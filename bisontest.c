@@ -13,7 +13,9 @@
 #define DEBUG_BISONTEST
 */
 
+/*
 #define EVIDENCE
+*/
 
 /*
 #define EVIDENCE1
@@ -67,6 +69,7 @@ static void test_probability(double **result, int *size_of_result,
 
 }
 
+#ifdef EVIDENCE
 /*
  * Enter some evidence of Variable "observed".
  */
@@ -105,6 +108,7 @@ static void test_evidence(Variable observed, double data[], Clique cliques[],
   distribute_evidence(clique_of_interest);
 
 }
+#endif /* EVIDENCE */
 
 int main(int argc, char *argv[]){
 

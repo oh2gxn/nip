@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.34 2004-06-21 06:12:12 mvkorpel Exp $
+ * $Id: parser.c,v 1.35 2004-06-21 08:24:09 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -510,9 +510,13 @@ int parsedPots2JTree(){
     fam_clique = find_family(nip_cliques, nip_num_of_cliques,
 			     family, initlist->data->num_of_vars);
 
-    if(fam_clique != NULL)
-      initialise(fam_clique, initlist->child, initlist->parents, 
-		 initlist->data); /* THE job */
+    if(fam_clique != NULL){
+      if(initlist->data->num_of_vars > 1)
+	initialise(fam_clique, initlist->child, initlist->parents, 
+		   initlist->data); /* THE job */
+      else
+	enter_evidence(fam_clique, initlist->child, initlist->data->data);
+    }
     else
       fprintf(stderr, "In parser.c : find_family failed!\n");
 
