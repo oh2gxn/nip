@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.17 2004-08-31 16:12:57 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.18 2004-09-07 10:16:38 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -180,8 +180,7 @@ double *get_probability(Nip model, Variable v, int print){
     return NULL;
   }
 
-  /* 1. Find the Clique that contains the family of 
-   *    the interesting Variable */
+  /* 1. Find the Clique that contains the interesting Variable */
   clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				   &v, 1);
   if(!clique_of_interest){

@@ -1,10 +1,11 @@
 /*
- * Clique.c $Id: Clique.c,v 1.100 2004-08-31 16:12:57 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.101 2004-09-07 10:16:37 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "Clique.h"
@@ -563,6 +564,10 @@ double *reorder_potential(Variable vars[], potential p){
     /* 1. old_flat_index -> old_indices (inverse_mapping) */
     inverse_mapping(p, old_flat_index, old_indices);
 
+
+
+
+    /* FIXME: This is totally wrong. */
     /* 2. "old_indices" is re-ordered according to "variables"
      *    -> new_indices */
     for(i = 0; i < p->num_of_vars; i++){
@@ -598,10 +603,12 @@ double *reorder_potential(Variable vars[], potential p){
       new_card[smallest_index] = p->cardinality[i];
       biggest_taken = vars[smallest_index]->id;
     }
+    /* <\totally wrong> */
+
+
 
 
     /* 3. new_indices -> new_flat_index (look at get_ppointer()) */
-
     new_flat_index = 0;
     card_temp = 1;
 
@@ -609,6 +616,8 @@ double *reorder_potential(Variable vars[], potential p){
       new_flat_index += new_indices[i] * card_temp;
       card_temp *= new_card[i];
     }
+
+    printf("New flat index == %d\n", new_flat_index);
 
     /* 4. */
     new_data[new_flat_index] = p->data[old_flat_index];
@@ -619,7 +628,7 @@ double *reorder_potential(Variable vars[], potential p){
   free(new_indices);
   free(new_card);
 
-  /* Pointer to allocated memory. Also, potential p remains alive.*/
+  /* Pointer to allocated memory. Potential p remains alive also. */
   return new_data;
 
 }
