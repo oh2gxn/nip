@@ -13,6 +13,26 @@
 extern int yyparse();
 
 
+void make_consistent(Clique* cliques, int n_cliques){
+  int i;
+  for (i = 0; i < n_cliques; i++)
+    unmark_Clique(cliques[i]);
+  collect_evidence(NULL, NULL, cliques[0]);
+  for (i = 0; i < n_cliques; i++)
+    unmark_Clique(cliques[i]);
+  distribute_evidence(cliques[0]);
+}
+
+
+void forget_evidence(Clique c){
+  Variable temp;
+  Variable_iterator it = get_Variable_list();
+  while((temp = next_Variable(&it)) != NULL)
+    reset_likelihood(temp);
+  global_retraction(c);
+}
+
+
 int main(int argc, char *argv[]){
 
   char** tokens;
@@ -24,14 +44,14 @@ int main(int argc, char *argv[]){
   int num_of_nexts = 0;
   int nip_num_of_cliques;
   double** result; /* probs of the hidden variables */
-
+  
   Clique *nip_cliques;
   Clique clique_of_interest;
-
+  
   potential *timeslice_sepsets;
   /* for reordering sepsets between timeslices
-    potential temp_potential;
-    potential reordered;
+     potential temp_potential;
+     potential reordered;
   */
   Variable *hidden;
   Variable *next;
@@ -78,7 +98,7 @@ int main(int argc, char *argv[]){
   /*****************************/
   /* read the data from a file */
   /*****************************/
-  timeseries = open_datafile(argv[2], ',', 0, 1); /* 1. Open */
+  timeseries = open_datafile(argv[2], ',', 0, 1);
   if(timeseries == NULL){
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
     fprintf(stderr, "%s\n", argv[2]);
@@ -86,8 +106,8 @@ int main(int argc, char *argv[]){
   }
 
 
-  /* Figure out the number of hidden variables and variables that substitute
-   * some other variable in the next timeslice. */
+  /* Figure out the number of hidden variables and variables 
+   * that substitute some other variable in the next timeslice. */
   it = get_Variable_list();
   temp = next_Variable(&it);
   while(temp != NULL){
@@ -221,30 +241,18 @@ int main(int argc, char *argv[]){
   for(t = 0; t < timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t+1);
-        
+    
     /* 2. Put some data in */
     for(i = 0; i < timeseries->num_of_nodes; i++)
       if(data[t][i] >= 0)
 	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
 			    data[t][i]);
-
+    
     /********************/
     /* Do the inference */
     /********************/
     
-    /* 1. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 2. Collect evidence */
-    collect_evidence(NULL, NULL, nip_cliques[0]);
-    
-    /* 3. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 4. Distribute evidence */
-    distribute_evidence(nip_cliques[0]);
+    make_consistent(nip_cliques, nip_num_of_cliques);
     
     
     /* an experimental forward phase (a.k.a. filtering)... */
@@ -301,12 +309,8 @@ int main(int argc, char *argv[]){
     general_marginalise(clique_of_interest->p, timeslice_sepsets[t],
 			temp_vars);
     
-    
     /* 0. Forget old evidence */
-    it = get_Variable_list();
-    while((temp = next_Variable(&it)) != NULL)
-      reset_likelihood(temp);
-    global_retraction(nip_cliques[0]);
+    forget_evidence(nip_cliques[0]);
     
     if(t < timeseries->datarows - 1){
       /* 1. Finish the message pass between timeslices */
@@ -339,10 +343,7 @@ int main(int argc, char *argv[]){
   printf("## Backward phase ##\n");  
   
   /* forget old evidence */
-  it = get_Variable_list();
-  while((temp = next_Variable(&it)) != NULL)
-    reset_likelihood(temp);
-  global_retraction(nip_cliques[0]);
+  forget_evidence(nip_cliques[0]);
   
   
   for(t = timeseries->datarows - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
@@ -350,12 +351,12 @@ int main(int argc, char *argv[]){
     printf("-- t = %d --\n", t+1);
 
 
-      for(i = 0; i < timeseries->num_of_nodes; i++)
-	if(data[t][i] >= 0)
-	  enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			      data[t][i]);
-
-
+    for(i = 0; i < timeseries->num_of_nodes; i++)
+      if(data[t][i] >= 0)
+	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+			    data[t][i]);
+    
+    
     /* Message pass??? */
     clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				     previous, num_of_nexts);
@@ -385,13 +386,7 @@ int main(int argc, char *argv[]){
 
 
     /* an inference */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    collect_evidence(NULL, NULL, nip_cliques[0]);
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    distribute_evidence(nip_cliques[0]);
-    
+    make_consistent(nip_cliques, nip_num_of_cliques);    
   
 
     if(t < timeseries->datarows - 1){
@@ -418,19 +413,7 @@ int main(int argc, char *argv[]){
     /* Do the inference */
     /********************/
     
-    /* 1. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 2. Collect evidence */
-    collect_evidence(NULL, NULL, nip_cliques[0]);
-    
-    /* 3. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 4. Distribute evidence */
-    distribute_evidence(nip_cliques[0]);
+    make_consistent(nip_cliques, nip_num_of_cliques);
     
     
     /*********************************/
@@ -481,12 +464,8 @@ int main(int argc, char *argv[]){
       general_marginalise(clique_of_interest->p, timeslice_sepsets[t],
 			  temp_vars);
 
-
       /* forget old evidence */
-      it = get_Variable_list();
-      while((temp = next_Variable(&it)) != NULL)
-	reset_likelihood(temp);
-      global_retraction(nip_cliques[0]);
+      forget_evidence(nip_cliques[0]);
     }
 
     free(temp_vars);
