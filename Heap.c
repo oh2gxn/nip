@@ -196,8 +196,8 @@ int get_heap_index(Heap* H, Variable v)
 void clean_heap_item(Heap_item* hi, Variable V_removed, Graph* G)
 {
   int i;
-  for (i = 1; i < hi->n; i++)
-    if (hi->Vs[i] == V_removed){
+  for(i = 1; i < hi->n; i++)
+    if(hi->Vs[i] == V_removed){
 	hi->Vs[i] = hi->Vs[hi->n];
 	--hi->n;
 	break;

@@ -98,6 +98,7 @@ int get_neighbours(Graph* G, Variable** neighbours)
   int i, j = 0;
 
     /* XX ihan vaiheessa. Mietip‰ joskus miten k‰y, jos refleksiivinen */
+  /* MVK: Mik‰ on n? Ei m‰‰ritelty. */
     for (i = 0; i < n; i++)
         if (G->adj_matrix)
             *neighbours[j++] = 1;
@@ -113,7 +114,6 @@ Variable* get_variables(Graph* G)
 int is_child(Graph* G, Variable parent, Variable child)
 {
     int i,j;
-    /* MVK korjaus: ei G->get_index(...) vaan get_index(G, ...)
     i = get_graph_index(G, parent); /* XX kts. refaktorointi ylh‰‰lt‰ */
     j = get_graph_index(G, child);
     return G->adj_matrix[i][j];
@@ -166,6 +166,7 @@ void moralise(Graph* Gm, Graph* G)
 }
 
 /* Not specified Graph.h -- internal helper function */
+/* MVK: Pit‰‰kˆ t‰m‰n olla void? Nyt siin‰ on ei-void palautusarvo. */
 void triangulate(Graph* Gm)
 {
     /*    Graph* Gm_copy; */
@@ -174,7 +175,7 @@ void triangulate(Graph* Gm)
     int clique_count = 0;
     Variable* min_cluster;
     Heap* H;
-    Cluster_list* cl_head, cl_end, cl_i;
+    Cluster_list *cl_head, *cl_end;
     int* variable_set;
 
     n = Gm->size;
@@ -218,6 +219,7 @@ void triangulate(Graph* Gm)
 	    }
 	}
 	
+	/* MVK: is_subset ei m‰‰ritelty */
 	if (!is_subset(cl_head, variable_set, n))
 	{
 	    cl_end->next = new_cl_item(n);
@@ -229,6 +231,7 @@ void triangulate(Graph* Gm)
     return cl2cliques(cl_head, clique_count, n);
 }
 
+/* MVK: T‰st‰kin funktiosta tarvitaan esittely. */
 Clique* cl2cliques(Cluster_list* cl_head, int n_cliques, int n)
 {
     int n_vars, i;
@@ -236,6 +239,7 @@ Clique* cl2cliques(Cluster_list* cl_head, int n_cliques, int n)
     Clique* cliques = calloc(n_cliques, sizeof(Clique));
     Variable* clique_vars = calloc(n, sizeof(Variable));
 
+    /* MVK: Mik‰ on vars? Ei m‰‰ritelty. */
     for (cl_i = cl_head; cl_i->next != NULL; cl_i = cl_i->next)
     {
 	n_vars = 0;
@@ -250,11 +254,16 @@ Clique* cl2cliques(Cluster_list* cl_head, int n_cliques, int n)
     return cliques;
 }
 
+/* MVK: T‰st‰ t‰ytyy saada esittely joko Graph.h:hon, tai t‰m‰n tiedoston
+ * alkuun, koska t‰t‰ k‰ytet‰‰n jo aiemmin. */
 Cluster_list* new_cl_item(int array_size)
 {
     Cluster_list* cl_new = (Cluster_list*) malloc(sizeof(Cluster_list));
     cl_new->variable_set = (int*) calloc(array_size, sizeof(int));
     cl_new->next = NULL;
+
+    /* MVK: Palautetaan jotain. Onko oikein? */
+    return cl_new;
 }
 
 int is_subset(Cluster_list* cl_head, int* var_set, int size)
@@ -265,22 +274,22 @@ int is_subset(Cluster_list* cl_head, int* var_set, int size)
     /* Iterate the list of known clusters */
     /* Later additions cannot be supersets of earlier ones */
     /* One of the variables in an earlier var_set is removed */
-    for (cl_i = cl_head; cl_i->next != NULL; cl_i = cli_i->next)
+    for (cl_i = cl_head; cl_i->next != NULL; cl_i = cl_i->next)
     {
-	flag = FALSE;
+	flag = 0;
 	for (i = 0; i < size; i++)
 	{
 	    if (var_set[i] & !cl_i->variable_set[i])
 	    {
-		flag = TRUE; /* var_set not a subset of cl_i */
+		flag = 1; /* var_set not a subset of cl_i */
 		break;
 	    }
 	}
-	if (flag == FALSE) /* We have a subset */
-	    return TRUE;
+	if (!flag) /* We have a subset */
+	    return 1;
     }
 
-    return FALSE;
+    return 0;
 }
 
 int find_cliques(Graph* Gm, Clique* cliques_p)
