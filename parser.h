@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.7 2004-04-22 14:23:03 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.8 2004-05-24 13:58:34 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -56,6 +56,21 @@ static stringlink first_string = 0;
 static stringlink last_string = 0;
 static int strings_parsed = 0;
 
+
+struct cliquelist {
+  Clique data;
+  struct stringlist *fwd;
+  struct stringlist *bwd;
+};
+
+typedef struct cliquelist cliqueelement;
+typedef cliqueelement *cliquelink;
+
+static cliquelink first_clique = 0;
+static cliquelink last_clique = 0;
+static int cliques_parsed = 0;
+
+
 /* The current input file */
 static FILE *parser_infile = NULL;
 
@@ -80,6 +95,9 @@ void close_infile();
  * If token_length == 0, there are no more tokens.
  */
 char *next_token(int *token_length);
+
+/* Adds a clique into the list of cliques. */
+int add_clique(Clique c);
 
 /* Adds a variable into the list of variables. */
 int add_pvar(Variable var);

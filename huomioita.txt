@@ -43,3 +43,12 @@ mm. Variable-juttuja s.e. muuttujille voi asettaa tilojen nimet ja muut
 parametrit helposti. Parseriin tulee tietorakenteet, joihin tiedoston 
 mukaisia muuttujia/nodeja tulee... Verkon, riippuvuuksien ja taulukoiden 
 parsettaminen vaikuttaa erityisen ikävältä. Tutkitaan...
+
+24.5.2004 (Janne)
+* Clique.c:ssä on nyt funktio create_Potential(...), jonka avulla voi 
+luoda ohjelmalle kelpaavan potentiaalin minkä tahansa muuttujajärjestyksen 
+mukaan järjestetystä taulukosta. Tämä on tarpeen, koska Huginin 
+tiedostoformaatissa esim. potentiaalin P(C | BD) "vähiten merkitsevä" 
+muuttuja on C, mutta ohjelmassamme oletetaan, että järjestys on esim. BCD.
+
+

@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.8 2004-04-01 12:39:31 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.9 2004-05-24 13:58:34 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -14,8 +14,11 @@
 /* BISON Declarations */
 /* These are the data types for semantic values. */
 %union {
+  int intval;
   double numval;
+  double *doublearray;
   char *name;
+  char **stringarray;
 }
 
 %token node "node"
@@ -25,59 +28,61 @@
 %token <name> QUOTED_STRING
 %token <name> UNQUOTED_STRING
 %token <numval> NUMBER
+%type <stringarray> strings
+%type <doublearray> numbers
+%type <name> labelDeclaration
+%type <intval> statesDeclaration
 
 /* Grammar follows */
 /* NOT READY!!! Procedures and arrays in C do not mix well with the more 
  * or less functional paradigm of the parser. */
 %%
 input:         /* empty string */
-             | input declaration
+             | declaration input
 ;
 
-declaration:   nodedecl {/* put the node somewhere */}
-             | potdecl {/* put the potential somewhere */}
+declaration:   nodeDeclaration {/* put the node somewhere */}
+             | potentialDeclaration {/* put the potential somewhere */}
 ;
 
-nodedecl:      node UNQUOTED_STRING '{' parameters  '}' {/* new_variable() */}
+nodeDeclaration:    node UNQUOTED_STRING '{' labelDeclaration 
+                                             statesDeclaration 
+                                             parameters '}' {
+  /* new_variable() ??? */
+  add_pvar(new_variable($2, $4, $5)); 
+  reset_strings();}
 ;
 
 /* probably not the easiest way... think again: LALR(1) */
 parameters:    /* end of definitions */
-             | labeldecl parameters
-             | statesdecl parameters
-	     | unknown_decl parameters
+             | unknownDeclaration parameters
 ;
 
-labeldecl:     label '=' QUOTED_STRING ';'
+labelDeclaration:     label '=' QUOTED_STRING ';' { $$ = $3 }
 ;
 
-/* JJT: I think this is not the best way either... cardinality??? */
-statesdecl:    states '=' '(' QUOTED_STRING strings ')' ';'
+/* JJT: cardinality??? */
+statesDeclaration:    states '=' '(' strings ')' ';' { $$ = strings_parsed; }
 ;
 
-strings:       /* end of list */
-             | QUOTED_STRING strings
+unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
 ;
 
-unknown_decl:  UNQUOTED_STRING '=' value ';' /* ignore */
+strings:       /* end of list */ { $$ = make_string_array(); }
+             | QUOTED_STRING strings { add_string($1); }
 ;
 
-value:         QUOTED_STRING /* Should there be $$ = $1 or something*/
-             | list
-             | NUMBER
+numbers:       /* end of list */ { $$ = make_double_array(); }
+             | NUMBER numbers { add_number($1); }
 ;
 
-list:          '(' strlistitems ')'
-             | '(' numlistitems ')' 
+value:         QUOTED_STRING {/* ignore */}
+             | numbers { reset_doubles(); }
+             | strings { reset_strings(); }
+             | NUMBER {/* ignore */}
 ;
 
-strlistitems:  /* empty */
-             | QUOTED_STRING strlistitems
-;
-
-numlistitems:  /* sumthin */
-/*
-potdecl:       potential '{' '}' /* arbitrary array? */
+potentialDeclaration: potential '{' '}' { /* <Some AI to make decisions> */ }
 ;
 
 %%

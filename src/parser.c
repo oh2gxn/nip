@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.9 2004-05-17 12:59:38 mvkorpel Exp $
+ * $Id: parser.c,v 1.10 2004-05-24 13:58:34 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -117,6 +117,19 @@ char *next_token(int *token_length){
     read_line = 1;
 
   return token;
+}
+
+/* correctness? */
+int add_clique(Clique c){
+  cliquelink new = (cliquelink) malloc(sizeof(cliqueelement));
+  new->data = c;
+  new->fwd = 0;
+  new->bwd = last_clique;
+  if(first_clique = 0)
+    first_clique = new;
+  last_clique = new;
+  cliques_parsed++;
+  return 0;
 }
 
 /* correctness? */
