@@ -11,8 +11,9 @@ struct pot_array {
 typedef struct pot_array ptype;
 typedef ptype *potential;
 
-/* Make a num_of_vars -dimension potential array. */
-potential make_potential(int cardinality[], int num_of_vars);
+/* Make a num_of_vars -dimension potential array. 
+ * The potential array data[] can be null, if it is not known. */
+potential make_potential(int cardinality[], int num_of_vars, double data[]);
 
 /* Free the memory used by potential p. Returned value is an error code. */
 int free_potential(potential p);

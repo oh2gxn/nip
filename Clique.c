@@ -13,7 +13,7 @@ Clique make_Clique(Variable vars[], int num_of_vars){
     cardinality[i] = vars[i]->cardinality;
     c->variables[i] = vars[i];
   }
-  c->p = make_potential(cardinality, num_of_vars);
+  c->p = make_potential(cardinality, num_of_vars, NULL);
   free(cardinality);
   c->sepsets = 0;
   c->mark = 0;
@@ -59,8 +59,8 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
     cardinality[i] = vars[i]->cardinality;
     s->variables[i] = vars[i];
   }
-  s->old = make_potential(cardinality, num_of_vars);
-  s->new = make_potential(cardinality, num_of_vars);
+  s->old = make_potential(cardinality, num_of_vars, NULL);
+  s->new = make_potential(cardinality, num_of_vars, NULL);
   free(cardinality); /* the array was copied ? */
   s->cliques[0] = cliques[0]; /* Hopefully the space was allocated! */
   s->cliques[1] = cliques[1];
@@ -174,9 +174,17 @@ int message_pass(Clique c1, Sepset s, Clique c2){
 
 int initialise(Clique c, Variable v, Variable parents[], potential p){
   int i, j = 0, k = 0;
-  int extra_vars[c->p->num_of_vars - p->num_of_vars];
+  int diff = c->p->num_of_vars - p->num_of_vars;
+  int *extra_vars = NULL;
+
+  if(diff > 0)
+    extra_vars = (int *) calloc(diff, sizeof(int));
 
   /* UNFINISHED! Who can make such a potential and how??? */
+
+  /* JJ_NOTE: I'm convinced that there is a bug somewhere!
+   * What happens for example when diff==0 ?!?!? 
+   * - Fixed 18.5.2004 */
 
   /* initialisation with conditional distributions 
      first: select the variables */
@@ -184,12 +192,17 @@ int initialise(Clique c, Variable v, Variable parents[], potential p){
     if(j < (p->num_of_vars - 1) &&
        equal_variables((c->variables)[i], parents[j])) /* or v? */
       j++;                                             /* MVK: Look down */
-    else if(!equal_variables((c->variables)[i], v))
-      extra_vars[k++] = i;
+    else if(!equal_variables((c->variables)[i], v)){
+      if(diff > 0)
+	extra_vars[k++] = i;
+      // else there is an ERROR!!! (Namely invalid arguments)
+    }
     /* Else, if equal_variables((c->variables)[i], v), do nothing. */
   }
   /* rest the case */
-  return (init_potential(p, c->p, extra_vars));
+  i = init_potential(p, c->p, extra_vars);
+  free(extra_vars);
+  return (i);
 }
 
 int marginalise(Clique c, Variable v, double r[]){

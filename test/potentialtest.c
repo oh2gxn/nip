@@ -15,8 +15,8 @@ int main(){
   int indices[5], i, j, k, l, m, x = 0;
   double value;
   potential p, q;
-  p = make_potential(cardinality, num_of_vars);
-  q = make_potential(card2, num_of_vars - 1);
+  p = make_potential(cardinality, num_of_vars, NULL);
+  q = make_potential(card2, num_of_vars - 1, NULL);
 
   /* Set values of p */
   for(i = 0; i < cardinality[0]; i++){

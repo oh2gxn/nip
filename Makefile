@@ -6,7 +6,7 @@
 # XXX Replace "*.c" below with the names of your source files!
 SRCS=potential.c Variable.c Clique.c cliquetest.c
 
-# XXX Replace "tester" below with the name you want for your program!
+# XXX Replace "cliquetest" below with the name you want for your program!
 TARGET=cliquetest
 
 # You should not need to modify anything below this line...

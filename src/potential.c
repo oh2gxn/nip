@@ -7,7 +7,7 @@
 int choose_indices(potential source, int source_indices[],
 		   int dest_indices[], int source_vars[]);
 
-potential make_potential(int cardinality[], int num_of_vars){
+potential make_potential(int cardinality[], int num_of_vars, double data[]){
 
   /* JJ NOTE: what if num_of_vars = 0 i.e. size_of_data = 1 ???
      (this can happen with sepsets...) */
@@ -15,7 +15,7 @@ potential make_potential(int cardinality[], int num_of_vars){
   int i;
   int size_of_data = 1;
   int *cardinal;
-  double *dpointer;
+  double *dpointer = NULL;
   potential p;
   p = (potential) malloc(sizeof(ptype));
   cardinal = (int *) calloc(num_of_vars, sizeof(int));
@@ -29,9 +29,15 @@ potential make_potential(int cardinality[], int num_of_vars){
   p->size_of_data = size_of_data;
   p->num_of_vars = num_of_vars;
   p->data = (double *) calloc(size_of_data, sizeof(double));
-
-  /* The array has to be initialised. Let's do it right away. */
-  for(dpointer=p->data, i=0; i < size_of_data; *dpointer++ = 1, i++);
+  if(data == NULL){
+    /* The array has to be initialised. Let's do it right away. */
+    for(dpointer=p->data, i=0; i < size_of_data; *dpointer++ = 1, i++);
+  }
+  else{
+    /* Just copy the contents of the array */
+    for(i=0; i < size_of_data; i++)
+      p->data[i] = data[i];
+  }
 
   return p;
 }
@@ -106,11 +112,11 @@ int inverse_mapping(potential p, int big_index, int indices[]){
  */
 int choose_indices(potential source, int source_indices[],
 		    int dest_indices[], int source_vars[]){
-
   /* JJ NOTE: What if this is done only once to form some sort of 
    *          mask and then the mask could be more efficient for 
    *          the rest of the calls..? */
   int i, j = 0, k = 0;
+
   for(i = 0; i < source->num_of_vars; i++){    
     if(i == source_vars[j])
       j++;
@@ -164,7 +170,7 @@ int general_marginalise(potential source, potential destination,
 }
 
 int total_marginalise(potential source, double destination[], int variable){
-  int i, j, x, index, flat_index;
+  int i, j, x, index = 0, flat_index;
   int *source_indices;
 
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) 
@@ -267,15 +273,19 @@ int init_potential(potential probs, potential target, int extra_vars[]){
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
   /* The general idea is the same as in marginalise */
-  for(i = 0; i < target->size_of_data; i++){
-    inverse_mapping(target, i, target_indices);
-    choose_indices(target, target_indices, probs_indices, extra_vars);
-
-    potvalue =
-      get_ppointer(probs, probs_indices);
-    target->data[i] *= *potvalue;  /* THE multiplication */
-  }
-
+  if(extra_vars == NULL) // this is one kind of a bug fix
+    for(i = 0; i < target->size_of_data; i++) // similar kind of potentials
+      target->data[i] *= probs->data[i];
+  else
+    for(i = 0; i < target->size_of_data; i++){
+      inverse_mapping(target, i, target_indices);
+      choose_indices(target, target_indices, probs_indices, extra_vars);
+      
+      potvalue =
+	get_ppointer(probs, probs_indices);
+      target->data[i] *= *potvalue;  /* THE multiplication */
+    }
+  
   free(probs_indices); /* JJ NOTE: GET RID OF THESE? */
   free(target_indices);
 
