@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.15 2004-06-02 12:18:48 jatoivol Exp $
+ * $Id: parser.c,v 1.16 2004-06-02 13:05:30 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -8,6 +8,34 @@
 #include "parser.h"
 #include "fileio.h"
 #include "errorhandler.h"
+
+varlink nip_first_var = NULL; /* global stuff, sad but true */
+varlink nip_last_var = NULL;
+int nip_vars_parsed = 0;
+
+varlink nip_first_temp_var = NULL;
+varlink nip_last_temp_var = NULL;
+int nip_symbols_parsed = 0;
+
+Graph *nip_graph = NULL;
+
+doublelink nip_first_double = 0;
+doublelink nip_last_double = 0;
+int nip_doubles_parsed = 0;
+
+stringlink nip_first_string = 0;
+stringlink nip_last_string = 0;
+int nip_strings_parsed = 0;
+
+initDataLink nip_first_initData = 0;
+initDataLink nip_last_initData = 0;
+int nip_initData_parsed = 0;
+
+/* The current input file */
+FILE *nip_parser_infile = NULL;
+
+/* Is there a file open? 0 if no, 1 if yes. */
+int nip_file_open = 0;
 
 //#define DEBUG_PARSER
 

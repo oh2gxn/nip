@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.11 2004-05-31 10:36:54 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.12 2004-06-02 13:05:30 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -26,15 +26,15 @@ struct varlist {
 typedef struct varlist varelement;
 typedef varelement *varlink;
 
-static varlink nip_first_var = NULL; /* global stuff, sad but true */
-static varlink nip_last_var = NULL;
-static int nip_vars_parsed = 0;
+extern varlink nip_first_var; /* global stuff, sad but true */
+extern varlink nip_last_var;
+extern int nip_vars_parsed;
 
-static varlink nip_first_temp_var = NULL;
-static varlink nip_last_temp_var = NULL;
-static int nip_symbols_parsed = 0;
+extern varlink nip_first_temp_var;
+extern varlink nip_last_temp_var;
+extern int nip_symbols_parsed;
 
-static Graph *nip_graph = NULL;
+extern Graph *nip_graph;
 
 struct doublelist {
   double data;
@@ -45,10 +45,9 @@ struct doublelist {
 typedef struct doublelist doubleelement;
 typedef doubleelement *doublelink;
 
-static doublelink nip_first_double = 0;
-static doublelink nip_last_double = 0;
-static int nip_doubles_parsed = 0;
-
+extern doublelink nip_first_double;
+extern doublelink nip_last_double;
+extern int nip_doubles_parsed;
 
 struct stringlist {
   char* data;
@@ -59,10 +58,9 @@ struct stringlist {
 typedef struct stringlist stringelement;
 typedef stringelement *stringlink;
 
-static stringlink nip_first_string = 0;
-static stringlink nip_last_string = 0;
-static int nip_strings_parsed = 0;
-
+extern stringlink nip_first_string;
+extern stringlink nip_last_string;
+extern int nip_strings_parsed;
 
 struct initDataList {
   potential data;
@@ -75,16 +73,15 @@ struct initDataList {
 typedef struct initDataList initDataElement;
 typedef initDataElement *initDataLink;
 
-static initDataLink nip_first_initData = 0;
-static initDataLink nip_last_initData = 0;
-static int nip_initData_parsed = 0;
-
+extern initDataLink nip_first_initData;
+extern initDataLink nip_last_initData;
+extern int nip_initData_parsed;
 
 /* The current input file */
-static FILE *nip_parser_infile = NULL;
+extern FILE *nip_parser_infile;
 
 /* Is there a file open? 0 if no, 1 if yes. */
-static int nip_file_open = 0;
+extern int nip_file_open;
 
 /* Opens an input file. Returns 0 if file was opened or if some file was
  * already open. Returns ERROR_GENERAL if an error occurred
