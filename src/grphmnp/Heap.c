@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.18 2004-08-18 09:39:00 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.19 2004-08-18 11:09:09 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -134,7 +134,7 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
         hi->secondary_key =
 	  cluster_weight(cliques[i]->variables, cliques[i]->p->num_of_vars) +
 	  cluster_weight(cliques[j]->variables, cliques[j]->p->num_of_vars);
-	hi->Vs = NULL;
+	hi->Vs = NULL; /* this is a sepset heap */
       }
 
     /* Check Cormen, Leiserson, Rivest */
@@ -244,7 +244,12 @@ int extract_min_sepset(Heap* H, Sepset* sepset)
     
     min = H->heap_items[0];
 
+    /* Not a sepset heap */
+    if(min.s == NULL)
+      return ERROR_GENERAL;
+
     H->heap_items[0] = H->heap_items[H->heap_size -1];
+
     H->heap_size--;
     
     /* Rebuild the heap. Is this enough? */
