@@ -1,5 +1,5 @@
 #ifndef __CLS2CLQ_H__
-#define __GRAPH_H__
+#define __CLS2CLQ_H__
 
 #include "../Clique.h"
 
@@ -25,4 +25,5 @@ Clique* cl2cliques(Variable* vars, Cluster_list* cl_head, int n_cliques,int n);
 
 
 
-#endif __CLS2CLQ_H__
+#endif
+

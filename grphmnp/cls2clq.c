@@ -1,9 +1,7 @@
 #include <stdlib.h>
+#include <string.h>
 #include "cls2clq.h"
 #include "../Clique.h"
-
-#define NULL 0
-/* URK */
 
 Cluster_list* new_cl_item(int array_size, Cluster_list* next, int* var_set)
 {
@@ -25,17 +23,17 @@ int is_subset(Cluster_list* cl_head, int* var_set, int size)
     /* One of the variables in an earlier var_set is removed */
     for (cl_i = cl_head; cl_i != NULL; cl_i = cl_i->next)
     {
-	flag = 0;
-	for (i = 0; i < size; i++)
-	{
-	    if (var_set[i] & !cl_i->variable_set[i])
-	    {
-		flag = 1; /* var_set not a subset of cl_i */
-		break;
-	    }
-	}
-	if (!flag) /* We have a subset */
-	    return 1;
+        flag = 0;
+        for (i = 0; i < size; i++)
+        {
+            if (var_set[i] & !cl_i->variable_set[i])
+            {
+                flag = 1; /* var_set not a subset of cl_i */
+                break;
+            }
+        }
+        if (!flag) /* We have a subset */
+	       return 1;
     }
 
     return 0;
@@ -50,13 +48,13 @@ Clique* cl2cliques(Variable* vars, Cluster_list* cl_head, int n_cliques, int n)
 
     for (cl_i = cl_head; cl_i != NULL; cl_i = cl_i->next)
     {
-	n_vars = 0;
-	for (i = 0; i < n; i++)
-	    if (cl_i->variable_set[i])
-		clique_vars[n_vars++] = vars[i];
+        n_vars = 0;
+        for (i = 0; i < n; i++)
+            if (cl_i->variable_set[i])
+                clique_vars[n_vars++] = vars[i];
 
-	cliques[--n_cliques] = make_Clique(clique_vars, n_vars);
-	/* This ^^^^^^^^^^^ is sort of dangerous. */
+	   cliques[--n_cliques] = make_Clique(clique_vars, n_vars);
+	   /* This ^^^^^^^^^^^ is sort of dangerous. */
     }
     
     free(clique_vars);

@@ -7,7 +7,7 @@
 #define PARENT(i) (i/2)
 #define LEFT(i) (2*i)
 #define RIGHT(i) (2*i+1)
-/* Teepä p = p -1; temppu. Ja sovita synnit. */
+/* Tee p = p -1; temppu. Ja sovita synnit. */
 
 typedef struct {
     Variable* Vs; /* Vs[0] is the variable in the array, rest are neighbours*/
@@ -17,7 +17,7 @@ typedef struct {
     int secondary_key;
 } Heap_item;
 
-typedef struct {
+typedef struct hpt {
     Heap_item* array;
     int heap_size;
     /* MVK: Mikä on orig_size ? */
@@ -25,7 +25,6 @@ typedef struct {
      * ellei sitten heappia tuhottaessa. */
     int orig_size;
 } Heap;
-
 
 Heap* build_heap(Graph* Gm);
 

@@ -8,7 +8,7 @@
 
 typedef struct {
     int* adj_matrix; /* Two dimensional */
-    int* var_ind;
+    unsigned long* var_ind;
     unsigned long min_id;
     unsigned long max_id;
     Variable* variables;
@@ -75,14 +75,14 @@ int add_child(Graph* G, Variable parent, Variable child);
  * Parameter child: the child-variable
  */
 
-void moralise(Graph* Gm, Graph* G);
+Graph* moralise(Graph* G);
 /* Moralises a DAG. (Brit. spelling)
  * Parameter G: An unmoral graph.
- * Parameter Gm becomes the moralised Graph.
+ * Returns moralised Graph.
  * Does not modify G.
  */
 
-int find_cliques(Graph* Gm, Clique* cliques_p);
+int find_cliques(Graph* Gm, Clique** cliques_p);
 /* Triangulates G and finds the cliques.
  * Parameter Gm: moralised graph
  * Parameter cliques_p: pointer to a clique array
@@ -91,5 +91,7 @@ int find_cliques(Graph* Gm, Clique* cliques_p);
  * Modifies Gm.
  */
 
+void sort_variables(Graph* G); 
+/* Internal helper */
 
 #endif /* __GRAPH_H__ */

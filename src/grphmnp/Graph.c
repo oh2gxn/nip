@@ -142,7 +142,7 @@ int add_child(Graph* G, Variable parent, Variable child)
     child_i = get_graph_index(G, child);
 
     if (parent_i == -1 || child_i == -1)
-	return -1;
+	   return -1;
 
     ADJM(G, parent_i, child_i) = 1;
 
@@ -213,7 +213,7 @@ Graph* moralise(Graph* G)
 /* Not specified Graph.h -- internal helper function */
 /* MVK: Pitääkö tämän olla void? Nyt siinä on ei-void palautusarvo. */
 /* AR: Joo, refaktorointia kaipaillaan */
-void triangulate(Graph* Gm)
+int triangulate(Graph* Gm, Clique** clique_p)
 {
     int i, j, j_index, k, k_index, n;
     int clique_count = 0;
@@ -256,17 +256,21 @@ void triangulate(Graph* Gm)
         }
     }
     free(variable_set);
-
-    return cl2cliques(Gm->variables, cl_head, clique_count, n);
+ 
+    *clique_p = cl2cliques(Gm->variables, cl_head, clique_count, n);
+    
+    return clique_count;
 }
 
 
-int find_cliques(Graph* Gm, Clique* cliques_p)
+int find_cliques(Graph* G, Clique** cliques_p)
 {
-    /* XX NULL-tarkastukset uupuu */
+    Graph *Gu, *Gm;
+    int n_cliques;
 
-    triangulate(Gm);
+    Gu = make_undirected(G);
+    Gm = moralise(Gu);
+    n_cliques = triangulate(Gm, cliques_p);
 
-
-    return 0;
+    return n_cliques;
 }
