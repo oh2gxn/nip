@@ -98,7 +98,7 @@ void test4(Graph* G)
     printf("\tTest 4... make_undirected\n");
     Gu = make_undirected(G);
     
-    n = get_size(G); v = get_variables(g);
+    n = get_size(G); v = get_variables(G);
     for (i = 0; i < n; i++)
     {
         for (j=0;j < n;j++)
@@ -106,7 +106,7 @@ void test4(Graph* G)
             if (is_child(G, v[i], v[j]))
             {
                 assert(is_child(Gu, v[i], v[j]));
-                assert(is_child(Gu, v[j], v[j]));
+                assert(is_child(Gu, v[j], v[i]));
             }
             if (is_child(Gu, v[i], v[j]))
             {
@@ -123,7 +123,6 @@ void test5(Graph* G)
     Variable *v;
     int i,j,n;
     printf("\tTest 5... moralise\n");
-    printf("---Not implemented yet.---\n");
     Gm = moralise(G);
     v = get_variables(G);
     n = get_size(G);
@@ -147,5 +146,6 @@ void main(void)
     test2(G);
     test3(G);
     test4(G);
+    test5(G);
 }
 
