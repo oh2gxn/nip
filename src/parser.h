@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.14 2004-06-07 11:38:02 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.15 2004-06-08 10:04:35 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -9,7 +9,7 @@
 /* Comment character in input files.
  * After this, the rest of the line is ignored.
  */
-#define COMMENT_CHAR '#'
+#define COMMENT_CHAR '%'
 
 #include "Clique.h"
 #include "Variable.h"
