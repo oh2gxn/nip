@@ -17,6 +17,9 @@ int main();
 /* Make a num_of_vars -dimension potential array. */
 potential make_potential(int cardinality[], int num_of_vars){
 
+  /* JJ NOTE: what if num_of_vars = 0 i.e. size_of_data = 1 ???
+     (this can happen in sepsets...) */
+
   int i;
   int size_of_data = 1;
   int *cardinal;
@@ -104,6 +107,9 @@ int inverse_mapping(potential p, int big_index, int indices[]){
   int x = p->size_of_data;
   int i;
 
+  /* NOTE: the first variable (a.k.a the 0th variable) is 
+     'least significant' in the sense that the value of it 
+     has the smallest effect on the memory address */
   for(i = p->num_of_vars - 1; i >= 0; i--){
     x /= p->cardinality[i];
     indices[i] = big_index / x;    /* integer division */
@@ -200,13 +206,13 @@ int general_marginalise(potential source, potential destination,
 -variable: the index of the variable of interest 
 */
 int total_marginalise(potential source, double[] destination, int variable){
-  int i, j, x, index;
+  int i, j, x, index, flat_index;
   int *source_indices;
   double *potvalue;
 
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) 
                          |  |  |
-     variable index:     0  1  2 */
+     variable index:     0  1  2 (or 'significance') */
   source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
 
   /* initialization */
@@ -214,15 +220,16 @@ int total_marginalise(potential source, double[] destination, int variable){
     destination[i] = 0;
 
   for(i = 0; i < source->size_of_data; i++){
-    /* partial inverse mapping to find out the destination index 
-       NOT SURE IF THIS WORKS */
+    /* partial inverse mapping to find out the destination index */
     flat_index = i;
+    x = source->size_of_data;
     for(j = source->num_of_vars - 1; j >= variable; j--){
       x /= source->cardinality[j];
       index = flat_index / x;    /* integer division */
       flat_index -= index * x;
     }
-    destination[index] += source->data[i];
+    /* THE sum */
+    destination[index] += source->data[i]; 
   }
   free(source_indices);
   return 0;

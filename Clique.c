@@ -66,7 +66,7 @@ Sepset make_Sepset(Variable variables[], int num_of_vars, Clique cliques[]){
   s->new = make_potential(cardinality, num_of_vars);
   free(cardinality); /* the array was copied ? */
   s->variables = variables; /* <- */
-  s->cliques = cliques; /*  <---- but these arrays is not copied !? */
+  s->cliques = cliques; /*  <---- but these arrays are not copied !? */
   return s;
 }
 
