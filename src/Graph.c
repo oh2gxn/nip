@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "Graph.h"
 #include "Variable.h"
 #include "Clique.h"
@@ -30,7 +31,7 @@ Graph* new_graph(unsigned n)
 
 Graph* copy_graph(Graph* G)
 {
-    int n;
+    int n, var_ind_size;
     Graph* G_copy;
 
     n = G->size;
@@ -39,13 +40,14 @@ Graph* copy_graph(Graph* G)
     memcpy(G_copy->adj_matrix, G->adj_matrix, n*n*sizeof(int));
     memcpy(G_copy->variables, G->variables, n*sizeof(Variable));
     if (G->var_ind == NULL)
-	   G_copy->var_ind = NULL;
+		G_copy->var_ind = NULL;
     else
     {
-	   memcpy(G_copy->var_ind, G->var_ind, 
-              (G->min_id - G->max_id)*sizeof(int));
-	   G_copy->max_id = G->max_id;
-	   G_copy->min_id = G->min_id;
+        var_ind_size = (G->max_id - G->min_id +1)*sizeof(long);
+        G_copy->var_ind = (unsigned long*) malloc(var_ind_size);
+		memcpy(G_copy->var_ind, G->var_ind, var_ind_size);
+        G_copy->max_id = G->max_id;
+	    G_copy->min_id = G->min_id;
     }
 
     return G_copy;
@@ -87,12 +89,12 @@ int get_graph_index(Graph* G, Variable v)
     if (G->var_ind != NULL)
     {
         i = G->var_ind[get_id(v) - G->min_id];
-	   return equal_variables(G->variables[i], v)? i: -1;
+        return equal_variables(G->variables[i], v)? i: -1;
     }
     else /* Backup linear search */
         for (i = 0; i < G->size; i++)
-	       if (equal_variables(G->variables[i], v))
-		      return i;
+            if (equal_variables(G->variables[i], v))
+                return i;
 
     return -1;
 }
@@ -129,7 +131,7 @@ int add_variable(Graph* G, Variable v)
     G->top++;
 
     if (G->top == G->size)
-	sort_variables(G);
+		sort_variables(G);
 
     return 0; /* Error codes need work */
 }
@@ -151,19 +153,29 @@ int add_child(Graph* G, Variable parent, Variable child)
 
 /*** OPERATIONS (methods) ***/
 
-int varcomp(Variable v1, Variable v2) {
+/*int varcomp(Variable v1, Variable v2) {
     return get_id(v1) - get_id(v2);
-}
+}*/
 
 void sort_variables(Graph* G) 
 {
-    int max_id, i;
-    qsort(G->variables, G->size, sizeof(Variable), varcomp);
-    max_id = get_id(G->variables[G->size -1]);
-    G->min_id = get_id(G->variables[0]);
-    G->var_ind = (unsigned long*) calloc(max_id - G->min_id, sizeof(long));
+    int i, id;
+	
+    /*qsort(G->variables, G->size, sizeof(Variable), varcomp);
+    G->max_id = get_id(G->variables[G->size -1]);
+    G->min_id = get_id(G->variables[0]);*/
 
-    for (i = 0; G->size; i++)
+    G->min_id = get_id(G->variables[0]); G->max_id = get_id(G->variables[0]);
+    for (i = 1; i < G->size; i++)
+    {
+        id = get_id(G->variables[i]);
+        G->min_id = (id < G->min_id)?id:G->min_id;
+        G->max_id = (id > G->max_id)?id:G->max_id;
+    }
+    
+    G->var_ind = (unsigned long*) calloc(G->max_id - G->min_id +1, sizeof(long));
+	
+    for (i = 0; i < G->size; i++)
 	   G->var_ind[get_id(G->variables[i]) - G->min_id] = i;
 }
 
