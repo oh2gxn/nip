@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.22 2004-09-20 06:44:37 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.23 2004-09-20 14:18:54 arasinen Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -291,7 +291,7 @@ exist heuristics that give nearly optimal results.
 
 The triangulation algorithm is the one presented in ... 
 
-The Graph data type is implemented via an adjacency graph. The
+The \cdatatype{Graph} is implemented via an adjacency graph. The
 interface is designed to hide the implementation details. The Heap
 datatype used in the triangulation stage contains a Graph-like
 datatype and could possibly be refactored.
@@ -300,14 +300,14 @@ datatype and could possibly be refactored.
 \subsection{The functionality description}
 %The interface + how the stuff works...
 \subsubsection{The data structures}
-The data type {\it Graph} defined in \verb+Graph.h+ is a struct which
-has the following fields:
+The data type \cdatatype{Graph} defined in \cfilename{Graph.h} is a
+struct which has the following fields:
 \begin{description}
 \item[adj\_matrix] is an $n\times n$ adjacency matrix for the
 graph. The size $n$ is specified when the graph is first constructed
-and it is stored in the variable \textbf{size}. The matrix is
+and it is stored in the variable \cparameter{size}. The matrix is
 implemented as a simple array. For this reason it is manipulated via
-the macro \textbf{ADJM}.
+the macro \cparameter{ADJM}.
 \item[variables] is an array of variables associated with this graph.
 \item[size] is the number of variables in the Graph.
 \item[var\_ind] is an internal array of variables. Used for
@@ -322,7 +322,7 @@ graph. Used internally for better performance.
 
 \subsubsection{The functions}
 
-The functions provided in \verb+Variable.c+ are:
+The functions provided in \cfilename{Graph.c} are:
 
 \begin{description}
 \item[new\_graph(n)] creates a new graph with memory reserved for n
@@ -351,6 +351,40 @@ number of elements in the array.
 \item[moralise(G)] returns a moralised copy of graph G.
 
 \end{description}
+
+\subsection{Notes on Implementation}
+
+The above discussion describes only the interface of the Graph
+module. Some data structures used internally by the Graph module are
+summarily described here. The explanation is mostly aimed at those
+planning to modify the module.
+
+\subsubsection{Heap}
+
+The \cdatatype{Heap} is used to keep the potential cliques in a sorted
+data structure. Any search structure would suffice here; the heap is
+probably the most officient.
+
+This step requires a dynamically updatable Heap. The weights in
+neighbouring nodes change when the minimum weight node is
+removed. This also means that the heap implementation must be tied in
+with the \cdatatype{Graph}. This has led to number of tradeoffs and
+possible pitfalls.
+
+\subsubsection{cls2clq}
+
+The \cdatatype{cls2clq} module is used to convert a list of clusters
+to an array of cliques. In addition to a simple list implementation,
+it also includes a method to check whether a given set of variables
+(ie. a cluster) is a subset of a cluster already in the
+list\footnote{There is no need to check for supersets; the items in
+the list contain nodes that are then removed from the graph and thus cannot
+occur in later clusters.} and a method for the list-to-array
+conversion.
+
+The list used in this implementation could be replaced with a generic
+list data type.
+
 
 \subsection{Other possibilities}
 
