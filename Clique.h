@@ -30,4 +30,11 @@ void add_sepset(Clique *c, Sepset *s);
 
 Sepset make_Sepset(Variable **variables, int num_of_vars, Clique **cliques);
 
+/* This will change or be removed */
+void insert_evidence(Clique c, double *data);
+
+void distribute_evidence(Clique c); /* ??? */
+
+void collect_evidence(Clique c); /* ??? */
+
 #endif /* __CLIQUE_H__ */

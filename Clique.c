@@ -38,3 +38,18 @@ Sepset make_Sepset(Variable **variables, int num_of_vars, Clique **cliques){
   s.cliques = cliques;
   return s;
 }
+
+/* TODO */
+void insert_evidence(Clique c, double *data){
+  /* copy the pointer or the data? */
+}
+
+/* TODO */
+void distribute_evidence(Clique c){
+  /* recursive? */
+}
+
+/* TODO */
+void collect_evidence(Clique c){
+  /* recursive? */
+}
