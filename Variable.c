@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.36 2004-08-11 12:19:42 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.37 2004-08-12 09:47:21 jatoivol Exp $
  */
 
 #include <string.h>
@@ -184,13 +184,6 @@ varlink get_last_variable(){
 
 
 void reset_Variable_list(){
-  varlink l = nip_first_var;
-  varlink temp;
-  while(l){
-    temp = l->fwd;
-    free(l);
-    l = temp;
-  }
   nip_first_var = NULL;
   nip_last_var = NULL;
   nip_vars_parsed = 0;

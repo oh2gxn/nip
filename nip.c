@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.4 2004-08-10 12:52:48 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.5 2004-08-12 09:47:21 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -67,7 +67,7 @@ void free_model(Nip model){
   }
   free(model->cliques);
 
-  /* 2. Free Variables */
+  /* 2. Free the Variables and the list */
   while(v != NULL){
     free_variable(v);
     if(it != NULL)

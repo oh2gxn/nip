@@ -8,6 +8,7 @@
 #include "Variable.h"
 #include "nip.h"
 
+#define FOO
 
 int main(int argc, char *argv[]){
   
@@ -22,6 +23,7 @@ int main(int argc, char *argv[]){
   int cardinality[] = {3, 2, 3};
   int num_of_vars = 3;
   Variable vars[3];
+  varlink first, last;
   char **symbols;
   char **names;
   char ***states;
@@ -79,15 +81,21 @@ int main(int argc, char *argv[]){
   printf("\nAllocating and freeing variables:\n");
   for(i = 0; i < n; i++){
     /* Create Variables */
-    vars[0] = new_variable(symbols[0], names[0], states[0], cardinality[0]);
-    vars[1] = new_variable(symbols[1], names[1], states[1], cardinality[1]);
-    vars[2] = new_variable(symbols[2], names[2], states[2], cardinality[2]);
+    new_variable(symbols[0], names[0], states[0], cardinality[0]);
+    new_variable(symbols[1], names[1], states[1], cardinality[1]);
+    new_variable(symbols[2], names[2], states[2], cardinality[2]);
     printf("\rIteration %d of %d                               ", i + 1, n);
     /* Free Variables */
+    first = get_first_variable();
+    last = get_last_variable();
     reset_Variable_list();
-    free_variable(vars[0]);
-    free_variable(vars[1]);
-    free_variable(vars[2]);
+    while(first != NULL){
+      free_variable(first->data);
+      first = first->fwd;
+      if(first)
+	free(first->bwd);
+    }
+    free(last);
   }
 
   vars[0] = new_variable(symbols[0], names[0], states[0], cardinality[0]);
