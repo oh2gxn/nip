@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.49 2004-06-29 13:28:50 mvkorpel Exp $
+ * $Id: parser.c,v 1.50 2004-06-30 07:58:52 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -58,6 +58,8 @@ static int add_to_stringlink(stringlink *s, char* string);
 static int search_stringlinks(stringlink s, char* string);
 
 static int nullobservation(char *token);
+
+static void free_datafile(datafile *f);
 
 int open_yyparse_infile(const char *filename){
   if(!nip_yyparse_infile_open){
@@ -156,6 +158,7 @@ datafile *open_datafile(char *filename, char separator,
 	if(!f->node_symbols){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	  free_datafile(f);
+	  free(token_bounds);
 	  return NULL;
 	}
 
@@ -164,6 +167,7 @@ datafile *open_datafile(char *filename, char separator,
 	if(!statenames){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	  free_datafile(f);
+	  free(token_bounds);
 	  return NULL;
 	}
 
@@ -173,6 +177,7 @@ datafile *open_datafile(char *filename, char separator,
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	  free_datafile(f);
 	  free(statenames);
+	  free(token_bounds);
 	  return NULL;
 	}
 
@@ -182,6 +187,7 @@ datafile *open_datafile(char *filename, char separator,
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	  free_datafile(f);
 	  free(statenames);
+	  free(token_bounds);
 	  return NULL;
 	}
 
@@ -199,6 +205,7 @@ datafile *open_datafile(char *filename, char separator,
 	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	      free_datafile(f);
 	      free(statenames);
+	      free(token_bounds);
 	      return NULL; /* error horror */
 	    }
 
@@ -223,6 +230,7 @@ datafile *open_datafile(char *filename, char separator,
 	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	      free_datafile(f);
 	      free(statenames);
+	      free(token_bounds);
 	      return NULL; /* error horror */
 	    }
 
@@ -250,6 +258,7 @@ datafile *open_datafile(char *filename, char separator,
 	    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	    free_datafile(f);
 	    free(statenames);
+	    free(token_bounds);
 	    return NULL;
 	  }
 
@@ -374,12 +383,85 @@ void close_datafile(datafile *file){
     file->is_open = 0;
   }
 
-  /* This function could probably also release the memory of "file", 
-     leaving a pointer to "nowhere". */
+  /* Release the memory of file struct. */
+  free_datafile(file);
 }
 
 
-void free_datafile(datafile *f){
+int nextline_tokens(datafile *f, char separator, char ***tokens){
+
+  char line[MAX_LINELENGTH];
+  char *token;
+  int num_of_tokens = 0;
+  int *token_bounds;
+  int i, j;
+
+  if(!f || !tokens){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return -1;
+  }
+
+  if(!(f->is_open)){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return -1;
+  }
+
+  if(fgets(line, MAX_LINELENGTH, f->file) == NULL)
+    return -1;
+
+  num_of_tokens = count_tokens(line, NULL, 0, &separator, 1, 0, 0);
+  token_bounds = tokenise(line, num_of_tokens, 0, &separator, 1, 0, 0);
+  
+  if(num_of_tokens == 0){
+    free(token_bounds);
+    return 0;
+  }
+
+  *tokens = (char **)
+    calloc(f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens,
+	   sizeof(char *));
+
+  if(!tokens){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(token_bounds);
+    return -1;
+  }
+
+
+  for(i = 0;
+      i < (f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens);
+      i++){
+
+    token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
+			    sizeof(char));
+
+    if(!token){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free_datafile(f);
+      for(j = 0; j < i; j++)
+	free(*tokens[j]);
+      free(token_bounds);
+      return -1;
+    }
+
+    strncpy(token, &(line[token_bounds[2*i]]),
+	    token_bounds[2*i+1] - token_bounds[2*i]);
+
+    token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
+
+    *tokens[i] = token;
+  }
+
+  free(token_bounds);
+
+  /* Return the number of acquired tokens. */
+  return f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens;
+
+}
+
+
+/* Frees the memory used by (possibly partially allocated) datafile f. */
+static void free_datafile(datafile *f){
   
   int j;
   if(!f)

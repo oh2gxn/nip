@@ -1,12 +1,12 @@
 /*
  * Definitions for the bison parser and for other parsers.
- * $Id: parser.h,v 1.30 2004-06-29 13:28:51 mvkorpel Exp $
+ * $Id: parser.h,v 1.31 2004-06-30 07:58:52 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
 #define __PARSER_H__
 
-#define MAX_LINELENGTH 1000
+#define MAX_LINELENGTH 10000
 
 /* Comment character in input files.
  * After this, the rest of the line is ignored.
@@ -90,15 +90,24 @@ datafile *open_datafile(char *filename, char separator,
 			int write, int nodenames);
 
 
-/* Closes a file described by the datafile struct. */
+/*
+ * Closes a file described by the datafile struct.
+ * Also releases the memory of the datafile struct.
+ */
 void close_datafile(datafile *file);
 
 
-/* Frees the memory used by (possibly partially allocated) datafile f. */
-void free_datafile(datafile *f);
+/*
+ * Gets the tokens (separated by separator) on the next line of
+ * the given file. Allocates memory for an array of strings and its
+ * contents.
+ * Returns the number of tokens found.
+ * Negative number indicates error or end of file.
+ */
+int nextline_tokens(datafile *f, char separator, char ***tokens);
 
 
-/* Gets the next token from the input file.
+/* Gets the next token from the hugin .net file.
  * Returns the token. token_length is the length of the token.
  * The token is a NUL terminated string.
  * *token_length doesn't include the NULL character.
