@@ -1,3 +1,10 @@
+/*
+ * Clique.c $Id: Clique.c,v 1.42 2004-06-11 12:34:18 mvkorpel Exp $
+ * Functions for handling cliques and sepsets.
+ * Includes evidence handling and propagation of information
+ * in the join tree.
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "Clique.h"

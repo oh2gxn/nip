@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.38 2004-06-11 11:42:07 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.39 2004-06-11 12:34:18 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -58,17 +58,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
 %type <name> labelDeclaration
 
 /* Grammar follows */
-/* NOT READY!!! 
- * TODO:
- * - make compatible with the actual Hugin files
- * - find out what to do with the parsed stuff! */
 
-/* A PROBLEM: The graph is not entirely known until the end of the 
- * file has been reached, but the cliques are needed immediately!
- * Solutions:
- * - defer the creation of jointree and the initialisation of cliques 
- *   until the graph is ready 
- * - X ? */
 %%
 input:  nodes potentials {
 
@@ -100,7 +90,7 @@ input:  nodes potentials {
 ;
 
 
-nodes:    /* empty */ { init_new_Graph() }         
+nodes:    /* empty */ { init_new_Graph() }
 |         nodeDeclaration nodes {/* a variable added */}
 ;
 
@@ -113,7 +103,7 @@ potentials:    /* empty */ {/* list of initialisation data ready */}
 nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   /* new_variable() */
   Variable v = new_variable($2, get_nip_label(), get_nip_statenames(), 
-			    nip_strings_parsed);
+			    get_nip_strings_parsed());
   free($2);
   reset_strings();
   add_pvar(v);
@@ -143,17 +133,17 @@ statesDeclaration:    token_states '=' '(' strings ')' ';' {
 ;
 
 
-positionDeclaration:  token_position '=' '(' NUMBER NUMBER ')' ';' {/* ignore */}
+positionDeclaration:  token_position '=' '(' NUMBER NUMBER ')' ';'
 ;
 
 
-unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
+unknownDeclaration:  UNQUOTED_STRING '=' value ';'
 ;
 
 
 potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}' { 
   int i;
-  Variable *vars = (Variable*) calloc(nip_symbols_parsed + 1,
+  Variable *vars = (Variable*) calloc(get_nip_symbols_parsed() + 1,
 				      sizeof(Variable));
   Variable *parents = make_variable_array();
   double *doubles = $8;
@@ -162,14 +152,14 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
     YYABORT;
 
 #ifdef DEBUG_BISON
-  printf("nip_symbols_parsed = %d\n", nip_symbols_parsed);
+  printf("nip_symbols_parsed = %d\n", get_nip_symbols_parsed());
 #endif
 
   vars[0] = $3; 
-  for(i = 0; i < nip_symbols_parsed; i++)
+  for(i = 0; i < get_nip_symbols_parsed(); i++)
     vars[i + 1] = parents[i];
 
-  add_initData(create_Potential(vars, nip_symbols_parsed + 1, doubles),
+  add_initData(create_Potential(vars, get_nip_symbols_parsed() + 1, doubles),
 	       vars[0], parents); 
   free(doubles); /* the data was copied at create_Potential */
   reset_doubles();
@@ -192,7 +182,7 @@ child:        UNQUOTED_STRING { $$ = get_variable($1); free($1)}
 
 
 symbols:       /* end of list */
-             | symbol symbols { /* add_symbol(get_variable($1)) */ }
+             | symbol symbols
 ;
 
 
@@ -201,7 +191,7 @@ symbol:       UNQUOTED_STRING { add_symbol(get_variable($1)); free($1)}
 
 
 strings:       /* end of list */
-             | string strings { /* add_string($1) */ }
+             | string strings
 ;
 
 
@@ -210,8 +200,8 @@ string:        QUOTED_STRING { add_string($1) }
 
 
 numbers:     /* end of list */
-           | num numbers { /* add_double($1) */ }
-           | '(' numbers ')' numbers {/* ignore brackets */}
+           | num numbers
+           | '(' numbers ')' numbers
 ;
 
 
@@ -220,13 +210,13 @@ num:       NUMBER { add_double($1) }
 
 
 ignored_numbers:     /* end of list */
-           | NUMBER ignored_numbers { /* ignore the NUMBER */ }
-           | '(' ignored_numbers ')' ignored_numbers {/* ignore brackets */}
+           | NUMBER ignored_numbers
+           | '(' ignored_numbers ')' ignored_numbers
 ;
 
 
-value:         QUOTED_STRING { free($1) } /* ignore */
-|              ignored_numbers { /* ignore */ }
+value:         QUOTED_STRING { free($1) }
+|              ignored_numbers
 ;
 
 

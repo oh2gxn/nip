@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.28 2004-06-11 11:42:07 mvkorpel Exp $
+ * $Id: parser.c,v 1.29 2004-06-11 12:34:18 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -14,35 +14,35 @@
 #define DEBUG_PARSER
 */
 
-varlink nip_first_var = NULL; /* global stuff, sad but true */
-varlink nip_last_var = NULL;
-int nip_vars_parsed = 0;
+static varlink nip_first_var = NULL;
+static varlink nip_last_var = NULL;
+static int nip_vars_parsed = 0;
 
-varlink nip_first_temp_var = NULL;
-varlink nip_last_temp_var = NULL;
-int nip_symbols_parsed = 0;
+static varlink nip_first_temp_var = NULL;
+static varlink nip_last_temp_var = NULL;
+static int nip_symbols_parsed = 0;
 
-Graph *nip_graph = NULL;
-Clique *nip_cliques = NULL;
-int nip_num_of_cliques = 0;
+static Graph *nip_graph = NULL;
+static Clique *nip_cliques = NULL;
+static int nip_num_of_cliques = 0;
 
-doublelink nip_first_double = NULL;
-doublelink nip_last_double = NULL;
-int nip_doubles_parsed = 0;
+static doublelink nip_first_double = NULL;
+static doublelink nip_last_double = NULL;
+static int nip_doubles_parsed = 0;
 
-stringlink nip_first_string = NULL;
-stringlink nip_last_string = NULL;
-int nip_strings_parsed = 0;
+static stringlink nip_first_string = NULL;
+static stringlink nip_last_string = NULL;
+static int nip_strings_parsed = 0;
 
-initDataLink nip_first_initData = NULL;
-initDataLink nip_last_initData = NULL;
-int nip_initData_parsed = 0;
+static initDataLink nip_first_initData = NULL;
+static initDataLink nip_last_initData = NULL;
+static int nip_initData_parsed = 0;
 
 /* The current input file */
-FILE *nip_parser_infile = NULL;
+static FILE *nip_parser_infile = NULL;
 
 /* Is there a file open? 0 if no, 1 if yes. */
-int nip_file_open = 0;
+static int nip_file_open = 0;
 
 static char** nip_statenames;
 static char* nip_label;
@@ -549,4 +549,24 @@ void set_nip_label(char *label){
 char* get_nip_label(){
 
   return nip_label;
+}
+
+int get_nip_symbols_parsed(){
+
+  return nip_symbols_parsed;
+}
+
+int get_nip_strings_parsed(){
+
+  return nip_strings_parsed;
+}
+
+int get_nip_num_of_cliques(){
+
+  return nip_num_of_cliques;
+}
+
+Clique *get_nip_cliques(){
+
+  return nip_cliques;
 }

@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.17 2004-06-08 13:00:37 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.18 2004-06-11 12:34:18 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -25,14 +25,6 @@ struct varlist {
 
 typedef struct varlist varelement;
 typedef varelement *varlink;
-
-extern varlink nip_first_var; /* global stuff, sad but true */
-extern varlink nip_last_var;
-extern int nip_vars_parsed;
-
-extern varlink nip_first_temp_var;
-extern varlink nip_last_temp_var;
-extern int nip_symbols_parsed;
 
 extern Graph *nip_graph;
 extern Clique *nip_cliques;
@@ -74,16 +66,6 @@ struct initDataList {
 
 typedef struct initDataList initDataElement;
 typedef initDataElement *initDataLink;
-
-extern initDataLink nip_first_initData;
-extern initDataLink nip_last_initData;
-extern int nip_initData_parsed;
-
-/* The current input file */
-extern FILE *nip_parser_infile;
-
-/* Is there a file open? 0 if no, 1 if yes. */
-extern int nip_file_open;
 
 /* Opens an input file. Returns 0 if file was opened or if some file was
  * already open. Returns ERROR_GENERAL if an error occurred
@@ -173,5 +155,13 @@ char** get_nip_statenames();
 
 void set_nip_label(char *label);
 char* get_nip_label();
+
+int get_nip_symbols_parsed();
+
+int get_nip_strings_parsed();
+
+int get_nip_num_of_cliques();
+
+Clique *get_nip_cliques();
 
 #endif /* __PARSER_H__ */

@@ -16,6 +16,8 @@ int yyparse();
 int main(int argc, char *argv[]){
 
   int i, retval, temp;
+  int nip_num_of_cliques;
+  Clique *nip_cliques;
 
 #ifdef PRINT_POTENTIALS
   int j;
@@ -48,6 +50,9 @@ int main(int argc, char *argv[]){
   if(retval != 0)
     return retval;
   /* The input file has been parsed. -- */
+
+  nip_cliques = get_nip_cliques();
+  nip_num_of_cliques = get_nip_num_of_cliques();
 
   /* propagation: some action */
   /*

@@ -1,3 +1,8 @@
+/*
+ * potential.c $Id: potential.c,v 1.30 2004-06-11 12:34:18 mvkorpel Exp $
+ * Functions for handling potentials. 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
