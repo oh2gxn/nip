@@ -9,14 +9,14 @@
 #include "parser.h"
 #include "nip.h"
 
-/*
+
 #define FOO
-*/
+
 
 int main(int argc, char *argv[]){
   
   int i;
-  int n = atoi(argv[2]);
+  int n;
 
   Nip model;
 
@@ -39,6 +39,19 @@ int main(int argc, char *argv[]){
   Clique *cl2 = NULL;
   Sepset s;
   Graph *g;
+  datafile* dataf;
+
+  if(argc > 3)
+    n = atoi(argv[3]);
+  else if(argc > 1)
+    n = atoi(argv[argc - 1]);
+  else{
+    printf("Usage: ./memleaktest <net> <data> <integer>\n");
+    printf("Where <net> is the name of a Hugin .net file,\n");
+    printf("<data> is the name of a data file, and\n");
+    printf("<integer> is the number of iterations for the test.\n");
+    return 0;
+  }
 
   /* This works OK, no memory leaks. */
   printf("Allocating and freeing potentials:\n");
@@ -145,6 +158,19 @@ int main(int argc, char *argv[]){
   }
   printf("\rDone.                                             \n");
 
+
+  /* TODO: Test open_datafile() */
+  if(argc > 3){
+    printf("\nOpening and closing the datafile:\n");
+    for(i = 0; i < n; i++){
+      dataf = open_datafile(argv[2], ',', 0, 1);
+      printf("\rIteration %d of %d                               ", i + 1, n); 
+      close_datafile(dataf);
+    }
+    printf("\rDone.                                             \n");
+  }
+
+
   /* Free some memory */
   first = get_first_variable();
   last = get_last_variable();
@@ -173,17 +199,15 @@ int main(int argc, char *argv[]){
 
 #endif
 
-
-  /* TODO: Test open_datafile() */
-
-
-  printf("\nParsing and freeing models:\n");
-  for(i = 0; i < n; i++){
-    model = parse_model(argv[1]);
-    printf("\rIteration %d of %d                               ", i + 1, n);
-    free_model(model);
+  if(argc > 2){
+    printf("\nParsing and freeing models:\n");
+    for(i = 0; i < n; i++){
+      model = parse_model(argv[1]);
+      printf("\rIteration %d of %d                               ", i + 1, n);
+      free_model(model);
+    }
+    printf("\rDone.                                             \n");
   }
-  printf("\rDone.                                             \n");
 
   return 0;
 }
