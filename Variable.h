@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.26 2004-06-22 13:19:50 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.27 2004-06-24 08:24:05 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -68,6 +68,12 @@ unsigned long get_id(Variable v);
 /* Returns the symbol of the Variable. It is a string. 
  * (or NULL if nullpointer given) */
 char *get_symbol(Variable v);
+
+
+/* Gives the numerical representation of the variable state. 
+ * Numbers are [0 ... <cardinality-1>] or -1 if the Variable doesn't have
+ * such a state. This function is needed when parsing data. */
+int get_stateindex(Variable v, char *state);
 
 
 /* Tells the length of the list of Variables. */

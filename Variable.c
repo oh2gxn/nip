@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.26 2004-06-22 13:19:50 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.27 2004-06-24 08:24:05 jatoivol Exp $
  */
 
 #include <string.h>
@@ -146,6 +146,17 @@ char *get_symbol(Variable v){
   if(v)
     return v->symbol;
   return NULL;
+}
+
+
+int get_stateindex(Variable v, char *state){
+  int i;
+  if(!v->statenames)
+    return -1;
+  for(i = 0; i < v->cardinality; i++)
+    if(strcmp(state, v->statenames[i]) == 0)
+      return i;
+  return -1;
 }
 
 
