@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.27 2004-06-04 06:29:23 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.28 2004-06-04 07:09:04 jhollmen Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -44,7 +44,7 @@
 %token <name> UNQUOTED_STRING
 %token <numval> NUMBER
 %type <stringarray> strings statesDeclaration
-%type <doublearray> numbers dataList
+%type <doublearray> dataList
 %type <variable> nodeDeclaration symbol
 /* %type <variablearray> symbols */
 %type <name> labelDeclaration
@@ -139,6 +139,13 @@ potentialDeclaration: token_potential '(' symbol '|' symbols ')' '{' dataList '}
   for(i = 0; i < nip_symbols_parsed; i++)
     vars[i + 1] = parents[i];
 
+
+  /* Yritelmiä metsästää  bugia */
+  fprintf(stdout, "Datatesti tiedostossa huginnet.y:\n");
+  fprintf(stdout, "\n%f %f %f% f% f% f% f% f% f% f% f %f %f %f %f %f %f %f %f %f %f %f %f %f\n", $8);
+  fflush(NULL);
+
+
   p = create_Potential(vars, nip_symbols_parsed + 1, $8);
 
   printf("WTF happens here !?!?\n");
@@ -176,11 +183,14 @@ string:        QUOTED_STRING { add_string($1) }
 
 
 /* This should ignore all brackets between numbers! */
-numbers:       /* end of list */ { $$ = make_double_array() }
-             | num numbers { /* add_double($1) */ }
-             | '(' numbers ')' {/* ignore */} // nested lists?
-             | '(' numbers ')' '(' numbers ')' {/* ignore */} // nested lists?
-;
+numbers:       /* end of list */ //{ $$ = make_double_array() }
+               | num numbers { /* add_double($1) */ };
+
+
+
+//           | '(' numbers ')' {/* ignore */} // nested lists?
+//           | '(' numbers ')' '(' numbers ')' {/* ignore */} // nested lists?
+// 
 
 
 num:           NUMBER { add_double($1) }
@@ -193,7 +203,10 @@ value:         QUOTED_STRING { free($1) /* ignore */}
 ;
 
 
-dataList: token_data '=' '(' numbers ')' ';' { $$ = $4 }
+// dataList: token_data '=' '(' numbers ')' ';' { $$ = $4 }
+dataList: token_data '=' '(' numbers ')' ';' { $$ = make_double_array() }
+
+
 ;
 
 %%

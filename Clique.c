@@ -88,11 +88,32 @@ potential create_Potential(Variable variables[], int num_of_vars,
 			   double data[]){
   // THIS IS TRICKY: we have to reorder the array and stuff...
   int i, j, card_temp, index, size_of_data = 1;
+
+  /* Kommentoidaan t‰m‰ pois, ja v‰‰nnet‰‰n samat malloc:in avulla
+
   int cardinality[num_of_vars];
   int indices[num_of_vars];
-  int reorder[num_of_vars];
+  int reorder[num_of_vars]; */
+
+  int *cardinality;
+  int *indices;
+  int *reorder;
+
   unsigned long temp;
   potential p;
+
+
+  if((cardinality = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
+	  fprintf(stderr, "Homma kusee!!! (malloc, \n");
+  }
+  if((indices = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
+	  fprintf(stderr, "Homma kusee!!! (malloc, \n");
+  }
+  if((reorder = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
+	  fprintf(stderr, "Homma kusee!!! (malloc, \n");
+  }
+  fprintf(stdout, "Homma toimii!\n");
+  fflush(NULL);
 
 #ifdef DEBUG_CLIQUE
   printf("In create_Potential: num_of_vars = %d\n", num_of_vars);
