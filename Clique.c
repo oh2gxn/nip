@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h> // DEBUG!!
 #include "Clique.h"
 #include "Variable.h"
 #include "potential.h"
@@ -98,6 +99,9 @@ potential create_Potential(Variable variables[], int num_of_vars,
   for(i = 0; i < num_of_vars; i++)
     indices[i] = 0;
 
+  /* DEBUG!!! */
+  //printf("Debug 1\n");
+
   /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
   for(i = 0; i < num_of_vars; i++){
@@ -107,6 +111,9 @@ potential create_Potential(Variable variables[], int num_of_vars,
 	indices[j]++; // counts how many greater variables there are
     }
   }
+
+  /* DEBUG!!! */
+  //printf("Debug 2\n");
   
   /* Figure out some stuff */
   for(i = 0; i < num_of_vars; i++){
@@ -114,6 +121,9 @@ potential create_Potential(Variable variables[], int num_of_vars,
     size_of_data *= variables[i]->cardinality; // optimal?
     cardinality[i] = variables[reorder[i]]->cardinality;
   }
+
+  /* DEBUG!!! */
+  //printf("Debug: size of data = %d\n", size_of_data);
 
   /* Create a potential */
   p = make_potential(cardinality, num_of_vars, NULL);
@@ -128,14 +138,20 @@ potential create_Potential(Variable variables[], int num_of_vars,
     index = indices[reorder[0]];
     card_temp = 1;
     /* THE mapping */
-    for(i = 1; i < num_of_vars; i++){
-      card_temp *= cardinality[i-1];
-      index += indices[reorder[i]] * card_temp;
+    for(j = 1; j < num_of_vars; j++){
+      card_temp *= cardinality[j-1];
+      index += indices[reorder[j]] * card_temp;
     }
 
     // set the value (in a little ugly way)
     p->data[i] = data[index];
+
+    /* DEBUG!!! */
+    //printf("Debug i=%d\n", i);
   }
+
+  /* DEBUG!!! */
+  //printf("Debug return...\n");
 
   return p;
 }

@@ -63,23 +63,32 @@ int main(){
   add_Sepset(clique_pile[2], sepset_pile[1]);
 
   /* initialization: This information is usually parsed from a file. */
-  potential model[3];
+  potential model[4]; // the fourth potential is extra
   Variable parentsA[2];
   Variable parentsC[2];
   Variable parentsE[1];
   cardinality[0] = 3;
   cardinality[1] = 4;
   cardinality[2] = 2; /* note1 */
-  model[0]=make_potential(cardinality, 3, potentialA);
+  model[0] = make_potential(cardinality, 3, potentialA);
 
   cardinality[0] = 4;
   cardinality[1] = 2; /* note1 */
   cardinality[2] = 3;
-  model[1]=make_potential(cardinality, 3, potentialC);
+  model[1] = make_potential(cardinality, 3, potentialC);
 
   cardinality[0] = 3;
   cardinality[1] = 2;
-  model[2]=make_potential(cardinality, 2, potentialE);
+  model[2] = make_potential(cardinality, 2, potentialE);
+
+  /* The extra potential for testing (should be equal to model[1]) */
+  // variables C, B, D, and the data which is ordered accordingly
+  Variable set_of_variables[3] = {variables[2], variables[1], variables[3]}; 
+  model[3] = create_Potential(set_of_variables, 3, potentialC2);
+
+  /* A test */
+  for(i = 0; i < 24; i++)
+    printf("Correct=%f ,Reordered=%f\n", model[1]->data[i], model[3]->data[i]);
 
   parentsA[0] = variables[1]; parentsA[1] = variables[2];
   parentsC[0] = variables[1]; parentsC[1] = variables[3];
@@ -89,9 +98,9 @@ int main(){
   initialise(clique_pile[2], variables[4], parentsE, model[2]);
 
   /* DEBUG */
-  printf("BCD before evidence:\n");
-  for(i = 0; i < 24; i++) /* note1 */
-    printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);
+  //printf("BCD before evidence:\n");
+  //for(i = 0; i < 24; i++) /* note1 */
+  //  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);
 
   /* observation entry: This information is from the given data. */
   /* data please? anyone? */
@@ -99,9 +108,9 @@ int main(){
   enter_evidence(clique_pile[1], variables[3], probD);
 
   /* DEBUG */
-  printf("BCD after evidence:\n");
-  for(i = 0; i < 24; i++) /* note1 */
-    printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);
+  //printf("BCD after evidence:\n");
+  //for(i = 0; i < 24; i++) /* note1 */
+  //  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);
 
   /* propagation: some action */
   for(i = 0; i < 3; i++)
@@ -110,9 +119,9 @@ int main(){
   distribute_evidence(clique_pile[1]);
 
   /* DEBUG */
-  printf("BCD after propagation:\n");
-  for(i = 0; i < 24; i++) /* note1 */
-    printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);
+  //printf("BCD after propagation:\n");
+  //for(i = 0; i < 24; i++) /* note1 */
+  //  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);
 
   /* marginalisation */
   printf("Marginalisation returned %d. (0 is OK)\n", 
@@ -127,9 +136,9 @@ int main(){
   normalise(result, 3); /* note1 */
 
   /* DEBUG */
-  printf("ABC after propagation:\n");
-  for(i = 0; i < 24; i++) /* note1 */
-    printf("potential[%d] = %f\n", i, clique_pile[0]->p->data[i]);
+  //printf("ABC after propagation:\n");
+  //for(i = 0; i < 24; i++) /* note1 */
+  //  printf("potential[%d] = %f\n", i, clique_pile[0]->p->data[i]);
   
   printf("Normalised probability of A:\n");
   for(i = 0; i < 3; i++) /* note1 */
