@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.34 2005-02-10 15:32:38 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.35 2005-02-14 15:45:58 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -42,7 +42,9 @@
  *       - "HOUSTON, WE HAVE A PROBLEM!"... 
  *         Do we know which are the parents and which are the children?
  *         - An obvious solution is to save an array of pointers to the 
- *           family members (or just parents) to the child Variable
+ *           family members (or just parents) in the child Variable
+ *         - How about specialized pointers for this job, so that repeated
+ *           computing of the same things is avoided..?
  *           
  *     - initialise with saved potentials? (see parser.c line 1115)
  *
@@ -179,6 +181,7 @@ TimeSeries read_timeseries(Nip model, char* filename){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
+  ts->model = model;
 
   df = open_datafile(filename, ',', 0, 1);
   if(df == NULL){
@@ -938,6 +941,8 @@ TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
    * - find out the result by iterating backwards the best choices
    */
 
+  /* NOT IMPLEMENTED YET! */
+  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   return mlss;
 }
 
@@ -945,9 +950,10 @@ TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
 /* Teaches the given model according to the given time series with 
  * EM-algorithm. Returns an error code as an integer. */
 int em_learn(Nip model, TimeSeries observations){
+
+  /* NOT IMPLEMENTED YET! */
+  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   return ERROR_GENERAL;
-
-
 }
 
 

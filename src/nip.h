@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.17 2005-02-10 15:32:38 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.18 2005-02-14 15:45:58 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -35,11 +35,8 @@ typedef nip_type *Nip;
 
 typedef struct{
   Nip model;          /* The model (contains the variables and state names) */
-
   Variable *hidden;   /* An array containing the latent variables */
-
   int num_of_hidden;  /* Number of latent variables */
-
   Variable *observed; /* An array containing the observed variables ??? */
 
   int length;
@@ -141,17 +138,18 @@ Variable get_Variable(Nip model, char* symbol);
 void make_consistent(Nip model);
 
 
-/* Computes the most likely state sequence of the variables, given the 
- * time series. In other words, this function implements the idea also 
- * known as the Viterbi algorithm. 
+/* Computes the most likely state sequence of the variables, given the time
+ * series. In other words, this function implements the idea also known as
+ * the Viterbi algorithm. (The model is included in the TimeSeries.)  
  * NOTE: this is not implemented yet! */
-TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts);
+TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts);
 
 
 /* Teaches the given model according to the given time series with 
  * EM-algorithm. Returns an error code as an integer. 
- * NOTE: this is not implemented yet! */
-int em_learn(Nip model, TimeSeries observations);
+ * NOTE:  this is not implemented yet! 
+ * NOTE2: the model is included in the TimeSeries */
+int em_learn(TimeSeries observations);
 
 
 /********************************************************************
