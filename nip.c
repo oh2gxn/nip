@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.9 2004-08-23 13:55:46 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.10 2004-08-26 10:58:56 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -116,6 +116,11 @@ int insert_soft_evidence(Nip model, char* variable, double* distribution){
 
 Variable get_Variable(Nip model, char* symbol){
 
+  if(!model){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return NULL;
+  }
+
   return get_variable(model->first_var, symbol);
 
 }
@@ -139,3 +144,58 @@ void make_consistent(Nip model){
 
   return;
 }
+
+
+double *get_probability(Nip model, Variable v, int print){
+
+  Clique clique_of_interest;
+  double *result;
+  int cardinality;
+  int i;
+  char *symbol;
+
+  if(!model){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return NULL;
+  }
+
+  if(!v){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return NULL;
+  }
+
+  cardinality = number_of_values(v);
+  result = (double *) calloc(cardinality, sizeof(double));
+  if(!result){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  /* 1. Find the Clique that contains the family of 
+   *    the interesting Variable */
+  clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				   &v, 1);
+  if(!clique_of_interest){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  /* 2. Marginalisation (the memory must have been allocated) */
+  marginalise(clique_of_interest, v, result);
+
+  /* 3. Normalisation */
+  normalise(result, cardinality);
+
+  /* 4. Print result if desired */
+  if(print){
+    symbol = get_symbol(v);
+    for(i = 0; i < cardinality; i++)
+      printf("P(%s=%s) = %f\n", symbol, (v->statenames)[i], result[i]);
+    printf("\n");
+  }
+
+  /* 5. Return the result */
+  return result;
+
+}
+

@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.35 2004-08-25 11:14:41 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.36 2004-08-26 10:58:56 mvkorpel Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -69,8 +69,8 @@ int equal_variables(Variable v1, Variable v2);
 unsigned long get_id(Variable v);
 
 
-/* Returns the symbol of the Variable. It is a string. 
- * (or NULL if nullpointer given) */
+/* Returns the symbol of the Variable (a reference). It is a string 
+ * (or NULL if nullpointer given). */
 char *get_symbol(Variable v);
 
 

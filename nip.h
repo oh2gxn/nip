@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.3 2004-08-10 08:49:34 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.4 2004-08-26 10:58:56 mvkorpel Exp $
  */
 
 #ifndef __NIP_H__
@@ -52,5 +52,6 @@ void make_consistent(Nip model);
  *       the model 
  */
 
+double *get_probability(Nip model, Variable v, int print);
 
 #endif /* __NIP_H__ */
