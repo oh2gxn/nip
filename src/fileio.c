@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.7 2004-04-01 12:39:31 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.8 2004-05-05 13:40:16 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -144,7 +144,7 @@ int *tokenise(const char s[], int n, int mode){
       }
     }
     else if(state == 1 &&
-	    (s[i] == ' ') || (s[i] == '\t') || (s[i] == '\n')){
+	    ((s[i] == ' ') || (s[i] == '\t') || (s[i] == '\n'))){
       indices[j++] = i;
       state = 0;
     }
