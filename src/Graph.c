@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.44 2004-08-30 11:07:00 mvkorpel Exp $
+ * Graph.c $Id: Graph.c,v 1.45 2005-03-21 12:45:59 jatoivol Exp $
  */
 
 #include <string.h>
@@ -8,8 +8,8 @@
 #include "Graph.h"
 #include "Variable.h"
 #include "Clique.h"
-#include "grphmnp/Heap.h"
-#include "grphmnp/cls2clq.h"
+#include "Heap.h"
+#include "cls2clq.h"
 #include "errorhandler.h"
 
 static void sort_gr_variables(Graph* G);

@@ -1,13 +1,13 @@
 /*
- * Heap.h $Id: Heap.h,v 1.14 2004-08-23 13:55:53 mvkorpel Exp $
+ * Heap.h $Id: Heap.h,v 1.6 2005-03-21 12:45:59 jatoivol Exp $
  */
 
 #ifndef __HEAP_H__
 #define __HEAP_H__
 
-#include "../Variable.h"
-#include "../Graph.h"
-#include "../Clique.h"
+#include "Variable.h"
+#include "Graph.h"
+#include "Clique.h"
 
 #define PARENT(i) ((i-1)/2)
 #define LEFT(i) (2*i+1)

@@ -1,11 +1,11 @@
 /*
- * cls2clq.h $Id: cls2clq.h,v 1.4 2004-08-12 14:13:48 jatoivol Exp $
+ * cls2clq.h $Id: cls2clq.h,v 1.1 2005-03-21 12:45:59 jatoivol Exp $
  */
 
 #ifndef __CLS2CLQ_H__
 #define __CLS2CLQ_H__
 
-#include "../Clique.h"
+#include "Clique.h"
 
 struct clustlist {
     struct clustlist* next;

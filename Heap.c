@@ -1,12 +1,12 @@
 /*
- * Heap.c $Id: Heap.c,v 1.27 2004-08-23 13:55:53 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.10 2005-03-21 12:45:59 jatoivol Exp $
  */
 
 #include <stdlib.h>
-#include "../Variable.h"
-#include "../Graph.h"
+#include "Variable.h"
+#include "Graph.h"
 #include "Heap.h"
-#include "../errorhandler.h"
+#include "errorhandler.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.111 2005-03-18 15:40:49 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.112 2005-03-21 12:45:59 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -12,7 +12,7 @@
 #include "Variable.h"
 #include "potential.h"
 #include "errorhandler.h"
-#include "grphmnp/Heap.h"
+#include "Heap.h"
 
 /*
 #define DEBUG_CLIQUE

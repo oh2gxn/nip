@@ -1,11 +1,11 @@
 /*
- * cls2clq.c $Id: cls2clq.c,v 1.7 2004-08-23 13:18:33 mvkorpel Exp $
+ * cls2clq.c $Id: cls2clq.c,v 1.1 2005-03-21 12:45:59 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <string.h>
 #include "cls2clq.h"
-#include "../Clique.h"
+#include "Clique.h"
 
 Cluster_list* new_cl_item(int array_size, Cluster_list* next, int* var_set)
 {
