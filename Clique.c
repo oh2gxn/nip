@@ -159,7 +159,7 @@ void message_pass(Clique c1, Sepset s, Clique c2){
     if(equal_variables(*((c1->variables)[i]), *((s->variables)[j])))
       j++;
     else {
-      source_vars[k] = i;
+      source_vars[k] = i; /* --- DOES j OVERFLOW ??? --- */
       k++;
     }
   } /* then: do da job */
@@ -172,7 +172,7 @@ void message_pass(Clique c1, Sepset s, Clique c2){
     if(equal_variables(*((c2->variables)[i]), *((s->variables)[j])))
       j++;
     else {
-      extra_vars[k] = i;
+      extra_vars[k] = i; /* --- DOES j OVERFLOW ??? --- */
       k++;
     }
   } /* rest the case */
