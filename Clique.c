@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.83 2004-08-17 14:06:53 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.84 2004-08-17 14:39:50 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -317,8 +317,13 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
 
 
 int free_Sepset(Sepset s){
+
+  if(!s)
+    return 0;
+
   if(s->old->num_of_vars)
     free(s->variables);
+
   free_potential(s->old);
   free_potential(s->new);
    free(s->cliques);
