@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.16 2004-08-17 12:59:54 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.17 2004-08-17 14:07:02 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -79,6 +79,7 @@ Heap* build_heap(Graph* Gm)
 
         hi->primary_key = edges_added(Gm, hi->Vs, hi->n);
         hi->secondary_key = cluster_weight(hi->Vs, hi->n);
+	hi->s = NULL; /* not a sepset heap */
     }
 
     free(Vs_temp);
@@ -131,7 +132,7 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
         hi->secondary_key =
 	  cluster_weight(cliques[i]->variables, cliques[i]->p->num_of_vars) +
 	  cluster_weight(cliques[j]->variables, cliques[j]->p->num_of_vars);
-
+	hi->Vs = NULL;
       }
 
     /* Check Cormen, Leiserson, Rivest */
@@ -319,6 +320,7 @@ void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 void free_heap(Heap* H){
 
   int i;
+  Sepset s = NULL;
 
   if(!H)
     return;
@@ -327,6 +329,11 @@ void free_heap(Heap* H){
     /* Free each heap item */
     free((H->heap_items[i]).Vs);
   }
+
+  while(!extract_min_sepset(H, &s)){
+    free_Sepset(s);
+  }
+  
   free(H->heap_items);
 
   free(H);

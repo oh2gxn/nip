@@ -234,6 +234,7 @@ int main(int argc, char *argv[]){
   /* Allocate some space for the intermediate potentials */
   timeslice_sepsets = (potential *) calloc(timeseries->datarows + 1, 
 					   sizeof(potential));
+
   /* Initialise intermediate potentials */
   for(t = 0; t <= timeseries->datarows; t++){
     timeslice_sepsets[t] = make_potential(cardinalities, num_of_nexts, NULL);
