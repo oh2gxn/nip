@@ -1,3 +1,6 @@
+# Makefile for the "nip" project.
+# $Id: Makefile,v 1.11 2004-06-03 07:46:42 mvkorpel Exp $
+
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
 POT_SRCS=potential.c potentialtest.c
