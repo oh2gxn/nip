@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.23 2004-07-08 12:51:55 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.24 2004-08-23 08:56:58 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -39,7 +39,7 @@ int set_pvalue(potential p, int indices[], double value);
 /* Mapping from flat index to n-dimensional index, where n is the number of
  * variables in potential p. Returns an error code. 
  * USUALLY NOT NEEDED outside of potential.c */
-int inverse_mapping(potential p, int big_index, int indices[]);
+int inverse_mapping(potential p, int flat_index, int indices[]);
 
 /* Method for marginalising over certain variables. Useful in message passing
  * from clique to sepset. It is best that sepsets have two static potentials 

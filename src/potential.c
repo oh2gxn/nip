@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.43 2004-08-20 10:00:27 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.44 2004-08-23 08:56:58 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -160,7 +160,7 @@ int set_pvalue(potential p, int indices[], double value){
 }
 
 
-int inverse_mapping(potential p, int big_index, int indices[]){
+int inverse_mapping(potential p, int flat_index, int indices[]){
 
   int x = p->size_of_data;
   int i;
@@ -170,8 +170,8 @@ int inverse_mapping(potential p, int big_index, int indices[]){
      has the smallest effect on the memory address */
   for(i = p->num_of_vars - 1; i >= 0; i--){
     x /= p->cardinality[i];
-    indices[i] = big_index / x;    /* integer division */
-    big_index -= indices[i] * x;
+    indices[i] = flat_index / x;    /* integer division */
+    flat_index -= indices[i] * x;
   }
 
   return NO_ERROR;

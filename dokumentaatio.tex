@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.4 2004-08-20 14:32:40 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.5 2004-08-23 08:56:57 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -121,7 +121,7 @@ The idea and mathematical formulas...
 \subsection{The functionality description}
 
 \subsubsection{The data structure}
-The data type ''Variable'' defined in \verb+Variable.h+ is a pointer 
+The data type {\it Variable} defined in \verb+Variable.h+ is a pointer 
 to a struct which has the following fields: 
 \begin{description}
 \item[symbol] is a short string used to identify the variable. Maximum
@@ -269,8 +269,12 @@ and will always have.
 
 
 \subsection{Other possibilities}
-
-How the stuff could also work...
+The Hugin net file parser is made with Bison and consequently the 
+\verb+yyparse+ function may not return a list of variables etc. This 
+makes it awkward to pass the results of parsing to the rest of the
+program. Our solution is to create a list of parsed variables in
+\verb+Variable.c+ but it could also be at \verb+parser.c+ in order to
+avoid having weird functions like \+get_parser_variable+.
 
 
 \newpage
@@ -298,11 +302,52 @@ How the stuff could also work...
 
 The idea and mathematical formulas...
 
+
 \subsection{The functionality description}
 %The interface + how the stuff works...
 \subsubsection{The data structure}
+The data type {\it potential} defined in \verb+potential.h+ is a
+pointer to a struct which contains the following fields:
+\begin{description}
+\item[size_of_data]
+
+\item[cardinality]
+
+\item[num_of_vars]
+
+\item[data]
+
+\end{description}
+
 
 \subsubsection{The functions}
+
+\begin{description}
+\item[make_potential(cardinality, num_of_vars, data)]
+
+\item[free_potential(p)]
+
+\item[copy_potential(source, destination)]
+
+\item[get_pvalue(p, indices)]
+
+\item[set_pvalue(p, indices, value)]
+
+\item[inverse_mapping(p, flat_index, indices)]
+
+\item[general_marginalise(source, destination, source_vars)]
+
+\item[total_marginalise(source, destination, variable)]
+
+\item[update_potential(numerator, denominator, target, extra_vars)]
+
+\item[update_evidence(numerator, denominator, target, var)]
+
+\item[init_potential(probs, target, extra_vars)]
+
+\item[print_potential(p)]
+
+\end{description}
 
 
 \subsection{Other possibilities}
