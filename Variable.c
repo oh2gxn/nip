@@ -1,7 +1,8 @@
 /*
- * Variable.c $Id: Variable.c,v 1.37 2004-08-12 09:47:21 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.38 2004-08-12 12:45:05 jatoivol Exp $
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "Variable.h"
@@ -123,7 +124,6 @@ Variable copy_variable(Variable v){
 
 
 void free_variable(Variable v){
-  /* FIXME: remove the Variable from the list ? */
   int i;
   if(v == NULL)
     return;

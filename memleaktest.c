@@ -42,6 +42,7 @@ int main(int argc, char *argv[]){
     /* Free the potential */
     free_potential(p);
   }
+  printf("\rDone.                                             \n");
 
   symbols = (char **) calloc(3, sizeof(char *));
   symbols[0] = (char *) calloc(2, sizeof(char));
@@ -99,6 +100,7 @@ int main(int argc, char *argv[]){
     }
     free(last);
   }
+  printf("\rDone.                                             \n");
 
   vars[0] = new_variable(symbols[0], names[0], states[0], cardinality[0]);
   vars[1] = new_variable(symbols[1], names[1], states[1], cardinality[1]);
@@ -117,7 +119,7 @@ int main(int argc, char *argv[]){
     free_Clique(cl[0]);
     free_Clique(cl[1]);
   }
-
+  printf("\rDone.                                             \n");
 
   /* TODO: Test the free_graph function */
   printf("\nAllocating and freeing Graphs:\n");
@@ -134,11 +136,21 @@ int main(int argc, char *argv[]){
     free_Clique(cl2[0]);
     free_Clique(cl2[1]);
   }
-
+  printf("\rDone.                                             \n");
 
   /* Free some memory */
+  first = get_first_variable();
+  last = get_last_variable();
+  reset_Variable_list();
+  while(first != NULL){
+    free_variable(first->data);
+    first = first->fwd;
+    if(first)
+      free(first->bwd);
+  }
+  free(last);
+  
   for(i = 0; i < 3; i++){
-    free_variable(vars[i]);
     free(states[i][0]);
     free(states[i][1]);
     free(symbols[i]);
@@ -160,7 +172,7 @@ int main(int argc, char *argv[]){
     printf("\rIteration %d of %d                               ", i + 1, n);
     free_model(model);
   }
-  printf("\n");
+  printf("\rDone.                                             \n");
 
   return 0;
 }
