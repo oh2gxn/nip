@@ -48,9 +48,10 @@ int main(int argc, char *argv[]){
     printf("%s ", clique_of_interest->variables[i]->symbol);
   printf("and %s.\n", clique_of_interest->variables[i]->symbol);
 
-
+  /*
   clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-				   observed, 2);
+                                   observed, 2);
+  */
   enter_evidence(clique_of_interest, observed[1], probD);
   printf("Entered evidence into the clique of ");
   for(i = 0; i < clique_of_interest->p->num_of_vars - 1; i++)
@@ -67,21 +68,21 @@ int main(int argc, char *argv[]){
   interesting = get_variable("A"); /* THE variable */
 
   if(!interesting){
-    printf("This is not interesting!\n");
+    printf("In bisontest.c : Interesting variable not found.\n");
     return 1;
   }
 
   clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				   &interesting, 1);
   if(!clique_of_interest){
-    printf("No clique found! Sorry.\n");
+    printf("In bisontest.c : No clique found! Sorry.\n");
     return 1;
   }  
     
   result = (double *) calloc(interesting->cardinality,
 			     sizeof(double));
   if(!result){
-    printf("No room for results! Sorry.\n");
+    printf("In bisontest.c : Calloc failed.\n");
     return 1;
   }
 
@@ -96,5 +97,6 @@ int main(int argc, char *argv[]){
     printf("result[%d] = %f\n", i, result[i]);
   /* To be continued... */
 
+  free(result);
   return 0;
 }
