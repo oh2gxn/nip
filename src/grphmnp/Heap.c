@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.23 2004-08-19 13:37:54 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.24 2004-08-19 15:11:38 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -363,6 +363,8 @@ void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
        Copy hi first, because Vs[0] must be the generating node */
     n_total = hi->n + min_cluster->n;
     cluster_vars = (Variable*) calloc(n_total, sizeof(Variable));
+    if(!cluster_vars)
+      return;
 
     /*for (i = 0; i < hi->n; i++)
       cluster_vars[i] = hi->Vs[i];
@@ -393,12 +395,19 @@ void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
     free(hi->Vs);
 
     hi->Vs = (Variable*) calloc(n_vars, sizeof(Variable));
+    if(!(hi->Vs)){
+      free(cluster_vars);
+      return;
+    }
+
     memcpy(hi->Vs, cluster_vars, n_vars*sizeof(Variable));
 
     free(cluster_vars);
 
     hi->primary_key = edges_added(G, hi->Vs, hi->n);
     hi->secondary_key = cluster_weight(hi->Vs, hi->n);
+
+    return;
 }
 
 void free_heap(Heap* H){

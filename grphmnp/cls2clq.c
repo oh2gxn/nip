@@ -1,5 +1,5 @@
 /*
- * cls2clq.c $Id: cls2clq.c,v 1.5 2004-08-12 14:13:48 jatoivol Exp $
+ * cls2clq.c $Id: cls2clq.c,v 1.6 2004-08-19 15:11:38 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -10,7 +10,15 @@
 Cluster_list* new_cl_item(int array_size, Cluster_list* next, int* var_set)
 {
     Cluster_list* cl_new = (Cluster_list*) malloc(sizeof(Cluster_list));
+    if(!cl_new)
+      return NULL;
+
     cl_new->variable_set = (int*) calloc(array_size, sizeof(int));
+    if(!(cl_new->variable_set)){
+      free(cl_new);
+      return NULL;
+    }
+
     memcpy(cl_new->variable_set, var_set, array_size*sizeof(int));
     cl_new->next = next;
 
@@ -59,8 +67,18 @@ Clique* cl2cliques(Variable* vars, Cluster_list* cl_head, int n_cliques, int n)
 {
     int n_vars, i;
     Cluster_list* cl_i;
-    Clique* cliques = (Clique*) calloc(n_cliques, sizeof(Clique));
-    Variable* clique_vars = (Variable*) calloc(n, sizeof(Variable));
+    Clique* cliques;
+    Variable* clique_vars;
+
+    cliques = (Clique*) calloc(n_cliques, sizeof(Clique));
+    if(!cliques)
+      return NULL;
+
+    clique_vars = (Variable*) calloc(n, sizeof(Variable));
+    if(!clique_vars){
+      free(cliques);
+      return NULL;
+    }
 
     for (cl_i = cl_head; cl_i != NULL; cl_i = cl_i->next)
     {

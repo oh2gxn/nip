@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.42 2004-08-19 13:37:34 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.43 2004-08-19 15:11:27 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -33,7 +33,7 @@ Variable new_variable(const char* symbol, const char* name,
   /* NOTE: This id-stuff may overflow if variables are created and 
    * freed over and over again. */
   static long id = VAR_MIN_ID;
-  int i;
+  int i, j;
   double *dpointer;
   Variable v;
   varlink new;
@@ -64,22 +64,44 @@ Variable new_variable(const char* symbol, const char* name,
     v->name[0] = '\0';
 
   if(states){
+
     v->statenames = (char **) calloc(cardinality, sizeof(char *));
     if(!(v->statenames)){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      free_variable(v);
+      free(v);
+      free(new);
       return NULL;
-    }else
-      for(i = 0; i < cardinality; i++){
-	v->statenames[i] = (char *) calloc(strlen(states[i]) + 1, 
+    }
+
+    for(i = 0; i < cardinality; i++){
+
+      v->statenames[i] = (char *) calloc(strlen(states[i]) + 1, 
 					   sizeof(char));
-	strcpy(v->statenames[i], states[i]);
+      if(!(v->statenames[i])){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	for(j = 0; j < i; j++)
+	  free(v->statenames[j]);
+	free(v->statenames);
+	free(v);
+	free(new);
       }
+
+      strcpy(v->statenames[i], states[i]);
+    }
   }
   else
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
+  if(!(v->likelihood)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    for(i = 0; i < v->cardinality; i++)
+      free(v->statenames[i]);
+    free(v->statenames);
+    free(v);
+    free(new);
+  }
+
   /* initialise likelihoods to 1 */
   for(dpointer=v->likelihood, i=0; i < cardinality; *dpointer++ = 1, i++);
 

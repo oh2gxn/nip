@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.40 2004-08-18 14:01:52 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.41 2004-08-19 15:11:27 mvkorpel Exp $
  * Functions for handling potentials. 
  */
 
@@ -305,7 +305,6 @@ int update_potential(potential numerator, potential denominator,
 
     if(!source_indices){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      free(source_indices);
       return ERROR_OUTOFMEMORY;
     }
   }
@@ -458,8 +457,13 @@ void print_potential(potential p){
   int big_index, i;
   int *indices = NULL;
 
-  if(p->num_of_vars)
+  if(p->num_of_vars){
     indices = (int *) calloc(p->num_of_vars, sizeof(int));
+    if(!indices){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return;
+    }
+  }
   else{
     printf("P(0) = %f\n", p->data[0]);
     return;

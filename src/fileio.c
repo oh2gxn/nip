@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.17 2004-06-30 13:19:00 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.18 2004-08-19 15:11:27 mvkorpel Exp $
  */
 
 #include <ctype.h>
@@ -199,7 +199,7 @@ int *tokenise(const char s[], int n, int quoted_strings,
 }
 
 char **split(const char s[], int indices[], int n){
-  int i, wordlength, begin, end;
+  int i, j, wordlength, begin, end;
   char **words = (char **) calloc(n, sizeof(char *));
 
   /* Couldn't allocate memory */
@@ -217,8 +217,12 @@ char **split(const char s[], int indices[], int n){
     /* Couldn't allocate memory */
     if(!words[i]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      for(j = 0; j < i; j++)
+	free(words[j]);
+      free(words);
       return NULL;
     }
+
     strncpy(words[i], &s[begin], wordlength);
     words[i][wordlength] = '\0';
   }

@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.75 2004-08-19 13:37:34 mvkorpel Exp $
+ * $Id: parser.c,v 1.76 2004-08-19 15:11:27 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -130,6 +130,7 @@ datafile *open_datafile(char *filename, char separator,
   f->name = (char *) calloc(length_of_name + 1, sizeof(char));
   if(!f->name){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    fclose(f->file);
     free(f);
     return NULL;
   }
@@ -157,7 +158,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!f->node_symbols){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	  free_datafile(f);
+	  close_datafile(f);
 	  free(token_bounds);
 	  return NULL;
 	}
@@ -166,7 +167,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!statenames){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	  free_datafile(f);
+	  close_datafile(f);
 	  free(token_bounds);
 	  return NULL;
 	}
@@ -175,7 +176,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!f->num_of_states){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	  free_datafile(f);
+	  close_datafile(f);
 	  free(statenames);
 	  free(token_bounds);
 	  return NULL;
@@ -185,7 +186,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!f->node_states){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	  free_datafile(f);
+	  close_datafile(f);
 	  free(statenames);
 	  free(token_bounds);
 	  return NULL;
@@ -201,10 +202,10 @@ datafile *open_datafile(char *filename, char separator,
 			      sizeof(char));
 	    if(!f->node_symbols[i]){
 	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	      free_datafile(f);
+	      close_datafile(f);
 	      free(statenames);
 	      free(token_bounds);
-	      return NULL; /* error horror */
+	      return NULL;
 	    }
 
 	    strncpy(f->node_symbols[i], &(last_line[token_bounds[2*i]]),
@@ -227,7 +228,7 @@ datafile *open_datafile(char *filename, char separator,
 	    f->node_symbols[i] = (char *) calloc(length_of_name, sizeof(char));
 	    if(!f->node_symbols[i]){
 	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	      free_datafile(f);
+	      close_datafile(f);
 	      free(statenames);
 	      free(token_bounds);
 	      return NULL; /* error horror */
@@ -254,7 +255,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	  if(!token){
 	    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	    free_datafile(f);
+	    close_datafile(f);
 	    free(statenames);
 	    free(token_bounds);
 	    return NULL;
@@ -306,7 +307,7 @@ datafile *open_datafile(char *filename, char separator,
 	  }
 	}
 	free(statenames);
-	free_datafile(f);
+	close_datafile(f);
 	return NULL;
       }
 
@@ -819,10 +820,9 @@ Variable* make_variable_array(){
 /* Creates an array from the double values in the list. 
  * The size will be doubles_parsed. */
 double* make_double_array(){
-  double* new = (double*) calloc(nip_doubles_parsed, sizeof(double));
-  /* free() is at ? */
   int i;
   doublelink ln = nip_first_double;
+  double* new = (double*) calloc(nip_doubles_parsed, sizeof(double));
 
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -840,10 +840,9 @@ double* make_double_array(){
 /* Creates an array from the strings in the list. 
  * The size will be strings_parsed. */
 char** make_string_array(){
-  char** new = (char**) calloc(nip_strings_parsed, sizeof(char*));
-  /* free() is probably at free_variable() */
   int i;
   stringlink ln = nip_first_string;
+  char** new = (char**) calloc(nip_strings_parsed, sizeof(char*));
 
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
