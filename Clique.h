@@ -78,7 +78,9 @@ int normalise(double result[], int array_size);
 
 /* Method for entering evidence to a clique. 
    sizeof(evidence) must equal variable->cardinality.
-   Returns an error code. */
+   Returns an error code. *** NOTE: If this returns GLOBAL_RETRACTION, 
+   it failed and an initialisation should be made before calling this 
+   again.*/
 int enter_evidence(Clique c, Variable v, double evidence[]);
 
 /* Method for checking if Variable v is part of Clique c.

@@ -9,7 +9,7 @@ int choose_indices(potential source, int source_indices[],
 potential make_potential(int cardinality[], int num_of_vars){
 
   /* JJ NOTE: what if num_of_vars = 0 i.e. size_of_data = 1 ???
-     (this can happen in sepsets...) */
+     (this can happen with sepsets...) */
 
   int i;
   int size_of_data = 1;
@@ -145,8 +145,7 @@ int general_marginalise(potential source, potential destination,
 
     /* get pointer to the destination potential element where the current
      data should be added */
-    potvalue =
-      get_ppointer(destination, dest_indices);
+    potvalue = get_ppointer(destination, dest_indices);
     *potvalue += source->data[i];
   }
 
@@ -166,7 +165,7 @@ int total_marginalise(potential source, double destination[], int variable){
 
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) 
                          |  |  |
-     variable index:     0  1  2 (or 'significance') */
+     variable index:     0  1  2... (or 'significance') */
   source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
 
   /* initialization */
@@ -241,6 +240,9 @@ int update_evidence(double numerator[], double denominator[],
 
     if(denominator[source_index] != 0)
       target->data[i] /= denominator[source_index];  /* THE division */
+    /* ----------------------------------------------------------- */
+    /* It is assumed that: denominator[i]==0 => numerator[i]==0 !!!*/
+    /* ----------------------------------------------------------- */
   }
 
   free(target_indices);   /* JJ NOTE: GET RID OF THESE */
