@@ -56,7 +56,7 @@ void marginalise(potential source, potential destination, int source_vars[]);
 -extra_vars: an integer array which holds the target variable ID's 
  that are NOT in source potentials and in ascending order. Length of the 
  array must be at least the number of variables in source potentials */
-void update(potential enumerator, potential denominator, potential target,
-	    int extra_vars[]);
+void update_potential(potential enumerator, potential denominator, 
+		      potential target, int extra_vars[]);
 
 #endif

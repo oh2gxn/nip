@@ -11,7 +11,7 @@ double get_pvalue(potential, int[], int);
 void set_pvalue(potential, int[], int, double);
 double *get_ppointer(potential, int[], int);
 void marginalise(potential, potential, int[]);
-void update(potential, potential, potential, int[]);
+void update_potential(potential, potential, potential, int[]);
 int main();
 
 /* Make a num_of_vars -dimension potential array. */
@@ -184,8 +184,8 @@ EXAMPLE: If two sepset variables are the third and fifth variables in
 a five variable clique, the call is 
 update(newSepsetPotential, oldSepsetPotential, cliquePotential, {0, 1, 3}) 
 */
-void update(potential enumerator, potential denominator, potential target,
-	    int extra_vars[]){
+void update_potential(potential enumerator, potential denominator, 
+		      potential target, int extra_vars[]){
 
   int i;
   int *source_indices, *target_indices;
