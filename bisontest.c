@@ -13,9 +13,7 @@
 #define DEBUG_BISONTEST
 */
 
-/*
 #define EVIDENCE
-*/
 
 /*
 #define EVIDENCE1
@@ -94,18 +92,6 @@ static void test_evidence(Variable observed, double data[], Clique cliques[],
   print_Clique(clique_of_interest);
   printf("enter_evidence returned %d.\n", evidence_retval);
 #endif /* DEBUG_BISONTEST */
-
-  /* propagation: some action */
-
-  /* Procedural guide: UNMARK all clusters. */
-  for(i = 0; i < num_of_cliques; i++)
-    unmark_Clique(cliques[i]);
-  collect_evidence(NULL, NULL, clique_of_interest);
-
-  /* Procedural guide: UNMARK all clusters. */
-  for(i = 0; i < num_of_cliques; i++)
-    unmark_Clique(cliques[i]);
-  distribute_evidence(clique_of_interest);
 
 }
 #endif /* EVIDENCE */
@@ -241,8 +227,7 @@ int main(int argc, char *argv[]){
 
   printf("\n\n");
 
-#ifndef EVIDENCE
-  /* another propagation */
+  /* a propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
   collect_evidence(NULL, NULL, nip_cliques[0]);
@@ -250,7 +235,6 @@ int main(int argc, char *argv[]){
   for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
   distribute_evidence(nip_cliques[0]);
-#endif /* EVIDENCE */
 
   /* marginalisation */
   if(argc > 2)
