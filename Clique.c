@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.105 2004-10-18 11:02:39 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.106 2004-10-18 14:25:29 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -109,6 +109,7 @@ Clique make_Clique(Variable vars[], int num_of_vars){
     return NULL;
   }
 
+  /* JJ_NOTE: reordering probably not required anymore... */
   for(i = 0; i < num_of_vars; i++){
     cardinality[i] = vars[reorder[i]]->cardinality;
     c->variables[i] = vars[reorder[i]];
@@ -318,6 +319,7 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
     reorder[indices[i]] = i; /* fill the reordering */
 
 
+  /* JJ_NOTE: reordering probably not required anymore... */
   for(i = 0; i < num_of_vars; i++){
     cardinality[i] = vars[reorder[i]]->cardinality;
     s->variables[i] = vars[reorder[i]];
@@ -565,8 +567,6 @@ double *reorder_potential(Variable vars[], potential p){
     inverse_mapping(p, old_flat_index, old_indices);
 
 
-
-
     /* FIXME: This is totally wrong. */
     /* 2. "old_indices" is re-ordered according to "variables"
      *    -> new_indices */
@@ -773,8 +773,7 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
 static int message_pass(Clique c1, Sepset s, Clique c2){
   int i, j = 0, k = 0;
   int retval;
-  int *source_vars;
-  int *extra_vars;
+  int *mapping;
 
   /* save the newer potential as old by switching the pointers */
   potential temp;
@@ -782,41 +781,31 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
   s->old = s->new;
   s->new = temp;
 
-  source_vars = (int *) calloc(c1->p->num_of_vars - s->new->num_of_vars,
-			       sizeof(int));
-  if(!source_vars){
+  mapping = (int *) calloc(s->new->num_of_vars, sizeof(int));
+  if(!mapping){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-
-  extra_vars = (int *) calloc(c2->p->num_of_vars - s->new->num_of_vars,
-			      sizeof(int));
-  if(!extra_vars){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(source_vars);
     return ERROR_OUTOFMEMORY;
   }
 
   /*
    * Marginalise (projection).
-   * First: select the variables. This relies on the order of variables.
+   * First: select the variables. This takes O(n^2)
    */
   for(i=0; i < c1->p->num_of_vars; i++){
-    if(j < s->new->num_of_vars &&
-       equal_variables((c1->variables)[i], (s->variables)[j]))
-      j++;
-    else {
-      source_vars[k] = i;
-      k++;
-    }
+    if(k == s->new->num_of_vars)
+      break; /* all found */
+    for(j=0; j < s->new->num_of_vars; j++)
+      if(equal_variables((c1->variables)[i], (s->variables)[j])){
+	mapping[j] = i;
+	k++;
+      }
   }
 
   /* Information flows from Clique c1 to Sepset s. */
-  retval = general_marginalise(c1->p, s->new, source_vars);
+  retval = general_marginalise(c1->p, s->new, mapping);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    free(source_vars);
-    free(extra_vars);
+    free(mapping);
     return ERROR_GENERAL;
   }
 
@@ -827,26 +816,24 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
    * First: select the variables. This relies on the order of variables.
    */
   for(i=0; i < c2->p->num_of_vars; i++){
-    if(j < s->new->num_of_vars &&
-       equal_variables((c2->variables)[i], (s->variables)[j]))
-      j++;
-    else {
-      extra_vars[k] = i;
-      k++;
-    }
+    if(k == s->new->num_of_vars)
+      break; /* all found */
+    for(j=0; j < s->new->num_of_vars; j++)
+      if(equal_variables((c2->variables)[i], (s->variables)[j])){
+	mapping[j] = i;
+	k++;
+      }
   }
 
   /* Information flows from Sepset s to Clique c2. */
-  retval = update_potential(s->new, s->old, c2->p, extra_vars);
+  retval = update_potential(s->new, s->old, c2->p, mapping);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    free(source_vars);
-    free(extra_vars);
+    free(mapping);
     return ERROR_GENERAL;
   }
 
-  free(source_vars);
-  free(extra_vars);
+  free(mapping);
 
   return NO_ERROR;
 }
@@ -855,41 +842,41 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
 int initialise(Clique c, Variable child, Variable parents[], potential p,
 	       int transient){
   int i, j = 0, k = 0;
-  int diff = c->p->num_of_vars - p->num_of_vars;
-  int *extra_vars = NULL;
-  int extra;
+  int *mapping = NULL;
   int retval;
   Variable var = NULL;
 
-  if(diff > 0){
-    extra_vars = (int *) calloc(diff, sizeof(int));
-    if(!extra_vars){
+  if(p->num_of_vars < c->p->num_of_vars){
+    mapping = (int *) calloc(p->num_of_vars, sizeof(int));
+    if(!mapping){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return ERROR_OUTOFMEMORY;
     }    
-
+    
     /***************************************************************/
     /* HEY! parents[] NOT assumed to be in any particular order!   */
+    /* But the variables of p are assumed to be in the same order  */
+    /* as in the clique c!                                         */
     /***************************************************************/
     
     /* initialisation with conditional distributions 
        first: select the variables (in a stupid but working way) */
     for(i=0; i < c->p->num_of_vars; i++){
+      if(k == p->num_of_vars)
+	break; /* all found */
       var = (c->variables)[i];
-      extra = 1;
-
-      for(j = 0; j < p->num_of_vars - 1; j++)
+      
+      for(j=0; j < p->num_of_vars - 1; j++)
 	if(equal_variables(var, parents[j]))
-	  extra = 0;
+	  mapping[k++] = i;
+      
       if(equal_variables(var, child))
-	extra = 0;
-
-      if(extra)
-	extra_vars[k++] = i;
+	mapping[k++] = i;
     }
   }
+
   /* rest the case */
-  retval = init_potential(p, c->p, extra_vars);
+  retval = init_potential(p, c->p, mapping);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return ERROR_GENERAL;
@@ -898,7 +885,7 @@ int initialise(Clique c, Variable child, Variable parents[], potential p,
   /* Some extra work is done here,
    * because only the last initialisation counts. */
   if(!transient){
-    retval = init_potential(p, c->original_p, extra_vars);
+    retval = init_potential(p, c->original_p, mapping);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
@@ -908,7 +895,7 @@ int initialise(Clique c, Variable child, Variable parents[], potential p,
    * some clique potentials need to be initialised but still 
    * be retractable... */
 
-  free(extra_vars); /* free(NULL) is O.K. */
+  free(mapping); /* free(NULL) is O.K. */
   return NO_ERROR;
 }
 

@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.27 2004-08-26 12:59:26 mvkorpel Exp $
+ * potential.h $Id: potential.h,v 1.28 2004-10-18 14:25:30 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -46,18 +46,18 @@ void inverse_mapping(potential p, int flat_index, int indices[]);
  * -source: the potential to be marginalised
  * -destination: the potential to put the answer into, variables will be 
  *               in the same order
- * -source_vars: indices of the marginalised variables in source potential
- *               (ascending order and between 0...num_of_vars-1 inclusive!) 
+ * -mapping: placement of the destination variables in the source potential 
+ *           in the same order they appear in the destination potential
  * EXAMPLE: If sepset variables are the second (i.e. 1) and third (i.e. 2) 
  *          variable in a five variable clique, the call is 
- *          marginalise(cliquePotential, newSepsetPotential, {0, 3, 4}) 
+ *          marginalise(cliquePotential, newSepsetPotential, {1, 2}) 
  * -Returns an error code.
  */
 int general_marginalise(potential source, potential destination, 
-			int source_vars[]);
+			int mapping[]);
 
 /* Method for finding out the probability distribution of a single variable 
- * according to a clique potential. This one is marginalisation too, but 
+ * according to a clique potential. This one is a marginalisation too, but 
  * this one is not generic. The outcome is not normalized. 
  * -source: the potential to be marginalised
  * -destination: the double array for the answer
@@ -73,20 +73,18 @@ int total_marginalise(potential source, double destination[], int variable);
  * -numerator: multiplier, usually the newer sepset potential (source)
  * -denominator: divider, usually the older sepset potential. This MUST have 
  *  similar geometry to numerator.
- * -extra_vars: an integer array which holds the target variable indices 
- *  (0...num_of_vars - 1 inclusive) that are NOT in source potentials and in 
- *  ascending order. Length of the array must be at least the number of 
- *  variables in source potentials. 
- * EXAMPLE: If two sepset variables are the third and fifth variables in 
- *  a five variable clique, the call is 
- *  update(newSepsetPotential, oldSepsetPotential, cliquePotential, {0, 1, 3}) 
+ * -extra_vars: an integer array which holds the placement of the variables 
+ *              of numerator/denominator potential in the target potential
+ * EXAMPLE: If two sepset variables are the third (indexed by 2) and 
+ *          fifth (4) variables in a five variable clique, the call is 
+ *  update(newSepsetPotential, oldSepsetPotential, cliquePotential, {2, 4}) 
  * -Returns an error code.
  * 
  * JJT: If denominator is NULL, only the multiplication is done.
  *      If numerator is NULL, and error is reported.
  */
 int update_potential(potential numerator, potential denominator, 
-		      potential target, int extra_vars[]);
+		      potential target, int mapping[]);
 
 /* Method for updating potential according to new evidence.
  * MUST BE: evidence[i] > 0 => v->likelihood[i] > 0
@@ -104,7 +102,7 @@ int update_evidence(double numerator[], double denominator[],
  * Similar to update_potential() so look at the info about 
  * arguments there.
  */
-int init_potential(potential probs, potential target, int extra_vars[]);
+int init_potential(potential probs, potential target, int mapping[]);
 
 void print_potential(potential p);
 

@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.34 2004-10-18 11:02:39 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.35 2004-10-18 14:25:30 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -587,7 +587,7 @@ variables and their cardinalities in the potential~\cparameter{p}.
 
 \item[set\_pvalue(p, indices, value)] sets a \cdatatype{double}
 \cparameter{value} in the \cdatatype{potential}~\cparameter{p} the same 
-way as \cfunction{get\_pvalue(p, indices)} retrieves it. 
+way as \\ \cfunction{get\_pvalue(p, indices)} retrieves it. 
 (See the description above.)
 
 \item[inverse\_mapping(p, flat\_index, indices)] transforms a
@@ -600,6 +600,7 @@ made for finding out which configuration of states of the variables
 corresponds to each element in the potential. Note that the 
 \cparameter{indices} array is not allocated by the function.
 
+% FIXME: the assumptions about the ordering of variables will be relieved
 \item[general\_marginalise(source, destination, source\_vars)] is one
 of the most useful functions since it computes the marginalisation
 i.e. a sum over the variables indicated by the given 
@@ -659,6 +660,7 @@ fourth parameter \cparameter{extra\_vars} which is an
 example, a zero in the array indicates that the first variable of the 
 target potential is not amongst those associated with the multiplicand 
 potentials.
+% EOF - end of fixme
 
 \item[update\_evidence(numerator, denominator, target, var)] is made
 for multiplying potentials with probability distributions of a single
@@ -677,6 +679,7 @@ with the \cparameter{var} \cdatatype{integer}. E.g. a zero tells the
 function that the evidence is about the first variable associated with 
 the potential.
 
+% FIXME
 \item[init\_potential(probs, target, extra\_vars)] is essentially the
 same as the \cfunction{update\_potential} function. It is meant for
 multiplying the \cparameter{target} potential with the given
@@ -698,7 +701,7 @@ without keeping the corresponding variables in a certain order. This
 could be achieved by using an integer array to remap the order of the
 variables instead of telling which are not included and assuming that
 the rest of the variables are in the same order in both potentials.
-
+% EOF - end of fixme
 
 \newpage
 \section{Join trees} % Cliques and sepsets
@@ -862,6 +865,7 @@ cliques. The function is recursive and is usually used like this:
 where \examplecode{c} is some \cdatatype{Clique}. This causes the 
 evidence to be collected from the entire join tree.
 
+% !!! NOTE !!! This requires variables to have a certain order in clique c!
 \item[initialise(c, child, parents, p)] is used for entering the
 quantitative parameters of the model into the join tree. This function
 initialises the \cdatatype{Clique}~\cparameter{c} with the given 

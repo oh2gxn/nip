@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.48 2004-10-14 15:11:21 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.49 2004-10-18 14:25:30 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -17,9 +17,8 @@
 
 static double *get_ppointer(potential p, int indices[]);
 
-static void choose_indices(potential source, int source_indices[],
-			   int dest_indices[], int source_vars[],
-			   int size_of_source_vars);
+static void choose_indices(int source_indices[], int dest_indices[], 
+			   int mapping[], int size_of_mapping);
 
 /*
  * Returns a pointer to the potential with given variable values (indices).
@@ -43,28 +42,18 @@ static double *get_ppointer(potential p, int indices[]){
 
 /*
  * Drops the indices that are marginalised or multiplied. 
- * source_vars must be in ascending order (see marginalise(...)). 
- * dest_indices[] must be of the right size. Returns an error code.
+ * dest_indices[] must have the same size as mapping[] and smaller than 
+ * source_indices[].
+ * Returns an error code.
  */
-static void choose_indices(potential source, int source_indices[],
-			  int dest_indices[], int source_vars[],
-			  int size_of_source_vars){
-
-  /* JJ NOTE: What if this is done only once to form some sort of 
-   *          mask and then the mask could be more efficient for 
-   *          the rest of the calls..? */
-  int i, j = 0, k = 0;
+static void choose_indices(int source_indices[], int dest_indices[], 
+			   int mapping[], int size_of_mapping){
+  int i;
 
   /* Warning: Write Only Code (TM) */
-  for(i = 0; i < source->num_of_vars; i++){    
+  for(i = 0; i < size_of_mapping; i++)
+    dest_indices[i] = source_indices[mapping[i]];
 
-    if(j < size_of_source_vars && i == source_vars[j])
-      j++;
-    else{
-      dest_indices[k] = source_indices[i];
-      k++;
-    }
-  } 
   return;
 }
 
@@ -183,7 +172,7 @@ void inverse_mapping(potential p, int flat_index, int indices[]){
 
 
 int general_marginalise(potential source, potential destination, 
-			int source_vars[]){
+			int mapping[]){
 
   int i;
   int *source_indices = NULL; 
@@ -229,8 +218,8 @@ int general_marginalise(potential source, potential destination,
 
     /* remove extra indices, eg. if source_vars = { 1, 3 }, then
      source_indices { 2, 6, 7, 5, 3 } becomes dest_indices { 2, 7, 3 }*/
-    choose_indices(source, source_indices, dest_indices, source_vars,
-		   source->num_of_vars - destination->num_of_vars);
+    choose_indices(source_indices, dest_indices, mapping,
+		   destination->num_of_vars);
 
     /* get pointer to the destination potential element where the current
      data should be added */
@@ -289,7 +278,7 @@ int total_marginalise(potential source, double destination[], int variable){
 }
 
 int update_potential(potential numerator, potential denominator, 
-		     potential target, int extra_vars[]){
+		     potential target, int mapping[]){
 
   int i;
   int *source_indices = NULL; 
@@ -336,8 +325,8 @@ int update_potential(potential numerator, potential denominator,
   /* The general idea is the same as in marginalise */
   for(i = 0; i < target->size_of_data; i++){
     inverse_mapping(target, i, target_indices);
-    choose_indices(target, target_indices, source_indices, extra_vars,
-		   target->num_of_vars - numerator->num_of_vars);
+    choose_indices(target_indices, source_indices, 
+		   mapping, numerator->num_of_vars);
 
     potvalue = get_ppointer(numerator, source_indices);
     target->data[i] *= *potvalue;  /* THE multiplication */
@@ -396,7 +385,7 @@ int update_evidence(double numerator[], double denominator[],
 
 }
 
-int init_potential(potential probs, potential target, int extra_vars[]){
+int init_potential(potential probs, potential target, int mapping[]){
 
   /* probs is assumed to be normalised */
 
@@ -424,14 +413,14 @@ int init_potential(potential probs, potential target, int extra_vars[]){
   }
 
   /* The general idea is the same as in marginalise */
-  if(extra_vars == NULL) /* this is one kind of a bug fix */
+  if(probs->num_of_vars == target->num_of_vars)
     for(i = 0; i < target->size_of_data; i++) /* similar kind of potentials */
       target->data[i] *= probs->data[i];
   else
     for(i = 0; i < target->size_of_data; i++){
       inverse_mapping(target, i, target_indices);
-      choose_indices(target, target_indices, probs_indices, extra_vars,
-		     target->num_of_vars - probs->num_of_vars);
+      choose_indices(target_indices, probs_indices, 
+		     mapping, probs->num_of_vars);
       
       potvalue =
 	get_ppointer(probs, probs_indices);
