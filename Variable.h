@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.17 2004-03-16 12:50:07 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.18 2004-03-19 15:25:58 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -17,14 +17,17 @@ typedef struct {
   int cardinality;
   unsigned long id; /* unique id for every variable */
   double *likelihood; /* likelihood of each value */
-  potential probability; /* probability of variable, given parents */
+  potential probability; /* probability of the variable, given parents */
   /* JJT: potential is mainly for making global retraction easier! */
 } vtype;
 
 typedef vtype *Variable;
 
-/* Creates a new Variable */
-Variable new_variable(const char* symbol, int cardinality);
+/* Creates a new Variable:
+ * - symbol is a short name e.g. A (= array [A, \0])
+ * - name is a more verbose name e.g. "rain" or NULL 
+ * - cardinality is the number of states/values the variable has */
+Variable new_variable(const char* symbol, const char* name, int cardinality);
 
 /* Gives the Variable a verbose name */
 int variable_name(Variable v, const char *name);

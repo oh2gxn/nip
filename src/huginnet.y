@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.5 2004-03-16 13:40:02 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.6 2004-03-19 15:25:58 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -26,19 +26,21 @@
 %token UNKNOWN
 
 /* Grammar follows */
-/* NOT READY!!! */
+/* NOT READY!!! Procedures and arrays in C do not mix well with the more 
+ * or less functional paradigm of the parser. */
 %%
 input:         /* empty string */
              | input declaration
 ;
 
-declaration:   nodedecl
-             | potdecl
+declaration:   nodedecl {/* put the node somewhere */}
+             | potdecl {/* put the potential somewhere */}
 ;
 
-nodedecl:      node NODEID '{' parameters  '}' {}
+nodedecl:      node NODEID '{' parameters  '}' {/* new_variable() */}
 ;
 
+/* probably not the easiest way... think again: LALR(1) */
 parameters:    /* end of definitions */
              | labeldecl parameters
              | statesdecl parameters
@@ -48,6 +50,7 @@ parameters:    /* end of definitions */
 labeldecl:     label '=' STRING ';'
 ;
 
+/* JJT: I think this is not the best way either... cardinality??? */
 statesdecl:    states '=' '(' STRING strings ')' ';'
 ;
 
@@ -55,10 +58,10 @@ strings:       /* end of list */
              | STRING strings
 ;
 
-unknown_decl:  UNKNOWN '=' value ';'
+unknown_decl:  UNKNOWN '=' value ';' /* ignore */
 ;
 
-value:         STRING
+value:         STRING /* Should there be $$ = $1 or something*/
              | list
              | NUMBER
 ;
@@ -71,8 +74,8 @@ strlistitems:  /* empty */
              | STRING strlistitems
 ;
 
-numlistitems:  /*
-
+numlistitems:  /* sumthin */
+/*
 potdecl:       potential '{' '}' /* arbitrary array? */
 ;
 
@@ -82,11 +85,14 @@ potdecl:       potential '{' '}' /* arbitrary array? */
 /* JJT: I did some reading. Might get nasty, if there has to be a token 
  *      for a potential array and yylval becomes a double array... Only 
  *      other option: leave the creation of an array to the parser. But 
- *      how can you add elements dynamically? 
+ *      how can you add elements dynamically? Cardinality & stuff?
  *      List -> Array and Array -> Potential at the end of each potdecl? 
  *
  *      yylex will be able to parse strings i.e. strings are terminals: 
- *      "this is a string" -> char* = [t, h, i, s, ... , g, \0] as lvalue */
+ *      "this is a string": char* -> [t, h, i, s, ... , g, \0] as lvalue 
+ *
+ *      BTW: How does the graph framework fit into this? All the structure 
+ *      is more or less implicitly defined :-( */
 
 #include <ctype.h>
 

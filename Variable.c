@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.14 2004-02-13 14:12:20 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.15 2004-03-19 15:25:57 jatoivol Exp $
  */
 
 #include <string.h>
@@ -8,7 +8,7 @@
 #include "potential.h"
 #include "errorhandler.h"
 
-Variable new_variable(const char* symbol, int cardinality){
+Variable new_variable(const char* symbol, const char* name, int cardinality){
   static long id = 0;
   int i;
   double *dpointer;
@@ -21,6 +21,9 @@ Variable new_variable(const char* symbol, int cardinality){
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
 
+  if(variable_name(v, name) == ERROR_NULLPOINTER)
+    v->name = 0; /* DANGER! The name can be omitted and consequently be NULL */
+
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */
   for(dpointer=v->likelihood, i=0; i < cardinality; *dpointer++ = 1, i++);
@@ -32,7 +35,7 @@ int variable_name(Variable v, const char *name){
   if(!name)
     return ERROR_NULLPOINTER;
   strncpy(v->name, name, VAR_NAME_LENGTH);
-  v->symbol[VAR_NAME_LENGTH] = '\0';
+  v->name[VAR_NAME_LENGTH] = '\0';
   return NO_ERROR;
 }
 
