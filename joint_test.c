@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.2 2004-08-31 16:12:57 mvkorpel Exp $
+ * joint_test.c $Id: joint_test.c,v 1.3 2004-11-09 14:18:44 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) clique number (0 ... N - 1)
  * where N is the number of cliques.
@@ -87,8 +87,7 @@ int main(int argc, char *argv[]){
     for(i = 0; i < num_of_vars; i++)
       vars[i] = clique_of_interest->variables[i];
 
-    /* Let get_joint_probability print the result */
-    result = get_joint_probability(model, vars, num_of_vars, 1);
+    result = get_joint_probability(model, vars, num_of_vars);
 
     free(vars);
     free(result);

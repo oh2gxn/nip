@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.14 2004-11-01 15:08:12 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.15 2004-11-09 14:18:44 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -141,7 +141,15 @@ Variable get_Variable(Nip model, char* symbol);
 void make_consistent(Nip model);
 
 
+/* Computes the most likely state sequence of the variables, given the 
+ * time series. In other words, this function implements the idea also 
+ * known as the Viterbi algorithm. */
+TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts);
 
+
+/* Teaches the given model according to the given time series with 
+ * EM-algorithm. Returns an error code as an integer. */
+int em_learn(Nip model, TimeSeries observations);
 
 
 /********************************************************************
@@ -155,12 +163,11 @@ void make_consistent(Nip model);
  * Parameters:
  * - model: the model that contains the Variable
  * - v: the Variable whose distribution we want
- * - print: zero if we don't want the result printed. Non-zero is the opposite.
  * Returns an array of doubles (remember to free the result when not needed).
  * The returned array is of size v->cardinality.
  * In case of problems, NULL is returned.
  */
-double *get_probability(Nip model, Variable v, int print);
+double *get_probability(Nip model, Variable v);
 
 
 /*
@@ -171,7 +178,6 @@ double *get_probability(Nip model, Variable v, int print);
  * - model: the model that contains the Variable
  * - vars: the Variables whose distribution we want
  * - num_of_vars: the number of Variables (size of "vars")
- * - print: zero if we don't want the result printed. Non-zero is the opposite.
  * Returns an array of doubles (remember to free the result when not needed).
  * The returned array is of size
  *   vars[0]->cardinality * ... * vars[num_of_vars - 1]->cardinality.
@@ -180,8 +186,7 @@ double *get_probability(Nip model, Variable v, int print);
  *   the array "vars".
  * In case of problems, NULL is returned.
  */
-double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
-			      int print);
+double *get_joint_probability(Nip model, Variable *vars, int num_of_vars);
 
 
 /*

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.28 2004-11-05 14:39:14 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.29 2004-11-09 14:18:44 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -32,10 +32,6 @@ static int start_timeslice_message_pass(Nip model, Variable vars[], int nvars,
 					potential sepset);
 static int finish_timeslice_message_pass(Nip model, Variable vars[], int nvars,
 					 potential num, potential den);
-
-static int increment_indices(int indices[], Variable vars[], int num_of_vars);
-static double get_data(double data[], int indices[],
-		       int num_of_vars, int cardinality[]);
 
 
 void reset_model(Nip model){
@@ -844,17 +840,23 @@ void make_consistent(Nip model){
 }
 
 
+/* Most likely state sequence of the variables given the timeseries. */
+TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
+  return NULL;
+}
 
-/* TODO: Figure out if we need the stuff below this comment. (Probably in 
- *       some form yes, but...) */
 
-double *get_probability(Nip model, Variable v, int print){
+/* Teaches the given model according to the given time series with 
+ * EM-algorithm. Returns an error code as an integer. */
+int em_learn(Nip model, TimeSeries observations){
+  return ERROR_GENERAL;
+}
 
+
+double *get_probability(Nip model, Variable v){
   Clique clique_of_interest;
   double *result;
   int cardinality;
-  int i;
-  char *symbol;
 
   if(!model){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -888,65 +890,14 @@ double *get_probability(Nip model, Variable v, int print){
   /* 3. Normalisation */
   normalise(result, cardinality);
 
-  /* 4. Print result if desired */
-  if(print){
-    symbol = get_symbol(v);
-    for(i = 0; i < cardinality; i++)
-      printf("P(%s=%s) = %f\n", symbol, (v->statenames)[i], result[i]);
-    printf("\n");
-  }
-
-  /* 5. Return the result */
+  /* 4. Return the result */
   return result;
-
 }
 
 
-static int increment_indices(int indices[], Variable vars[], int num_of_vars){
-
-  int finger = 0;
-  int i;
-
-  while(finger <= num_of_vars - 1){
-
-    if(indices[finger] >= vars[finger]->cardinality - 1)
-      finger++;
-    else{
-      indices[finger]++;
-      for(i = 0; i < finger; i++)
-	indices[i] = 0;
-      return 1; /* TRUE */
-    }
-  }
-
-  return 0; /* FALSE */
-}
-
-
-static double get_data(double data[], int indices[],
-		       int num_of_vars, int cardinality[]){
-
-  int index = 0;
-  int i;
-  int card_temp = 1;
-
-  for(i = 0; i < num_of_vars; i++){
-    index += indices[i] * card_temp;
-    card_temp *= cardinality[i];
-  }
-
-#ifdef DEBUG_NIP
-  printf("in get_data(): index = %d\n", index);
-#endif
-
-  return data[index];
-
-}
-
-
-double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
-			      int print){
-
+/* TODO: Figure out if we need the stuff below this comment. (Probably in 
+ *       some form yes, but...) */
+double *get_joint_probability(Nip model, Variable *vars, int num_of_vars){
   Clique clique_of_interest;
   potential source, destination;
   int *cardinality;
@@ -956,7 +907,6 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
   int retval;
   int extra_vars;
   double *result;
-  double prob;
 
   Variable *vars_sorted;
 
@@ -1060,36 +1010,6 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 #endif
 
   /* NORMALISE? */
-
-  /* Print the result if print != 0 */
-  if(print){
-
-    /* Create and initialise the array of indices */
-    indices = (int *) calloc(num_of_vars, sizeof(int));
-    if(!indices){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      free_potential(destination);
-      free(vars_sorted);
-      free(cardinality);
-      free(source_vars);
-      return NULL;
-    }
-  
-    for(i = 0; i < num_of_vars; i++)
-      indices[i] = 0;
-
-    /* The loop goes through every combination of values */
-    do{
-      prob = get_data(result, indices, num_of_vars, cardinality);
-      printf("P(");
-      for(i = 0; i < num_of_vars - 1; i++)
-	printf("%s = %s, ", vars[i]->symbol,
-	       vars[i]->statenames[indices[i]]);
-      printf("%s = %s) = ", vars[num_of_vars - 1]->symbol,
-	     vars[num_of_vars-1]->statenames[indices[num_of_vars-1]]);
-      printf("%f\n", prob);
-    } while(increment_indices(indices, vars, num_of_vars));
-  }
 
   /* FREE MEMORY!!! */
   free_potential(destination);
