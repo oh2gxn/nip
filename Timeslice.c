@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "Graph.h"
 #include "Variable.h"
+#include "Timeslice.h"
 
 /* All time slice operations assume G is completely specified!
    That is, every variable must be added before using any of these,
@@ -17,8 +18,8 @@ Timeslice new_timeslice(Graph *G)
 
 	/* Startup variables */
 	ts->n_SV = 0; ts->n_SV_max = n;
-	ts->SV = (Variable) calloc(ts->n_SV_max, sizeof(Variable))
-	ts->s_adjm = (int) calloc(n*ts->n_SV_max, sizeof(int));
+	ts->SV = (Variable*) calloc(ts->n_SV_max, sizeof(Variable));
+	ts->s_adjm = (int*) calloc(n*ts->n_SV_max, sizeof(int));
 
 	ts->n_FC = 0;
 	ts->f_adjm = (int*) calloc(n*n, sizeof(int));
@@ -29,8 +30,6 @@ Timeslice new_timeslice(Graph *G)
 
 void ts_add_start(Timeslice ts, Variable v)
 {
-	Variable* newSV;
-	int* new_s_adjm;
 	int n;
 
 	n = get_size(ts->G);
@@ -39,7 +38,7 @@ void ts_add_start(Timeslice ts, Variable v)
 	if (ts->n_SV == ts->n_SV_max)
 	{
 		ts->n_SV_max *= 2;
-		ts->SV = (Variable) realloc(ts->SV, ts->n_SV_max*sizeof(Variable));
+		ts->SV = (Variable*) realloc(ts->SV, ts->n_SV_max*sizeof(Variable));
 		ts->s_adjm = (int*) realloc(ts->s_adjm, n*ts->n_SV_max*sizeof(int));
 	}
 	
@@ -83,7 +82,7 @@ Graph* ts_unroll(Timeslice ts, unsigned T)
 	n = ts->n_SV + T*(n_orig - ts->n_FC) /*+ ts->n_FC*/;
 
 	G = new_graph(n);
-	vars = (Variable) calloc(n_orig*T, sizeof(Variable));
+	vars = (Variable*) calloc(n_orig*T, sizeof(Variable));
 	oldvars = get_variables(ts->G);
 	
 	/* First add every variable */
@@ -92,7 +91,8 @@ Graph* ts_unroll(Timeslice ts, unsigned T)
 	for (iter = 0; iter < T; iter++)
 		for (i = 0; i < n_orig; i++)
 		{
-			/* XX copy variable */
+			newvar = copy_variable(oldvars[i]);
+			/* XX add "-%d",iter to symbol and label */
 			vars[iter*n_orig + i] = newvar;
 			add_variable(G, newvar);	
 		}
@@ -110,7 +110,7 @@ Graph* ts_unroll(Timeslice ts, unsigned T)
 		{
 			for (j = 0; j < n_orig; j++)
 			{
-				if (is_child(oldvars[i], oldvars[j]))
+				if (is_child(ts->G, oldvars[i], oldvars[j]))
 					add_child(G, vars[offset+i], vars[offset+j]);
 				if (F_ADJM(ts, i, j) && iter!=T-1)
 					add_child(G, vars[offset+i], vars[n_orig+offset+j]);
@@ -118,6 +118,8 @@ Graph* ts_unroll(Timeslice ts, unsigned T)
 		}
 	}
 
-	/* It's a wrap! */	
+	/* It's a wrap! */
+	free(vars);	
 	return G;
 }
+

@@ -33,4 +33,4 @@ void ts_connect_start(Timeslice ts, Variable start_parent, Variable child);
 void ts_connect_future(Timeslice ts, Variable parent, Variable future_child);
 Graph* ts_unroll(Timeslice ts, unsigned T);
 
-#ENDIF /*__TIMESLICE_H__*/
+#endif /*__TIMESLICE_H__*/
