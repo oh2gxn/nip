@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.11 2004-06-03 07:46:42 mvkorpel Exp $
+# $Id: Makefile,v 1.12 2004-06-03 08:22:58 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -7,9 +7,10 @@ POT_SRCS=potential.c potentialtest.c
 CLI_SRCS=potential.c Variable.c Clique.c cliquetest.c
 PAR_SRCS=potential.c Variable.c Clique.c errorhandler.c fileio.c parser.c parsertest.c
 GRPH_SRCS=Graph.c grphmnp/Heap.c grphmnp/cls2clq.c graph_test.c
-BIS_SRCS=huginnet.tab.c parser.c huginnet.tab.c Clique.c Variable.c potential.c Graph.c errorhandler.c bisontest.c
 HUG_DEFS=huginnet.y
 HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
+BIS_SRCS=$(HUG_SRCS) parser.c Clique.c Variable.c potential.c Graph.c errorhandler.c bisontest.c
+
 
 # XXX Replace "cliquetest" below with the name you want for your program!
 POT_TARGET=potentialtest
