@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.47 2004-06-14 14:11:16 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.48 2004-06-14 14:34:53 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -542,6 +542,10 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
   Sepset s;
   Clique one, two;
 
+#ifdef DEBUG_CLIQUE
+  int j, k;
+#endif
+
   Heap *H = build_sepset_heap(cliques, num_of_cliques);
 
   if(!H){
@@ -568,12 +572,46 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
     /* Prevent loops by checking if the Cliques
      * are already in the same tree. */
     if(!clique_search(one, two)){
+
+#ifdef DEBUG_CLIQUE
+      printf("In Clique.c: Trying to add Sepset ");
+
+      for(i = 0; i < s->old->num_of_vars; i++)
+	printf("%s", s->variables[i]->symbol);
+
+      printf(" to Cliques ");
+
+      for(i = 0; i < one->p->num_of_vars; i++)
+	printf("%s", one->variables[i]->symbol);
+
+      printf(" and ");
+
+      for(i = 0; i < two->p->num_of_vars; i++)
+	printf("%s", two->variables[i]->symbol);
+
+      printf("\n");
+#endif
+
       add_Sepset(one, s);
       add_Sepset(two, s);
       inserted++;
     }
 
   }
+
+#ifdef DEBUG_CLIQUE
+  for(i = 0; i < num_of_cliques - 1; i++)
+    for(j = i; j < num_of_cliques; j++)
+      if(!clique_search(cliques[i], cliques[j])){
+	printf("No connection from Clique ");
+	for(k = 0; k < cliques[i]->p->num_of_vars; k++)
+	  printf("%s", cliques[i]->variables[k]->symbol);
+	printf(" and Clique ");
+	for(k = 0; k < cliques[j]->p->num_of_vars; k++)
+	  printf("%s", cliques[j]->variables[k]->symbol);
+	printf("\n");
+      }
+#endif
 
   return 0;
 
@@ -584,6 +622,10 @@ int clique_search(Clique one, Clique two){
   link l = one->sepsets;
   Sepset s;
 
+#ifdef DEBUG_CLIQUE
+  int i;
+#endif
+
   /* mark */
   one->mark = 1;
 
@@ -591,8 +633,17 @@ int clique_search(Clique one, Clique two){
   if(one == two)
     return 1;
 
+#ifdef DEBUG_CLIQUE
+  if(l == NULL){
+    printf("In Clique.c: No Sepsets attached to this Clique: ");
+    for(i = 0; i < one->p->num_of_vars; i++)
+      printf("%s", one->variables[i]->symbol);
+    printf("\n");
+  }
+#endif
+
   /* call neighboring cliques */
-  while (l != 0){
+  while (l != NULL){
     s = l->data;
     if(s->cliques[0]->mark == 0){
       if(clique_search(s->cliques[0], two))
