@@ -316,11 +316,6 @@ int main(int argc, char *argv[]){
       
       /* 1. Decide which Variable you are interested in */
       interesting = hidden[i];
-      if(!interesting){
-	printf("In hmmtest.c : Variable of interest not found.\n");
-	return 1;
-      }
-
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
@@ -354,15 +349,6 @@ int main(int argc, char *argv[]){
     global_retraction(nip_cliques[0]);
    
   }
-
-  
-
-  /* AN IDEA: 
-   * - start with a blank join tree
-   * - add the evidence just like in forward phase
-   * - collect & distribute evidence
-   * - change the evidence for hidden variables with "next" pointers 
-   * - collect & distribute again. */
   
   
   return 0;
