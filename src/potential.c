@@ -200,7 +200,8 @@ int marginalise(potential source, potential destination, int source_vars[]){
  variables in source potentials. 
 EXAMPLE: If two sepset variables are the third and fifth variables in 
 a five variable clique, the call is 
-update(newSepsetPotential, oldSepsetPotential, cliquePotential, {0, 1, 3}) 
+update_potential(newSepsetPotential, oldSepsetPotential,
+                 cliquePotential, {0, 1, 3})
 -Returns an error code.
 */
 int update_potential(potential enumerator, potential denominator, 
@@ -213,6 +214,7 @@ int update_potential(potential enumerator, potential denominator,
   source_indices = (int *) calloc(enumerator->num_of_vars, sizeof(int));
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
+  /* The general idea is the same as in marginalise */
   for(i = 0; i < target->size_of_data; i++){
     inverse_mapping(target, i, target_indices);
     choose_indices(target, target_indices, source_indices, extra_vars);
