@@ -30,7 +30,7 @@ void free_graph(Graph* G){
   for(i = 0; i < size; i++)
     free(G->adj_matrix[i]);
   free(G->adj_matrix);
-  free(G->variables);
+  free(&(G->variables));
   free(G);
 }
 

@@ -17,6 +17,15 @@ typedef vtype *Variable;
 /* Creates a new Variable */
 Variable new_variable(char* name, int cardinality);
 
+/* Function for copying a Variable (if needed).
+ * v: the Variable to be copied
+ * Returns the copy.
+ */
+Variable copy_variable(Variable v);
+
+/* Frees the memory used by the Variable v. */
+void free_variable(Variable v);
+
 /* Checks if two variables are the same */
 int equal_variables(Variable v1, Variable v2);
 

@@ -24,7 +24,7 @@ Clique make_Clique(Variable vars[], int num_of_vars){
   int i;
   c->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = variables[i]->cardinality;
+    cardinality[i] = vars[i]->cardinality;
     c->variables[i] = vars[i];
   }
   c->p = make_potential(cardinality, num_of_vars);
@@ -76,7 +76,7 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
   for(i = 0; i < num_of_vars; i++){
     cardinality[i] = vars[i]->cardinality;
-    s->variables = vars[i];
+    s->variables[i] = vars[i];
   }
   s->old = make_potential(cardinality, num_of_vars);
   s->new = make_potential(cardinality, num_of_vars);
