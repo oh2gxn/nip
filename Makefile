@@ -34,8 +34,8 @@ LIBS=
 POT_OBJS=$(POT_SRCS:.c=.o)
 CLI_OBJS=$(CLI_SRCS:.c=.o)
 PAR_OBJS=$(PAR_SRCS:.c=.o)
-HUG_OBJS=$(HUG_DEFS:.c=.o)
-BIS_OBJS=$(BIS_DEFS:.c=.o)
+HUG_OBJS=$(HUG_SRCS:.c=.o)
+BIS_OBJS=$(BIS_SRCS:.c=.o)
 OBJS=$(POT_OBJS) $(CLI_OBJS) $(PAR_OBJS) $(HUG_OBJS) $(BIS_OBJS)
 
 # Rules for make
@@ -67,7 +67,7 @@ $(HUG_SRCS): $(HUG_DEFS)
 # With these lines, executing "make clean" removes the .o files that
 # are not needed after the program is compiled.
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) $(HUG_SRCS)
 
 # "make realclean" does the same as "make clean", and also removes the
 # compiled program and a possible "core" file.
