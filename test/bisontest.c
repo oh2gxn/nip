@@ -4,7 +4,9 @@
 #include "Variable.h"
 #include "potential.h"
 
+/*
 #define PRINT_POTENTIALS
+*/
 
 /*
 #define DEBUG_BISONTEST
@@ -15,6 +17,7 @@
 */
 
 /*#define EVIDENCE1*/
+
 
 int yyparse();
 
@@ -83,6 +86,9 @@ int main(int argc, char *argv[]){
   distribute_evidence(nip_cliques[0]);
   */
 
+
+
+  /* *********************************************************** */
 #ifdef PRINT_POTENTIALS
   for(i = 0; i < nip_num_of_cliques; i++){
     printf("In bisontest.c : Clique of ");
@@ -93,7 +99,12 @@ int main(int argc, char *argv[]){
     print_potential(nip_cliques[i]->p);
   }
 #endif /* PRINT_POTENTIALS */
+  /* *********************************************************** */
 
+
+
+
+  /* *********************************************************** */
 #ifdef EVIDENCE
   /* add some evidence */
   observed[0] = get_variable("B");
@@ -145,6 +156,10 @@ int main(int argc, char *argv[]){
   printf("enter_evidence returned %d.\n", evidence_retval);
 #endif /* DEBUG_BISONTEST*/
 #endif /* EVIDENCE */
+  /* *********************************************************** */
+
+
+
 
   printf("\n\n");
 
