@@ -188,8 +188,16 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   return 0;
 }
 
-/* TODO */
-int marginalise(Variable var){
+/* This one calculates the probability distribution for a variable v
+   according to the clique c. To make sense, the join tree should be 
+   made consistent before this. 
+- The result is placed in v->likelihood
+- The returned value is an error code. */
+int marginalise(Clique c, Variable v){
+
+  /* JJT: Is this the correct idea? */
+  
+  
   return 0;
 }
 
