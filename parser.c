@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.68 2004-08-16 13:33:48 mvkorpel Exp $
+ * $Id: parser.c,v 1.69 2004-08-16 13:54:48 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -97,7 +97,7 @@ datafile *open_datafile(char *filename, char separator,
   int linecounter = 0;
   int dividend;
   int i, j;
-  stringlink *statenames = NULL; /* FIXME: Are these lists freed? */
+  stringlink *statenames = NULL;
   stringlink temp, temp2;
   datafile *f = (datafile *) malloc(sizeof(datafile));
 
@@ -120,8 +120,7 @@ datafile *open_datafile(char *filename, char separator,
   else
     f->is_open = 1;
 
-  while(filename[length_of_name] != '\0')
-    length_of_name++;
+  length_of_name = strlen(filename);
 
   f->name = (char *) calloc(length_of_name + 1, sizeof(char));
   if(!f->name){
