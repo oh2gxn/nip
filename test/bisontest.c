@@ -254,7 +254,7 @@ int main(int argc, char *argv[]){
 
   printf("Normalised probability of %s:\n", get_symbol(interesting));
   for(i = 0; i < size_of_result; i++)
-    printf("result[%d] = %f\n", i, result[i]);
+    printf("P(%s=%d) = %f\n", get_symbol(interesting), i, result[i]);
 
   printf("\n\n");
 
@@ -307,7 +307,7 @@ int main(int argc, char *argv[]){
 
   printf("Normalised probability of %s:\n", get_symbol(interesting));
   for(i = 0; i < size_of_result; i++)
-    printf("result[%d] = %f\n", i, result[i]);
+    printf("P(%s=%d) = %f\n", get_symbol(interesting), i, result[i]);
   /* To be continued... */
 
   free(result);
