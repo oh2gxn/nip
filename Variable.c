@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.38 2004-08-12 12:45:05 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.39 2004-08-12 14:13:28 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -30,6 +30,8 @@ static int variable_name(Variable v, const char *name){
 
 Variable new_variable(const char* symbol, const char* name, 
 		      char** states, int cardinality){
+  /* NOTE: This id-stuff may overflow if variables are created and 
+   * freed over and over again. */
   static long id = VAR_MIN_ID;
   int i;
   double *dpointer;

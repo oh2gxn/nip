@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.34 2004-08-11 12:19:41 jatoivol Exp $
+ * Graph.c $Id: Graph.c,v 1.35 2004-08-12 14:13:28 jatoivol Exp $
  */
 
 #include <string.h>
@@ -232,7 +232,7 @@ int triangulate(Graph* Gm, Clique** clique_p)
     int* variable_set; /* [i] true, if variable[i] is in the cluster */
 
     n = Gm->size;
-    H = build_heap(Gm);
+    H = build_heap(Gm); /* FIXME? Where is the heap freed? */
     variable_set = (int*) calloc(n, sizeof(int));
 
     for (i = 0; i < n; i++)
@@ -266,6 +266,11 @@ int triangulate(Graph* Gm, Clique** clique_p)
     free(variable_set);
  
     *clique_p = cl2cliques(Gm->variables, cl_head, clique_count, n);
+
+    /* JJT: Free the list cl_head ??? */
+    while(cl_head){
+      cl_head = remove_cl_item(cl_head);
+    }
     
     return clique_count;
 }

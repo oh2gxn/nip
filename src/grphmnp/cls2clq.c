@@ -1,5 +1,5 @@
 /*
- * cls2clq.c $Id: cls2clq.c,v 1.4 2004-06-21 06:12:27 mvkorpel Exp $
+ * cls2clq.c $Id: cls2clq.c,v 1.5 2004-08-12 14:13:48 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -13,6 +13,18 @@ Cluster_list* new_cl_item(int array_size, Cluster_list* next, int* var_set)
     cl_new->variable_set = (int*) calloc(array_size, sizeof(int));
     memcpy(cl_new->variable_set, var_set, array_size*sizeof(int));
     cl_new->next = next;
+
+    return cl_new;
+}
+
+Cluster_list* remove_cl_item(Cluster_list* head){
+    Cluster_list* cl_new;
+    if(!head)
+        return NULL;
+    
+    cl_new = head->next;
+    free(head->variable_set);
+    free(head);
 
     return cl_new;
 }

@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.32 2004-08-09 15:02:23 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.33 2004-08-12 14:13:29 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -52,7 +52,8 @@ Variable new_variable(const char* symbol, const char* name,
 Variable copy_variable(Variable v);
 
 
-/* Frees the memory used by the Variable v. */
+/* Frees the memory used by the Variable v. NOTE: REMEMBER TO REMOVE 
+ * THE VARIABLE FROM ALL POSSIBLE LISTS TOO. */
 void free_variable(Variable v);
 
 

@@ -130,7 +130,7 @@ int main(int argc, char *argv[]){
     add_variable(g, vars[2]);
     add_child(g, vars[1], vars[0]);
     add_child(g, vars[1], vars[2]);
-    assert(find_cliques(g, &cl2) == 2);
+    assert(find_cliques(g, &cl2) == 2); /* THIS LEAKS! */
     printf("\rIteration %d of %d                               ", i + 1, n);
     free_graph(g);
     free_Clique(cl2[0]);
