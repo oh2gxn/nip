@@ -1,15 +1,16 @@
-/* Functions for the bison parser. $Id: parser.c,v 1.1 2004-03-16 10:34:22 mvkorpel Exp $
+/* Functions for the bison parser. $Id: parser.c,v 1.2 2004-03-16 12:50:07 jatoivol Exp $
  */
 
 #include "parser.h"
 
+/* correctness? */
 void add_pvar(Variable var){
-  link new = (link) malloc(sizeof(element));
-  new->data = s;
-  new->fwd = c->sepsets;
-  new->bwd = 0;
-  if(c->sepsets != 0)
-    c->sepsets->bwd = new;
-  c->sepsets = new;
-  return 0;
+  varlink new = (varlink) malloc(sizeof(varelement));
+  new->data = var;
+  new->fwd = 0;
+  new->bwd = last;
+  if(first = 0)
+    first = new;
+  last = new;
+  vars_parsed++;
 }

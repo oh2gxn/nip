@@ -35,3 +35,11 @@ Sekalaisia huomioita:
 * Alettiin ihmettelem‰‰n Bison-systeemeit‰. Teemme seuraavaksi
   parserin, jolla saadaan malleja ja niiden parametreja luettua
   tiedostosta. T‰llˆin p‰‰semme ehk‰ jopa testaamaan tuotoksia...
+--
+
+16.3.2004 (Janne)
+* Parserin m‰‰ritteleminen ei ole aivan triviaalia. On hieman muokattava 
+mm. Variable-juttuja s.e. muuttujille voi asettaa tilojen nimet ja muut 
+parametrit helposti. Parseriin tulee tietorakenteet, joihin tiedoston 
+mukaisia muuttujia/nodeja tulee... Verkon, riippuvuuksien ja taulukoiden 
+parsettaminen vaikuttaa erityisen ik‰v‰lt‰. Tutkitaan...

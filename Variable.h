@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.16 2004-02-13 14:12:20 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.17 2004-03-16 12:50:07 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -8,10 +8,12 @@
 #include "potential.h"
 #define VAR_SYMBOL_LENGTH 20
 #define VAR_NAME_LENGTH 40
+#define VAR_STATENAME_LENGTH 20
 
 typedef struct {
-  char symbol[VAR_SYMBOL_LENGTH + 1];
-  char name[VAR_NAME_LENGTH + 1];
+  char symbol[VAR_SYMBOL_LENGTH + 1]; /* short symbol for the node */
+  char name[VAR_NAME_LENGTH + 1]; /* label in the Net language*/
+  char **statenames; /* a string array with <cardinality> strings */
   int cardinality;
   unsigned long id; /* unique id for every variable */
   double *likelihood; /* likelihood of each value */
