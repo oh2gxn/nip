@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.17 2004-08-17 14:07:02 jatoivol Exp $
+ * Heap.c $Id: Heap.c,v 1.18 2004-08-18 09:39:00 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -15,6 +15,7 @@
 /* Koodi ei tässä muodossaan sovellu lapsille tai raskaana oleville tai 
    imettäville naisille. */
 
+/* MVK: Harmiton */
 int edges_added(Graph* G, Variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
@@ -33,6 +34,7 @@ int edges_added(Graph* G, Variable* vs, int n)
     return sum; /* Number of links to add */
 }
 
+/* MVK: Harmiton */
 int cluster_weight(Variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
@@ -157,6 +159,7 @@ void remove_node(Heap_item* node)
     */
 }
 
+/* MVK: Harmiton */
 int lessthan(Heap_item h1, Heap_item h2)
 {
     return (h1.primary_key < h2.primary_key) || 
@@ -208,6 +211,10 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
 #endif    
     
     H->heap_items[0] = H->heap_items[H->heap_size -1];
+
+    /* Mark this as NULL, so that free() won't be called twice */
+    H->heap_items[H->heap_size -1].Vs = NULL;
+
     H->heap_size--;
     
     /* Iterate over neighbours of minimum element *
@@ -223,7 +230,7 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
 		heapify(H, get_heap_index(H, min.Vs[i]));
     heapify(H, 0);
     
-    *cluster_vars = min.Vs; 
+    *cluster_vars = min.Vs;
     return min.n; /* Cluster size*/
 }
 
@@ -267,51 +274,46 @@ int get_heap_index(Heap* H, Variable v)
 void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 {
     int i, j, n_vars = 0, n_total;
-	Variable v_i, V_removed = min_cluster->Vs[0];
-	Variable* cluster_vars;
+    Variable v_i, V_removed = min_cluster->Vs[0];
+    Variable* cluster_vars;
 
-	/* Copy all variables in hi and min_cluster together.
-	   Copy hi first, because Vs[0] must be the generating node */
-	n_total = hi->n + min_cluster->n;
-	cluster_vars = (Variable*) calloc(n_total, sizeof(Variable));
+    /* Copy all variables in hi and min_cluster together.
+       Copy hi first, because Vs[0] must be the generating node */
+    n_total = hi->n + min_cluster->n;
+    cluster_vars = (Variable*) calloc(n_total, sizeof(Variable));
 
-	/*for (i = 0; i < hi->n; i++)
-		cluster_vars[i] = hi->Vs[i];
-	for (i = 0; i < min_cluster->n; i++)
-		cluster_vars[hi->n +i] = min_cluster[i];*/
+    /*for (i = 0; i < hi->n; i++)
+      cluster_vars[i] = hi->Vs[i];
+      for (i = 0; i < min_cluster->n; i++)
+      cluster_vars[hi->n +i] = min_cluster[i];*/
 
-	memcpy(cluster_vars, hi->Vs, hi->n*sizeof(Variable));
-	memcpy(cluster_vars+hi->n, min_cluster->Vs, 
-		   min_cluster->n*sizeof(Variable));
+    memcpy(cluster_vars, hi->Vs, hi->n*sizeof(Variable));
+    memcpy(cluster_vars+hi->n, min_cluster->Vs, 
+	   min_cluster->n*sizeof(Variable));
 		
-	/* Remove duplicates and min_vs[0] */
-	for (i = 0; i < n_total; i++)
-	{
-		v_i = cluster_vars[i];
-		if (v_i == NULL) continue;
-		for (j = i+1; j < n_total; j++)
-		{
-			if (cluster_vars[j] == NULL) continue;
-			if (equal_variables(v_i, cluster_vars[j]) ||
-				equal_variables(V_removed, cluster_vars[j]))
-				cluster_vars[j] = NULL;
-		}
-		cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
-	}
+    /* Remove duplicates and min_vs[0] */
+    for (i = 0; i < n_total; i++)
+      {
+	v_i = cluster_vars[i];
+	if (v_i == NULL) continue;
+	for (j = i+1; j < n_total; j++)
+	  {
+	    if (cluster_vars[j] == NULL) continue;
+	    if (equal_variables(v_i, cluster_vars[j]) ||
+		equal_variables(V_removed, cluster_vars[j]))
+	      cluster_vars[j] = NULL;
+	  }
+	cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
+      }
 		
-	hi->n = n_vars;
+    hi->n = n_vars;
 
-	/* FIXME: WTF? hi->Vs korvataan uudella taulukolla,
-	 * mutta vanhaa ei saa vapauttaa???
-	 *
-	 * Antti, mistä on kyse?
-	 */
-	/*	free(hi->Vs);*/
+    free(hi->Vs);
 
-	hi->Vs = (Variable*) calloc(n_vars, sizeof(Variable));
-	memcpy(hi->Vs, cluster_vars, n_vars*sizeof(Variable));
+    hi->Vs = (Variable*) calloc(n_vars, sizeof(Variable));
+    memcpy(hi->Vs, cluster_vars, n_vars*sizeof(Variable));
 
-	free(cluster_vars);
+    free(cluster_vars);
 
     hi->primary_key = edges_added(G, hi->Vs, hi->n);
     hi->secondary_key = cluster_weight(hi->Vs, hi->n);
@@ -321,13 +323,18 @@ void free_heap(Heap* H){
 
   int i;
   Sepset s = NULL;
+  Heap_item *hi;
 
   if(!H)
     return;
 
+  /* Go through every heap item*/
   for(i = 0; i < H->orig_size; i++){
-    /* Free each heap item */
-    free((H->heap_items[i]).Vs);
+    hi = &(H->heap_items[i]);
+
+    /* Free variable array in the heap item */
+    free(hi->Vs);
+    hi->Vs = NULL;
   }
 
   while(!extract_min_sepset(H, &s)){

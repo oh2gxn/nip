@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.38 2004-08-13 14:38:11 jatoivol Exp $
+ * Graph.c $Id: Graph.c,v 1.39 2004-08-18 09:38:52 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -239,7 +239,7 @@ int triangulate(Graph* Gm, Clique** clique_p)
     for (i = 0; i < n; i++)
     {
 
-        cluster_size = extract_min(H, Gm, &min_cluster); /* FIXME: This leaves memory allocated(?) */
+      cluster_size = extract_min(H, Gm, &min_cluster);
 
         /* Clear the variable_set for this cluster */
         memset(variable_set, 0, n*sizeof(int));
@@ -264,6 +264,9 @@ int triangulate(Graph* Gm, Clique** clique_p)
             cl_head = new_cl_item(n, cl_head, variable_set);
             clique_count++;
         }
+
+	/* MVK: memory leak fix */
+	free(min_cluster);
     }
     free(variable_set);
 
