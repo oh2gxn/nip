@@ -7,6 +7,7 @@
 int lessthan(Heap_item h1, Heap_item h2)
 {
     /* Ei kovin NULL-varma. */
+    /* The heap has two keys: edges_added is the primary */
     if (h1.edges_added < h2.edges_added)
         return 1;
     if (h1.edges_added > h2.edges_added)
@@ -15,15 +16,6 @@ int lessthan(Heap_item h1, Heap_item h2)
     if (h1.new_weight < h2.new_weight)
         return 1;
     return 0;
-}
-
-adj_list build_adjacency_list(Variable* neighbours, int n)
-{
-    adj_list nb;
-    
-    nb.vars = neighbours;
-    nb.size = n;
-    return nb;
 }
 
 void destroy_node()
@@ -35,7 +27,7 @@ void remove_node(Heap_item* node)
     int i;
     
 
-    for (i = 0; i < node->adj_list.size; i++)
+    for (i = 0; i < node->n; i++)
     {
         node->adj_list.vars[i]
     }
@@ -44,18 +36,20 @@ void remove_node(Heap_item* node)
 
 int primary_weight(Graph G, Variable* vs, int n)
 {
-    int i,j,sum;
+    /* vs is the array of variables in the cluster induced by vs[0] */
 
-    sum = 0;
+    int i,j, sum = 0;
+
     for (i = 0; i < n; i++)
-	for (j = i+1; j < n; j++)
-	    sum += ~is_child(vs[i], vs[j]);
+        for (j = i+1; j < n; j++)
+            sum += ~is_child(vs[i], vs[j]);
    
-    return sum; /* Number of links to be added */
+    return sum; /* Number of links to add */
 }
 
 int secondary_weight(Variable* vs, int n)
 {
+    /* vs is the array of variables in the cluster induced by vs[0] */
     int i, int prod = 1;
     
     for (i = 0; i < n; i++)
@@ -66,9 +60,10 @@ int secondary_weight(Variable* vs, int n)
 
 Heap* build_heap(Variable* vars, int n)
 {
-    int i;
+    int i,j;
     Heap_item* hi;
     Heap* H = (Heap*) malloc(sizeof(Heap));
+    Variable* Vs_temp = (Variable*) calloc(n, sizeof(Variable));
      
     H->array = (Heap_item*) calloc(n, sizeof(Heap_item));
     H->heap_size = n;
@@ -77,11 +72,18 @@ Heap* build_heap(Variable* vars, int n)
     for (i = 0; i < n; i++)
     {
         hi = &(H->array[i]);
-        hi->V = vars[i];
-        hi->neighbours = build_adjacency_list(get_neighbours(Gm));
-        hi->edges_added = primary_weight(Gm, V u neighbours, n_neigh);
-        hi->new_weight = secondary_weight(Gm, V u neighbours, n_neigh);
+        hi->n = get_neighbours(Gm, &Vs_temp) +1;
+        hi->Vs = calloc(hi->n, sizeof(int));
+        hi->Vs[0] = vars[i];
+        
+        for (j = 1; j < hi->n; j++)      /* Copy variable-pointers from Vs_temp */
+            hi->Vs[j] = Vs_temp[j-1];    /* Note the index-shifting */
+
+        hi->edges_added = primary_weight(Gm, hi->Vs, hi->n);
+        hi->new_weight = secondary_weight(Gm, hi->Vs, hi->n);
     }
+
+    delete Vs_temp;
 
     H->array = H->array-1; /* Tästä ne murheet alkaa. */
 
@@ -123,7 +125,7 @@ void heapify(Heap* H, int i)
 Variable extract_min(Heap* H)
 {
     Heap_item min;
-    int i, n_neighbors;
+    int i, heap_i;
 
     if (H->heap_size < 1)
         return NULL;
@@ -140,10 +142,34 @@ Variable extract_min(Heap* H)
      * naapurille! Sä oot nero! Sä oot myös aika väsynyt ja tuhnuinen.
      * Ja muista myös ajaa sit koko nipulle se heapify. */
     
-    for (i = 0; i < n_neighbors; i++)
-        heapify(A, neighbors[i]);
+    /* Iterate over neighbours of minimum element */
+    for (i = 1; i < min->n; i++)         /* This loop could be heavy. */
+        clean_heap_item(&H->array[get_heap_index(min->Vs[i])], min.Vs[0]); 
+ 
+    /* Rebuild the heap */
+    for (i = 1; i < min->n; i++)
+        heapify(A, get_heap_index(min->Vs[i]));
     heapify(A, 1);
     
-    return min.V;
+    return min.Vs[0];
 }
 
+int get_heap_index(Variable v)
+{
+    /* Maksamme velkaa, olemme vaiheessa */
+}
+
+void clean_heap_item(Heap_item* hi, Variable V_removed)
+{
+    int i;
+    for (i = 1; i < hi->n; i++)
+        if (hi->Vs[i] == V_removed)
+        {
+            hi->Vs[i] = hi->Vs[hi->n];
+            --hi->n;
+            break;
+        }
+        
+    hi->edges_added = primary_weight(G, hi->Vs, hi->n);
+    hi->new_weight = secondary_weight(G, hi->Vs, hi->n    
+}
