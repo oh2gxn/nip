@@ -11,7 +11,7 @@
 */
 
 /* DUMMY-funktio, ehkä nimi pitäisi vaihtaa */
-int get_index(Graph* G, Variable v){
+int get_graph_index(Graph* G, Variable v){
   return 0;
 }
 
@@ -114,9 +114,8 @@ int is_child(Graph* G, Variable parent, Variable child)
 {
     int i,j;
     /* MVK korjaus: ei G->get_index(...) vaan get_index(G, ...)
-     get_index taitaa olla vähän liian geneerinen nimi */
-    i = get_index(G, parent); /* XX kts. refaktorointi ylhäältä */
-    j = get_index(G, child);
+    i = get_graph_index(G, parent); /* XX kts. refaktorointi ylhäältä */
+    j = get_graph_index(G, child);
     return G->adj_matrix[i][j];
 }
 
@@ -169,14 +168,19 @@ void moralise(Graph* Gm, Graph* G)
 /* Not specified Graph.h -- internal helper function */
 void triangulate(Graph* Gm)
 {
-    int i, j, j_index, k, k_index, n;
     /*    Graph* Gm_copy; */
+
+    int i, j, j_index, k, k_index, n;
+    int clique_count = 0;
     Variable* min_cluster;
     Heap* H;
+    Cluster_list* cl_head, cl_end, cl_i;
+    int* variable_set;
 
+    n = Gm->size;
+ 
     /* Step 1: Copy Gm */
 /*Copy of Gm probably unnecessary!
-    n = Gm->size;
     Gm_copy = new_graph(n);
     for (i = 0; i < n; i++)
 	add_variable(Gm_copy, Gm->variables[i]);
@@ -187,34 +191,96 @@ void triangulate(Graph* Gm)
  
     H = build_heap(Gm);
 
+    variable_set = (int*) calloc(n, sizeof(int));
+
+    cl_head = new_cl_item(n);
+    cl_end = cl_head;
+
     for (i = 0; i < n; i++)
     {
 	min_cluster = extract_min(H, Gm);
+
+	/* Clear the variable_set for this cluster */
+	memset(variable_set, 0, n*sizeof(int));
 	
 	for (j = 0; j < cluster_size; j++)
 	{
-	  /* MVK: Mikä on get_graph_index ? */
 	    j_index = get_graph_index(Gm, min_cluster[j]);
-	    /* XXX lisää min_cluster[j_index] settiin. */
+	    variable_set[j_index] = 1;
 
+	    /* Add new edges to Gm. */
 	    for (k = j+1; k < cluster_size; k++)
 	    {
 		k_index = get_graph_index(Gm, min_cluster[k]);
 
-		/* MVK: Lisäsin Gm-> */
 		Gm->adj_matrix[j_index][k_index] = 1;
-		Gm->adj_matrix[j_index][k_index] = 1;
+		Gm->adj_matrix[k_index][j_index] = 1;
 	    }
 	}
 	
-	/* XX Eihän noi oo järjestyksessä.
-         * Keksi tapa esittää noi seteittäin.
-	 * Ja hae cluster_size tuolta extract_ministä
-	 */
+	if (!is_subset(cl_head, variable_set, n))
+	{
+	    cl_end->next = new_cl_item(n);
+	    cl_end = cl_end->next;
+	    clique_count++;
+	}
+    }
+    
+    return cl2cliques(cl_head, clique_count, n);
+}
 
-	/* And to add edges */
-	/* Use this to build cliques as well */
-    } 
+Clique* cl2cliques(Cluster_list* cl_head, int n_cliques, int n)
+{
+    int n_vars, i;
+    Cluster_list* cl_i;
+    Clique* cliques = calloc(n_cliques, sizeof(Clique));
+    Variable* clique_vars = calloc(n, sizeof(Variable));
+
+    for (cl_i = cl_head; cl_i->next != NULL; cl_i = cl_i->next)
+    {
+	n_vars = 0;
+	for (i = 0; i < n; i++)
+	    if (cl_i->variable_set[i])
+		clique_vars[n_vars++] = vars[i];
+
+	cliques[--n_cliques] = make_Clique(clique_vars, n_vars);
+	/* This ^^^^^^^^^^^ is sort of dangerous. */
+    }
+    
+    return cliques;
+}
+
+Cluster_list* new_cl_item(int array_size)
+{
+    Cluster_list* cl_new = (Cluster_list*) malloc(sizeof(Cluster_list));
+    cl_new->variable_set = (int*) calloc(array_size, sizeof(int));
+    cl_new->next = NULL;
+}
+
+int is_subset(Cluster_list* cl_head, int* var_set, int size)
+{
+    Cluster_list* cl_i;
+    int i, flag;
+
+    /* Iterate the list of known clusters */
+    /* Later additions cannot be supersets of earlier ones */
+    /* One of the variables in an earlier var_set is removed */
+    for (cl_i = cl_head; cl_i->next != NULL; cl_i = cli_i->next)
+    {
+	flag = FALSE;
+	for (i = 0; i < size; i++)
+	{
+	    if (var_set[i] & !cl_i->variable_set[i])
+	    {
+		flag = TRUE; /* var_set not a subset of cl_i */
+		break;
+	    }
+	}
+	if (flag == FALSE) /* We have a subset */
+	    return TRUE;
+    }
+
+    return FALSE;
 }
 
 int find_cliques(Graph* Gm, Clique* cliques_p)
