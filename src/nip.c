@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.16 2004-08-31 12:51:47 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.17 2004-08-31 16:12:57 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -10,8 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
 #define DEBUG_NIP
-
+*/
 
 extern int yyparse();
 
@@ -242,6 +243,10 @@ static double get_data(double data[], int indices[],
     card_temp *= cardinality[i];
   }
 
+#ifdef DEBUG_NIP
+  printf("in get_data(): index = %d\n", index);
+#endif
+
   return data[index];
 
 }
@@ -259,6 +264,7 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
   int retval;
   int extra_vars;
   double *result;
+  double prob;
 
   Variable *vars_sorted;
 
@@ -346,7 +352,19 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
     return NULL;
   }
 
+#ifdef DEBUG_NIP
+  for(i = 0; i < destination->size_of_data; i++)
+    printf("in get_joint_probability(): destination->data[%d] = %f\n",
+	   i, destination->data[i]);
+#endif
+
   result = reorder_potential(vars, destination);
+
+#ifdef DEBUG_NIP
+  for(i = 0; i < destination->size_of_data; i++)
+    printf("in get_joint_probability(): result[%d] = %f\n",
+	   i, result[i]);
+#endif
 
   /* NORMALISE? */
 
@@ -369,14 +387,15 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 
     /* The loop goes through every combination of values */
     do{
+      prob = get_data(result, indices, num_of_vars, cardinality);
       printf("P(");
       for(i = 0; i < num_of_vars - 1; i++)
-	printf("%s = %s, ", vars_sorted[i]->symbol,
-	       vars_sorted[i]->statenames[indices[i]]);
-      printf("%s = %s) = ", vars_sorted[num_of_vars - 1]->symbol,
-	     vars_sorted[num_of_vars-1]->statenames[indices[num_of_vars-1]]);
-      printf("%f\n", get_data(result, indices, num_of_vars, cardinality));
-    } while(increment_indices(indices, vars_sorted, num_of_vars));
+	printf("%s = %s, ", vars[i]->symbol,
+	       vars[i]->statenames[indices[i]]);
+      printf("%s = %s) = ", vars[num_of_vars - 1]->symbol,
+	     vars[num_of_vars-1]->statenames[indices[num_of_vars-1]]);
+      printf("%f\n", prob);
+    } while(increment_indices(indices, vars, num_of_vars));
   }
 
   /* FREE MEMORY!!! */

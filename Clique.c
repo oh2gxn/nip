@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.99 2004-08-30 11:48:55 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.100 2004-08-31 16:12:57 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -510,12 +510,12 @@ double *reorder_potential(Variable vars[], potential p){
   int i, j;
   int *old_indices, *new_indices;
   int *new_card;
-  unsigned long smallest_id = 0L;
+  unsigned long smallest_id;
+  unsigned long this_id;
+  unsigned long biggest_taken;
   int smallest_index = 0;
   double *new_data;
-  int id_init;
   int card_temp;
-  Variable *vars_copy;
 
   /* Simple (stupid) checks */
   if(!p){
@@ -557,52 +557,48 @@ double *reorder_potential(Variable vars[], potential p){
     return NULL;
   }
 
-  vars_copy = (Variable *) calloc(p->num_of_vars, sizeof(Variable));
-  if(!vars_copy){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(old_indices);
-    free(new_indices);
-    free(new_card);
-    free(new_data);
-    return NULL;
-  }
-
-  for(i = 0; i < p->num_of_vars; i++)
-    vars_copy[i] = vars[i];
 
   for(old_flat_index = 0; old_flat_index < p->size_of_data; old_flat_index++){
 
     /* 1. old_flat_index -> old_indices (inverse_mapping) */
     inverse_mapping(p, old_flat_index, old_indices);
 
-    /* 2. "indices" is re-ordered according to "variables" -> new_indices */
+    /* 2. "old_indices" is re-ordered according to "variables"
+     *    -> new_indices */
     for(i = 0; i < p->num_of_vars; i++){
 
-      id_init = 0;
-
       for(j = 0; j < p->num_of_vars; j++){
-
-	if(id_init == 0){
-	  if(vars_copy[j] != NULL){
-	    id_init = 1;
+	this_id = vars[j]->id;
+	if(j != 0 && i != 0){
+	  if(this_id < smallest_id &&
+	     this_id > biggest_taken){
 	    smallest_index = j;
-	    smallest_id = vars_copy[j]->id;
-	    vars_copy[j] = NULL;
+	    smallest_id = this_id;
+	  }
+	}
+	else if(j != 0 && i == 0){
+	  if(this_id < smallest_id){
+	    smallest_index = j;
+	    smallest_id = this_id;
+	  }
+	}
+	else if(j == 0 && i != 0){
+	  if(this_id > biggest_taken){
+	    smallest_index = j;
+	    smallest_id = this_id;
 	  }
 	}
 	else{
-	  if(vars_copy[j] != NULL){
-	    if(vars_copy[j]->id < smallest_id){
-	      smallest_id = vars_copy[j]->id;
-	      smallest_index = j;
-	    }
-	  }
+	  smallest_index = j;
+	  smallest_id = this_id;
 	}
       }
 
       new_indices[smallest_index] = old_indices[i];
       new_card[smallest_index] = p->cardinality[i];
+      biggest_taken = vars[smallest_index]->id;
     }
+
 
     /* 3. new_indices -> new_flat_index (look at get_ppointer()) */
 
@@ -622,7 +618,6 @@ double *reorder_potential(Variable vars[], potential p){
   free(old_indices);
   free(new_indices);
   free(new_card);
-  free(vars_copy);
 
   /* Pointer to allocated memory. Also, potential p remains alive.*/
   return new_data;
