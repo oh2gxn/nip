@@ -139,7 +139,7 @@ potential create_Potential(Variable variables[], int num_of_vars,
     }
 
     // set the value (in a little ugly way)
-    p->data[i] = data[index];
+    p->data[i] = data[index]; // data is being copied => free(data) somewhere
   }
 
   return p;
@@ -251,10 +251,11 @@ int message_pass(Clique c1, Sepset s, Clique c2){
 }
 
 
-int initialise(Clique c, Variable variables[], potential p){
+int initialise(Clique c, Variable v, Variable parents[], potential p){
   int i, j = 0, k = 0;
   int diff = c->p->num_of_vars - p->num_of_vars;
   int *extra_vars = NULL;
+  Variable var = NULL;
 
   if(diff > 0){
     extra_vars = (int *) calloc(diff, sizeof(int));
@@ -265,21 +266,24 @@ int initialise(Clique c, Variable variables[], potential p){
      * - Another heavy change 25.5.2004 */
     
     /***************************************************************/
-    /* HEY! variables[] NOT assumed to be in any particular order! */
+    /* HEY! parents[] NOT assumed to be in any particular order! */
     /***************************************************************/
-
+    
     /* initialisation with conditional distributions 
        first: select the variables (in a stupid but working way) */
     for(i=0; i < c->p->num_of_vars; i++){
-      for(j = 0; j < p->num_of_vars; j++){
-	if(!equal_variables((c->variables)[i], variables[j]))
+      var = (c->variables)[i];
+    for(j = 0; j < p->num_of_vars - 1; j++){
+      if(!equal_variables(var, parents[j]) ||
+	 !equal_variables(var, v))
 	  extra_vars[k++] = i;
       }
     }
   }
   /* rest the case */
+  set_probability(v, p); // was this the intention??
   i = init_potential(p, c->p, extra_vars);
-  free(extra_vars);
+  free(extra_vars); // free(NULL) is O.K.
   return (i);
 }
 

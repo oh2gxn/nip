@@ -64,3 +64,14 @@ käsiksi mihinkään ja miten parseri antaa tuotoksensa ulkomaailman nähtäväksi?
 * Mikä ajatus on Variable.c:n funktiossa
 int variable_statenames(Variable v, char **states) ?
 Tuo ei näytä kovin paljon tekevän...
+
+2.6.2004 (Janne)
+* variable_statenames() mahdollistaa takin kääntämisen, jos joskus vaikka 
+vaihdettaisiin muistinvaraus strategiaa. Nyt taulukoita ei kopioida, 
+mutta vaarana on käytössä olevan muistin vapauttaminen tai uudelleen 
+käyttäminen merkkijonojen osalta.
+
+* Mitäs mitäs... Meillä ei muuten taida olla semmoista kuin 
+"GLOBAL RETRACTION", vaikka jonkunlaiset valmiudet onkin. Tämä vain 
+tarkoittaa sitä, että mikään ei saisi olla mahdotonta l. todennäköisyydeltään 
+nollaa kun dataa syötetään sisään.

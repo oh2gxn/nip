@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.14 2004-05-31 10:36:54 mvkorpel Exp $
+ * $Id: parser.c,v 1.15 2004-06-02 12:18:48 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -229,6 +229,7 @@ Variable* make_variable_array(){
  * The size will be doubles_parsed. */
 double* make_double_array(){
   double* new = (double*) calloc(nip_doubles_parsed, sizeof(double));
+  // free() is at ?
   int i;
   doublelink ln = nip_first_double;
   for(i = 0; i < nip_doubles_parsed; i++){
@@ -243,6 +244,7 @@ double* make_double_array(){
  * The size will be strings_parsed. */
 char** make_string_array(){
   char** new = (char**) calloc(nip_strings_parsed, sizeof(char*));
+  // free() is probably at free_variable()
   int i;
   stringlink ln = nip_first_string;
   for(i = 0; i < nip_strings_parsed; i++){
@@ -256,13 +258,13 @@ char** make_string_array(){
 /* Removes everything from the list of doubles. This is likely to be used 
  * after the parser has parsed doubles to the list, created an array out 
  * of it and wants to reset the list for future use. 
- * JJT: DO NOT TOUCH THE ACTUAL DATA, OR IT WILL BE LOST. */
+ */
 int reset_doubles(){
   doublelink ln = nip_last_double;
   nip_last_double = NULL;
-  while(ln != 0){
+  while(ln != NULL){
+    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
     ln = ln->bwd;
-    free(ln->fwd); /* correct? */
   }
   nip_first_double = NULL;
   nip_doubles_parsed = 0;
@@ -275,9 +277,9 @@ int reset_doubles(){
 int reset_strings(){
   stringlink ln = nip_last_string;
   nip_last_string = NULL;
-  while(ln != 0){
+  while(ln != NULL){
+    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
     ln = ln->bwd;
-    free(ln->fwd); /* correct? */
   }
   nip_first_string = NULL;
   nip_strings_parsed = 0;  
@@ -289,9 +291,9 @@ int reset_strings(){
 int reset_symbols(){
   varlink ln = nip_last_temp_var;
   nip_last_temp_var = NULL;
-  while(ln != 0){
+  while(ln != NULL){
+    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
     ln = ln->bwd;
-    free(ln->fwd); /* correct? */
   }
   nip_first_temp_var = NULL;
   nip_symbols_parsed = 0;
@@ -299,15 +301,17 @@ int reset_symbols(){
 }
 
 
-/* Frees some memory after parsing. */
+/* Frees some memory after parsing. 
+ * JJT: DO NOT TOUCH THE ACTUAL DATA, OR IT WILL BE LOST. */
 int reset_initData(){
   initDataLink ln = nip_last_initData;
   nip_last_initData = NULL;
-  while(ln != 0){
-    free_potential(ln->data); // hopefully the potential was used
-    free(ln->parents); // see calloc in make_variable_array();
+  while(ln != NULL){
+    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
+    // NOTE: the potential is probably a part of a variable somewhere
+    /*free_potential(ln->data);*/
+    free(ln->parents); // calloc is in make_variable_array();
     ln = ln->bwd;
-    free(ln->fwd); /* correct? */
   }
   nip_first_initData = NULL;
   nip_initData_parsed = 0;  

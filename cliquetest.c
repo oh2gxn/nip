@@ -9,6 +9,9 @@ int main(){
   /* create the variables 
    * normally this information would be found in a file and parsed */
   Variable variables[5];
+  Variable parentsA[2];
+  Variable parentsC[2];
+  Variable parentsE[1];
   char nameA[] = "einari";
   char nameB[] = "jalmari";
   char nameC[] = "jokke";
@@ -91,12 +94,12 @@ int main(){
   for(i = 0; i < 24; i++)
     printf("Correct=%f, Reordered=%f\n", model[1]->data[i], model[3]->data[i]);
 
-  //parentsA[0] = variables[1]; parentsA[1] = variables[2];
-  //parentsC[0] = variables[1]; parentsC[1] = variables[3];
-  //parentsE[0] = variables[3];
-  initialise(clique_pile[0], variables, model[0]);
-  initialise(clique_pile[1], &variables[1], model[1]);
-  initialise(clique_pile[2], &variables[3], model[2]);
+  parentsA[0] = variables[1]; parentsA[1] = variables[2];
+  parentsC[0] = variables[1]; parentsC[1] = variables[3];
+  parentsE[0] = variables[3];
+  initialise(clique_pile[0], variables[0], parentsA, model[0]);
+  initialise(clique_pile[1], variables[2], parentsC, model[1]);
+  initialise(clique_pile[2], variables[4], parentsE, model[2]);
 
   /* DEBUG */
   //printf("BCD before evidence:\n");
