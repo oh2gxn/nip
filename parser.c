@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.71 2004-08-16 14:19:07 jatoivol Exp $
+ * $Id: parser.c,v 1.72 2004-08-17 08:48:42 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -50,6 +50,9 @@ static char** nip_statenames;
 static char* nip_label;
 static char* nip_next;
 
+/* Should a new line be read in when the next token is requested? */
+static int nip_read_line = 1;
+
 /* The current input file */
 static FILE *nip_yyparse_infile = NULL;
 
@@ -71,8 +74,10 @@ int open_yyparse_infile(const char *filename){
       report_error(__FILE__, __LINE__, ERROR_IO, 1);
       return ERROR_IO; /* fopen(...) failed */
     }
-    else
+    else{
       nip_yyparse_infile_open = 1;
+      nip_read_line = 1;
+    }
   }
   return NO_ERROR;
 }
@@ -493,32 +498,42 @@ char *next_token(int *token_length){
   /* Pointer to the index array of token boundaries */
   static int *indexarray = NULL;
 
-  /* Should a new line be read in when the next token is requested? */
-  static int read_line = 1;
+  /* Pointer to the index array of token boundaries
+   * (not incremented, we need this for free() ) */
+  static int *indexarray_original = NULL;
 
   /* The token we return */
   char *token;
 
   /* Return if some evil mastermind gives us a NULL pointer */
   if(!token_length){
-    if(indexarray)
-      free(indexarray);
+    if(indexarray_original){
+      free(indexarray_original);
+      indexarray = NULL;
+      indexarray_original = NULL;
+    }
     return NULL;
   }
 
   /* Return if input file is not open */
   if(!nip_yyparse_infile_open){
-    if(indexarray)
-      free(indexarray);
+    if(indexarray_original){
+      free(indexarray_original);
+      indexarray = NULL;
+      indexarray_original = NULL;
+    }
     return NULL;
   }
 
   /* Read new line if needed and do other magic... */
-  while(read_line){
+  while(nip_read_line){
     /* Read the line and check for EOF */
     if(!(fgets(last_line, MAX_LINELENGTH, nip_yyparse_infile))){
-      if(indexarray != NULL)
-	free(indexarray);
+      if(indexarray_original){
+	free(indexarray_original);
+	indexarray = NULL;
+	indexarray_original = NULL;
+      }
       *token_length = 0;
       return NULL;
     }
@@ -529,9 +544,13 @@ char *next_token(int *token_length){
      * (go to beginning of loop) */
     if(tokens_left > 0){
       /* Adjust pointer to the beginning of token boundary index array */
-      if(indexarray != NULL)
-	free(indexarray);
+      if(indexarray_original){
+	free(indexarray_original);
+	indexarray = NULL;
+	indexarray_original = NULL;
+      }
       indexarray = tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1, 1);
+      indexarray_original = indexarray;
 
       /* Check if tokenise failed. If it failed, we have no other option
        * than to stop: return NULL, *token_length = 0.
@@ -545,17 +564,20 @@ char *next_token(int *token_length){
 
       /* Ignore lines that have COMMENT_CHAR as first non-whitespace char */
       if(last_line[indexarray[0]] == COMMENT_CHAR)
-	read_line = 1;
+	nip_read_line = 1;
       else
-	read_line = 0;
+	nip_read_line = 0;
     }
   }
 
   *token_length = indexarray[1] - indexarray[0];
   token = (char *) calloc(*token_length + 1, sizeof(char));
   if(!token){
-    if(indexarray)
-      free(indexarray);
+    if(indexarray_original){
+      free(indexarray_original);
+      indexarray = NULL;
+      indexarray_original = NULL;
+    }
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     *token_length = -1;
     return NULL;
@@ -571,11 +593,11 @@ char *next_token(int *token_length){
   
   /* If all the tokens have been handled, read a new line next time */
   if(--tokens_left == 0)
-    read_line = 1;
+    nip_read_line = 1;
 
   /* Still some tokens left. Check for COMMENT_CHAR. */
   else if(last_line[indexarray[0]] == COMMENT_CHAR)
-    read_line = 1;
+    nip_read_line = 1;
 
 #ifdef PRINT_TOKENS
   printf("%s\n", token);

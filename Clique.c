@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.80 2004-08-16 14:17:04 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.81 2004-08-17 08:48:42 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1167,9 +1167,17 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
 	isect[realsize++] = cl1->variables[i];
     }
 
+  if(realsize == 0){
+    free(isect);
+    *vars = NULL;
+    *n = 0;
+    return NO_ERROR;
+  }
+
+  /* Intersection is non-empty, realsize > 0 */
+
   shaved_isect = (Variable *) calloc(realsize, sizeof(Variable));
 
-  /* This should not happen. We are not making the array bigger. */
   if(!shaved_isect){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
