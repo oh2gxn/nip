@@ -1,0 +1,138 @@
+class made_with_hugin
+{
+    inputs = ();
+    outputs = ();
+    node_size = (80 40);
+    HR_Desc = "";
+    HR_OOBN_FitExpand = "1";
+    HR_Zoom_ZoomFactor = "100";
+    HR_Groups_GroupColors = "";
+    HR_Groups_GroupNames = "";
+    HR_Groups_UserGroupsNo = "0";
+    HR_Color_Interface = "21";
+    HR_Color_Instance = "0";
+    HR_Color_Utility = "36";
+    HR_Color_Decision = "17";
+    HR_Color_ContinuousChance = "48";
+    HR_Color_DiscreteChance = "16";
+    HR_Monitor_InitSD = "2";
+    HR_Monitor_InitStates = "5";
+    HR_Monitor_OpenGraph = "0";
+    HR_Monitor_GraphPrecision = "100";
+    HR_Monitor_AutoUpdGraph = "0";
+    HR_Compile_MaxMinimalSeparators = "100000";
+    HR_Compile_ApproxEpsilon = "1.0E-5";
+    HR_Compile_Approximate = "0";
+    HR_Compile_Compress = "0";
+    HR_Compile_TriangMethod = "0";
+    HR_Propagate_AutoNormal = "1";
+    HR_Propagate_AutoSum = "1";
+    HR_Propagate_Auto = "1";
+    HR_Font_Italic = "0";
+    HR_Font_Weight = "400";
+    HR_Font_Size = "-12";
+    HR_Font_Name = "Arial";
+    HR_Grid_GridShow = "0";
+    HR_Grid_GridSnap = "0";
+    HR_Grid_Y = "40";
+    HR_Grid_X = "40";
+
+    node E
+    {
+	label = "Raimo";
+	position = (404 172);
+	states = ("happy" "sad");
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node C
+    {
+	label = "Jokke";
+	position = (177 171);
+	states = ("home" "abroad");
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node A
+    {
+	label = "Einari";
+	position = (79 265);
+	states = ("drunk" "sober" "sleeping");
+	HR_Desc = "";
+	HR_State_2 = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node D
+    {
+	label = "Spede";
+	position = (287 31);
+	states = ("golfing" "alive" "dead");
+	HR_Desc = "";
+	HR_State_2 = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node B
+    {
+	label = "Jalmari";
+	position = (83 37);
+	states = ("drunk" "sober" "eating" "sleeping");
+	HR_Desc = "";
+	HR_State_3 = "";
+	HR_State_2 = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    potential (E | D)
+    {
+	data = (( 0.6 0.4 )	%  D=golfing
+		( 0.2 0.8 )	%  D=alive
+		( 0.4 0.6 ));	%  D=dead
+    }
+
+    potential (C | D B)
+    {
+	data = ((( 0.4 0.6 )	%  D=golfing  B=drunk
+		 ( 0.5 0.5 )	%  D=golfing  B=sober
+		 ( 0.5 0.5 )	%  D=golfing  B=eating
+		 ( 0.6 0.4 ))	%  D=golfing  B=sleeping
+		(( 0.2 0.8 )	%  D=alive  B=drunk
+		 ( 0.4 0.6 )	%  D=alive  B=sober
+		 ( 0.6 0.4 )	%  D=alive  B=eating
+		 ( 0.7 0.3 ))	%  D=alive  B=sleeping
+		(( 0.1 0.9 )	%  D=dead  B=drunk
+		 ( 0.3 0.7 )	%  D=dead  B=sober
+		 ( 0.6 0.4 )	%  D=dead  B=eating
+		 ( 0.9 0.1 )));	%  D=dead  B=sleeping
+    }
+
+    potential (A | C B)
+    {
+	data = ((( 0.6 0.3 0.1 )	%  C=home  B=drunk
+		 ( 0.5 0.3 0.2 )	%  C=home  B=sober
+		 ( 0.4 0.4 0.2 )	%  C=home  B=eating
+		 ( 0.2 0.3 0.5 ))	%  C=home  B=sleeping
+		(( 0.8 0.1 0.1 )	%  C=abroad  B=drunk
+		 ( 0.6 0.3 0.1 )	%  C=abroad  B=sober
+		 ( 0.3 0.4 0.3 )	%  C=abroad  B=eating
+		 ( 0.1 0.2 0.7 )));	%  C=abroad  B=sleeping
+    }
+
+    potential (D)
+    {
+	data = ( 1 1 1 );
+    }
+
+    potential (B)
+    {
+	data = ( 1 1 1 1 );
+    }
+} % class made_with_hugin

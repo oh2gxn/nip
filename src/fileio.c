@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.11 2004-06-07 08:04:31 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.12 2004-06-08 08:51:14 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -8,12 +8,6 @@
 #include "fileio.h"
 #include "errorhandler.h"
 #include "Graph.h"
-
-#define COMMENT_CHAR '%'
-#define LINELENGTH 10000
-#define STRING_NODE "node"
-#define STRING_STATES "states"
-#define STRING_LABEL "label"
 
 /* #define DEBUG_IO */
 

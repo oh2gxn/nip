@@ -1,10 +1,14 @@
 /*
- * fileio.h $Id: fileio.h,v 1.7 2004-05-17 12:59:38 mvkorpel Exp $
+ * fileio.h $Id: fileio.h,v 1.8 2004-06-08 08:51:14 mvkorpel Exp $
  */
 
 #ifndef __FILEIO_H__
+
 #include "Graph.h"
+
 #define __FILEIO_H__
+#define COMMENT_CHAR '%'
+#define LINELENGTH 10000
 
 /* Counts the number of words in string s.
  * The string must be null terminated.
@@ -16,7 +20,7 @@ int count_words(const char *s, int *chars);
 /* Counts the number of tokens in string s.
  * The string must be null terminated.
  * Tokens are like (white space separated) words, but every
- * '(', ')', '=', '{', '}', ',', and ';' is a separate token.
+ * '(', ')', '=', '{', '}', ',', and ';'is a separate token.
  * Additionally, quoted strings are each counted as one token.
  * POSSIBLE PROBLEMS with un-paired quotes?
  * If chars is not a null pointer, the number of characters in the string
