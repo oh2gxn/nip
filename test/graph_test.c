@@ -1,8 +1,9 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 #include <string.h>
 #include "Graph.h"
-#include "../Variable.h"
+#include "Variable.h"
 
 
 Graph* test1(void)
@@ -79,7 +80,7 @@ void test3(Graph* G)
     }
     for (i = 0; i < get_size(G); i++)
         for (j = 0; j < get_size(G); j++) {
-            assert(is_child(v[i], v[j]) == is_child(w[i], w[j]));
+            assert(is_child(G, v[i], v[j]) == is_child(G,w[i], w[j]));
         }
     
 }
