@@ -47,7 +47,7 @@ int get_graph_index(Graph* G, Variable v);
  * Parameter v: the variable
  */
 
-int get_neighbours(Graph* G, Variable** neighbours, Variable v);
+int get_neighbours(Graph* G, Variable* neighbours, Variable v);
 /* Returns the number of neighbours of v.
  * Parameter G: the graph
  * Parameter neighbours: a pointer to a variable array
@@ -82,9 +82,9 @@ Graph* moralise(Graph* G);
  * Does not modify G.
  */
 
-int find_cliques(Graph* Gm, Clique** cliques_p);
+int find_cliques(Graph* Gu, Clique** cliques_p);
 /* Triangulates G and finds the cliques.
- * Parameter Gm: moralised graph
+ * Parameter Gm: moralised undirected graph
  * Parameter cliques_p: pointer to a clique array
  * MVK UPDATE: I think there should be only one asterisk in cliques_p, changed
  * Returns the number of cliques.
@@ -94,5 +94,5 @@ int find_cliques(Graph* Gm, Clique** cliques_p);
 void sort_variables(Graph* G); 
 /* Internal helper */
 Graph* make_undirected(Graph* G);
-
+int triangulate(Graph* Gm, Clique** clique_p);
 #endif /* __GRAPH_H__ */

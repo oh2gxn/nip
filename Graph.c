@@ -96,18 +96,19 @@ int get_graph_index(Graph* G, Variable v)
             if (equal_variables(G->variables[i], v))
                 return i;
 
-    return -1;
-}
+	return -1;
+} 
 
-int get_neighbours(Graph* G, Variable** neighbours, Variable V)
+int get_neighbours(Graph* G, Variable* neighbours, Variable V)
 {
-    int i, j = 0;
+    int i, j;
     int n = get_size(G);
     int vi = get_graph_index(G, V);
 
+	j = 0;
     for (i = 0; i < n; i++)
         if (ADJM(G, vi, i))
-            *neighbours[j++] = G->variables[i];
+            neighbours[j++] = G->variables[i];
 
     return j; /* # of neighbours */
 }
@@ -223,8 +224,6 @@ Graph* moralise(Graph* G)
 }
 
 /* Not specified Graph.h -- internal helper function */
-/* MVK: Pitääkö tämän olla void? Nyt siinä on ei-void palautusarvo. */
-/* AR: Joo, refaktorointia kaipaillaan */
 int triangulate(Graph* Gm, Clique** clique_p)
 {
     int i, j, j_index, k, k_index, n;
