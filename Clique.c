@@ -389,3 +389,33 @@ int var_index(Clique c, Variable v){
   }
   return var;
 }
+
+
+Clique find_family(Clique *cliques, int num_of_cliques,
+		   Variable *variables, int num_of_vars){
+
+  int i, j, k;
+  int ok;
+
+  for(i = 0; i < num_of_cliques; i++){
+    ok = 0;
+
+    for(j = 0; j < num_of_vars; j++){
+
+      for(k = 0; k < cliques[i]->p->num_of_vars; k++){
+	if(equal_variables(variables[j], cliques[i]->variables[k])){
+	  ok++;
+	  break; /* found the variable in the clique */
+	}
+      }
+
+    }
+
+    /* All variables found in the clique */
+    if(ok == num_of_vars)
+      return cliques[i];
+  }
+
+  return NULL;
+
+}

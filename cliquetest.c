@@ -55,11 +55,6 @@ int main(){
 
   Variable set_of_variables[3];
 
-  /* parents not needed after 25.5.2004 */
-  /* Variable parentsA[2]; */
-  /* Variable parentsC[2]; */
-  /* Variable parentsE[1]; */
-
   /* Create the variables (without statenames) */
   variables[0] = new_variable("A", nameA, NULL, 3);
   variables[1] = new_variable("B", nameB, NULL, 4);

@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.31 2004-06-07 11:38:01 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.32 2004-06-07 14:22:15 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -104,6 +104,33 @@ input:  nodes potentials {
   nip_num_of_cliques = find_cliques(nip_graph, &nip_cliques);
 
   printf("In huginnet.y: %d cliques found.\n", nip_num_of_cliques);
+
+  initlist = nip_first_initData;
+  while(initlist != NULL){
+    
+    Variable *family = (Variable *) calloc(initlist->data->num_of_vars, 
+					   sizeof(Variable));
+    Clique fam_clique;
+
+    if(!family)
+      fprintf(stderr, "In huginnet.y : Calloc failed\n");
+
+    family[0] = initlist->child;
+    for(i = 0; i < initlist->data->num_of_vars - 1; i++)
+      family[i + 1] = initlist->parents[i];
+
+    fam_clique = find_family(nip_cliques, nip_num_of_cliques,
+			     family, initlist->data->num_of_vars);
+
+    if(fam_clique != NULL)
+      initialise(fam_clique, initlist->child, initlist->parents, 
+		 initlist->data); /* THE job */
+    else
+      fprintf(stderr, "In huginnet.y : find_family failed!\n");
+
+    initlist = initlist->fwd;    
+
+  }
 
 #ifdef DEBUG_BISON
   /*    while(list != NULL){
