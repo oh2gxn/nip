@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.24 2004-06-29 13:15:33 jatoivol Exp $
+# $Id: Makefile,v 1.25 2004-07-07 13:31:19 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -13,6 +13,7 @@ BIS_SRCS=$(HUG_SRCS) $(PAR_SRCS)
 IO_SRCS=fileio.c errorhandler.c
 DF_SRCS=$(PAR_SRCS)
 HMM_SRCS=$(BIS_SRCS)
+HTM_SRCS=$(BIS_SRCS)
 
 # XXX Replace "cliquetest" below with the name you want for your program!
 POT_TARGET=potentialtest
@@ -23,7 +24,8 @@ IO_TARGET=iotest
 BIS_TARGET=bisontest
 DF_TARGET=datafiletest
 HMM_TARGET=hmmtest
-TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET)
+HTM_TARGET=htmtest
+TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET)
 
 # You should not need to modify anything below this line...
 # Sets the name and some flags for the C compiler and linker
@@ -53,7 +55,8 @@ BIS_OBJS=$(BIS_SRCS:.c=.o) bisontest.o
 IO_OBJS=$(IO_SRCS:.c=.o) iotest.o
 DF_OBJS=$(DF_SRCS:.c=.o) datafiletest.o
 HMM_OBJS=$(HMM_SRCS:.c=.o) hmmtest.o
-OBJS=$(BIS_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o iotest.o datafiletest.o hmmtest.o
+HTM_OBJS=$(HTM_SRCS:.c=.o) htmtest.o
+OBJS=$(BIS_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o iotest.o datafiletest.o hmmtest.o htmtest.o
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program
@@ -61,7 +64,7 @@ OBJS=$(BIS_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o iotest.o
 # NOTE the tab character! Syntax of a rule:
 # <target>: <dependencies>
 # \t<command>
-all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET)
+all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET)
 
 # The program depends on the object files in $(OBJS). Make knows how
 # to compile a .c file into an object (.o) file; this rule tells it
@@ -89,6 +92,9 @@ $(DF_TARGET): $(DF_OBJS)
 
 $(HMM_TARGET): $(HMM_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(HMM_OBJS) $(LIBS)
+
+$(HTM_TARGET): $(HTM_OBJS) $(HUG_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(HTM_OBJS) $(LIBS)
 
 $(HUG_SRCS): $(HUG_DEFS)
 	$(YY) $(YYFLAGS) $(HUG_DEFS)

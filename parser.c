@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.58 2004-07-02 11:07:21 jatoivol Exp $
+ * $Id: parser.c,v 1.59 2004-07-07 13:31:19 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -962,8 +962,14 @@ int time2Vars(){
     
     v1 = initlist->var;
     v2 = get_variable(initlist->next);
-    v1->next = v2;
-    v2->previous = v1;
+    if(v1->cardinality == v2->cardinality){
+      v1->next = v2;
+      v2->previous = v1;
+    }
+    else{
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
     
     initlist = initlist->fwd;
   }

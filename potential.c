@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.35 2004-06-22 13:19:50 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.36 2004-07-07 13:31:20 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -274,11 +274,13 @@ int update_potential(potential enumerator, potential denominator,
     potvalue = get_ppointer(enumerator, source_indices);
     target->data[i] *= *potvalue;  /* THE multiplication */
 
-    potvalue = get_ppointer(denominator, source_indices);
-    if(*potvalue == 0)
-      target->data[i] = 0;  /* see Procedural Guide p. 20 */
-    else
-      target->data[i] /= *potvalue;  /* THE division */
+    if(denominator){
+      potvalue = get_ppointer(denominator, source_indices);
+      if(*potvalue == 0)
+	target->data[i] = 0;  /* see Procedural Guide p. 20 */
+      else
+	target->data[i] /= *potvalue;  /* THE division */
+    }
   }
 
   free(source_indices); /* JJ NOTE: GET RID OF THESE */

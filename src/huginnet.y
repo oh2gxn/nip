@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.46 2004-06-30 12:43:32 mvkorpel Exp $
+ * huginnet.y $Id: huginnet.y,v 1.47 2004-07-07 13:31:19 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -64,7 +64,10 @@ yyerror (const char *s);  /* Called by yyparse on error */
 %%
 input:  nodes potentials {
 
-  time2Vars();
+  if(time2Vars() != NO_ERROR){
+    yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
+    YYABORT;
+  }
 
   reset_timeinit();
 
@@ -82,7 +85,10 @@ input:  nodes potentials {
 
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
 
-  time2Vars();
+  if(time2Vars() != NO_ERROR){
+    yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
+    YYABORT;
+  }
 
   reset_timeinit();
 
