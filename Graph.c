@@ -203,34 +203,34 @@ void triangulate(Graph* Gm)
 
     for (i = 0; i < n; i++)
     {
-		min_cluster = extract_min(H, Gm);
-
-		/* Clear the variable_set for this cluster */
-		memset(variable_set, 0, n*sizeof(int));
+	min_cluster = extract_min(H, Gm);
 	
-		for (j = 0; j < cluster_size; j++)
-		{
-	    	j_index = get_graph_index(Gm, min_cluster[j]);
-	    	variable_set[j_index] = 1;
+	/* Clear the variable_set for this cluster */
+	memset(variable_set, 0, n*sizeof(int));
+	
+	for (j = 0; j < cluster_size; j++)
+	{
+	    j_index = get_graph_index(Gm, min_cluster[j]);
+	    variable_set[j_index] = 1;
 
-	    	/* Add new edges to Gm. */
-	    	for (k = j+1; k < cluster_size; k++)
-	    	{
+	    /* Add new edges to Gm. */
+	    for (k = j+1; k < cluster_size; k++)
+	    {
             	k_index = get_graph_index(Gm, min_cluster[k]);
 
             	ADJM(Gm, j_index, k_index) = 1;
             	ADJM(Gm, k_index, j_index) = 1;
-	    	}
-		}
-	
-		/* MVK: is_subset ei määritelty */
-		if (!is_subset(cl_head, variable_set, n))
-		{
-	    	cl_end->next = new_cl_item(n);
-	    	cl_end = cl_end->next;
-	    	clique_count++;
-    	}
+	    }
 	}
+	
+	/* MVK: is_subset ei määritelty */
+	if (!is_subset(cl_head, variable_set, n))
+	{
+	    cl_end->next = new_cl_item(n);
+	    cl_end = cl_end->next;
+	    clique_count++;
+    	}
+    }
     return cl2cliques(cl_head, clique_count, n);
 }
 
@@ -245,13 +245,13 @@ Clique* cl2cliques(Cluster_list* cl_head, int n_cliques, int n)
     /* MVK: Mikä on vars? Ei määritelty. */
     for (cl_i = cl_head; cl_i->next != NULL; cl_i = cl_i->next)
     {
-		n_vars = 0;
-		for (i = 0; i < n; i++)
-	    	if (cl_i->variable_set[i])
-				clique_vars[n_vars++] = vars[i];
+	n_vars = 0;
+	for (i = 0; i < n; i++)
+	    if (cl_i->variable_set[i])
+		clique_vars[n_vars++] = vars[i];
 
-		cliques[--n_cliques] = make_Clique(clique_vars, n_vars);
-		/* This ^^^^^^^^^^^ is sort of dangerous. */
+	cliques[--n_cliques] = make_Clique(clique_vars, n_vars);
+	/* This ^^^^^^^^^^^ is sort of dangerous. */
     }
     
     return cliques;
