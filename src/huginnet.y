@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.22 2004-06-03 07:28:29 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.23 2004-06-03 07:37:26 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -149,6 +149,7 @@ strings:       /* end of list */ { $$ = make_string_array() }
 numbers:       /* end of list */ { $$ = make_double_array() }
              | NUMBER numbers { add_double($1) }
              | '(' numbers ')' {/* ignore */} // nested lists?
+             | '(' numbers ')' '(' numbers ')' {/* ignore */} // nested lists?
 ;
 
 
