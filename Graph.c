@@ -92,6 +92,16 @@ int get_size(Graph* G)
     return G->size;
 }
 
+int get_neighbours(Graph* G, Variable** neighbours)
+{
+    /* XX ihan vaiheessa. Mietipä joskus miten käy, jos refleksiivinen */
+    for (i = 0; i < n; i++)
+        if (G->adj_matrix)
+            *neighbours[j++] = 1;
+
+    return j/* # of neighbours */
+}
+
 Variable* get_variables(Graph* G)
 {
     return G->variables;
@@ -158,16 +168,48 @@ void triangulate(Graph* Gm)
 {
     int i,n;
     Graph* Gm_copy;
-    
+    Variable* min_cluster;
+    Heap* H;
+
     /* Step 1: Copy Gm */
+/*Copy of Gm probably unnecessary!
     n = Gm->size;
     Gm_copy = new_graph(n);
     for (i = 0; i < n; i++)
-      add_variable(Gm_copy, Gm->variables[i]);
+	add_variable(Gm_copy, Gm->variables[i]);
         
     memcpy(Gm_copy->adj_matrix[0], Gm->adj_matrix[0], n*n*sizeof(int));
-    
+*/    
     /* Step 2: Triangulate Gm */
+ 
+    H = build_heap(Gm);
+
+    for (i = 0; i < n; i++)
+    {
+	min_cluster = extract_min(H, Gm);
+	
+	for (j = 0; j < cluster_size; j++)
+	{
+	    j_index = get_graph_index(Gm, min_cluster[j]);
+	    XXX lisää min_cluster[j_index] settiin.
+
+	    for (k = j+1; k < cluster_size; k++)
+	    {
+		k_index = get_graph_index(Gm, min_cluster[k]);
+
+		adj_matrix[j_index][k_index] = 1;
+		adj_matrix[j_index][k_index] = 1;
+	    }
+	}
+	
+	/* XX Eihän noi oo järjestyksessä.
+         * Keksi tapa esittää noi seteittäin.
+	 * Ja hae cluster_size tuolta extract_ministä
+	 */
+
+	/* And to add edges */
+	/* Use this to build cliques as well */
+    } 
 }
 
 int find_cliques(Graph* Gm, Clique* cliques_p)
