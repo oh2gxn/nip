@@ -16,6 +16,7 @@ int main(){
   char name3[] = "jokke";
   char name4[] = "spede";
   char name5[] = "raimo";
+  int cardinality[3];
   variables[0] = new_variable(name1, 3);
   variables[1] = new_variable(name2, 4);
   variables[2] = new_variable(name3, YKS_KARDINALITEETTI_VAAN);
@@ -41,13 +42,21 @@ int main(){
   Variable parents0[2];
   Variable parents2[2];  /* JJ: HOW TO MAKE ARRAYS EASILY? */
   Variable parents4[1];
-  model[0]=make_potential({3,4,YKS_KARDINALITEETTI_VAAN}, 3);
-  model[1]=make_potential({4,YKS_KARDINALITEETTI_VAAN,3}, 3);
-  model[2]=make_potential({3,2}, 2);
+  cardinality[0] = 3;
+  cardinality[1] = 4;
+  cardinality[2] = YKS_KARDINALITEETTI_VAAN;
+  model[0]=make_potential(cardinality, 3);
+  cardinality[0] = 4;
+  cardinality[1] = YKS_KARDINALITEETTI_VAAN;
+  cardinality[2] = 3;
+  model[1]=make_potential(cardinality, 3);
+  cardinality[0] = 3;
+  cardinality[1] = 2;
+  model[2]=make_potential(cardinality, 2);
   /* model[i]->data  i.e. conditional distributions ??? */
-  parents0 = {variables[1], variables[2]};
-  parents2 = {variables[1], variables[3]};
-  parents4 = {variables[3]};
+  parents0[0] = variables[1]; parents0[1] = variables[2];
+  parents2[0] = variables[1]; parents2[1] = variables[3];
+  parents4[0] = variables[3];
   initialise(clique_pile[0], variables[0], parents0, model[0]);
   initialise(clique_pile[1], variables[2], parents2, model[1]);
   initialise(clique_pile[2], variables[4], parents4, model[2]);
@@ -62,7 +71,7 @@ int main(){
   collect_evidence(NULL, NULL, clique_pile[1]);
   distribute_evidence(clique_pile[1]);
 
-  /* marginalization */
+  /* marginalisation */
   marginalise(clique_pile[1], variables[2], result);
 
   /* normalization */

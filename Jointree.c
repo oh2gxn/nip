@@ -1,10 +1,12 @@
 /*
- * Jointree.c $Id: Jointree.c,v 1.1 2004-02-02 13:34:31 mvkorpel Exp $
+ * Jointree.c $Id: Jointree.c,v 1.2 2004-02-19 13:18:20 mvkorpel Exp $
+ * Saapa n‰hd‰, mik‰ Jointreen rooli tulee olemaan, jos mik‰‰n.
  */
 
 #include <stdlib.h>
 #include "Jointree.h"
 #include "Clique.h"
+#include "errorhandler.h"
 
 Jointree make_Jointree(int num_of_cliques){
   Jointree j = (Jointree) malloc(sizeof(jointreetype));
