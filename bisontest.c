@@ -18,7 +18,7 @@ int yyparse();
 
 int main(int argc, char *argv[]){
 
-  int i, retval, temp;
+  int i, retval;
   int nip_num_of_cliques;
   Clique *nip_cliques;
 
@@ -26,23 +26,27 @@ int main(int argc, char *argv[]){
   int j;
 #endif
 
+#ifdef DEBUG_BISONTEST
+  int temp;
+  int evidence_retval;
+#endif
+
   double* result;
 
 #ifdef EVIDENCE
-  int evidence_retval;
 
 #ifdef EVIDENCE1
   double probB[] = {0.25, 0.25, 0.40, 0.10};
   double probD[] = {0.2, 0.3, 0.5};
-#endif
+#endif /* EVIDENCE1 */
 
 #ifndef EVIDENCE1
   double probB[] = {0.75, 0.21, 0.03, 0.01};
   double probD[] = {0.6, 0.1, 0.3};
-#endif
+#endif /* !EVIDENCE1 */
 
   Variable observed[2];
-#endif
+#endif /* EVIDENCE */
 
   Variable interesting;
   Clique clique_of_interest;
@@ -86,7 +90,7 @@ int main(int argc, char *argv[]){
     
     print_potential(nip_cliques[i]->p);
   }
-#endif
+#endif /* PRINT_POTENTIALS */
 
 #ifdef EVIDENCE
   /* add some evidence */
@@ -95,16 +99,20 @@ int main(int argc, char *argv[]){
 
   clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				   observed, 1);
-  evidence_retval = enter_evidence(clique_of_interest, observed[0], probB);
+
+#ifndef DEBUG_BISONTEST
+  enter_evidence(clique_of_interest, observed[0], probB);
+#endif
 
 #ifdef DEBUG_BISONTEST
+  evidence_retval = enter_evidence(clique_of_interest, observed[0], probB);
   printf("\n\nEntered evidence into the clique of ");
   for(i = 0; i < clique_num_of_vars(clique_of_interest) - 1; i++)
     printf("%s ", get_symbol(clique_get_Variable(clique_of_interest, i)));
   printf("and %s.\n", get_symbol(clique_get_Variable(clique_of_interest, i)));
 
   printf("enter_evidence returned %d.\n", evidence_retval);
-#endif
+#endif /* DEBUG_BISONTEST */
 
   /* propagation: some action */
 
@@ -121,17 +129,20 @@ int main(int argc, char *argv[]){
   clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				   observed, 2);
 
-  evidence_retval = enter_evidence(clique_of_interest, observed[1], probD);
+#ifndef DEBUG_BISONTEST
+  enter_evidence(clique_of_interest, observed[1], probD);
+#endif
 
 #ifdef DEBUG_BISONTEST
+  evidence_retval = enter_evidence(clique_of_interest, observed[1], probD);
   printf("Entered evidence into the clique of ");
   for(i = 0; i < clique_num_of_vars(clique_of_interest) - 1; i++)
     printf("%s ", get_symbol(clique_get_Variable(clique_of_interest, i)));
   printf("and %s.\n", get_symbol(clique_get_Variable(clique_of_interest, i)));
 
   printf("enter_evidence returned %d.\n", evidence_retval);
-#endif
-#endif
+#endif /* DEBUG_BISONTEST*/
+#endif /* EVIDENCE */
 
   printf("\n\n");
 
@@ -175,18 +186,21 @@ int main(int argc, char *argv[]){
   for(i = 0; i < clique_num_of_vars(clique_of_interest); i++)
     printf("%s", get_symbol(clique_get_Variable(clique_of_interest, i)));
   printf("\n");
-#endif
+#endif /* DEBUG_BISONTEST */
     
-  temp = marginalise(clique_of_interest, interesting, result);
+#ifndef DEBUG_BISONTEST
+  marginalise(clique_of_interest, interesting, result);
+#endif
 
 #ifdef DEBUG_BISONTEST
+  temp = marginalise(clique_of_interest, interesting, result);
   printf("Marginalisation returned %d. (0 is OK)\n", temp);
 
   printf("After marginalisation, probability of %s:\n", 
 	 get_symbol(interesting));
   for(i = 0; i < number_of_values(interesting); i++)
     printf("result[%d] = %f\n", i, result[i]);
-#endif
+#endif /* DEBUG_BISONTEST */
 
   /* normalization */
   normalise(result, number_of_values(interesting));

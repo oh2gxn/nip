@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.18 2004-06-11 12:34:18 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.19 2004-06-16 13:06:50 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -26,10 +26,6 @@ struct varlist {
 typedef struct varlist varelement;
 typedef varelement *varlink;
 
-extern Graph *nip_graph;
-extern Clique *nip_cliques;
-extern int nip_num_of_cliques;
-
 struct doublelist {
   double data;
   struct doublelist *fwd;
@@ -39,10 +35,6 @@ struct doublelist {
 typedef struct doublelist doubleelement;
 typedef doubleelement *doublelink;
 
-extern doublelink nip_first_double;
-extern doublelink nip_last_double;
-extern int nip_doubles_parsed;
-
 struct stringlist {
   char* data;
   struct stringlist *fwd;
@@ -51,10 +43,6 @@ struct stringlist {
 
 typedef struct stringlist stringelement;
 typedef stringelement *stringlink;
-
-extern stringlink nip_first_string;
-extern stringlink nip_last_string;
-extern int nip_strings_parsed;
 
 struct initDataList {
   potential data;

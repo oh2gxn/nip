@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.12 2004-06-08 08:51:14 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.13 2004-06-16 13:06:49 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -213,48 +213,4 @@ char **split(const char s[], int indices[], int n){
   }
 
   return words;
-}
-
-/* NOT USED. Parser is done with bison instead.*/
-Graph *read_model(const char *filename){
-
-  FILE *f;
-  char s[LINELENGTH];
-  int words;
-  int *wordbounds;
-  int state = 0;
-  f=fopen(filename, "r");
-  if(!f){
-    report_error(ERROR_IO, 1);
-    return NULL;
-  }
-
-  /* Read a line at a time from the file. */
-  while(fgets(s, LINELENGTH, f) != NULL){
-    words = count_words(s, NULL);
-    wordbounds = tokenise(s, words, 1);
-
-    /* TO DO */
-
-    /* Process the input line with an FSA */
-    while(1){
-      switch(state){
-	/* 0: looking for upper level token "node" */
-	case 0 :
-	  
-	  break;
-
-	case 1 :
-	  
-	  break;
-
-	case 2 :
-
-	  break;
-      }            
-    } /* end line processing */
-
-  } /* end of file */
-
-  return NULL;
 }

@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.30 2004-06-11 12:34:18 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.31 2004-06-16 13:06:50 mvkorpel Exp $
  * Functions for handling potentials. 
  */
 
@@ -294,8 +294,8 @@ int init_potential(potential probs, potential target, int extra_vars[]){
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
   /* The general idea is the same as in marginalise */
-  if(extra_vars == NULL) // this is one kind of a bug fix
-    for(i = 0; i < target->size_of_data; i++) // similar kind of potentials
+  if(extra_vars == NULL) /* this is one kind of a bug fix */
+    for(i = 0; i < target->size_of_data; i++) /* similar kind of potentials */
       target->data[i] *= probs->data[i];
   else
     for(i = 0; i < target->size_of_data; i++){

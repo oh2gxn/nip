@@ -5,6 +5,7 @@
 int main(int argc, char *argv[]){
 
   int token_length;
+  int ok = 1;
   char *token;
 
   if(argc < 2){
@@ -14,14 +15,15 @@ int main(int argc, char *argv[]){
   else if(open_infile(argv[1]) != 0)
     return -1;
 
-  while(1){
+  while(ok){
     token = next_token(&token_length);
 
     if(token_length == 0)
-      break; /* no more tokens */
+      ok = 0; /* no more tokens */
 
     /* Printataan "token" ruudulle. */
-    printf("%s\n", token);
+    if(ok)
+      printf("%s\n", token);
     
   }
 

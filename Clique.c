@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.53 2004-06-16 12:04:26 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.54 2004-06-16 13:06:49 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -69,11 +69,14 @@ Clique make_Clique(Variable vars[], int num_of_vars){
 
 
 int free_Clique(Clique c){
+  link l1, l2;
+
   if(c == NULL)
     return ERROR_NULLPOINTER;
+  
   /* clean the list of sepsets */
-  link l1 = c->sepsets;
-  link l2 = c->sepsets;
+  l1 = c->sepsets;
+  l2 = c->sepsets;
   while(l1 != NULL){
     l2 = l1->fwd;
     free(l1);
@@ -142,13 +145,15 @@ int add_Sepset(Clique c, Sepset s){
  * ATTENTION! Check what this does when num_of_vars == 0.
  */
 Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
+
   Sepset s = (Sepset) malloc(sizeof(sepsettype));
-  s->cliques = (Clique *) calloc(2, sizeof(Clique));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
   int *reorder = (int *) calloc(num_of_vars, sizeof(int));
   int *indices = (int *) calloc(num_of_vars, sizeof(int));
   int i, j;
   unsigned long temp;
+
+  s->cliques = (Clique *) calloc(2, sizeof(Clique));
   s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
 
   if(!s || !cardinality || !reorder || !indices || 
@@ -364,6 +369,9 @@ Variable clique_get_Variable(Clique c, int i){
 
 int distribute_evidence(Clique c){
 
+  link l;
+  Sepset s;
+
 #ifdef DEBUG_CLIQUE
   int i;
 
@@ -377,8 +385,7 @@ int distribute_evidence(Clique c){
   c->mark = 1;
 
   /* pass the messages */
-  link l = c->sepsets;
-  Sepset s;
+  l = c->sepsets;
   while (l != 0){
     s = l->data;
     if(!clique_marked(s->cliques[0]))
@@ -404,6 +411,9 @@ int distribute_evidence(Clique c){
 
 int collect_evidence(Clique c1, Sepset s12, Clique c2){
 
+  link l;
+  Sepset s;
+
 #ifdef DEBUG_CLIQUE
   int i;
 #endif
@@ -412,8 +422,7 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
   c2->mark = 1;
 
   /* call neighboring cliques */
-  link l = c2->sepsets;
-  Sepset s;
+  l = c2->sepsets;
   while (l != NULL){
     s = l->data;
     if(!clique_marked(s->cliques[0]))
@@ -445,13 +454,29 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
 
 int message_pass(Clique c1, Sepset s, Clique c2){
   int i, j = 0, k = 0;
-  int source_vars[c1->p->num_of_vars - s->new->num_of_vars];
-  int extra_vars[c2->p->num_of_vars - s->new->num_of_vars];
+  int *source_vars;
+  int *extra_vars;
+
   /* save the newer potential as old by switching the pointers */
   potential temp;
   temp = s->old;
   s->old = s->new;
   s->new = temp;
+
+  source_vars = (int *) calloc(c1->p->num_of_vars - s->new->num_of_vars,
+			       sizeof(int));
+  if(!source_vars){
+    fprintf(stderr, "In Clique.c: Calloc failed.\n");
+    return ERROR_OUTOFMEMORY;
+  }
+
+  extra_vars = (int *) calloc(c2->p->num_of_vars - s->new->num_of_vars,
+			      sizeof(int));
+  if(!extra_vars){
+    fprintf(stderr, "In Clique.c: Calloc failed.\n");
+    free(source_vars);
+    return ERROR_OUTOFMEMORY;
+  }
 
   /* marginalise (projection)
      first: select the variables */
@@ -479,6 +504,10 @@ int message_pass(Clique c1, Sepset s, Clique c2){
     }
   } /* rest the case */
   update_potential(s->new, s->old, c2->p, extra_vars);
+
+  free(source_vars);
+  free(extra_vars);
+
   return 0;
 }
 

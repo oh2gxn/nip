@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.21 2004-06-16 12:04:26 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.22 2004-06-16 13:06:49 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -18,9 +18,6 @@ Variable new_variable(const char* symbol, const char* name,
   v->cardinality = cardinality;
   v->id = id++;
   v->probability = NULL; 
-  /* FIXME: This NULL is probably NOT suitable, because the variables without parents 
-   * will then have NULL as v->probability. The reason: HUGIN files don't have this 
-   * "potential ( A ) { data = ( 1 1 1 ... 1 1 1 ) }" for independent variables. */
  
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
@@ -29,7 +26,7 @@ Variable new_variable(const char* symbol, const char* name,
     /* DANGER! The name can be omitted and consequently be NULL */
     v->name[0] = '\0';
 
-  // "the ownership" of the states (array of strings) changes
+  /* "the ownership" of the states (array of strings) changes */
   variable_statenames(v, states); 
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
@@ -49,7 +46,7 @@ int variable_name(Variable v, const char *name){
 }
 
 
-// "the ownership" of the states (array of strings) changes
+/* "the ownership" of the states (array of strings) changes */
 int variable_statenames(Variable v, char **states){
   v->statenames = states;
   return 0;
@@ -58,9 +55,11 @@ int variable_statenames(Variable v, char **states){
 
 Variable copy_variable(Variable v){
   int i;
+  Variable copy = (Variable) malloc(sizeof(vtype));
+
   if(v == NULL)
     return NULL;
-  Variable copy = (Variable) malloc(sizeof(vtype));
+
   copy->cardinality = v->cardinality;
   copy->id = v->id;
 
