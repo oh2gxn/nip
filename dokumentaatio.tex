@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.38 2004-11-29 15:59:55 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.39 2005-01-19 16:00:52 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -501,6 +501,7 @@ $P(\mathbf{X})$ can be calculated from $P(\mathbf{Z})$ by summing over
 $\mathbf{Z} \setminus \mathbf{X}$ and similarly
 \begin{equation}
 \phi_\mathbf{X} = \sum_{\mathbf{Z} \setminus \mathbf{X}} \phi_{\mathbf{Z}}.
+\label{potentialmarginalisation}
 \end{equation}
 Which means that if we have $\mathbf{Z} = \{X, Z_2, Z_3\}$, then
 \begin{equation}
@@ -518,14 +519,15 @@ Again, if we have $\mathbf{X} \subseteq \mathbf{Z}$, we may assign
 As an example, when $\mathbf{Z} = \{X, Z_2, Z_3\}$, the assignment
 \begin{equation}
 \phi_\mathbf{Z}[i][j][k] \leftarrow \phi_\mathbf{Z}[i][j][k]*\phi_X[i]
+\label{potentialmultiplication}
 \end{equation}
 is done for all combinations of 
 $(i,j,k) \in [0,c_X-1]\times[0,c_{Z_2}-1]\times[0,c_{Z_3}-1]$.
 
 From the implementation point of view, one of the most important
-notions is that a multidimensional table can be referenced by a 
-``flat index'' also. For example, if we assume that the first index of an
-array is the least significant one and $\mathbf{X} = \{X_1,X_2\}$, then 
+notions is that an element in a multidimensional table can be referenced 
+by a ``flat index'' also. For example, if we assume that the first index of 
+an array is the least significant one and $\mathbf{X} = \{X_1,X_2\}$, then 
 \begin{itemize}
 \item $\phi_\mathbf{X}[0] = \phi_\mathbf{X}[0][0]$, 
 \item $\phi_\mathbf{X}[i] = \phi_\mathbf{X}[i][0]$, if $i<c_{X_1}$,
@@ -533,7 +535,7 @@ array is the least significant one and $\mathbf{X} = \{X_1,X_2\}$, then
   $c_{X_1} \leq i < 2c_{X_1}$ etc.,
 \item $\phi_\mathbf{X}[c_{X_1}] = \phi_\mathbf{X}[0][1]$, and 
 \item $\phi_\mathbf{X}[c_{X_1}*c_{X_2}-1] = 
-  \phi_\mathbf{X}[c_{X_1}-1][c_{X_2}-1]$ which is the last element. 
+  \phi_\mathbf{X}[c_{X_1}-1][c_{X_2}-1]$, which is the last element. 
 \end{itemize}
 
 
@@ -760,9 +762,9 @@ which simply means that a sepset potential must describe the same kind of
 dependency between its variables than the neigbouring clique potential. The
 clique just has some extra variables which the sepset does not care about.
 
-The intention of the join tree potentials is to encode the joint
-distribution of all the variables in the original belief network, which is
-called the \textbf{global consistency}:
+The intention of the join tree potentials is to encode the joint probabilty
+distribution of all the variables in the original belief network. This 
+property is called the \textbf{global consistency}:
 \begin{equation}
 P(\mathbf{U}) = \frac{\prod_i \phi_{\mathbf{X}_i}} 
                      {\prod_j \phi_{\mathbf{S}_j}},
@@ -793,10 +795,57 @@ Another important property is that a family of a variable can be found in a
 single clique. (This is due to the moralisation of the original network.) 
 The importance becomes clear in the message passing scheme presented below.
 
-\subsubsection{Maintaining the consistency}
-The propagation of evidence...
+\subsubsection{Inference with a join tree}
+% initialisation
+In order to encode the quantitative dependencies of the original belief 
+network, the join tree must be initialised with the belief potentials. 
+At first, all the potentials are uniform i.e. $\phi_\mathbf{X} = 1$, for
+all cliques and sepsets $\mathbf{X}$. The initialisation is achieved by 
+multiplying the conditional probability distributions (belief potentials 
+$P(V|\mathbf{\Pi}_V)$) into certain clique potentials. The 
+clique~$\mathbf{X}$ to be initialised has to contain the corresponding 
+variable~$V$ and its parents~$\mathbf{\Pi}_V$: if variable family is
+$\mathbf{F}_V = V \cup \mathbf{\Pi}_V$ then 
+$\mathbf{F}_V \subseteq \mathbf{X}$. The multiplication is the one defined 
+previously by Eq.~\ref{potentialmultiplication}
+%
+\begin{equation}
+\phi_\mathbf{X} \leftarrow \phi_\mathbf{X} P(V|\mathbf{\Pi}_V).
+\end{equation}
 
-% XXXXX To be continued...
+% entering evidence 
+The next step is entering evidence into the join tree. First, e.g. for a
+single variable $V$, we need to encode the observation as a
+likelihood~$\Lambda_V^{new}$, which tells the probabilities for each state
+of the variable. Then we multiply the potential of a suitable clique
+$\mathbf{X}$, containing the variable i.e. $V \in \mathbf{X}$, by the new
+likelihood. In the case of dynamic observations, the possible old
+likelihood of the variable has to be canceled away from the clique 
+potential with an element-wise division.
+%
+\begin{equation}
+\phi_\mathbf{X} \leftarrow \phi_\mathbf{X}\frac{\Lambda_V^{new}}{\Lambda_V}
+\end{equation}
+%
+The previous likelihood of the variable, denoted by $\Lambda_V$, 
+is updated after the observation entry.
+%
+\begin{equation}
+\Lambda_V \leftarrow \Lambda_V^{new}.
+\end{equation}
+
+% propagation by distributing and collecting evidence
+The initialisation and observations will make the join tree inconsistent. 
+After all, the parameters were multiplied into single cliques, so the
+evidence has to be distributed throughout the tree. You could think that
+most of the inference will happen during the third phase where the tree is
+made consistent.
+
+The consistency is achieved by a two-phase procedure, where...
+
+% marginalisation
+
+% XX To be continued...
 
 
 \subsection{The functionality description}
