@@ -10,6 +10,7 @@ typedef struct {
   unsigned long id; /* unique id for every variable */
   double *likelihood; /* likelihood of each value */
   potential probability; /* probability of variable, given parents */
+  /* JJT: potential is mainly for making global retraction easier! */
 } vtype;
 
 typedef vtype *Variable;
@@ -47,6 +48,8 @@ int number_of_values(Variable v);
 
 /* Sets the conditional probability of variable v.
  * If probability is already set, the previous values are freed from memory.
+ * This means that the "ownership" of the potential will change.
+ * DO NOT USE THE SAME POTENTIAL FOR ANY OTHER VARIABLE!
  */
 int set_probability(Variable v, potential p);
 

@@ -47,6 +47,8 @@ void free_variable(Variable v){
   if(v == NULL)
     return;
   free(v->likelihood);
+  if(v->probability != NULL)
+    free(v->probability);
   free(v);
 }
 

@@ -257,7 +257,7 @@ int update_evidence(double numerator[], double denominator[],
 
 int init_potential(potential probs, potential target, int extra_vars[]){
 
-  /* MUOKKAA TÄTÄ, TÄMÄ ON MELKEIN COPY-PASTE */
+  /* probs is assumed to be normalised */
 
   int i;
   int *probs_indices, *target_indices;
@@ -276,7 +276,7 @@ int init_potential(potential probs, potential target, int extra_vars[]){
     target->data[i] *= *potvalue;  /* THE multiplication */
   }
 
-  free(probs_indices); /* JJ NOTE: GET RID OF THESE */
+  free(probs_indices); /* JJ NOTE: GET RID OF THESE? */
   free(target_indices);
 
   return 0;

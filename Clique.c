@@ -172,6 +172,29 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   return 0;
 }
 
+/* Make up a better name for this */
+/* !!! p->num_of_vars == sizeof(parents) + 1 !!! */
+int initialise(Clique c, Variable v, Variable parents[], potential p){
+  int i, j = 0, k = 0;
+  int extra_vars[c->p->num_of_vars - p->num_of_vars];
+
+  /* UNFINISHED! BUGS & STUFF... */
+
+  /* initialisation with conditional distributions 
+     first: select the variables */
+  for(i=0; i < c->p->num_of_vars; i++){
+    if(j < p->num_of_vars &&
+       equal_variables((c->variables)[i], parents[j])) /* or v !!! */
+      j++;
+    else {
+      extra_vars[k] = i;
+      k++;
+    }
+  } /* rest the case */
+  return (init_potential(p, c->p, extra_vars));
+}
+
+
 int marginalise(Clique c, Variable v, double r[]){
   int index = var_index(c, v);
 

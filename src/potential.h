@@ -96,7 +96,10 @@ int update_potential(potential enumerator, potential denominator,
 int update_evidence(double enumerator[], double denominator[], 
 		    potential target, int var);
 
-/* COMMENTS PLEASE
+/* This one implements the initialisation with observations. 
+ * See the Procedural Guide page 25, step 2. 
+ * Similar to update_potential() so look at the info about 
+ * arguments there.
  */
 int init_potential(potential probs, potential target, int extra_vars[]);
 
