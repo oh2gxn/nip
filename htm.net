@@ -37,28 +37,6 @@ class htm
     HR_Grid_Y = "40";
     HR_Grid_X = "40";
 
-    node A3
-    {
-	label = "";
-	position = (539 319);
-	states = ("s1" "s2" "s3");
-	HR_Desc = "";
-	HR_State_2 = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node A2
-    {
-	label = "";
-	position = (300 313);
-	states = ("s1" "s2" "s3");
-	HR_Desc = "";
-	HR_State_2 = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
     node A1
     {
 	label = "";
@@ -81,10 +59,54 @@ class htm
 	HR_State_0 = "";
     }
 
+    node S1
+    {
+	label = "";
+	position = (66 52);
+	states = ("s1" "s2" "s3");
+	HR_Desc = "";
+	HR_State_2 = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node A2
+    {
+	label = "";
+	position = (300 313);
+	states = ("s1" "s2" "s3");
+	HR_Desc = "";
+	HR_State_2 = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
     node B2
     {
 	label = "";
 	position = (423 171);
+	states = ("s1" "s2" "s3");
+	HR_Desc = "";
+	HR_State_2 = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node S2
+    {
+	label = "";
+	position = (304 52);
+	states = ("s1" "s2" "s3");
+	HR_Desc = "";
+	HR_State_2 = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node A3
+    {
+	label = "";
+	position = (539 319);
 	states = ("s1" "s2" "s3");
 	HR_Desc = "";
 	HR_State_2 = "";
@@ -107,28 +129,6 @@ class htm
     {
 	label = "";
 	position = (551 52);
-	states = ("s1" "s2" "s3");
-	HR_Desc = "";
-	HR_State_2 = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node S2
-    {
-	label = "";
-	position = (304 52);
-	states = ("s1" "s2" "s3");
-	HR_Desc = "";
-	HR_State_2 = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node S1
-    {
-	label = "";
-	position = (66 52);
 	states = ("s1" "s2" "s3");
 	HR_Desc = "";
 	HR_State_2 = "";

@@ -312,7 +312,7 @@ int main(int argc, char *argv[]){
     n = 0;
     for(j=0; j < clique_of_interest->p->num_of_vars; j++){
       if(m < num_of_nexts &&
-	 equal_variables((clique_of_interest->variables)[j], next[m]))
+	 equal_variables((clique_of_interest->variables)[j], next[m])) /* ? */
 	m++;
       else {
 	temp_vars[n] = j;

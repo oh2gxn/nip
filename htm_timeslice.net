@@ -159,7 +159,13 @@ class htm_timeslice
     }
 
     potential (S0)
-    {
+    { % NOTE: Has to be marginalised from P(S1 | S0) above ?
 	data = ( 1 1 1 );
     }
+
+    potential (B0)
+    { % NOTE: What about this?
+	data = ( 1 1 1 );
+    }
+
 } % class htm_timeslice
