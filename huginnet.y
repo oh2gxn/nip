@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.13 2004-05-28 13:28:20 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.14 2004-05-28 13:41:06 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -81,6 +81,7 @@ potentials:    /* empty */ {/* initialisation data ready at first_initData */}
 ;
 
 
+// FIXME: Put another rule here to support symbols of one character!!!!
 nodeDeclaration:    node UNQUOTED_STRING '{' labelDeclaration 
                                              statesDeclaration
                                              positionDeclaration
