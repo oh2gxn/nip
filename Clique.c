@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.50 2004-06-14 22:41:49 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.51 2004-06-15 08:40:33 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -87,6 +87,12 @@ int free_Clique(Clique c){
 
 
 int add_Sepset(Clique c, Sepset s){
+
+#ifdef DEBUG_CLIQUE
+  int i;
+  Clique two;
+#endif
+
   link new = (link) malloc(sizeof(element));
   new->data = s;
   new->fwd = c->sepsets;
@@ -94,6 +100,37 @@ int add_Sepset(Clique c, Sepset s){
   if(c->sepsets != NULL)
     c->sepsets->bwd = new;
   c->sepsets = new;
+
+#ifdef DEBUG_CLIQUE
+  printf("In Clique.C: add_Sepset added Sepset ");
+  for(i = 0; i < ((Sepset)(c->sepsets->data))->old->num_of_vars; i++)
+    printf("%s", ((Sepset)(c->sepsets->data))->variables[i]->symbol);
+  printf(" to Clique ");
+  for(i = 0; i < c->p->num_of_vars; i++)
+    printf("%s", c->variables[i]->symbol);
+  printf("\nSepset has connections to Cliques ");
+  for(i = 0; i < ((Sepset)(c->sepsets->data))->cliques[0]->p->num_of_vars; i++)
+    printf("%s",
+	   ((Sepset)(c->sepsets->data))->cliques[0]->variables[i]->symbol);
+  printf(" and ");
+  for(i = 0; i < ((Sepset)(c->sepsets->data))->cliques[1]->p->num_of_vars; i++)
+    printf("%s",
+	   ((Sepset)(c->sepsets->data))->cliques[1]->variables[i]->symbol);
+  printf("\n");
+
+  /* Check if clique_search works. */
+  printf("In Clique.C: add_Sepset called clique_search. ");
+  if(c == ((Sepset)(c->sepsets->data))->cliques[1])
+    two = ((Sepset)(c->sepsets->data))->cliques[0];
+  else
+    two = ((Sepset)(c->sepsets->data))->cliques[1];
+  if(clique_search(c, two))
+    printf("It works!\n");
+  else
+    printf("It failed. clique_search is buggy.\n");
+
+#endif
+
   return 0;
 }
 
@@ -629,6 +666,9 @@ int clique_search(Clique one, Clique two){
   /* mark */
   one->mark = 1;
 
+  if(one == NULL || two == NULL)
+    return 0;
+
   /* NOTE: this defines the equality of cliques. */
   if(one == two)
     return 1;
@@ -644,7 +684,7 @@ int clique_search(Clique one, Clique two){
 
   /* call neighboring cliques */
   while (l != NULL){
-    s = l->data;
+    s = (Sepset)(l->data);
     if(s->cliques[0]->mark == 0){
       if(clique_search(s->cliques[0], two))
 	return 1;
