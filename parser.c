@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.4 2004-03-22 14:16:07 mvkorpel Exp $
+ * $Id: parser.c,v 1.5 2004-03-23 12:08:55 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -95,13 +95,40 @@ char *next_token(int *token_length){
 }
 
 /* correctness? */
-void add_pvar(Variable var){
+int add_pvar(Variable var){
   varlink new = (varlink) malloc(sizeof(varelement));
   new->data = var;
   new->fwd = 0;
-  new->bwd = last;
-  if(first = 0)
-    first = new;
-  last = new;
+  new->bwd = last_double;
+  if(first_var = 0)
+    first_var = new;
+  last_var = new;
   vars_parsed++;
+  return 0;
+}
+
+/* correctness? */
+int add_double(double d){
+  doublelink new = (doublelink) malloc(sizeof(doubleelement));
+  new->data = d;
+  new->fwd = 0;
+  new->bwd = last_double;
+  if(first_double = 0)
+    first_double = new;
+  last_double = new;
+  vars_parsed++;
+  return 0;
+}
+
+/* correctness? */
+int add_string(char* string){
+  stringlink new = (stringlink) malloc(sizeof(stringelement));
+  new->data = string;
+  new->fwd = 0;
+  new->bwd = last_string;
+  if(first_string = 0)
+    firststring = new;
+  last_string = new;
+  vars_parsed++;
+  return 0;
 }

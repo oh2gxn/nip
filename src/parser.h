@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.4 2004-03-22 14:16:07 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.5 2004-03-23 12:08:55 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -19,13 +19,40 @@ struct varlist {
 typedef struct varlist varelement;
 typedef varelement *varlink;
 
-static varlink first = 0;
-static varlink last = 0;
+static varlink first_var = 0; /* global stuff, sad but true */
+static varlink last_var = 0;
 static int vars_parsed = 0;
+
+
+struct doublelist {
+  double data;
+  struct doublelist *fwd;
+  struct doublelist *bwd;
+};
+
+typedef struct doublelist doubleelement;
+typedef doubleelement *doublelink;
+
+static varlink first_double = 0;
+static varlink last_double = 0;
+static int doubles_parsed = 0;
+
+
+struct stringlist {
+  char* data;
+  struct stringlist *fwd;
+  struct stringlist *bwd;
+};
+
+typedef struct stringlist stringelement;
+typedef stringelement *stringlink;
+
+static stringlink first_string = 0;
+static varlink last_string = 0;
+static int strings_parsed = 0;
 
 /* The current input file */
 static FILE *parser_infile = NULL;
-
 
 /* Is there a file open? 0 if no, 1 if yes. */
 static int file_open = 0;
@@ -46,6 +73,13 @@ void close_infile();
  */
 char *next_token(int *token_length);
 
-void add_pvar(Variable var);
+/* Adds a variable into the list of variables. */
+int add_pvar(Variable var);
+
+/* Adds a number into the list of parsed numbers. */
+int add_double(double d);
+
+/* Adds a string into the list of parsed strings. */
+int add_string(char* string);
 
 #endif /* __PARSER_H__ */
