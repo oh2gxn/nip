@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.30 2004-07-01 12:49:28 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.31 2004-07-02 11:07:21 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -100,6 +100,10 @@ Variable get_variable(char *symbol);
  * must match v->cardinality
  */
 int update_likelihood(Variable v, double likelihood[]);
+
+
+/* Sets a uniform likelihood for v. */
+void reset_likelihood(Variable v);
 
 
 /* Returns the number of possible values in the Variable v. (-1 if v == NULL)

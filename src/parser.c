@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.57 2004-07-01 14:45:56 jatoivol Exp $
+ * $Id: parser.c,v 1.58 2004-07-02 11:07:21 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -983,11 +983,7 @@ int Graph2JTree(){
   printf("In parser.c: %d cliques found.\n", get_num_of_cliques());
 #endif
 
-  /* We also need Sepsets. */
-#ifdef DEBUG_PARSER
-  printf("In parser.c: Making Sepsets.\n");
-#endif
-  return find_sepsets(*cliques, get_num_of_cliques());
+  return 0; /* find_sepsets(*cliques, get_num_of_cliques()); */
 }
 
 

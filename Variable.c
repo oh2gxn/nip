@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.32 2004-07-01 14:06:07 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.33 2004-07-02 11:07:21 jatoivol Exp $
  */
 
 #include <string.h>
@@ -214,6 +214,18 @@ int update_likelihood(Variable v, double likelihood[]){
     (v->likelihood)[i] = likelihood[i];
 
   return NO_ERROR;
+}
+
+
+void reset_likelihood(Variable v){
+  int i;
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return;
+  }
+  
+  for(i = 0; i < v->cardinality; i++)
+    (v->likelihood)[i] = 1;
 }
 
 
