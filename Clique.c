@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.49 2004-06-14 22:18:38 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.50 2004-06-14 22:41:49 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -601,9 +601,9 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 
 #ifdef DEBUG_CLIQUE
   for(i = 0; i < num_of_cliques - 1; i++)
-    for(j = i; j < num_of_cliques; j++)
+    for(j = i + 1; j < num_of_cliques; j++)
       if(!clique_search(cliques[i], cliques[j])){
-	printf("No connection from Clique ");
+	printf("No connection between Clique ");
 	for(k = 0; k < cliques[i]->p->num_of_vars; k++)
 	  printf("%s", cliques[i]->variables[k]->symbol);
 	printf(" and Clique ");
