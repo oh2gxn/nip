@@ -260,10 +260,7 @@ int main(int argc, char *argv[]){
        * the interesting Variables */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				       &interesting, 1);
-      if(!clique_of_interest){
-	printf("In htmtest.c : No clique found! Sorry.\n");
-	return 1;
-      }  
+      assert(clique_of_interest != NULL);
       
       /* 2. Marginalisation (memory for the result must have been allocated) */
       marginalise(clique_of_interest, interesting, result[i]);
@@ -311,6 +308,7 @@ int main(int argc, char *argv[]){
       reset_likelihood(temp);
     global_retraction(nip_cliques[0]);
     
+
     /* 1. Finish the message pass between timeslices */
     clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				     previous, num_of_nexts);
@@ -350,25 +348,24 @@ int main(int argc, char *argv[]){
   for(t = timeseries->datarows - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t+1);
-    
+
     for(i = 0; i < timeseries->num_of_nodes; i++)
       if(data[t][i] >= 0)
 	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
 			    data[t][i]);
     
-    
     /* Message pass??? */
-    /* 1. Finish the message pass between timeslices */
+    clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				     previous, num_of_nexts);
+    assert(clique_of_interest != NULL);
+    temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
+			      num_of_nexts, sizeof(int));
+    if(!temp_vars){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return 1;
+    }
+
     if(t > 0){
-      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-				       previous, num_of_nexts);
-      assert(clique_of_interest != NULL);
-      temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
-				num_of_nexts, sizeof(int));
-      if(!temp_vars){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	return 1;
-      }
       j = 0; k = 0;
       for(i=0; i < clique_of_interest->p->num_of_vars; i++){
 	if(j < num_of_nexts &&
@@ -379,22 +376,18 @@ int main(int argc, char *argv[]){
 	  k++;
 	}
       }
-      
       update_potential(timeslice_sepsets[t-1], NULL,
 		       clique_of_interest->p, temp_vars);
     }
 
+
     if(t < timeseries->datarows - 1){
-      /* FIX ME: there's a bug here somewhere. */
+      /*******************************************/
+      /* FIX ME: there's a bug here somewhere!!! */
+      /*******************************************/
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				       next, num_of_nexts);
       assert(clique_of_interest != NULL);
-      temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
-				num_of_nexts, sizeof(int));
-      if(!temp_vars){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	return 1;
-      }
       j = 0; k = 0;
       for(i=0; i < clique_of_interest->p->num_of_vars; i++){
 	if(j < num_of_nexts &&
@@ -405,10 +398,10 @@ int main(int argc, char *argv[]){
 	  k++;
 	}
       }
-      
-      update_potential(timeslice_sepsets[t+1], timeslice_sepsets[t],
+      update_potential(timeslice_sepsets[t+1], timeslice_sepsets[t], 
 		       clique_of_interest->p, temp_vars);
     }
+
 
     /********************/
     /* Do the inference */
@@ -429,7 +422,6 @@ int main(int argc, char *argv[]){
     distribute_evidence(nip_cliques[0]);
     
     
-    
     /*********************************/
     /* Check the result of inference */
     /*********************************/
@@ -442,10 +434,7 @@ int main(int argc, char *argv[]){
        *    the interesting Variable */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				       &interesting, 1);
-      if(!clique_of_interest){
-	printf("In htmtest.c : No clique found! Sorry.\n");
-	return 1;
-      }  
+      assert(clique_of_interest != NULL);
       
       /* 3. Marginalisation (the memory must have been allocated) */
       marginalise(clique_of_interest, interesting, result[i]);
@@ -460,6 +449,7 @@ int main(int argc, char *argv[]){
       printf("\n");
     }
     
+
     if(t > 0){
       /* forget old evidence */
       it = get_Variable_list();
@@ -467,13 +457,11 @@ int main(int argc, char *argv[]){
 	reset_likelihood(temp);
       global_retraction(nip_cliques[0]);
       
+
       /* Start a message pass between timeslices */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				       previous, num_of_nexts);
-      if(!clique_of_interest){
-	printf("In htmtest.c : No clique found! Sorry.\n");
-	return 1;
-      }
+      assert(clique_of_interest != NULL);
       /* NOTE: Let's hope the "previous" variables are in correct order */
       m = 0;
       n = 0;
@@ -489,6 +477,7 @@ int main(int argc, char *argv[]){
       general_marginalise(clique_of_interest->p, timeslice_sepsets[t],
 			  temp_vars);
     }
+
     free(temp_vars);
   }
   
