@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.47 2004-08-26 10:37:27 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.48 2004-10-14 15:11:21 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -10,6 +10,10 @@
 #include "errorhandler.h"
 
 /*#define DEBUG_POTENTIAL*/
+
+/* TO DO: get rid of the requirement of having potentials in a certain order. 
+ * This can be done with some sort of mapping arrays for looking up the 
+ * correct index positions. */
 
 static double *get_ppointer(potential p, int indices[]);
 

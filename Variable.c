@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.46 2004-08-30 11:07:00 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.47 2004-10-14 15:11:21 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -244,10 +244,6 @@ Variable get_variable(Variable_iterator it, char *symbol){
   Variable v; 
   v = next_Variable(&it);
 
-#ifdef DEBUG_PARSER
-  printf("In get_variable: looking for \"%s\"\n", symbol);
-#endif
-
   if(v == NULL)
     return NULL; /* didn't find the variable (possibly normal) */
   
@@ -258,9 +254,7 @@ Variable get_variable(Variable_iterator it, char *symbol){
       return NULL; /* didn't find the variable (a normal situation) */
     }
   }
-#ifdef DEBUG_PARSER
-  printf("In get_variable: Found \"%s\"\n", v->symbol);
-#endif
+
   return v;
 }
 

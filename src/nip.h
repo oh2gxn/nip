@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.8 2004-08-31 08:41:36 mvkorpel Exp $
+ * nip.h $Id: nip.h,v 1.9 2004-10-14 15:11:21 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -14,11 +14,35 @@ typedef struct{
   int num_of_cliques;
   int num_of_vars;
   Clique *cliques;
-  varlink first_var;
-  varlink last_var;
+  Variable *variables;
+
+  Variable *next;     /* An array of the variables that will substitute 
+		       * another one in the next timeslice. */
+  Variable *previous; /* An array of the variables that are substituted 
+		       * by some variables from the previous timeslice. 
+		       * Waste of memory? */
+  int num_of_nexts;   /* Number of variables in the 'next' and 'previous' 
+		       * arrays*/
 }nip_type;
 
 typedef nip_type *Nip;
+
+
+typedef struct{
+  Nip model;          /* The model (contains the variables and state names) */
+
+  Variable *hidden;   /* An array containing the latent variables */
+
+  int num_of_hidden;  /* Number of latent variables */
+
+  Variable *observed; /* An array containing the observed variables ??? */
+
+  int length;
+  int **data;         /* The time series */
+  /* JJ NOTES: Should there be a cache for extremely large time series? */
+}timeseries_type;
+
+typedef timeseries_type *Timeseries;
 
 
 /* Makes the model forget all the given evidence. */
@@ -34,6 +58,30 @@ Nip parse_model(char* file);
 void free_model(Nip model);
 
 
+/* This reads data from the data file and constructs a time series according 
+ * to the given model. */
+Timeseries read_timeseries(Nip model, char* datafile);
+
+
+/* A method for freeing the huge chunk of memory used by a time series. */
+void free_timeseries(Timeseries ts);
+
+
+/* Tells the length of the timeseries. */
+int timeseries_length(Timeseries ts);
+
+
+/* A method for reading an observation from the time series. 
+ * You'll have to specify the variable. Do not alter the string returned 
+ * by the function! The returned value may be NULL if the variable was not 
+ * observed at the specified moment in time. The time span is [0, T-1] */
+char* get_observation(Timeseries ts, Variable v, int time);
+
+
+/* A method for setting an observation in the time series. */
+int set_observation(Timeseries ts, Variable v, int time, char* observation);
+
+
 /* This is a function for telling the model about observations. 
  * In case of an error, a non-zero value is returned. */
 int insert_hard_evidence(Nip model, char* variable, char* observation);
@@ -43,9 +91,15 @@ int insert_hard_evidence(Nip model, char* variable, char* observation);
  * with this procedure. The returned value is 0 if everything went well. */
 int insert_soft_evidence(Nip model, char* variable, double* distribution);
 
+
 Variable get_Variable(Nip model, char* symbol);
 
+
 void make_consistent(Nip model);
+
+
+
+
 
 /********************************************************************
  * TODO: a set of functions for reading the results of inference from 

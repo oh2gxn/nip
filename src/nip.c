@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.19 2004-10-11 13:07:35 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.20 2004-10-14 15:11:21 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -7,6 +7,7 @@
 #include "Clique.h"
 #include "Variable.h"
 #include "errorhandler.h"
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -47,7 +48,9 @@ void reset_model(Nip model){
 
 
 Nip parse_model(char* file){
-  int retval;
+  int i, j, retval;
+  Variable temp;
+  Variable_iterator it;
   Nip new = (Nip) malloc(sizeof(nip_type));
 
   if(!new){
@@ -72,10 +75,58 @@ Nip parse_model(char* file){
   new->num_of_cliques = get_num_of_cliques();
   new->num_of_vars = total_num_of_vars();
   new->cliques = *get_cliques_pointer();
-  new->first_var = get_first_variable();
-  new->last_var = get_last_variable();
+
+  new->variables = (Variable*) calloc(new->num_of_vars, sizeof(Variable));
+  if(!(new->variables)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(new);
+    return NULL;
+  }
+    
+  it = get_first_variable();
+  temp = next_Variable(&it);
+  i = 0;
+  while(temp != NULL){
+    new->variables[i++] = temp;
+    temp = next_Variable(&it);
+  }
+  
+  for(i = 0; i < new->num_of_vars; i++)
+    if(new->variables[i]->next)
+      new->num_of_nexts++;
+
+  new->next = (Variable*) calloc(new->num_of_nexts, sizeof(Variable));
+  new->previous = (Variable*) calloc(new->num_of_nexts, sizeof(Variable));
+  if(!(new->next && new->previous)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(new->variables);
+    free(new);
+    return NULL;
+  }
+  
+  j = 0;
+  for(i = 0; i < new->num_of_vars; i++)  
+    if(new->variables[i]->next){
+      new->next[j] = new->variables[i];
+      new->previous[j] = new->variables[i]->next;
+      j++;
+    }
+
+  /* Check one little detail :) 
+   * NOTE: needed because of an implementation detail. (FIX IT?) */
+  j = 1;
+  for(i = 1; i < num_of_nexts; i++)
+    if(get_id(new->previous[i-1]) > get_id(new->previous[i]))
+      j = 0;
+  assert(j); 
 
   /* 3. Reset parser globals */
+  it = get_last_variable(); /* free the list structure */
+  while(it->bwd){
+    it = it->bwd;
+    free(it->fwd);
+  }
+  free(it);
   reset_Variable_list();
   reset_Clique_array();
 
@@ -85,25 +136,176 @@ Nip parse_model(char* file){
 
 void free_model(Nip model){
   int i;
-  Variable_iterator it = model->first_var;
-  Variable v = next_Variable(&it);
 
   /* 1. Free Cliques and adjacent Sepsets */
-  for(i = 0; i < model->num_of_cliques; i++){
+  for(i = 0; i < model->num_of_cliques; i++)
     free_Clique(model->cliques[i]);
-  }
   free(model->cliques);
 
-  /* 2. Free the Variables and the list */
-  while(v != NULL){
-    free_variable(v);
-    if(it != NULL)
-      free(it->bwd);
-    v = next_Variable(&it);
+  /* 2. Free the Variables */
+  for(i = 0; i < model->num_of_vars; i++)
+    free_variable(model->variables[i]);
+  free(model->variables);
+
+  free(model->next);
+  free(model->previous);
+  free(model);
+}
+
+
+Timeseries read_timeseries(Nip model, char* filename){
+  int i, j, k, m;
+  char** tokens = NULL;
+  Timeseries ts = NULL;
+  datafile* df = NULL;
+  
+  ts = (Timeseries) malloc(sizeof(timeseries_type));
+  if(!ts){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
   }
 
-  free(model->last_var);
-  free(model);
+  df = open_datafile(filename, ',', 0, 1);
+  if(df == NULL){
+    report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
+    fprintf(stderr, "%s\n", filename);
+    free(ts);
+    return NULL;
+  }  
+  ts->length = df->datarows;
+
+  /* Find out how many (totally) latent variables there are. */
+  for(k = 0; k < model->num_of_vars; k++){
+    j = 1;
+    for(i = 0; i < df->num_of_nodes; i++)
+      if(equal_variables(model->variables[k], 
+			 get_Variable(model, df->node_symbols[i])))
+	j = 0;
+    if(j)
+      ts->num_of_hidden++;
+  }
+
+  /* Allocate the array for the hidden variables. */
+  ts->hidden = (Variable *) calloc(ts->num_of_hidden, sizeof(Variable));
+  ts->obseved = (Variable *) calloc(df->num_of_nodes, sizeof(Variable));
+  if(!(ts->hidden && ts->observed)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(ts->hidden);
+    free(ts);
+    close_datafile(df);
+    return NULL;
+  }  
+
+  /* Set the pointers to the hidden variables. */
+  m = 0;
+  for(k = 0; k < model->num_of_vars; k++){
+    j = 1;
+    for(i = 0; i < df->num_of_nodes; i++)
+      if(equal_variables(model->variables[k], 
+			 get_Variable(model, df->node_symbols[i])))
+	j = 0;
+    if(j)
+      ts->hidden[m++] = model->variables[k];
+  }
+
+  for(i = 0; i < df->num_of_nodes; i++)
+    ts->observed[i] = get_Variable(model, df->node_symbols[i]);
+
+  /* Allocate some space for data */
+  ts->data = (int**) calloc(ts->length, sizeof(int*));
+  if(!(ts->data)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(ts->hidden);
+    free(ts->observed);
+    free(ts);
+    close_datafile(df);
+    return NULL;
+  }
+  for(i = 0; i < ts->length; i++){
+    data[i] = (int*) calloc(df->num_of_nodes, sizeof(int));
+    if(!(data[i])){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      for(j = 0; j < i; j++)
+	free(ts->data[j]);
+      free(ts->data);
+      free(ts->hidden);
+      free(ts->observed);
+      free(ts);
+      close_datafile(df);
+      return NULL;
+    }
+  }
+
+  /* Get the data */
+  for(j = 0; j < ts->length; j++){
+    m = nextline_tokens(df, ',', &tokens); /* 2. Read */
+    assert(m == df->num_of_nodes);
+
+    /* 3. Put into the data array */
+    for(i = 0; i < m; i++){
+      data[j][i] = 
+	get_stateindex(get_Variable(model, df->node_symbols[i]), tokens[i]);
+
+      /* Q: Should missing data be allowed?   A: Yes. */
+      /* assert(data[j][i] >= 0); */
+    }
+
+    for(i = 0; i < m; i++) /* 4. Dump away */
+      free(tokens[i]);
+    free(tokens);
+  }
+
+  close_datafile(df);
+  return ts;
+}
+
+
+void free_timeseries(Timeseries ts){
+  int t;
+  if(ts){
+    for(t = 0; t < ts->length; t++)
+      free(ts->data[t]);
+    free(ts->data);
+    free(ts->hidden);
+    free(ts->observed);
+    free(ts);
+  }
+}
+
+
+int timeseries_length(Timeseries ts){
+  return ts->length;
+}
+
+
+char* get_observation(Timeseries ts, Variable v, int time){
+  int i, j = -1;
+  for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
+    if(equal_variables(v, ts->observed[i]))
+      j = i;
+
+  if(j < 0)
+    return ERROR_INVALID_ARGUMENT;
+  else
+    return v->statenames[ts->data[time][j]];
+}
+
+
+int set_observation(Timeseries ts, Variable v, int time, char* observation){
+  int i, j = -1;
+  for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
+    if(equal_variables(v, ts->observed[i]))
+      j = i;
+
+  if(j < 0)
+    return ERROR_INVALID_ARGUMENT;
+  else{
+    if(get_stateindex(v, observation) < 0)
+      return ERROR_INVALID_ARGUMENT;
+    else
+      ts->data[time][j] = get_stateindex(v, observation);
+    return 0; /* FIXME! */
+  }
 }
 
 
@@ -135,14 +337,18 @@ int insert_soft_evidence(Nip model, char* variable, double* distribution){
 
 
 Variable get_Variable(Nip model, char* symbol){
+  int i;
 
   if(!model){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return NULL;
   }
 
-  return get_variable(model->first_var, symbol);
+  for(i = 0; i < model->num_of_vars)
+    if(strcmp(symbol, model->variables[i]->symbol) == 0)
+      return model->variables[i];
 
+  return NULL;
 }
 
 

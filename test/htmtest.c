@@ -226,6 +226,7 @@ int main(int argc, char *argv[]){
 
     for(i = 0; i < retval; i++) /* 4. Dump away */
       free(tokens[i]);
+    free(tokens); /* added 14.10.2004 */
   }
 
 
