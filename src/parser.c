@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.78 2004-08-23 13:18:18 mvkorpel Exp $
+ * $Id: parser.c,v 1.79 2004-08-23 13:55:46 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -879,7 +879,7 @@ char** make_string_array(){
  * after the parser has parsed doubles to the list, created an array out 
  * of it and wants to reset the list for future use. 
  */
-int reset_doubles(){
+void reset_doubles(){
   doublelink ln = nip_last_double;
   nip_last_double = NULL;
   while(ln != NULL){
@@ -889,13 +889,13 @@ int reset_doubles(){
   free(nip_first_double);
   nip_first_double = NULL;
   nip_doubles_parsed = 0;
-  return NO_ERROR;
+  return;
 }
 
 
 /* Removes everything from the list of strings and resets the counter. 
  * The actual memory for the strings is not freed, only the list. */
-int reset_strings(){
+void reset_strings(){
   int i;
   stringlink ln = nip_last_string;
   nip_last_string = NULL;
@@ -912,12 +912,12 @@ int reset_strings(){
   nip_statenames = NULL;
 
   nip_strings_parsed = 0;  
-  return NO_ERROR;
+  return;
 }
 
 
 /* Removes everything from the temporary list of variables. */
-int reset_symbols(){
+void reset_symbols(){
   varlink ln = nip_last_temp_var;
   nip_last_temp_var = NULL;
   while(ln != NULL){
@@ -927,13 +927,13 @@ int reset_symbols(){
   free(nip_first_temp_var);
   nip_first_temp_var = NULL;
   nip_symbols_parsed = 0;
-  return NO_ERROR;
+  return;
 }
 
 
 /* Frees some memory after parsing. 
  * JJT: DO NOT TOUCH THE ACTUAL DATA, OR IT WILL BE LOST. */
-int reset_initData(){
+void reset_initData(){
   initDataLink ln = nip_last_initData;
   initDataLink temp;
   nip_last_initData = NULL;
@@ -946,13 +946,13 @@ int reset_initData(){
   }
   nip_first_initData = NULL;
   nip_initData_parsed = 0;  
-  return NO_ERROR;
+  return;
 }
 
 
 /* Frees some memory after parsing. 
  * JJT: DO NOT TOUCH THE ACTUAL DATA, OR IT WILL BE LOST. */
-int reset_timeinit(){
+void reset_timeinit(){
   time_init_link ln = nip_first_timeinit;
   while(ln != NULL){
     nip_first_timeinit = ln->fwd;
@@ -961,7 +961,7 @@ int reset_timeinit(){
     ln = nip_first_timeinit;    
   }
 
-  return NO_ERROR;
+  return;
 }
 
 

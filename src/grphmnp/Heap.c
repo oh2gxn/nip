@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.26 2004-08-23 13:18:33 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.27 2004-08-23 13:55:53 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -12,8 +12,14 @@
 #include <string.h>
 
 static void free_useless_Sepsets(Heap *H);
+static int lessthan(Heap_item h1, Heap_item h2);
+static void heapify(Heap* H, int i);
+static int get_heap_index(Heap* H, Variable v);
+static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G);
+static int edges_added(Graph* G, Variable* vs, int n);
+static int cluster_weight(Variable* vs, int n);
 
-int edges_added(Graph* G, Variable* vs, int n)
+static int edges_added(Graph* G, Variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
 
@@ -31,7 +37,7 @@ int edges_added(Graph* G, Variable* vs, int n)
     return sum; /* Number of links to add */
 }
 
-int cluster_weight(Variable* vs, int n)
+static int cluster_weight(Variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
     int i, prod = 1;
@@ -195,14 +201,14 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
     return H;
 }
 
-int lessthan(Heap_item h1, Heap_item h2)
+static int lessthan(Heap_item h1, Heap_item h2)
 {
     return (h1.primary_key < h2.primary_key) || 
 	   (h1.primary_key == h2.primary_key && 
 	    h1.secondary_key < h2.secondary_key);
 }  
 
-void heapify(Heap* H, int i)
+static void heapify(Heap* H, int i)
 {
     int l,r;
     int min, flag;
@@ -331,7 +337,7 @@ static void free_useless_Sepsets(Heap *H){
   }
 }
 
-int get_heap_index(Heap* H, Variable v)
+static int get_heap_index(Heap* H, Variable v)
 {
     /* Finds the heap element that contains the variable v */
     /* Linear search, but at the moment the only option */
@@ -346,7 +352,7 @@ int get_heap_index(Heap* H, Variable v)
     return -1;
 }
 
-void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
+static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 {
     int i, j, n_vars = 0, n_total;
     Variable v_i, V_removed = min_cluster->Vs[0];

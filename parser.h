@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser and for other parsers.
- * $Id: parser.h,v 1.35 2004-08-10 12:52:48 jatoivol Exp $
+ * $Id: parser.h,v 1.36 2004-08-23 13:55:46 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -172,23 +172,23 @@ char** make_string_array();
 /* Removes everything from the list of doubles. This is likely to be used 
  * after the parser has parsed doubles to the list, created an array out 
  * of it and wants to reset the list for future use. */
-int reset_doubles();
+void reset_doubles();
 
 
 /* Removes everything from the list of strings and resets the counter. */
-int reset_strings();
+void reset_strings();
 
 
 /* Removes everything from the temporary list of variables. */
-int reset_symbols();
+void reset_symbols();
 
 
 /* Frees some memory after parsing. */
-int reset_initData();
+void reset_initData();
 
 
 /* Frees some memory after information is no longer needed. */
-int reset_timeinit();
+void reset_timeinit();
 
 
 /* Initialises a new graph. */

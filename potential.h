@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.24 2004-08-23 08:56:58 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.25 2004-08-23 13:55:46 mvkorpel Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -19,8 +19,8 @@ typedef ptype* potential;
  * The potential array data[] can be null, if it is not known. */
 potential make_potential(int cardinality[], int num_of_vars, double data[]);
 
-/* Free the memory used by potential p. Returned value is an error code. */
-int free_potential(potential p);
+/* Free the memory used by potential p. */
+void free_potential(potential p);
 
 /* Make a copy of a potential. 
  * Source and destination must be potentials of same cardinality! 

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.8 2004-08-23 13:18:18 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.9 2004-08-23 13:55:46 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -125,8 +125,17 @@ void make_consistent(Nip model){
   int i;
   for (i = 0; i < model->num_of_cliques; i++)
     unmark_Clique(model->cliques[i]);
-  collect_evidence(NULL, NULL, model->cliques[0]);
+
+  if(collect_evidence(NULL, NULL, model->cliques[0]) != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return;
+  }
+
   for (i = 0; i < model->num_of_cliques; i++)
     unmark_Clique(model->cliques[i]);
-  distribute_evidence(model->cliques[0]);
+
+  if(distribute_evidence(model->cliques[0]) != NO_ERROR)
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+
+  return;
 }

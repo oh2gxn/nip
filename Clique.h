@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.44 2004-08-23 13:18:18 mvkorpel Exp $
+ * Clique.h $Id: Clique.h,v 1.45 2004-08-23 13:55:46 mvkorpel Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -42,16 +42,12 @@ typedef sepsettype *Sepset;
 Clique make_Clique(Variable vars[], int num_of_vars);
 
 
-/* Method for removing cliques and freeing memory: returns an error code */
-int free_Clique(Clique c);
+/* Method for removing cliques and freeing memory. */
+void free_Clique(Clique c);
 
 
 /* Method for adding a sepset next to a clique: returns an error code */
 int add_Sepset(Clique c, Sepset s);
-
-
-/* Method for removing a sepset from a clique: returns an error code */
-void remove_Sepset(Clique c, Sepset s);
 
 
 /* Method for creating sepsets: 
@@ -60,8 +56,8 @@ void remove_Sepset(Clique c, Sepset s);
 Sepset make_Sepset(Variable variables[], int num_of_vars, Clique cliques[]);
 
 
-/* Method for removing sepsets and freeing memory: returns an error code */
-int free_Sepset(Sepset s);
+/* Method for removing sepsets and freeing memory. */
+void free_Sepset(Sepset s);
 
 
 /* Method for creating potentials with correct structure.
@@ -73,12 +69,8 @@ potential create_Potential(Variable variables[], int num_of_vars,
 
 
 /* Method for unmarking a clique: call this to every clique before 
-   collecting or distributing evidence. Returns an error code. */
-int unmark_Clique(Clique c);
-
-
-/* Method for marking a clique. Returns an error code. */
-int mark_Clique(Clique c);
+   collecting or distributing evidence. */
+void unmark_Clique(Clique c);
 
 
 /* Tells how many variables the clique contains. */

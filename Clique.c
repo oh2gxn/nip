@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.91 2004-08-23 13:18:18 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.92 2004-08-23 13:55:46 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -39,6 +39,8 @@ static int clique_marked(Clique c);
 static void retract_Clique(Clique c);
 
 static void retract_Sepset(Sepset s);
+
+static void remove_Sepset(Clique c, Sepset s);
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c;
@@ -141,13 +143,13 @@ Clique make_Clique(Variable vars[], int num_of_vars){
 }
 
 
-int free_Clique(Clique c){
+void free_Clique(Clique c){
   link l1, l2;
   Clique cl1, cl2;
   Sepset s;
 
   if(c == NULL)
-    return ERROR_NULLPOINTER;
+    return;
   
   /* clean the list of sepsets */
   l1 = c->sepsets;
@@ -171,7 +173,7 @@ int free_Clique(Clique c){
   free_potential(c->original_p);
   free(c->variables);
   free(c);
-  return NO_ERROR;
+  return;
 }
 
 
@@ -226,7 +228,7 @@ int add_Sepset(Clique c, Sepset s){
 }
 
 
-void remove_Sepset(Clique c, Sepset s){
+static void remove_Sepset(Clique c, Sepset s){
   link l;
 
   if(!(c && s)){
@@ -383,7 +385,7 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
 }
 
 
-int free_Sepset(Sepset s){
+void free_Sepset(Sepset s){
 
   if(s){
     if(s->old->num_of_vars)
@@ -395,7 +397,7 @@ int free_Sepset(Sepset s){
     free(s);
   }
 
-  return 0;
+  return;
 }
 
 
@@ -538,19 +540,10 @@ potential create_Potential(Variable variables[], int num_of_vars,
 }
 
 
-int unmark_Clique(Clique c){
-  if(c == NULL)
-    return ERROR_INVALID_ARGUMENT;
-  c->mark = 0;
-  return 0;
-}
-
-
-int mark_Clique(Clique c){
-  if(c == NULL)
-    return ERROR_INVALID_ARGUMENT;
-  c->mark = 1;
-  return 0;
+void unmark_Clique(Clique c){
+  if(c != NULL)
+    c->mark = 0;
+  return;
 }
 
 
@@ -612,9 +605,15 @@ int distribute_evidence(Clique c){
   while (l != 0){
     s = l->data;
     if(!clique_marked(s->cliques[0]))
-      distribute_evidence(s->cliques[0]);
+      if(distribute_evidence(s->cliques[0]) != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
     else if(!clique_marked(s->cliques[1]))
-      distribute_evidence(s->cliques[1]);
+      if(distribute_evidence(s->cliques[1]) != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
     l = l->fwd;
   }
   return NO_ERROR;
@@ -634,10 +633,17 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
   l = c2->sepsets;
   while (l != NULL){
     s = l->data;
-    if(!clique_marked(s->cliques[0]))
-      collect_evidence(c2, s, s->cliques[0]);
+    if(!clique_marked(s->cliques[0])){
+      if(collect_evidence(c2, s, s->cliques[0]) != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
+    }
     else if(!clique_marked(s->cliques[1]))
-      collect_evidence(c2, s, s->cliques[1]);
+      if(collect_evidence(c2, s, s->cliques[1]) != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
     l = l->fwd;
   }
 

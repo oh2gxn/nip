@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.44 2004-08-23 08:56:58 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.45 2004-08-23 13:55:46 mvkorpel Exp $
  * Functions for handling potentials. 
  */
 
@@ -122,13 +122,13 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
 }
 
 
-int free_potential(potential p){
+void free_potential(potential p){
   if(p){
     free(p->cardinality);
     free(p->data);
     free(p);
   }
-  return NO_ERROR;
+  return;
 }
 
 
