@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.48 2004-06-14 14:34:53 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.49 2004-06-14 22:18:38 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -664,6 +664,7 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
   int max_vars = cl2->p->num_of_vars;
   int realsize = 0;
   Variable *isect;
+  Variable *shaved_isect;
 
   if(cl1->p->num_of_vars < max_vars)
     max_vars = cl1->p->num_of_vars;
@@ -683,15 +684,19 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
 	isect[realsize++] = cl1->variables[i];
     }
 
-  isect = (Variable *) realloc(isect, realsize * sizeof(Variable));
+  shaved_isect = (Variable *) calloc(realsize, sizeof(Variable));
 
   /* This should not happen. We are not making the array bigger. */
-  if(!isect){
-    fprintf(stderr, "In Clique.c: realloc failed.\n");
+  if(!shaved_isect){
+    fprintf(stderr, "In Clique.c: calloc failed.\n");
     return ERROR_OUTOFMEMORY;
   }
 
-  *vars = isect;
+  for(i = 0; i < realsize; i++)
+    shaved_isect[i] = isect[i];
+  
+  free(isect);
+  *vars = shaved_isect;
   *n = realsize;
 
   return 0;
