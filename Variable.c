@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.18 2004-05-25 14:47:28 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.19 2004-05-26 14:46:31 jatoivol Exp $
  */
 
 #include <string.h>
@@ -9,7 +9,7 @@
 #include "errorhandler.h"
 
 Variable new_variable(const char* symbol, const char* name, 
-		      const char** states, int cardinality){
+		      char** states, int cardinality){
   static long id = VAR_MIN_ID;
   int i;
   double *dpointer;
@@ -45,7 +45,7 @@ int variable_name(Variable v, const char *name){
 }
 
 // "the ownership" of the states (array of strings) changes
-int variable_statenames(Variable v, const char **states){
+int variable_statenames(Variable v, char **states){
   v->statenames = states;
   return 0;
 }

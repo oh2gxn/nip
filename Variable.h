@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.20 2004-05-25 14:47:28 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.21 2004-05-26 14:46:31 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -30,14 +30,14 @@ typedef vtype *Variable;
  * - states is an array of strings containing the state names or NULL
  * - cardinality is the number of states/values the variable has */
 Variable new_variable(const char* symbol, const char* name, 
-		      const char** states, int cardinality);
+		      char** states, int cardinality);
 
 /* Gives the Variable a verbose name */
 int variable_name(Variable v, const char *name);
 
 /* Gives the Variable the names of the states if needed. 
  * NOTE: "the ownership" of the states (array of strings) changes */
-int variable_statenames(Variable v, const char **states);
+int variable_statenames(Variable v, char **states);
 
 /* Function for copying a Variable (if needed). Handle with care.
  * v: the Variable to be copied
