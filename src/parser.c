@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.26 2004-06-10 19:27:52 jatoivol Exp $
+ * $Id: parser.c,v 1.27 2004-06-10 23:19:52 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -42,9 +42,9 @@ int nip_file_open = 0;
 
 static char** nip_statenames;
 static char* nip_label;
-
+/*
 #define DEBUG_PARSER
-
+*/
 int open_infile(const char *file){
   if(!nip_file_open){
     nip_parser_infile = fopen(file,"r");
@@ -459,85 +459,85 @@ int parsedPots2JTree(){
 
 
 void print_parsed_stuff(){
-  int i; 
-
-#ifdef SUSI  
-  int j, k;
-  int temp_index;
-  unsigned long biggest_found, biggest_ready;
-#endif
-
+  int i, j;
+  unsigned long temp;
   initDataLink list = nip_first_initData;
 
   /* Traverse through the list of parsed potentials. */
   while(list != NULL){
     int *indices; 
-    unsigned long *reorder;
+    int *reorder;
+    int *temp_array;
+    Variable *variables;
 
     if((indices = (int *) calloc(list->data->num_of_vars,
 				 sizeof(int))) == NULL)
       fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
 
-    if((reorder = (unsigned long *) calloc(list->data->num_of_vars,
-					   sizeof(unsigned long))) == NULL)
+    if((reorder = (int *) calloc(list->data->num_of_vars,
+				 sizeof(int))) == NULL)
       fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
 
+    if((temp_array = (int *) calloc(list->data->num_of_vars,
+				 sizeof(int))) == NULL)
+      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
+
+    if((variables = (Variable *) calloc(list->data->num_of_vars,
+					sizeof(Variable))) == NULL)
+      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");    
+
+    variables[0] = list->child;
+    for(i = 1; i < list->data->num_of_vars; i++)
+      variables[i] = (list->parents)[i - 1];
+
+    /* reorder[i] is the place of i:th variable (in the sense of this program) 
+     * in the array variables[] */
     
+    /* init (needed?) */
+    for(i = 0; i < list->data->num_of_vars; i++)
+      temp_array[i] = 0;
+    
+    /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
+     * Note the temporary use of indices array. */
+    for(i = 0; i < list->data->num_of_vars; i++){
+      temp = get_id(variables[i]);
+      for(j = 0; j < list->data->num_of_vars; j++){
+	if(get_id(variables[j]) > temp)
+	  temp_array[j]++; /* counts how many greater variables there are */
+      }
+    }
+    
+    for(i = 0; i < list->data->num_of_vars; i++)
+      reorder[temp_array[i]] = i; /* fill the reordering */
+    
+    /******************************************/
+    /* WHY THE PHUCK REORDERING DOESN'T WORK? */
+    /******************************************/
+
+    for(i = 0; i < list->data->num_of_vars; i++)
+      printf("reorder[%d] = %d\n", i, reorder[i]);
+
+
     /* Go through every number in the potential array. */
     for(i = 0; i < list->data->size_of_data; i++){
       
-
-#ifdef SUSI
       inverse_mapping(list->data, i, indices);
-      
-      reorder[0] = get_id(list->child);
-      for(j = 1; j < list->data->num_of_vars; j++)
-	reorder[j] = get_id((list->parents)[j - 1]);
-
-      /* Make a reorder array.
-       * Smallest = 0, ..., Biggest = num_of_vars - 1
-       */
-      biggest_ready = 0; /* Initialisation doesn't matter. */
-      temp_index = 0; /* Initialisation doesn't matter. */
-      for(j = 0; j < list->data->num_of_vars; j++){
-	biggest_found = VAR_MIN_ID - 1;
-	for(k = 0; k < list->data->num_of_vars; k++){
-	  if(j == 0){
-	    if(reorder[k] > biggest_found){
-	      temp_index = k;
-	      biggest_found = reorder[k];
-	    }
-	  }
-	  else if(reorder[k] > biggest_found && reorder[k] < biggest_ready){
-	    temp_index = k;
-	    biggest_found = reorder[k];
-	  }
-	}
-	reorder[temp_index] = list->data->num_of_vars -1 - j;
-	biggest_ready = biggest_found;
-      }
-      
-      for(j = 0; j < list->data->num_of_vars; j++)
-	printf("reorder[%d] = %lu\n", j, reorder[j]);
-
 
       printf("P( %s = %s |", list->child->symbol, 
 	     (list->child->statenames)[indices[reorder[0]]]);
 
-      for(j = 0; j < list->data->num_of_vars - 1; j++)
-	printf(" %s = %s", (list->parents)[j]->symbol,
-	       ((list->parents[j])->statenames)[indices[reorder[j + 1]]]);
+      for(j = 1; j < list->data->num_of_vars; j++)
+	printf(" %s = %s", ((list->parents)[j])->symbol,
+	       (((list->parents)[j])->statenames)[indices[reorder[j + 1]]]);
       
       printf(" ) = %.2f \n", (list->data->data)[i]);
-#endif
-
-      printf("data[%d] = %f\n", i, (list->data->data)[i]);
-
     }
     list = list->fwd;
     
     free(indices);
     free(reorder);
+    free(temp_array);
+    free(variables);
   }
 }
 

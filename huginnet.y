@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.36 2004-06-09 15:02:44 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.37 2004-06-10 23:19:52 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -13,8 +13,9 @@
 #include "huginnet.h"
 
 #define YYERROR_VERBOSE
+  /*
 #define DEBUG_BISON
-
+  */
 %}
 
 /* BISON Declarations */

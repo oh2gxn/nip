@@ -49,20 +49,22 @@ Clique make_Clique(Variable vars[], int num_of_vars){
   }
 
 #ifdef DEBUG_CLIQUE
-  
+  printf("In Clique.c :\n");
   for(i = 0; i < num_of_vars; i++)
-    ;
+    printf("%d:th variable %s has cardinality %d\n", i, c->variables[i]->symbol, cardinality[i]);
+  j = 0;
   for(i = 0; i < num_of_vars; i++)
-    ;
-  for(i = 0; i < num_of_vars; i++)
-    ;
+    if(c->variables[i]->cardinality != cardinality[i])
+      j++;
+  if(j)
+    printf("In Clique.c : %d cardinalities were inconsistent !!! \n", j);
 #endif  
 
   c->p = make_potential(cardinality, num_of_vars, NULL);
   free(cardinality);
   free(indices);
   free(reorder);
-  c->sepsets = 0;
+  c->sepsets = NULL;
   c->mark = 0;
   return c;
 }
@@ -74,7 +76,7 @@ int free_Clique(Clique c){
   /* clean the list of sepsets */
   link l1 = c->sepsets;
   link l2 = c->sepsets;
-  while(l1 != 0){
+  while(l1 != NULL){
     l2 = l1->fwd;
     free(l1);
     l1=l2;
@@ -91,8 +93,8 @@ int add_Sepset(Clique c, Sepset s){
   link new = (link) malloc(sizeof(element));
   new->data = s;
   new->fwd = c->sepsets;
-  new->bwd = 0;
-  if(c->sepsets != 0)
+  new->bwd = NULL;
+  if(c->sepsets != NULL)
     c->sepsets->bwd = new;
   c->sepsets = new;
   return 0;
@@ -220,6 +222,12 @@ potential create_Potential(Variable variables[], int num_of_vars,
     size_of_data *= variables[i]->cardinality; /* optimal? */
     cardinality[i] = variables[reorder[i]]->cardinality;
   }
+
+#ifdef DEBUG_CLIQUE
+  for(i = 0; i < num_of_vars; i++)
+    printf("In Clique.c : %d:th variable %s (id = %lu) has cardinality %d\n",
+	   i, variables[reorder[i]]->symbol, get_id(variables[reorder[i]]), cardinality[i]);
+#endif
 
   /* Create a potential */
   p = make_potential(cardinality, num_of_vars, NULL);
@@ -383,9 +391,6 @@ int initialise(Clique c, Variable child, Variable parents[], potential p){
 	if(equal_variables(var, parents[j]) ||
 	   equal_variables(var, child)){
 	  extra = 0;
-#ifdef DEBUG_CLIQUE
-	  printf("extra_vars[%d] = %d.\n", k-1, i);
-#endif
 	}
       }
       if(extra)
