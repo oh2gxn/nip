@@ -31,7 +31,7 @@ Graph* test1(void)
     Variable v[4];
     Variable *w;
     char symbol[VAR_SYMBOL_LENGTH]; /* MVK: Must reserve some memory (?)*/
-    char name[VAR_NAME_LENGTH];     /* AR: Not really, handled by sprintf */
+    char name[VAR_NAME_LENGTH];     /* AR: True. IRIX has a black magic sprintf. */
     /* char *symbol, *name; */
     
     int i;
