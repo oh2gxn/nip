@@ -109,11 +109,14 @@ void inverse_mapping(potential p, int big_index, int indices[]){
 }
 
 /* Drops the indices that are marginalised or multiplied. 
-   source_vars must be in ascending order (see marginalise(...). 
-   dest_indices[] must be of right size */
+   source_vars must be in ascending order (see marginalise(...)). 
+   dest_indices[] must be of the right size */
 void choose_indices(potential source, int source_indices[],
 		    int dest_indices[], int source_vars[]){
 
+  /* JJ NOTE: What if this is done only once to form some sort of 
+   *          mask and then the mask could be more efficient for 
+   *          the rest of the calls..? */
   int i, j = 0, k = 0;
   for(i = 0; i < source->num_of_vars; i++){    
     if(i == source_vars[j])
