@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.19 2004-09-14 14:57:37 arasinen Exp $
+% $Id: dokumentaatio.tex,v 1.20 2004-09-15 14:40:26 arasinen Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -262,7 +262,32 @@ avoid having weird functions like \verb+get_parser_variable+.
 \section{Graphs}
 \subsection{General}
 
-The idea and mathematical formulas...
+The purpose of the graphical analysis is to find an optimal set of
+clusters in the graphical model that has the join tree property. XX
+
+The main steps in this process are moralisation and triangulation. The
+triangulation process extracts the cliques used to build the join tree.
+ 
+Put simply, moralisation means that any nodes that have a common child
+are connected. Furthermore, all directed links are replaced with
+undirected links. The resulting graph is called a {\textit moral
+graph}.
+
+This graph is then triangulated. There exist several triangulations
+for a given graph; we are interested in a triangulation that is
+optimal in the sense of adding the least edges\footnote{If there is
+more than one optimal solution, further constrains may be
+introduced. For example, for memory efficiency we prefer the solution
+that leads to the smallest potential tables.} to the moral
+graph. Finding such a triangulation is an NP-hard problem, but there
+exist heuristics that give nearly optimal results.
+
+The triangulation algorithm is the one presented in ... 
+
+The Graph data type is implemented via an adjacency graph. The
+interface is designed to hide the implementation details. The Heap
+datatype used in the triangulation stage contains a Graph-like
+datatype and could possibly be refactored.
 
 
 \subsection{The functionality description}
@@ -293,25 +318,36 @@ The functions provided in \verb+Variable.c+ are:
 \item[get\_variables(G)] returns the variables in the graph G as an array.
 \item[get\_graph\_index(G, v)] returns the index of the
 variable V in the internal array of the graph G.
-\item[get\_neighbours(G, v_array, v)] returns the number of neighbours of variable v in graph G. The neighbours will be stored in the array v_array, which {\it must be large enough}. No variable can have more neighbours than $n-1$, where $n$ is the number of variables in G.
+\item[get\_neighbours(G, v\_array, v)] returns the number of neighbours
+of variable v in graph G. The neighbours will be stored in the array
+v\_array, which {\it must be large enough}. No variable can have more
+neighbours than $n-1$, where $n$ is the number of variables in G.
 \item[is\_child(G, v1, v2)] will return True when variable v2 is a child of variable v1 in the graph G. 
 \item[add\_variable(G, v)] adds a new variable v to the graph G. You must add as many variables as you specified when creating G.
 \item[add\_child(G, v1, v2)] adds an edge to graph G from variable v1 to variable v2, ie. makes v2 a child of v1.
-\item[find\_cliques(Graph* G, cp] finds cliques in G and stores them
+\item[find\_cliques(G, cp)] finds cliques in G and stores them
 in the clique-array *cp\footnote{Type of cp is Clique**, ie. it is a
 pointer to such an array. It need not be initialized.}. Returns the
 number of elements in the array.
-\item[make_undirected(G)] returns an undirected copy of Graph G.
+\item[make\_undirected(G)] returns an undirected copy of Graph G.
 \item[moralise(G)] returns a moralised copy of graph G.
-
-
-
 
 \end{description}
 
 \subsection{Other possibilities}
 
-How the stuff could work also...
+From efficiency standpoint, the approach presented in ... is ... and suitable for production use.
+
+If efficiency is not the main concern, eg. in prototyping situations,
+some simplifications can be made. For example, the heap data structure
+in the triangulation phase can be replaced with a list or array and a linear
+search.
+
+The interface is not as smooth and polished as it could be. It is also
+not very flexible. For example you have to know the number of
+variables when constructing the graph; the system should be able to
+dynamically add new variables 'on the go'. However, such functionality
+can be introduced with a wrapper, if desired.
 
 
 \newpage
