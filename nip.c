@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.12 2004-08-26 14:22:21 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.13 2004-08-27 14:18:20 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -200,57 +200,92 @@ double *get_probability(Nip model, Variable v, int print){
 
 }
 
-void *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
-			    int print){
-
-  /* SORT THE VARIABLES? sort_variables in Variable.c */
+double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
+			      int print){
 
   Clique clique_of_interest;
-  potential source;
-  /* potential destination; */
-  /* Variable *vars_ordered; */
-  void *result = NULL;
-  int i;
-  /* int datasize; */
+  potential source, destination;
+  int *cardinality;
+  int *source_vars;
+  int i, j = 0, k = 0;
+  int retval;
+  int extra_vars;
+  double *result;
 
-  if(!model){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-    return NULL;
-  }
+  Variable *vars_sorted;
 
-  if(!vars){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-    return NULL;
-  }
-
-  if(num_of_vars < 1){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return NULL;
-  }
-
-  for(i = 0; i < num_of_vars; i++){
-    if(vars[i] == NULL){
-      report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-      return NULL;
-    }
-  }
-
-  /* 1. Find the Clique that contains the interesting Variables */
+  /* Find the Clique that contains the family of the interesting Variables */
   clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				   vars, num_of_vars);
-
-  /* Fails if the Variables are not in the same Clique */
+				   vars_sorted, num_of_vars);
   if(!clique_of_interest){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free(result);
     return NULL;
   }
 
+  /* Sort the Variables to program order (ascending ID) */
+  vars_sorted = sort_variables(vars, num_of_vars);
+  if(!vars_sorted){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return NULL;
+  }
+
+  cardinality = (int *) calloc(num_of_vars, sizeof(int));
+  if(!cardinality){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(vars_sorted);
+    return NULL;
+  }
+
+  for(i = 0; i < num_of_vars; i++)
+    cardinality[i] = vars_sorted[i]->cardinality;
+
   source = clique_of_interest->p;
 
+  destination = make_potential(cardinality, num_of_vars, NULL);
+  if(!destination){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free(vars_sorted);
+    free(cardinality);
+    return NULL;
+  }
 
-  /* TO BE CONTINUED */
+  extra_vars = clique_of_interest->p->num_of_vars - num_of_vars;
 
-  return NULL;
+  source_vars = (int *) calloc(extra_vars, sizeof(int));
+
+  /* Select the variables that are in the Clique but not in the set of
+   * Variables given to this function.
+   * This relies on the order of variables. */
+  for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+    if(j < num_of_vars &&
+       equal_variables((clique_of_interest->variables)[i], vars_sorted[j]))
+      j++;
+    else {
+      source_vars[k] = i;
+      k++;
+    }
+  }
+
+  retval = general_marginalise(source, destination, source_vars);
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free(vars_sorted);
+    free(cardinality);
+    free(source_vars);
+    return NULL;
+  }
+
+  result = reorder_potential(vars, destination);
+
+  /* NORMALISE? */
+
+  /* FREE MEMORY!!! */
+  free_potential(destination);
+  free(vars_sorted);
+  free(cardinality);
+  free(source_vars);
+
+  return result;
 
 }

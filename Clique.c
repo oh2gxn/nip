@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.96 2004-08-27 14:14:44 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.97 2004-08-27 14:18:20 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -505,6 +505,131 @@ potential create_Potential(Variable variables[], int num_of_vars,
   free(reorder);
 
   return p;
+}
+
+
+double *reorder_potential(Variable vars[], potential p){
+
+  /*
+   * - Käydään läpi (flat) kaikki alkiot alkuperäisessä taulukossa.
+   * 1. old_flat_index -> old_indices (inverse_mapping)
+   * 2. indices järjestetään -> new_indices (variables-taulukon mukaan)
+   * 3. new_indices -> new_flat_index (katso get_ppointer())
+   * 4. new_data[new_flat_index] = data[old_flat_index]
+   * 5. Siinä oli luuppi
+   *
+   * return new_data;
+   */
+
+  int old_flat_index, new_flat_index;
+  int i, j;
+  int *old_indices;
+  int *new_indices;
+  int *reorder;
+  unsigned long smallest_id;
+  int smallest_index;
+  unsigned long biggest_taken;
+  double *new_data;
+  int id_init;
+  Variable *vars_copy;
+
+  /* Simple (stupid) checks */
+  if(!p){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return NULL;
+  }
+  if(!vars){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return NULL;
+  }
+
+  old_indices = (int *) calloc(p->num_of_vars, sizeof(int));
+  if(!old_indices){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  new_indices = (int *) calloc(p->num_of_vars, sizeof(int));
+  if(!new_indices){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(old_indices);
+    return NULL;
+  }
+
+  reorder = (int *) calloc(p->num_of_vars, sizeof(int));
+  if(!reorder){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(old_indices);
+    free(new_indices);
+    return NULL;
+  }
+
+  new_data = (double *) calloc(p->size_of_data, sizeof(double));
+  if(!new_data){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(old_indices);
+    free(new_indices);
+    free(reorder);
+    return NULL;
+  }
+
+  vars_copy = (Variable *) calloc(p->num_of_vars, sizeof(Variable));
+  if(!vars_copy){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(old_indices);
+    free(new_indices);
+    free(reorder);
+    free(new_data);
+    return NULL;
+  }
+
+  for(i = 0; i < p->num_of_vars; i++)
+    vars_copy[i] = vars[i];
+
+  for(old_flat_index = 0; old_flat_index < p->size_of_data; old_flat_index++){
+
+    /* 1. */
+    inverse_mapping(p, old_flat_index, old_indices);
+
+    /* 2. */
+    for(i = 0; i < p->num_of_vars; i++){
+
+      id_init = 0;
+
+      for(j = 0; j < p->num_of_vars; j++){
+
+	if(id_init == 0){
+	  if(vars_copy[j] != NULL){
+	    id_init = 1;
+	    smallest_index = j;
+	    smallest_id = vars_copy[j]->id;
+	    vars_copy[j] = NULL;
+	  }
+	}
+	else{
+	  if(vars_copy[j] != NULL){
+	    if(vars_copy[j]->id < smallest_id){
+	      smallest_id = vars_copy[j]->id;
+	      smallest_index = j;
+	    }
+	  }
+	}
+      }
+
+      new_indices[smallest_index] = old_indices[i];
+    }
+
+    /* JATKUU */
+
+  }
+
+  free(old_indices);
+  free(new_indices);
+  free(reorder);
+  free(vars_copy);
+
+  return new_data;
+
 }
 
 

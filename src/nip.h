@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.6 2004-08-26 14:22:21 mvkorpel Exp $
+ * nip.h $Id: nip.h,v 1.7 2004-08-27 14:18:20 mvkorpel Exp $
  */
 
 #ifndef __NIP_H__
@@ -66,7 +66,7 @@ void make_consistent(Nip model);
 double *get_probability(Nip model, Variable v, int print);
 
 
-void *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
-			    int print);
+double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
+			      int print);
 
 #endif /* __NIP_H__ */

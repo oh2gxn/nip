@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.44 2004-08-26 14:22:21 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.45 2004-08-27 14:18:20 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -302,8 +302,40 @@ int number_of_values(Variable v){
 }
 
 
-/* TO BE CONTINUED*/
 Variable *sort_variables(Variable *vars, int num_of_vars){
 
-  return NULL;
+  /* Selection sort (simple, fast enough) */
+
+  int i, j;
+  int selected_index;
+  Variable *sorted;
+  Variable temp;
+
+  if(num_of_vars < 1){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return NULL;
+  }
+
+  sorted = (Variable *) calloc(num_of_vars, sizeof(Variable));
+
+  if(!sorted){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  /* Fill the sorted array naively (unsorted) */
+  for(i = 0; i < num_of_vars; i++)
+    sorted[i] = vars[i];
+
+  /* Sort in place (lots of swaps, I know...) */
+  for(i = 0; i < num_of_vars - 1; i++)
+    for(j = 1; j < num_of_vars; j++)
+      if(sorted[j]->id < sorted[i]->id){
+	temp = sorted[j];
+	sorted[j] = sorted[i];
+	sorted[i] = temp;
+      }
+
+  return sorted;
+
 }

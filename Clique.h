@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.47 2004-08-26 14:19:43 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.48 2004-08-27 14:18:20 mvkorpel Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -67,6 +67,8 @@ void free_Sepset(Sepset s);
 potential create_Potential(Variable variables[], int num_of_vars, 
 			   double data[]);
 
+
+double *reorder_potential(Variable vars[], potential p);
 
 /* Method for unmarking a clique: call this to every clique before 
    collecting or distributing evidence. */

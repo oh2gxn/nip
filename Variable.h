@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.37 2004-08-26 14:22:21 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.38 2004-08-27 14:18:20 mvkorpel Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -121,6 +121,9 @@ void reset_likelihood(Variable v);
 int number_of_values(Variable v);
 
 
+/* Returns a new array (allocates memory!) that contains the given Variables
+ * in ascending order according to their ID number.
+ */
 Variable *sort_variables(Variable *vars, int num_of_vars);
 
 #endif /* __VARIABLE_H__ */
