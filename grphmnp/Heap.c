@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.22 2004-08-19 10:57:59 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.23 2004-08-19 13:37:54 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -404,7 +404,6 @@ void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 void free_heap(Heap* H){
 
   int i;
-  Sepset s = NULL;
   Heap_item *hi;
 
   if(!H)
@@ -418,12 +417,6 @@ void free_heap(Heap* H){
     free(hi->Vs);
     hi->Vs = NULL;
   }
-
-  /*
-  while(!extract_min_sepset(H, &s)){
-    free_Sepset(s);
-  }
-  */
 
   free_useless_Sepsets(H);
   
