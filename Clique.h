@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.54 2005-02-23 13:59:40 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.55 2005-03-15 13:57:30 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -168,7 +168,7 @@ int enter_evidence(Variable* vars, int nvars, Clique* cliques,
  * Parameters:
  *  - cliques : an array of Cliques
  *  - num_of_cliques : the size of the array 'cliques'
- *  - var : the variable whos family is to be found
+ *  - var : the variable whose family is to be found
  */
 Clique find_family(Clique *cliques, int num_of_cliques, Variable var);
 

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.45 2005-03-15 10:14:29 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.46 2005-03-15 13:57:30 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -32,8 +32,8 @@
  *   - Invent a concise and efficient way of computing each of the parameters.
  *     - in which order? ("Time-First" or "Family-First")
  *     - one kind of solution:
- *       1: run forward-backward-inference -> UncertainSeries == P(x | t)
- *       2: sum up the "soft" frequencies of the events -> #(pa(x) -> x)
+ *       1: run family_inference -> FamilySeries == P(c, PA(c) | t)
+ *       2: sum up the "soft" frequencies of the (multidimensional) events
  *       3: normalise the results and create suitable potentials out of them
  *          -> P(x | pa(x))
  *
@@ -319,9 +319,12 @@ int uncertainseries_length(UncertainSeries ucs){
 void free_familyseries(FamilySeries fs){
   int t, c;
   if(fs){
-    for(t=0; t < fs->length; t++)
+    for(t=0; t < fs->length; t++){
       for(c=0; c < fs->model->num_of_children; c++)
 	free_potential(fs->families[t][c]);
+      free(fs->families[t]);
+    }
+    free(fs->families);
     free(fs);
   }
 }
@@ -545,13 +548,14 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
     results->data[t] = (double**) calloc(nvars, sizeof(double*));
     if(!results->data[t]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      t--;
       while(t > 0){
+	t--;
 	for(i = 0; i < nvars; i++)
-	  free(results->data[t][i]); /* Fixed 14.3.2005. Did it help? */
-	free(results->data[t--]);
+	  free(results->data[t][i]); /* Fixed 15.3.2005. Did it help? */
+	free(results->data[t]);
       }
-      free(results->variables); /* t == -1 */
+      free(results->data); /* t == -1 */
+      free(results->variables);
       free(results);
       free(cardinalities);
       return NULL;
@@ -562,15 +566,16 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
 					     sizeof(double));
       if(!results->data[t][i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	i--;
 	while(i > 0)
-	  free(results->data[t][i--]);
-	free(results->data[t--]);
+	  free(results->data[t][--i]);
+	free(results->data[t]);
 	while(t > 0){
+	  t--;
 	  for(i = 0; i < nvars; i++)
 	    free(results->data[t][i]);
-	  free(results->data[t--]);
+	  free(results->data[t]);
 	}
+	free(results->data);
 	free(results->variables); /* t == -1 */
 	free(results);
 	free(cardinalities);
@@ -709,13 +714,14 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
     results->data[t] = (double**) calloc(nvars, sizeof(double*));
     if(!results->data[t]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      t--;
       while(t > 0){
+	t--;
 	for(i = 0; i < nvars; i++)
-	  free(results->data[t][i]); /* Fixed 14.3.2005. Did it help? */
-	free(results->data[t--]);
+	  free(results->data[t][i]); /* Fixed 15.3.2005. Did it help? */
+	free(results->data[t]);
       }
-      free(results->variables); /* t == -1 */
+      free(results->data); /* t == 0 */
+      free(results->variables);
       free(results);
       free(cardinalities);
       return NULL;
@@ -726,16 +732,17 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
 					     sizeof(double));
       if(!results->data[t][i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	i--;
 	while(i > 0)
-	  free(results->data[t][i--]);
-	free(results->data[t--]);
+	  free(results->data[t][--i]);
+	free(results->data[t]);
 	while(t > 0){
+	  t--;
 	  for(i = 0; i < nvars; i++)
 	    free(results->data[t][i]);
-	  free(results->data[t--]);
+	  free(results->data[t]);
 	}
-	free(results->variables); /* t == -1 */
+	free(results->data); /* t == 0 */
+	free(results->variables);
 	free(results);
 	free(cardinalities);
 	return NULL;
@@ -905,7 +912,6 @@ FamilySeries family_inference(TimeSeries ts){
   results = (FamilySeries) malloc(sizeof(family_series_type));
   if(!results){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    //free(cardinalities);
     return NULL;
   }
   
@@ -916,7 +922,6 @@ FamilySeries family_inference(TimeSeries ts){
   if(!results->families){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(results);
-    //free(cardinalities);
     return NULL;
   }
   
@@ -925,14 +930,10 @@ FamilySeries family_inference(TimeSeries ts){
       (potential*) calloc(results->model->num_of_children, sizeof(potential));
     if(!results->families[t]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      t--;
-      while(t > 0){
-	for(i = 0; i < results->model->num_of_children; i++)
-	  free_potential(results->families[t][i]);
-	free(results->families[t--]);
-      }
-      free(results); /* t == -1 */
-      //free(cardinalities);
+      while(t > 0)
+	free(results->families[--t]);
+      free(results->families);
+      free(results);
       return NULL;
     }
   }
@@ -942,7 +943,17 @@ FamilySeries family_inference(TimeSeries ts){
     k = temp->num_of_parents + 1;
     cardinalities = (int *) calloc(k, sizeof(int));
     if(!cardinalities){
-      /* TODO: cleanup */
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      while(i > 0){
+	i--;
+	for(t = 0; t < results->length; t++)
+	  free_potential(results->families[t][i]); /* Not quite sure... */
+      }
+      for(t = 0; t < results->length; t++)
+	free(results->families[t]);
+      free(results->families);
+      free(results);
+      return NULL;
     }
 
     cardinalities[0] = temp->cardinality;
@@ -951,46 +962,41 @@ FamilySeries family_inference(TimeSeries ts){
     }
 
     for(t = 0; t < results->length; t++){
-
-      /* XXX: Unfinished!!! Let's make potentials instead of double arrays. */
-      results->families[t][i] = make_potential(cardinality, k, NULL);
-
-
+      results->families[t][i] = make_potential(cardinalities, k, NULL);
       if(!results->families[t][i]){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	i--;
-	while(i > 0)
-	  free(results->data[t][i--]);
-	free(results->data[t--]);
-	while(t > 0){
-	  for(i = 0; i < nvars; i++)
-	    free(results->data[t][i]);
-	  free(results->data[t--]);
+	while(t > 0)
+	  free_potential(results->families[--t][i]);
+	while(i > 0){
+	  for(t = 0; t < results->length; t++)
+	    free(results->families[t][i]); /* Not quite sure this works... */
+	  i--;
 	}
-	free(results->variables); /* t == -1 */
+	for(t = 0; t < results->length; t++)
+	  free(results->families[t]);
+	free(results->families);
 	free(results);
-	//free(cardinalities);
+	free(cardinalities);
 	return NULL;
       }
     }
+    free(cardinalities);
   }
 
 
   /* Allocate some space for the intermediate potentials */
   timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
 
-
   /* Allocate an array for describing the dimensions of timeslice sepsets */
   if(model->num_of_nexts > 0){
     cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      /* FIXME: free some memory... */
+      free_familyseries(results);
+      free(timeslice_sepsets);
       return NULL;
     }
   }
-
-  /* Fill the array */
   k = 0;
   for(i = 0; i < ts->num_of_hidden; i++){
     temp = ts->hidden[i];
@@ -1025,7 +1031,7 @@ FamilySeries family_inference(TimeSeries ts){
 				       NULL)                   != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_uncertainseries(results);
+	free_familyseries(results);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(timeslice_sepsets[i]);
 	free(timeslice_sepsets);
@@ -1039,7 +1045,7 @@ FamilySeries family_inference(TimeSeries ts){
     if(start_timeslice_message_pass(model, FORWARD,
 				    timeslice_sepsets[t]) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      free_uncertainseries(results);
+      free_familyseries(results);
       for(i = 0; i <= ts->length; i++)
 	free_potential(timeslice_sepsets[i]);
       free(timeslice_sepsets);
@@ -1073,7 +1079,7 @@ FamilySeries family_inference(TimeSeries ts){
 				       NULL)                   != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_uncertainseries(results);
+	free_familyseries(results);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(timeslice_sepsets[i]);
 	free(timeslice_sepsets);
@@ -1087,7 +1093,7 @@ FamilySeries family_inference(TimeSeries ts){
 				       timeslice_sepsets[t]) != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_uncertainseries(results);
+	free_familyseries(results);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(timeslice_sepsets[i]);
 	free(timeslice_sepsets);
@@ -1097,32 +1103,47 @@ FamilySeries family_inference(TimeSeries ts){
     /* Do the inference */
     make_consistent(model);
     
+
+
+
+
+    /* TO BE IMPLEMENTED... */
+
+
     /* Write the results */
-    for(i = 0; i < results->num_of_vars; i++){
+    for(i = 0; i < results->model->num_of_children; i++){
       
       /* 1. Decide which Variable you are interested in */
-      temp = results->variables[i];
+      temp = results->model->children[i];
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
-      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+      clique_of_interest = find_family(results->model->cliques, 
+				       results->model->num_of_cliques, 
 				       temp);
       assert(clique_of_interest != NULL);
       
-      /* 3. Marginalisation (the memory must have been allocated) */
-      marginalise(clique_of_interest, temp, results->data[t][i]);
+      /* Starting from here, do something else... */
+
+      /* 3. General Marginalisation */
+      //marginalise(clique_of_interest, temp, results->data[t][i]);
       
-      /* 4. Normalisation */
-      normalise(results->data[t][i], number_of_values(temp));
+      /* 4. Normalisation??? */
+      //normalise(results->data[t][i], number_of_values(temp));
     }
     
+
+
+
+
+
 
     if(t > 0)
       if(start_timeslice_message_pass(model, BACKWARD, 
 				      timeslice_sepsets[t]) != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_uncertainseries(results);
+	free_familyseries(results);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(timeslice_sepsets[i]);
 	free(timeslice_sepsets);
