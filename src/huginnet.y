@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.20 2004-06-02 14:04:43 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.21 2004-06-03 07:24:47 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -48,21 +48,20 @@
 /* Grammar follows */
 /* NOT READY!!! 
  * TODO:
- * + the input should be divided into two parts: nodes and potentials: DONE
- *   (all the node declarations should be before potential declarations)
  * - create cliques correctly (with Graph.h)
  * - create sepsets somehow   (with Graph.h)
- * + make it parse nested lists as data: DONE (correctly?)
+ * - figure out a way to initialise the resulting jointree
  * - find out what to do with the parsed stuff! */
 
 /* A PROBLEM: The graph is not entirely known until the end of the 
  * file has been reached, but the cliques are needed immediately!
  * Solutions:
- * - defer the initialisation of cliques until the graph is ready 
+ * - defer the creation of jointree and the initialisation of cliques 
+ *   until the graph is ready 
  * - X ? */
 %%
 input:  nodes potentials {
-  /* final stuff here */
+  /* <final stuff here> */
 
   /*
    * Create the graph between parsing nodes and potentials.
@@ -120,14 +119,6 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
 
 
 potentialDeclaration: token_potential '(' symbol '|' symbols ')' '{' dataList '}' { 
-  /*
-   * FIXME: This is still wrong. Variables should be added to the graph
-   * and the relations should be marked.
-   */
-
-
-  /* OBVIOUSLY the parents should be separated from the children somehow! */
-
   Variable vars[nip_symbols_parsed + 1];
   int i;
   vars[0] = $3;
@@ -157,7 +148,7 @@ strings:       /* end of list */ { $$ = make_string_array() }
 /* This should ignore all brackets between numbers! */
 numbers:       /* end of list */ { $$ = make_double_array() }
              | NUMBER numbers { add_double($1) }
-             | '(' NUMBER numbers ')' { add_double($2) } //nested lists?
+             | '(' numbers ')' {/* ignore */} // nested lists?
 ;
 
 
