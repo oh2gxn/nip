@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.35 2005-02-14 15:45:58 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.36 2005-02-14 22:15:31 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -868,7 +868,7 @@ void make_consistent(Nip model){
 
 
 /* Most likely state sequence of the variables given the timeseries. */
-TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
+TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
   int i, j, k, l, t;
   TimeSeries mlss;
 
@@ -879,8 +879,8 @@ TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
     return NULL;
   }
 
-  mlss->model = model;
-  mlss->num_of_hidden = model->num_of_vars - nvars;
+  mlss->model = ts->model;
+  mlss->num_of_hidden = ts->model->num_of_vars - nvars;
   mlss->hidden = (Variable*) calloc(mlss->num_of_hidden, sizeof(Variable));
   mlss->observed = (Variable*) calloc(nvars, sizeof(Variable));
   mlss->length = ts->length;
@@ -913,20 +913,20 @@ TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
 
   /* Find out the "hidden", or more like uninteresting, variables */
   l = 0;
-  for(i=0; i < model->num_of_vars; i++){
+  for(i=0; i < ts->model->num_of_vars; i++){
     if(l == mlss->num_of_hidden)
       break;
 
     k = 1;
     for(j=0; j < nvars; j++){
-      if(equal_variables(model->variables[i], vars[j])){
+      if(equal_variables(ts->model->variables[i], vars[j])){
 	k = 0;
 	break;
       }
     }
     
     if(k)
-      mlss->hidden[l++] = model->variables[i];
+      mlss->hidden[l++] = ts->model->variables[i];
   }
 
   /* TODO: write the algorithm here 
@@ -949,7 +949,7 @@ TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
 
 /* Teaches the given model according to the given time series with 
  * EM-algorithm. Returns an error code as an integer. */
-int em_learn(Nip model, TimeSeries observations){
+int em_learn(TimeSeries observations){
 
   /* NOT IMPLEMENTED YET! */
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
