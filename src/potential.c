@@ -2,41 +2,67 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+/* #include "potential.h" */
 
-struct array {
-  int size;
-  int has_data;
-  struct array *subarrays;
+struct pot_array {
+  int size_of_data;
+  int *cardinality;
+  int num_of_vars;
   double *data;
 };
 
-typedef struct array ptype;
+typedef struct pot_array ptype;
 typedef ptype *potential;
 
 potential make_potential(int[], int);
+void free_potential(potential);
+void copy_potential(potential, potential);
 double get_pvalue(potential, int[], int);
 void set_pvalue(potential, int[], int, double);
 double *get_ppointer(potential, int[], int);
-potential mk_pot(int, int);
 int main();
 
 /* Make a num_of_vars -dimension potential array. */
 potential make_potential(int cardinality[], int num_of_vars){
 
-  if(num_of_vars < 1)
-    return NULL;
-
-  potential p;
   int i;
-  if(num_of_vars == 1)
-    p = mk_pot(cardinality[0], 1);
-  else{
-    p = mk_pot(cardinality[0], 0);
-    for(i = 0; i < cardinality[0]; i++)
-      p->subarrays[i] = *make_potential(cardinality + 1,
-					num_of_vars - 1);
+  int size_of_data = 1;
+  int *cardinal;
+  potential p;
+  p = (potential) malloc(sizeof(ptype));
+  cardinal = (int *) calloc(num_of_vars, sizeof(int));
+
+  for(i = 0; i < num_of_vars; i++){
+    size_of_data *= cardinality[i];
+    cardinal[i] = cardinality[i];
   }
+
+  p->cardinality = cardinal;
+  p->size_of_data = size_of_data;
+  p->num_of_vars = num_of_vars;
+  p->data = (double *) calloc(size_of_data, sizeof(double));
+
   return p;
+}
+
+/* Free the memory used by potential p */
+void free_potential(potential p){
+
+  free(p->cardinality);
+  free(p->data);
+  free(p);
+
+}
+
+/* Make a copy of a potential. 
+ source and destination must be potentials of same cardinality! */
+/* TARVITAANKO? */
+void copy_potential(potential source, potential destination){
+
+  int i;
+  for(i = 0; i < source->size_of_data; i++)
+    destination->data[i] = source->data[i];
+
 }
 
 /* Syntactic sugar */
@@ -59,52 +85,87 @@ void set_pvalue(potential p, int indices[], int num_of_vars, double value){
    num_of_vars must be equal to the size of indices[] */
 double *get_ppointer(potential p, int indices[], int num_of_vars){
 
+  int index = indices[0];
   int i;
+  int card_temp = 1;
 
-  if(num_of_vars < 1)
-    return NULL;
-
-  for(i = 0; i < num_of_vars - 1; i++){
-    if(p->has_data)
-      return NULL;
-    if(indices[i] >= p->size ||
-       indices[i] < 0)
-      return NULL;
-    p = &(p->subarrays[indices[i]]);
+  for(i = 1; i < num_of_vars; i++){
+    card_temp *= p->cardinality[i-1];
+    index += indices[i] * card_temp;
   }
-  
-  if(!(p->has_data))
-    return NULL;
-  if(indices[num_of_vars - 1] >= p->size ||
-     indices[num_of_vars - 1] < 0)
-    return NULL;
 
-  return &(p->data[indices[num_of_vars - 1]]);
+  return &(p->data[index]);
+
 }
 
-/* This is an internal function for make_potential(...) */
-potential mk_pot(int cardinality, int has_data){
-  potential p;
-  p = (potential) malloc(sizeof(ptype));
-  p->size = cardinality;
-  if(has_data){
-    p->has_data = 1;
-    p->data = (double *) calloc(cardinality, sizeof(double));
+/* Mapping from flat index to n-dimensional index, where n is the number of
+   variables in potential p. */
+void inverse_mapping(potential p, int big_index, int indices[]){
+
+  int x = p->size_of_data;
+  int i;
+
+  for(i = p->num_of_vars - 1; i >= 0; i--){
+    x /= p->cardinality[i];
+    indices[i] = big_index / x;    /* integer division */
+    big_index -= indices[i] * x;
   }
-  else{
-    p->has_data = 0;
-    p->subarrays = (struct array *) calloc(cardinality, sizeof(struct array));
+
+  return;
+}
+
+/* Drops the indices that are marginalised. source_vars must be in ascending
+   order (see marginalise(...). dest_indices[] must be of right size */
+void choose_indices(potential source, int source_indices[],
+		    int dest_indices[], int source_vars[]){
+
+  int i, j = 0, k = 0;
+  for(i = 0; i < source->num_of_vars; i++){    
+    if(i == source_vars[j])
+      j++;
+    else{
+      dest_indices[k] = source_indices[i];
+      k++;
+    }
+  } 
+  return;
+}
+
+/* Method for marginalising over certain variables. 
+   TAKE CARE OF THE ORDER OF VARIABLES! 
+source: potential to be marginalised
+destination: potential to put the answer, variables will be in the same order
+source_vars: indices of the marginalised variables in source potential
+             (ascending order!) */
+void marginalise(potential source, potential destination, int source_vars[]){
+
+  int i;
+  int *source_indices, *dest_indices;
+  double *potvalue;
+
+  source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
+  dest_indices = (int *) calloc(destination->num_of_vars, sizeof(int));
+
+  for(i = 0; i < destination->size_of_data; i++)
+    destination->data[i] = 0;
+
+  for(i = 0; i < source->size_of_data; i++){
+    inverse_mapping(source, i, source_indices);
+    choose_indices(source, source_indices, dest_indices, source_vars);
+    potvalue =
+      get_ppointer(destination, dest_indices, destination->num_of_vars);
+    *potvalue += source->data[i];
   }
-  return p;
+  return;
 }
 
 /* Main function for testing */
 int main(){
 
   /* Use big numbers here and see that 640K isn't enough for everyone... */
-  int cardinality[] = { 3, 4, 5};
-  int num_of_vars = 3;
-  int indices[3], i, j, k;
+  int cardinality[] = { 2, 3, 4, 5, 6};
+  int num_of_vars = 5;
+  int indices[5], i, j, k, l, m, x = 0;
   double value;
   potential p;
   p = make_potential(cardinality, num_of_vars);
@@ -116,7 +177,14 @@ int main(){
       indices[1] = j;
       for(k = 0; k < cardinality[2]; k++){
 	indices[2] = k;
-	set_pvalue(p, indices, num_of_vars,i + 500 * j + 2500 * k);
+	for(l = 0; l < cardinality[3]; l++){
+	  indices[3] = l;
+	  for(m = 0; m < cardinality[4]; m++){
+	    indices[4] = m;
+	    x++;
+	    set_pvalue(p, indices, num_of_vars, x);
+	  }
+	}
       }
     }
   }
@@ -128,9 +196,15 @@ int main(){
       indices[1] = j;
       for(k = 0; k < cardinality[2]; k++){
 	indices[2] = k;
-	value = get_pvalue(p, indices, num_of_vars);
-	printf("Potential (%d, %d, %d) is: %f\n", indices[0],
-	       indices[1], indices[2], value);
+	for(l = 0; l < cardinality[3]; l++){
+	  indices[3] = l;
+	  for(m = 0; m < cardinality[4]; m++){
+	    indices[4] = m;
+	    value = get_pvalue(p, indices, num_of_vars);
+	    printf("Potential (%d, %d, %d, %d, %d) is: %f\n", indices[0],
+		   indices[1], indices[2], indices[3], indices[4], value);
+	  }
+	}
       }
     }
   }

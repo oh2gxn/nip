@@ -1,19 +1,28 @@
 #ifndef __POTENTIAL_H__
 #define __POTENTIAL_H__
 
-/* definition of potentials */
-typedef double* Potential;
+struct pot_array {
+  int size_of_data;
+  int *cardinality;
+  int num_of_vars;
+  double *data;
+};
+
+typedef struct pot_array ptype;
+typedef ptype *potential;
 
 /* method for initializing a potential */
-Potential makePotential(int cardinality /*+other stuff*/);
+potential make_potential(int cardinality[], int num_of_vars);
 
 /* method for copying a potential */
-Potential copyPotential(Potential p);
+void copy_potential(potential source, potential destination);
 
 /* method for marginalising over certain variables */
-Potential marginalise(Potential pot, Variable* vars); /* WILL CHANGE */
+void marginalise(potential source, potential destination, int source_vars[], 
+		 int num_of_vars);
+/* WILL CHANGE */
 
 /* method for multiplying potentials */
-void mulPotential(Potential factor, Potential target);
+void mul_potential(potential factor, potential target);
 
 #endif __POTENTIAL_H__
