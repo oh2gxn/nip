@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.31 2004-11-22 12:56:04 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.32 2005-01-27 23:53:10 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -22,8 +22,12 @@
  *   + some abstraction for a time series (structure and access to data..?)
  *
  * - Viterbi algorithm for the ML-estimate of the latent variables
+ *   - another forward-like algorithm with elements of dynamic programming
  *
  * - EM algorithm for estimating parameters of the model
+ *   - invent a concise and efficient way of computing each of the parameters
+ *   - find a neat way to replace the original parameters of the model
+ *   - determine the parameters of the algorithm ???
  *****/
 
 extern int yyparse();
@@ -922,6 +926,8 @@ TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
  * EM-algorithm. Returns an error code as an integer. */
 int em_learn(Nip model, TimeSeries observations){
   return ERROR_GENERAL;
+
+
 }
 
 
