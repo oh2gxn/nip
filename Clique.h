@@ -104,9 +104,9 @@ int enter_evidence(Clique c, Variable v, double evidence[]);
    Returns -1 if not, else the index of v among the Variables in c. */
 int var_index(Clique c, Variable v);
 
-/* Finds a clique containing a family of variables. Returns the Clique 
- * that contains all the given variables. Returns NULL if no such 
- * Clique is found.
+/* Finds a clique containing a family of variables. Returns the first
+ * found Clique that contains all the given variables.
+ * Returns NULL if no such Clique is found.
  * Parameters:
  *  - cliques : an array of cliques
  *  - num_of_cliques : the size of the array 'cliques'
