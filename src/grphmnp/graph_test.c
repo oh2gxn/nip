@@ -29,8 +29,9 @@ Graph* test1(void)
 
     w = get_variables(G);
     assert(get_size(G) == 5);
-    for (i = 0; i<5; i++)
+    for (i = 0; i<5; i++) {
         assert(equal_variables(v[i], w[i]));
+    }
     
     printf("\tTest 1 done.\n");
     return G;
@@ -61,6 +62,28 @@ void test2(Graph* G)
     printf("\tTest 2 done.\n");    
 }
 
+
+void test3(Graph* G)
+{
+    Graph* Gc;
+    Variable *v, *w;
+    int i,j;
+    
+    printf("\tTest3... copy_graph\n");
+    Gc = copy_graph(G);
+    v = get_variables(G);
+    w = get_variables(Gc);
+    assert(get_size(G) == get_size(Gc));
+    for (i = 0; i < get_size(G); i++) {
+        assert(equal_variables(v[i],w[i]));
+    }
+    for (i = 0; i < get_size(G); i++)
+        for (j = 0; j < get_size(G); j++) {
+            assert(is_child(v[i], v[j]) == is_child(w[i], w[j]));
+        }
+    
+}
+
 void main(void)
 {
     Graph* G;
@@ -69,6 +92,7 @@ void main(void)
     
     G = test1();
     test2(G);
-
+    test3(G);
+    
 }
 
