@@ -133,7 +133,10 @@ void choose_indices(potential source, int source_indices[],
 -source: potential to be marginalised
 -destination: potential to put the answer, variables will be in the same order
 -source_vars: indices of the marginalised variables in source potential
-             (ascending order!) */
+             (ascending order and between 0...num_of_vars-1 inclusive!) 
+EXAMPLE: If sepset variables are the second (i.e. 1) and third (i.e. 2) 
+variable in a five variable clique, the call is 
+marginalise(cliquePotential, newSepsetPotential, {0, 3, 4}) */
 void marginalise(potential source, potential destination, int source_vars[]){
 
   int i;
@@ -164,15 +167,20 @@ void marginalise(potential source, potential destination, int source_vars[]){
 }
 
 /* Method for updating target potential by multiplying with enumerator 
-   potentials and dividing with denominator potentials. Useful in message 
+   potential and dividing with denominator potential. Useful in message 
    passing from sepset to clique. 
 -target: the potential whose values are updated
 -enumerator: multiplier, usually the newer sepset potential (source)
 -denominator: divider, usually the older sepset potential. This MUST have 
  similar geometry to enumerator.
--extra_vars: an integer array which holds the target variable ID's 
- that are NOT in source potentials and in ascending order. Length of the 
- array must be at least the number of variables in source potentials */
+-extra_vars: an integer array which holds the target variable indices 
+ (0...num_of_vars - 1 inclusive) that are NOT in source potentials and in 
+ ascending order. Length of the array must be at least the number of 
+ variables in source potentials. 
+EXAMPLE: If two sepset variables are the third and fifth variables in 
+a five variable clique, the call is 
+update(newSepsetPotential, oldSepsetPotential, cliquePotential, {0, 1, 3}) 
+*/
 void update(potential enumerator, potential denominator, potential target,
 	    int extra_vars[]){
 
@@ -193,7 +201,10 @@ void update(potential enumerator, potential denominator, potential target,
 
     potvalue = 
       get_ppointer(denominator, source_indices, denominator->num_of_vars);
-    target->data[i] /= *potvalue;  /* THE division */
+    if(*potvalue == 0)
+      target->data[i] = 0;  /* see Procedural Guide p. 20 */
+    else
+      target->data[i] /= *potvalue;  /* THE division */
   }
 
   free(source_indices); /* JJ NOTE: GET RID OF THESE */
