@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.13 2004-08-27 14:18:20 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.14 2004-08-30 11:07:00 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -11,6 +11,10 @@
 #include <string.h>
 
 extern int yyparse();
+
+static int increment_indices(int indices[], Variable vars[], int num_of_vars);
+static double get_data(double data[], int indices[],
+		       int num_of_vars, int cardinality[]);
 
 void reset_model(Nip model){
   int retval;
@@ -200,6 +204,42 @@ double *get_probability(Nip model, Variable v, int print){
 
 }
 
+static int increment_indices(int indices[], Variable vars[], int num_of_vars){
+
+  int finger = 0;
+  int i;
+
+  while(finger <= num_of_vars - 1){
+
+    if(indices[finger] >= vars[finger]->cardinality - 1)
+      finger++;
+    else{
+      indices[finger]++;
+      for(i = 0; i < finger; i++)
+	indices[i] = 0;
+      return 1; /* TRUE */
+    }
+  }
+
+  return 0; /* FALSE */
+}
+
+static double get_data(double data[], int indices[],
+		       int num_of_vars, int cardinality[]){
+
+  int index = 0;
+  int i;
+  int card_temp = 1;
+
+  for(i = 0; i < num_of_vars; i++){
+    index += indices[i] * card_temp;
+    card_temp *= cardinality[i];
+  }
+
+  return data[index];
+
+}
+
 double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 			      int print){
 
@@ -207,6 +247,7 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
   potential source, destination;
   int *cardinality;
   int *source_vars;
+  int *indices = NULL;
   int i, j = 0, k = 0;
   int retval;
   int extra_vars;
@@ -216,10 +257,9 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 
   /* Find the Clique that contains the family of the interesting Variables */
   clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				   vars_sorted, num_of_vars);
+				   vars, num_of_vars);
   if(!clique_of_interest){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    free(result);
     return NULL;
   }
 
@@ -253,6 +293,13 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
   extra_vars = clique_of_interest->p->num_of_vars - num_of_vars;
 
   source_vars = (int *) calloc(extra_vars, sizeof(int));
+  if(!source_vars){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(vars_sorted);
+    free(cardinality);
+    free_potential(destination);
+    return NULL;
+  }
 
   /* Select the variables that are in the Clique but not in the set of
    * Variables given to this function.
@@ -280,12 +327,43 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 
   /* NORMALISE? */
 
+  /* Print the result if print != 0 */
+  if(print){
+
+    /* Create and initialise the array of indices */
+    indices = (int *) calloc(num_of_vars, sizeof(int));
+    if(!indices){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free_potential(destination);
+      free(vars_sorted);
+      free(cardinality);
+      free(source_vars);
+      return NULL;
+    }
+  
+    for(i = 0; i < num_of_vars; i++)
+      indices[i] = 0;
+
+    /* The loop goes through every combination of values */
+    do{
+      printf("P(");
+      for(i = 0; i < num_of_vars - 1; i++)
+	printf("%s = %s, ", vars_sorted[i]->symbol,
+	       vars_sorted[i]->statenames[indices[i]]);
+      printf("%s = %s) = ", vars_sorted[num_of_vars - 1]->symbol,
+	     vars_sorted[num_of_vars-1]->statenames[indices[num_of_vars-1]]);
+      printf("%f\n", get_data(result, indices, num_of_vars, cardinality));
+    } while(increment_indices(indices, vars_sorted, num_of_vars));
+  }
+
   /* FREE MEMORY!!! */
   free_potential(destination);
   free(vars_sorted);
   free(cardinality);
   free(source_vars);
+  free(indices);
 
   return result;
 
 }
+

@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.43 2004-08-25 11:14:41 mvkorpel Exp $
+ * Graph.c $Id: Graph.c,v 1.44 2004-08-30 11:07:00 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -12,7 +12,7 @@
 #include "grphmnp/cls2clq.h"
 #include "errorhandler.h"
 
-static void sort_variables(Graph* G);
+static void sort_gr_variables(Graph* G);
 
 /*** GRAPH MANAGEMENT ***/
 
@@ -154,7 +154,7 @@ int add_variable(Graph* G, Variable v)
     G->top++;
 
     if (G->top == G->size)
-		sort_variables(G);
+		sort_gr_variables(G);
 
     return NO_ERROR;
 }
@@ -180,7 +180,7 @@ int add_child(Graph* G, Variable parent, Variable child)
     return get_id(v1) - get_id(v2);
 }*/
 
-static void sort_variables(Graph* G) 
+static void sort_gr_variables(Graph* G) 
 {
     int i, id;
 	

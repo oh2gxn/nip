@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.45 2004-08-27 14:18:20 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.46 2004-08-30 11:07:00 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -307,7 +307,6 @@ Variable *sort_variables(Variable *vars, int num_of_vars){
   /* Selection sort (simple, fast enough) */
 
   int i, j;
-  int selected_index;
   Variable *sorted;
   Variable temp;
 

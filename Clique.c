@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.97 2004-08-27 14:18:20 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.98 2004-08-30 11:06:59 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -510,27 +510,15 @@ potential create_Potential(Variable variables[], int num_of_vars,
 
 double *reorder_potential(Variable vars[], potential p){
 
-  /*
-   * - Käydään läpi (flat) kaikki alkiot alkuperäisessä taulukossa.
-   * 1. old_flat_index -> old_indices (inverse_mapping)
-   * 2. indices järjestetään -> new_indices (variables-taulukon mukaan)
-   * 3. new_indices -> new_flat_index (katso get_ppointer())
-   * 4. new_data[new_flat_index] = data[old_flat_index]
-   * 5. Siinä oli luuppi
-   *
-   * return new_data;
-   */
-
   int old_flat_index, new_flat_index;
   int i, j;
-  int *old_indices;
-  int *new_indices;
-  int *reorder;
-  unsigned long smallest_id;
-  int smallest_index;
-  unsigned long biggest_taken;
+  int *old_indices, *new_indices;
+  int *new_card;
+  unsigned long smallest_id = 0L;
+  int smallest_index = 0;
   double *new_data;
   int id_init;
+  int card_temp;
   Variable *vars_copy;
 
   /* Simple (stupid) checks */
@@ -556,8 +544,8 @@ double *reorder_potential(Variable vars[], potential p){
     return NULL;
   }
 
-  reorder = (int *) calloc(p->num_of_vars, sizeof(int));
-  if(!reorder){
+  new_card = (int *) calloc(p->num_of_vars, sizeof(int));
+  if(!new_card){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(old_indices);
     free(new_indices);
@@ -569,7 +557,7 @@ double *reorder_potential(Variable vars[], potential p){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(old_indices);
     free(new_indices);
-    free(reorder);
+    free(new_card);
     return NULL;
   }
 
@@ -578,7 +566,7 @@ double *reorder_potential(Variable vars[], potential p){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(old_indices);
     free(new_indices);
-    free(reorder);
+    free(new_card);
     free(new_data);
     return NULL;
   }
@@ -588,10 +576,10 @@ double *reorder_potential(Variable vars[], potential p){
 
   for(old_flat_index = 0; old_flat_index < p->size_of_data; old_flat_index++){
 
-    /* 1. */
+    /* 1. old_flat_index -> old_indices (inverse_mapping) */
     inverse_mapping(p, old_flat_index, old_indices);
 
-    /* 2. */
+    /* 2. "indices" is re-ordered according to "variables" -> new_indices */
     for(i = 0; i < p->num_of_vars; i++){
 
       id_init = 0;
@@ -617,17 +605,30 @@ double *reorder_potential(Variable vars[], potential p){
       }
 
       new_indices[smallest_index] = old_indices[i];
+      new_card[smallest_index] = p->cardinality[i];
     }
 
-    /* JATKUU */
+    /* 3. new_indices -> new_flat_index (look at get_ppointer()) */
+
+    new_flat_index = 0;
+    card_temp = 1;
+
+    for(i = 0; i < p->num_of_vars; i++){
+      new_flat_index += new_indices[i] * card_temp;
+      card_temp *= new_card[i];
+    }
+
+    /* 4. */
+    new_data[new_flat_index] = p->data[old_flat_index];
 
   }
 
   free(old_indices);
   free(new_indices);
-  free(reorder);
+  free(new_card);
   free(vars_copy);
 
+  /* Pointer to allocated memory. Also, potential p remains alive.*/
   return new_data;
 
 }

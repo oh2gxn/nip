@@ -224,7 +224,7 @@ int main(int argc, char *argv[]){
 #ifdef EVIDENCE_SOTKU
 
 #ifdef TEST_RETRACTION
-  /* some crappy evidence */
+  /* some VERY FINE evidence */
   test_evidence(nip_cliques, nip_num_of_cliques, observed[2], probs[2]);
 
   /* a propagation */
@@ -308,7 +308,6 @@ int main(int argc, char *argv[]){
   printf("Normalised probability of %s:\n", get_symbol(interesting));
   for(i = 0; i < size_of_result; i++)
     printf("P(%s=%d) = %f\n", get_symbol(interesting), i, result[i]);
-  /* To be continued... */
 
   free(result);
   return 0;
