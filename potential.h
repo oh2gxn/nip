@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.21 2004-06-21 06:48:15 mvkorpel Exp $
+ * potential.h $Id: potential.h,v 1.22 2004-07-08 04:40:14 mvkorpel Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -68,13 +68,13 @@ int general_marginalise(potential source, potential destination,
  */
 int total_marginalise(potential source, double destination[], int variable);
 
-/* Method for updating target potential by multiplying with enumerator 
+/* Method for updating target potential by multiplying with numerator 
  * potential and dividing with denominator potential. Useful in message 
  * passing from sepset to clique. 
  * -target: the potential whose values are updated
- * -enumerator: multiplier, usually the newer sepset potential (source)
+ * -numerator: multiplier, usually the newer sepset potential (source)
  * -denominator: divider, usually the older sepset potential. This MUST have 
- *  similar geometry to enumerator.
+ *  similar geometry to numerator.
  * -extra_vars: an integer array which holds the target variable indices 
  *  (0...num_of_vars - 1 inclusive) that are NOT in source potentials and in 
  *  ascending order. Length of the array must be at least the number of 
@@ -84,18 +84,18 @@ int total_marginalise(potential source, double destination[], int variable);
  *  update(newSepsetPotential, oldSepsetPotential, cliquePotential, {0, 1, 3}) 
  * -Returns an error code.
  */
-int update_potential(potential enumerator, potential denominator, 
+int update_potential(potential numerator, potential denominator, 
 		      potential target, int extra_vars[]);
 
 /* Method for updating potential according to new evidence.
  * MUST BE: evidence[i] > 0 => v->likelihood[i] > 0
  * Otherwise a global retraction must be done before calling this !!!!!!
- * -enumerator[]: new evidence about the variable
+ * -numerator[]: new evidence about the variable
  * -denominator[]: old likelihood of the variable
  * -target: the potential to be updated
  * -var: the index (in the potential) of the variable that gets new evidence
  */
-int update_evidence(double enumerator[], double denominator[], 
+int update_evidence(double numerator[], double denominator[], 
 		    potential target, int var);
 
 /* This one implements the initialisation with observations. 

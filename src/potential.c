@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.36 2004-07-07 13:31:20 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.37 2004-07-08 04:40:14 mvkorpel Exp $
  * Functions for handling potentials. 
  */
 
@@ -249,14 +249,14 @@ int total_marginalise(potential source, double destination[], int variable){
   return 0;
 }
 
-int update_potential(potential enumerator, potential denominator, 
+int update_potential(potential numerator, potential denominator, 
 		     potential target, int extra_vars[]){
 
   int i;
   int *source_indices, *target_indices;
   double *potvalue;
 
-  source_indices = (int *) calloc(enumerator->num_of_vars, sizeof(int));
+  source_indices = (int *) calloc(numerator->num_of_vars, sizeof(int));
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
   if(!(target_indices && source_indices)){
@@ -269,9 +269,9 @@ int update_potential(potential enumerator, potential denominator,
   for(i = 0; i < target->size_of_data; i++){
     inverse_mapping(target, i, target_indices);
     choose_indices(target, target_indices, source_indices, extra_vars,
-		   target->num_of_vars - enumerator->num_of_vars);
+		   target->num_of_vars - numerator->num_of_vars);
 
-    potvalue = get_ppointer(enumerator, source_indices);
+    potvalue = get_ppointer(numerator, source_indices);
     target->data[i] *= *potvalue;  /* THE multiplication */
 
     if(denominator){
