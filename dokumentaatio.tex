@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.28 2004-09-24 11:44:05 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.29 2004-09-27 12:13:31 arasinen Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -218,8 +218,8 @@ All the given strings are copied, so remember to free them after they
 become useless.
 
 \item[copy\_variable(v)] returns an exact copy of the
-variable~\cparameter{v}. Note that also the id~field is copied and 
-consequently there may not be two copies of the same variable in the 
+variable~\cparameter{v}. Note that also the id~field is copied and
+consequently there may not be two copies of the same variable in the
 same model.
 
 \item[free\_variable(v)] frees the memory allocated for the
@@ -232,8 +232,9 @@ or not.
 \item[get\_id(v)] will return the unsigned long id field of the 
 variable~\cparameter{v}.
 
-\item[get\_symbol(v)] returns the symbol of the variable~\cparameter{v}. It
-will not make a copy of the string so don't mess with it.
+\item[get\_symbol(v)] returns the symbol of the
+variable~\cparameter{v}. It will not make a copy of the string so
+don't mess with it.
 
 \item[get\_stateindex(v, state)] tells the place of the string
 \cparameter{state} in the state name array of the
@@ -252,29 +253,29 @@ of newly created variables mentioned above.
 \item[get\_last\_variable()] gives the last element in the list
 of newly created variables mentioned above.
 
-\item[reset\_Variable\_list()] will replace the list of recently created
-variables with \cdatatype{NULL} and set the size of the list to zero. This
-is used only for resetting the list after copying the list pointer
-to a new model. Otherwise all the models would share the same list of
-parsed variables.
+\item[reset\_Variable\_list()] will replace the list of recently
+created variables with \cdatatype{NULL} and set the size of the list
+to zero. This is used only for resetting the list after copying the
+list pointer to a new model. Otherwise all the models would share the
+same list of parsed variables.
 
 \item[next\_Variable(it)] will give the next variable pointed by the
 variable iterator~\cparameter{it} and advance the pointer to the next
-variable in the list. The function returns \cdatatype{NULL} if the 
+variable in the list. The function returns \cdatatype{NULL} if the
 iterator runs out of variables.
 
 \item[get\_parser\_variable(symbol)] aids the net language parser 
 to find a variable, identified by the \cparameter{symbol} string, in the 
 list of newly created variables.
 
-\item[get\_variable(it, symbol)] searches the
-variable iterator~\cparameter{it} for a variable identified by the string
-\cparameter{symbol}. The iterator will be used by the function, so it will
-not be pointing to the beginning of any lists anymore.
+\item[get\_variable(it, symbol)] searches the variable
+iterator~\cparameter{it} for a variable identified by the string
+\cparameter{symbol}. The iterator will be used by the function, so it
+will not be pointing to the beginning of any lists anymore.
 
 \item[update\_likelihood(v, likelihood)] will set the likelihood array
-of variable~\cparameter{v} according to the given double array 
-\cparameter{likelihood}. Size of the given array should be the same 
+of variable~\cparameter{v} according to the given double array
+\cparameter{likelihood}. Size of the given array should be the same
 (or more) than the cardinality of the variable.
 
 \item[reset\_likelihood(v)] fills the likelihood array of the
@@ -282,8 +283,8 @@ variable~\cparameter{v} with ones. This means that the likelihood of the
 variable states will be uniform.
 
 \item[number\_of\_values(v)] returns the cardinality of the
-variable~\cparameter{v}. It is the exact number of states the variable has
-and will always have.
+variable~\cparameter{v}. It is the exact number of states the variable
+has and will always have.
 \end{description}
 
 
@@ -301,33 +302,37 @@ variables in \cfilename{Variable.c} but it could also be at
 \section{Graphs}
 \subsection{General}
 
+In graphical models the graphical layout describes independence and
+conditional independence between variables. This is exploited to
+obtain a computationally efficient factorisation of the joint
+probability distribution. 
+
 The purpose of the graphical analysis is to find an optimal set of
-clusters in the graphical model that has the join tree property. XX 
-% miten m‰‰ritell‰‰n optimaalisuus
+clusters in the graphical model that has the join tree property. These
+clusters are later merged into a join tree. This tree is then used for
+the actual inference.
 
-The main steps in this process are moralisation and triangulation. The
-triangulation process extracts the cliques used to build the join tree.
- 
-Put simply, moralisation means that any nodes that have a common child
-are connected. Furthermore, all directed links are replaced with
-undirected links. The resulting graph is called a {\it moral
-graph}.
+The main steps in the graphical analysis process are moralisation and
+triangulation. Put simply, moralisation means that any nodes that have
+a common child are connected. Furthermore, all directed links are
+replaced with undirected links. The resulting graph is called a {\it
+(undirected) moral graph}. 
 
-This graph is then triangulated. There exist several triangulations
-for a given graph; we are interested in a triangulation that is
-optimal in the sense of adding the least edges\footnote{If there is
-more than one optimal solution, further constrains may be
+This graph is then triangulated. The triangulation process also
+extracts the cliques used to build the join tree.  There exist several
+triangulations for a given graph; we are interested in a triangulation
+that is optimal in the sense of adding the least edges\footnote{If
+there is more than one optimal solution, further constrains may be
 introduced. For example, for memory efficiency we prefer the solution
-that leads to the smallest potential tables.} to the moral
+that generates the smallest potential tables.} to the moral
 graph. Finding such a triangulation is an NP-hard problem, but there
-exist heuristics that give nearly optimal results.
-
-The triangulation algorithm is the one presented in ... 
+exist heuristics that give nearly optimal results.  The triangulation
+algorithm is the one presented in \cite{huang1994}.
 
 The \cdatatype{Graph} is implemented via an adjacency graph. The
-interface is designed to hide the implementation details. The Heap
-datatype used in the triangulation stage contains a Graph-like
-datatype and could possibly be refactored.
+interface is designed to hide the implementation details. The
+\cdatatype{Heap} datatype used in the triangulation stage contains a
+\cdatatype{Graph}-like datatype and could possibly be refactored.
 
 
 \subsection{The functionality description}
@@ -342,13 +347,13 @@ and it is stored in the variable \cparameter{size}. The matrix is
 implemented as a simple array. For this reason it is manipulated via
 the macro \cparameter{ADJM}.
 \item[variables] is an array of variables associated with this graph.
-\item[size] is the number of variables in the Graph.
+\item[size] is the number of variables in the \cdatatype{Graph}.
 \item[var\_ind] is an internal array of variables. Used for
 performance reasons.
-\item[min\_id] The smallest id of a variable associated with the
-graph. Used internally for better performance.
-\item[max\_id] The largest id of a variable associated with the
-graph. Used internally for better performance.
+\item[min\_id] The smallest \examplecode{id} of a variable associated
+with the graph. Used internally for better performance.
+\item[max\_id] The largest \examplecode{id} of a variable associated
+with the graph. Used internally for better performance.
 \item[top] is an internal counter used when adding variables. 
 \end{description}
 
@@ -358,39 +363,48 @@ graph. Used internally for better performance.
 The functions provided in \cfilename{Graph.c} are:
 
 \begin{description}
-\item[new\_graph(n)] creates a new graph with memory reserved for n
+\item[new\_graph(n)] creates a new graph with memory reserved for $n$
 variables. Returns a pointer.
-\item[copy\_graph(G)] creates a copy of the graph G.
-\item[free\_graph(G)] frees the memory reserved for the graph G.
-\item[get\_size(G)] returns the number of variables in the graph G.
-\item[get\_variables(G)] returns the variables in the graph G as an array.
-\item[get\_graph\_index(G, v)] returns the index of the
-variable V in the internal array of the graph G.
-\item[get\_neighbours(G, v\_array, v)] returns the number of neighbours
-of variable v in graph G. The neighbours will be stored in the array
-v\_array, which {\it must be large enough}. No variable can have more
-neighbours than $n-1$, where $n$ is the number of variables in G.
-\item[is\_child(G, v1, v2)] will return True when variable v2 is a
-child of variable v1 in the graph G.
-\item[add\_variable(G, v)] adds a new variable v to the graph G. You
-must add as many variables as you specified when creating G.
-\item[add\_child(G, v1, v2)] adds an edge to graph G from variable v1
-to variable v2, ie. makes v2 a child of v1.
-\item[find\_cliques(G, cp)] finds cliques in G and stores them
-in the clique-array *cp\footnote{Type of cp is Clique**, ie. it is a
-pointer to such an array. It need not be initialized.}. Returns the
-number of elements in the array.
-\item[make\_undirected(G)] returns an undirected copy of Graph G.
-\item[moralise(G)] returns a moralised copy of graph G.
+\item[copy\_graph(G)] creates a copy of the graph \examplecode{G}.
+\item[free\_graph(G)] frees the memory reserved for the graph
+\examplecode{G}.
+\item[get\_size(G)] returns the number of variables in the graph
+\examplecode{G}.
+\item[get\_variables(G)] returns the variables in the graph
+\examplecode{G} as an array.
+\item[get\_graph\_index(G, v)] returns the index of the variable
+\examplecode{v} in the internal array of the graph \examplecode{G}.
+\item[get\_neighbours(G, v\_array, v)] returns the number of
+neighbours of variable \examplecode{v} in graph \examplecode{G}. The
+neighbours will be stored in the array \examplecode{v\_array}, which
+{\it must be large enough}. No variable can have more neighbours than
+$n-1$, where $n$ is the number of variables in \examplecode{G}.
+\item[is\_child(G, v1, v2)] will return \examplecode{True} when
+variable \examplecode{v2} is a child of variable \examplecode{v1} in
+the graph \examplecode{G}.
+\item[add\_variable(G, v)] adds a new variable \examplecode{v} to the
+graph \examplecode{G}. You must add as many variables as you specified
+when creating \examplecode{G}.
+\item[add\_child(G, v1, v2)] adds an edge to graph \examplecode{G}
+from variable \examplecode{v1} to variable \examplecode{v2}, ie. makes
+\examplecode{v2} a child of \examplecode{v1}.
+\item[find\_cliques(G, cp)] finds cliques in \examplecode{G} and
+stores them in the clique-array \examplecode{*cp}\footnote{Type of
+\examplecode{cp} is \cdatatype{Clique**}, ie. it is a pointer to such
+an array. It need not be initialized.}. Returns the number of elements
+in the array.
+\item[make\_undirected(G)] returns an undirected copy of Graph
+\examplecode{G}.
+\item[moralise(G)] returns a moralised copy of graph \examplecode{G}.
 
 \end{description}
 
 \subsection{Notes on Implementation}
 
-The above discussion describes only the interface of the Graph
-module. Some data structures used internally by the Graph module are
-summarily described here. The explanation is mostly aimed at those
-planning to modify the module.
+The above discussion describes only the interface of the
+\cdatatype{Graph} module. Some data structures used internally by the
+\cdatatype{Graph} module are summarily described here. The explanation
+is mostly aimed at those planning to modify the module.
 
 \subsubsection{Heap}
 
@@ -398,10 +412,10 @@ The \cdatatype{Heap} is used to keep the potential cliques in a sorted
 data structure. Any search structure would suffice here; the heap is
 probably the most efficient.
 
-This step requires a dynamically updatable Heap. The weights in 
-neighbouring nodes change when the minimum weight node is 
-removed. This also means that the heap implementation must be tied in 
-with the \cdatatype{Graph}. This has led to number of tradeoffs and 
+This step requires a dynamically updatable \cdatatype{Heap}. The
+weights in neighbouring nodes change when the minimum weight node is
+removed. This also means that the heap implementation must be tied in
+with the \cdatatype{Graph}. This has led to number of tradeoffs and
 possible pitfalls.
 
  
@@ -415,8 +429,8 @@ to an array of cliques. In addition to a simple list implementation,
 it also includes a method to check whether a given set of variables
 (ie. a cluster) is a subset of a cluster already in the
 list\footnote{There is no need to check for supersets; the items in
-the list contain nodes that are then removed from the graph and thus cannot
-occur in later clusters.} and a method for the list-to-array
+the list contain nodes that are then removed from the graph and thus
+cannot occur in later clusters.} and a method for the list-to-array
 conversion.
 
 The list used in this implementation could be replaced with a generic
@@ -424,13 +438,13 @@ list data type.
 
 \subsection{Other possibilities}
 
-From efficiency standpoint, the approach presented in ... is ... and
-suitable for production use.
+From efficiency standpoint, the approach presented in \cite{huang1994}
+and suitable for production use.
 
 If efficiency is not the main concern, eg. in prototyping situations,
 some simplifications can be made. For example, the heap data structure
-in the triangulation phase can be replaced with a list or array and a linear
-search.
+in the triangulation phase can be replaced with a list or array and a
+linear search.
 
 The interface is not as smooth and polished as it could be. It is also
 not very flexible. For example you have to know the number of
@@ -452,24 +466,24 @@ The idea and mathematical formulas...
 The data type \cdatatype{potential} defined in \cfilename{potential.h} 
 is a pointer to a struct which contains the following fields:
 \begin{description}
-\item[size\_of\_data] is an \cdatatype{integer} telling the total number of 
-elements in the potential. It must be the product of all the elements 
-in the \cstructfield{cardinality} array (or one if the number of variables 
-equals zero).
+\item[size\_of\_data] is an \cdatatype{integer} telling the total
+number of elements in the potential. It must be the product of all the
+elements in the \cstructfield{cardinality} array (or one if the number
+of variables equals zero).
 \item[cardinality] is an array of \cdatatype{integers}. The integers
 are the cardinalities of each variable the potential is related
 to. Thus the size of the array must be the same as the number of
 variables. Also the order of the cardinality array is significant
 because the variables are assumed to have a certain order.
-\item[num\_of\_vars] is an \cdatatype{integer} which tells the number 
+\item[num\_of\_vars] is an \cdatatype{integer} which tells the number
 of variables associated with the potential.
 \item[data] is the \cdatatype{double array} describing a probability
 distribution of the associated variables. The size of this array is in
-the \cstructfield{size\_of\_data} field. The data in the array is arranged
-according to the order of the corresponding variables: the variable
-which has its cardinality first in the \cstructfield{cardinality}
-array is considered least significant in the sense of placing a value 
-in the \cstructfield{data} array. 
+the \cstructfield{size\_of\_data} field. The data in the array is
+arranged according to the order of the corresponding variables: the
+variable which has its cardinality first in the
+\cstructfield{cardinality} array is considered least significant in
+the sense of placing a value in the \cstructfield{data} array.
 \end{description}
 
 
