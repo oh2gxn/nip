@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.58 2004-06-17 10:19:20 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.59 2004-06-17 13:31:34 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -834,6 +834,41 @@ int clique_search(Clique one, Clique two){
 
   return 0;
 }
+
+
+void jtree_dfs(Clique start, void (*funcPointer)(Clique)){
+  /* a lot of copy-paste from collect/distribute_evidence and clique_search */
+
+  link l = start->sepsets;
+  Sepset s;
+  
+#ifdef DEBUG_CLIQUE
+  int i;
+  printf("jtree_dfs in Clique ");
+  for(i = 0; i < start->p->num_of_vars; i++)
+    printf("%s", start->variables[i]->symbol);
+  printf("\n");
+#endif
+
+  if(start == NULL) /* error? */
+    return;
+
+  /* mark */
+  start->mark = 1;
+
+  funcPointer(start); /* do it now or after the children ??? */
+
+  /* call neighboring cliques */
+  while (l != NULL){
+    s = (Sepset)(l->data);
+    if(!clique_marked(s->cliques[0]))
+      jtree_dfs(s->cliques[0], funcPointer);
+    else if(!clique_marked(s->cliques[1]))
+      jtree_dfs(s->cliques[1], funcPointer);
+    l = l->fwd;
+  }
+}
+
 
 int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
 

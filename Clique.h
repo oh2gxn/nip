@@ -182,7 +182,14 @@ int find_sepsets(Clique *cliques, int num_of_cliques);
  */
 int clique_search(Clique one, Clique two);
 
-void jtree_dfs();
+
+/*
+ * A generic function for traversing the join tree. 
+ * Parameters:
+ * - a clique where the DFS starts
+ * - a function pointer to the function to be used for every Clique on the way
+ */
+void jtree_dfs(Clique start, void (*funcPointer)(Clique));
 
 
 /*

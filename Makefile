@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.19 2004-06-16 14:26:40 mvkorpel Exp $
+# $Id: Makefile,v 1.20 2004-06-17 13:31:34 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -46,7 +46,7 @@ PAR_OBJS=$(PAR_SRCS:.c=.o) parsertest.o
 GRPH_OBJS=$(GRPH_SRCS:.c=.o) graph_test.o
 HUG_OBJS=$(HUG_SRCS:.c=.o) 
 BIS_OBJS=$(BIS_SRCS:.c=.o) bisontest.o
-OBJS=$(POT_OBJS) $(CLI_OBJS) $(PAR_OBJS) $(HUG_OBJS) $(GRPH_OBJS) $(BIS_OBJS)
+OBJS=$(BIS_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program
