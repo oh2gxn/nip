@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.47 2004-07-07 13:31:19 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.48 2004-07-08 10:36:32 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -81,7 +81,7 @@ input:  nodes potentials {
   print_parsed_stuff();
 #endif
 
-  reset_initData()}
+  reset_initData();}
 
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
 
@@ -102,11 +102,11 @@ input:  nodes potentials {
   print_parsed_stuff();
 #endif
 
-  reset_initData()}
+  reset_initData();}
 ;
 
 
-nodes:    /* empty */ { init_new_Graph() }
+nodes:    /* empty */ { init_new_Graph(); }
 |         nodeDeclaration nodes {/* a variable added */}
 ;
 
@@ -128,14 +128,14 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   free($2);
   reset_strings();
   set_nip_next(NULL);
-  $$ = v}
+  $$ = v;}
 ;
 
 node_params: /* end of definitions */
 |            unknownDeclaration node_params
-|            statesDeclaration node_params { set_nip_statenames($1) }
-|            labelDeclaration node_params { set_nip_label($1) }
-|            nextDeclaration node_params { set_nip_next($1) }
+|            statesDeclaration node_params { set_nip_statenames($1); }
+|            labelDeclaration node_params { set_nip_label($1); }
+|            nextDeclaration node_params { set_nip_next($1); }
 |            positionDeclaration node_params
 ;
 
@@ -144,16 +144,16 @@ parameters:    /* end of definitions */
 ;
 
 
-labelDeclaration:     token_label '=' QUOTED_STRING ';' { $$ = $3 }
+labelDeclaration:     token_label '=' QUOTED_STRING ';' { $$ = $3; }
 ;
 
-nextDeclaration:      token_next '=' QUOTED_STRING ';' { $$ = $3 }
+nextDeclaration:      token_next '=' QUOTED_STRING ';' { $$ = $3; }
 ;
 
 /* JJT: cardinality == nip_strings_parsed ? */
 statesDeclaration:    token_states '=' '(' strings ')' ';' { 
   /* makes an array of strings out of the parsed list of strings */
-  $$ = make_string_array() }
+  $$ = make_string_array(); }
 ;
 
 
@@ -190,7 +190,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   free(doubles); /* the data was copied at create_Potential */
   reset_doubles();
   reset_symbols();
-  free(vars)
+  free(vars);
 }
 |                     token_potential '(' child ')' '{' dataList '}' {
   Variable vars[1];
@@ -207,7 +207,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 }
 ;
 
-child:        UNQUOTED_STRING { $$ = get_variable($1); free($1)}
+child:        UNQUOTED_STRING { $$ = get_variable($1); free($1); }
 ;
 
 
@@ -216,7 +216,7 @@ symbols:       /* end of list */
 ;
 
 
-symbol:       UNQUOTED_STRING { add_symbol(get_variable($1)); free($1)}
+symbol:       UNQUOTED_STRING { add_symbol(get_variable($1)); free($1); }
 ;
 
 
@@ -225,7 +225,7 @@ strings:       /* end of list */
 ;
 
 
-string:        QUOTED_STRING { add_string($1) }
+string:        QUOTED_STRING { add_string($1); }
 ;
 
 
@@ -235,7 +235,7 @@ numbers:     /* end of list */
 ;
 
 
-num:       NUMBER { add_double($1) }
+num:       NUMBER { add_double($1); }
 ;
 
 
@@ -245,12 +245,12 @@ ignored_numbers:     /* end of list */
 ;
 
 
-value:         QUOTED_STRING { free($1) }
+value:         QUOTED_STRING { free($1); }
 |              ignored_numbers
 ;
 
 
-dataList: token_data '=' '(' numbers ')' ';' { $$ = make_double_array() }
+dataList: token_data '=' '(' numbers ')' ';' { $$ = make_double_array(); }
 ;
 
 %%

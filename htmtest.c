@@ -6,7 +6,9 @@
 #include "potential.h"
 #include "errorhandler.h"
 
+/*
 #define PRINT_CLIQUES
+*/
 
 extern int yyparse();
 
@@ -16,7 +18,7 @@ int main(int argc, char *argv[]){
   char** tokens;
   int** data;
   int* cardinalities;
-  int* temp_vars;
+  int* temp_vars = NULL;
   int i, j, k, m, n, retval, t = 0;
   int num_of_hidden = 0;
   int num_of_nexts = 0;
@@ -26,14 +28,14 @@ int main(int argc, char *argv[]){
   Clique *nip_cliques;
   Clique clique_of_interest;
 
+  potential *timeslice_sepsets;
+
   Variable *hidden;
   Variable *next;
   Variable *previous;
   Variable temp;
   Variable interesting;
   Variable_iterator it;
-
-  potential *timeslice_sepsets;
 
   datafile* timeseries;
 
@@ -181,8 +183,8 @@ int main(int argc, char *argv[]){
       data[t][i] = 
 	get_stateindex(get_variable((timeseries->node_symbols)[i]), tokens[i]);
 
-      /* Should missing data be allowed? */
-      assert(data[t][i] >= 0);
+      /* Q: Should missing data be allowed?   A: Yes. */
+      /* assert(data[t][i] >= 0); */
     }
 
     for(i = 0; i < retval; i++) /* 4. Dump away */
@@ -192,12 +194,13 @@ int main(int argc, char *argv[]){
 
   /* Allocate some space for the intermediate potentials */
   timeslice_sepsets = (potential *) calloc(timeseries->datarows, 
-					   sizeof(potential));  
+					sizeof(potential));  
   /* Initialise intermediate potentials */
   for(t = 0; t <= timeseries->datarows; t++){
     timeslice_sepsets[t] = make_potential(cardinalities, num_of_nexts, NULL);
   }
   free(cardinalities);
+
 
   /*****************/
   /* Forward phase */
@@ -206,8 +209,14 @@ int main(int argc, char *argv[]){
 
   for(t = 0; t < timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
     
-    printf("-- t = %d --\n", t);
+    printf("-- t = %d --\n", t+1);
         
+    /* 0. Put some data in */
+    for(i = 0; i < timeseries->num_of_nodes; i++)
+      if(data[t][i] >= 0)
+	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+			    data[t][i]);
+
     /********************/
     /* Do the inference */
     /********************/
@@ -228,7 +237,6 @@ int main(int argc, char *argv[]){
     
     
     /* an experimental forward phase (a.k.a. filtering)... */
-    /* Calculates the result values */
     for(i = 0; i < num_of_hidden; i++){
       
       /*********************************/
@@ -315,12 +323,6 @@ int main(int argc, char *argv[]){
     update_potential(timeslice_sepsets[t], NULL, 
 		     clique_of_interest->p, temp_vars);
     
-    /* 2. Put some data in */
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(data[t][i] >= 0)
-	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			    data[t][i]);
-
     free(temp_vars);
   }
   
@@ -331,28 +333,25 @@ int main(int argc, char *argv[]){
   /* Backward phase */
   /******************/
 
-  /* Don't go backwards if there are no timeslices. */
-  if(timeseries->datarows > 1){
-    printf("## Backward phase ##\n");  
+  printf("## Backward phase ##\n");  
+  
+  /* forget old evidence */
+  it = get_Variable_list();
+  while((temp = next_Variable(&it)) != NULL)
+    reset_likelihood(temp);
+  global_retraction(nip_cliques[0]);
+  
+  
+  for(t = timeseries->datarows - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
-    /* forget old evidence */
-    it = get_Variable_list();
-    while((temp = next_Variable(&it)) != NULL)
-      reset_likelihood(temp);
-    global_retraction(nip_cliques[0]);
+    printf("-- t = %d --\n", t+1);
     
+    for(i = 0; i < timeseries->num_of_nodes; i++)
+      if(data[t][i] >= 0)
+	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+			    data[t][i]);
     
-    for(t = timeseries->datarows - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
-      
-      printf("-- t = %d --\n", t);
-      
-
-      if(t > 0)
-	for(i = 0; i < timeseries->num_of_nodes; i++)
-	  if(data[t - 1][i] >= 0)
-	    enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-				data[t - 1][i]);
-      
+    if(t > 0){
       /* Message pass??? */
       /* 1. Finish the message pass between timeslices */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
@@ -377,90 +376,89 @@ int main(int argc, char *argv[]){
 	  k++;
 	}
       }
-      update_potential(timeslice_sepsets[t], NULL, 
+      update_potential(timeslice_sepsets[t-1], NULL, 
 		       clique_of_interest->p, temp_vars);
-      
-      /********************/
-      /* Do the inference */
-      /********************/
-      
-      /* 1. Unmark all Cliques */
-      for(i = 0; i < nip_num_of_cliques; i++)
-	unmark_Clique(nip_cliques[i]);
-      
-      /* 2. Collect evidence */
-      collect_evidence(NULL, NULL, nip_cliques[0]);
-      
-      /* 3. Unmark all Cliques */
-      for(i = 0; i < nip_num_of_cliques; i++)
-	unmark_Clique(nip_cliques[i]);
-      
-      /* 4. Distribute evidence */
-      distribute_evidence(nip_cliques[0]);
-      
-
-  
-      /*********************************/
-      /* Check the result of inference */
-      /*********************************/
-      for(i = 0; i < num_of_hidden; i++){
-	
-	/* 1. Decide which Variable you are interested in */
-	interesting = hidden[i];
-	
-	/* 2. Find the Clique that contains the family of 
-	 *    the interesting Variable */
-	clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-					 &interesting, 1);
-	if(!clique_of_interest){
-	  printf("In htmtest.c : No clique found! Sorry.\n");
-	  return 1;
-	}  
-	
-	/* 3. Marginalisation (the memory must have been allocated) */
-	marginalise(clique_of_interest, interesting, result[i]);
-	
-	/* 4. Normalisation */
-	normalise(result[i], number_of_values(interesting));
-	
-	/* 5. Print the result */
-	for(j = 0; j < number_of_values(interesting); j++)
-	  printf("P(%s=%s) = %f\n", get_symbol(interesting),
-		 (interesting->statenames)[j], result[i][j]);
-	printf("\n");
-      }
-      
-      if(t > 0){
-	/* forget old evidence */
-	it = get_Variable_list();
-	while((temp = next_Variable(&it)) != NULL)
-	  reset_likelihood(temp);
-	global_retraction(nip_cliques[0]);
-	
-	/* Start a message pass between timeslices */
-	clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-					 previous, num_of_nexts);
-	if(!clique_of_interest){
-	  printf("In htmtest.c : No clique found! Sorry.\n");
-	  return 1;
-	}
-	/* NOTE: Let's hope the "next" variables are in correct order */
-	m = 0;
-	n = 0;
-	for(j=0; j < clique_of_interest->p->num_of_vars; j++){
-	  if(m < num_of_nexts &&
-	     equal_variables((clique_of_interest->variables)[j], next[m]))
-	    m++;
-	  else {
-	    temp_vars[n] = j;
-	    n++;
-	  }
-	}
-	general_marginalise(clique_of_interest->p, timeslice_sepsets[t],
-			    temp_vars);
-      }
-      free(temp_vars);
     }
+    /********************/
+    /* Do the inference */
+    /********************/
+    
+    /* 1. Unmark all Cliques */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+    
+    /* 2. Collect evidence */
+    collect_evidence(NULL, NULL, nip_cliques[0]);
+    
+    /* 3. Unmark all Cliques */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+    
+    /* 4. Distribute evidence */
+    distribute_evidence(nip_cliques[0]);
+    
+    
+    
+    /*********************************/
+    /* Check the result of inference */
+    /*********************************/
+    for(i = 0; i < num_of_hidden; i++){
+      
+      /* 1. Decide which Variable you are interested in */
+      interesting = hidden[i];
+      
+      /* 2. Find the Clique that contains the family of 
+       *    the interesting Variable */
+      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				       &interesting, 1);
+      if(!clique_of_interest){
+	printf("In htmtest.c : No clique found! Sorry.\n");
+	return 1;
+      }  
+      
+      /* 3. Marginalisation (the memory must have been allocated) */
+      marginalise(clique_of_interest, interesting, result[i]);
+      
+      /* 4. Normalisation */
+      normalise(result[i], number_of_values(interesting));
+      
+      /* 5. Print the result */
+      for(j = 0; j < number_of_values(interesting); j++)
+	printf("P(%s=%s) = %f\n", get_symbol(interesting),
+	       (interesting->statenames)[j], result[i][j]);
+      printf("\n");
+    }
+    
+    if(t > 0){
+      /* forget old evidence */
+      it = get_Variable_list();
+      while((temp = next_Variable(&it)) != NULL)
+	reset_likelihood(temp);
+      global_retraction(nip_cliques[0]);
+      
+      /* Start a message pass between timeslices */
+      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				       previous, num_of_nexts);
+      if(!clique_of_interest){
+	printf("In htmtest.c : No clique found! Sorry.\n");
+	return 1;
+      }
+      /* NOTE: Let's hope the "next" variables are in correct order */
+      m = 0;
+      n = 0;
+      for(j=0; j < clique_of_interest->p->num_of_vars; j++){
+	if(m < num_of_nexts &&
+	   equal_variables((clique_of_interest->variables)[j], next[m]))
+	  m++;
+	else {
+	  temp_vars[n] = j;
+	  n++;
+	}
+      }
+      general_marginalise(clique_of_interest->p, timeslice_sepsets[t-1],
+			  temp_vars);
+    }
+    free(temp_vars);
   }
   
   return 0;
