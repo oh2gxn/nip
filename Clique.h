@@ -184,7 +184,14 @@ int clique_search(Clique one, Clique two);
 
 
 /*
+ * Prints the variables of the given Clique. Can be used with jtree_dfs.
+ */
+void print_Clique(Clique c);
+
+
+/*
  * A generic function for traversing the join tree. 
+ * Cliques must be unmarked before calling this.
  * Parameters:
  * - a clique where the DFS starts
  * - a function pointer to the function to be used for every Clique on the way

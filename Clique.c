@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.60 2004-06-17 15:28:49 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.61 2004-06-18 06:05:48 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -844,6 +844,18 @@ int clique_search(Clique one, Clique two){
   }
 
   return 0; /* FALSE */
+}
+
+
+void print_Clique(Clique c){
+
+  int i;
+
+  printf("Clique ");
+  for(i = 0; i < c->p->num_of_vars; i++)
+    printf("%s ", c->variables[i]->symbol);
+  printf("\n");
+
 }
 
 

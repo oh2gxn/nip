@@ -20,6 +20,8 @@
 /*#define EVIDENCE1*/
 
 
+#define PRINT_JOINTREE
+
 int yyparse();
 
 int main(int argc, char *argv[]){
@@ -75,6 +77,10 @@ int main(int argc, char *argv[]){
 
   nip_cliques = get_nip_cliques();
   nip_num_of_cliques = get_nip_num_of_cliques();
+
+#ifdef PRINT_JOINTREE
+  jtree_dfs(nip_cliques[0], print_Clique);
+#endif
 
   /* propagation: some action */
   /*
