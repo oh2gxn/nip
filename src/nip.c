@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.39 2005-02-22 15:18:48 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.40 2005-02-23 13:59:40 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -54,9 +54,9 @@
 
 extern int yyparse();
 
-static int start_timeslice_message_pass(Nip model, Variable vars[], int nvars, 
+static int start_timeslice_message_pass(Nip model, int direction, 
 					potential sepset);
-static int finish_timeslice_message_pass(Nip model, Variable vars[], int nvars,
+static int finish_timeslice_message_pass(Nip model, int direction,
 					 potential num, potential den);
 
 
@@ -116,15 +116,23 @@ Nip parse_model(char* file){
     temp = next_Variable(&it);
   }
   
-  for(i = 0; i < new->num_of_vars; i++)
+  /* count the number of nexts and children */
+  for(i = 0; i < new->num_of_vars; i++){
     if(new->variables[i]->next)
       new->num_of_nexts++;
 
+    if(new->variables[i]->parents)
+      new->num_of_children++;
+  }
+
   new->next = (Variable*) calloc(new->num_of_nexts, sizeof(Variable));
   new->previous = (Variable*) calloc(new->num_of_nexts, sizeof(Variable));
-  if(!(new->next && new->previous)){
+  new->children = (Variable*) calloc(new->num_of_children, sizeof(Variable));
+  if(!(new->children && new->previous && new->next)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(new->variables);
+    free(new->next);
+    free(new->previous);
     free(new);
     return NULL;
   }
@@ -137,7 +145,14 @@ Nip parse_model(char* file){
       j++;
     }
 
-  /* 3. Reset parser globals */
+  for(i = 0; i < new->num_of_vars; i++)
+    if(new->variables[i]->parents)
+      new->children[i] = new->variables[i]; /* set the children */
+  
+  new->front_clique = NULL;
+  new->tail_clique = NULL;
+
+  /* 4. Reset parser globals */
   it = get_last_variable(); /* free the list structure */
   while(it->bwd){
     it = it->bwd;
@@ -163,7 +178,7 @@ void free_model(Nip model){
   for(i = 0; i < model->num_of_vars; i++)
     free_variable(model->variables[i]);
   free(model->variables);
-
+  free(model->children);
   free(model->next);
   free(model->previous);
   free(model);
@@ -352,14 +367,33 @@ int insert_hard_evidence(Nip model, char* variable, char* observation){
 
 
 /* Starts a message pass between timeslices */
-static int start_timeslice_message_pass(Nip model, Variable vars[], int nvars, 
+static int start_timeslice_message_pass(Nip model, int direction,
 					potential sepset){
   int i, j, k;
   int *mapping;
-  Clique c = NULL;
+  Clique c;
+  Variable *vars;
+  int nvars = model->num_of_nexts;
 
-  /* TODO: this could be memoized */
-  c = find_clique(model->cliques, model->num_of_cliques, vars, nvars);
+  if(direction == FORWARD){
+    vars = model->next;
+    c = model->front_clique; /* null if not yet memoized */
+  }
+  else{
+    vars = model->previous;
+    c = model->tail_clique; /* null if not yet memoized */
+  }
+
+  /* some cliques are memoized */
+  if(c == NULL){
+    c = find_clique(model->cliques, model->num_of_cliques, vars, nvars);
+
+    /* this saves the result */
+    if(direction == FORWARD)
+      model->front_clique = c; 
+    else
+      model->tail_clique = c;
+  }
   assert(c != NULL);
 
   mapping = (int*) calloc(c->p->num_of_vars - nvars, sizeof(int));
@@ -387,15 +421,34 @@ static int start_timeslice_message_pass(Nip model, Variable vars[], int nvars,
 
 
 /* Finishes the message pass between timeslices */
-static int finish_timeslice_message_pass(Nip model, Variable vars[], int nvars,
+static int finish_timeslice_message_pass(Nip model, int direction,
 					 potential num, potential den){
   int i, j, k;
   int *mapping;
-  Clique c = NULL;
+  Clique c;
+  Variable *vars;
+  int nvars = model->num_of_nexts;
 
-  /* TODO: This could be memoized! */
-  c = find_clique(model->cliques, model->num_of_cliques, vars, nvars);
+  /* This uses memoization for finding a suitable Clique c */
+  if(direction == FORWARD){
+    vars = model->previous;
+    c = model->tail_clique;
+  }
+  else{
+    vars = model->next;
+    c = model->front_clique;
+  }
+
+  if(c == NULL){
+    c = find_clique(model->cliques, model->num_of_cliques, vars, nvars);
+    if(direction == FORWARD)
+      model->tail_clique = c;
+    else
+      model->front_clique = c;
+  }
   assert(c != NULL);
+
+
   mapping = (int*) calloc(c->p->num_of_vars - nvars, sizeof(int));
   if(!mapping){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -528,8 +581,7 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
     
     
     if(t > 0)
-      if(finish_timeslice_message_pass(model, model->previous, 
-				       model->num_of_nexts, 
+      if(finish_timeslice_message_pass(model, FORWARD, 
 				       timeslice_sepset, NULL) != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	free_uncertainseries(results);
@@ -560,7 +612,7 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
     }
     
     /* Start a message pass between timeslices */
-    if(start_timeslice_message_pass(model, model->next, model->num_of_nexts, 
+    if(start_timeslice_message_pass(model, FORWARD, 
 				    timeslice_sepset) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free_uncertainseries(results);
@@ -696,8 +748,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
     
     
     if(t > 0)
-      if(finish_timeslice_message_pass(model, model->previous, 
-				       model->num_of_nexts, 
+      if(finish_timeslice_message_pass(model, FORWARD, 
 				       timeslice_sepsets[t-1], 
 				       NULL)                   != NO_ERROR){
 
@@ -713,7 +764,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
     make_consistent(model);
     
     /* Start a message pass between timeslices */
-    if(start_timeslice_message_pass(model, model->next, model->num_of_nexts,
+    if(start_timeslice_message_pass(model, FORWARD,
 				    timeslice_sepsets[t]) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free_uncertainseries(results);
@@ -745,8 +796,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
 
     /* Pass the message from the past */
     if(t > 0)
-      if(finish_timeslice_message_pass(model, model->previous, 
-				       model->num_of_nexts, 
+      if(finish_timeslice_message_pass(model, FORWARD, 
 				       timeslice_sepsets[t-1], 
 				       NULL)                   != NO_ERROR){
 
@@ -760,8 +810,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
     
     /* Pass the message from the future */
     if(t < ts->length - 1)
-      if(finish_timeslice_message_pass(model, model->next, 
-				       model->num_of_nexts, 
+      if(finish_timeslice_message_pass(model, BACKWARD, 
 				       timeslice_sepsets[t+1], 
 				       timeslice_sepsets[t]) != NO_ERROR){
 
@@ -797,8 +846,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
     
 
     if(t > 0)
-      if(start_timeslice_message_pass(model, model->previous, 
-				      model->num_of_nexts, 
+      if(start_timeslice_message_pass(model, BACKWARD, 
 				      timeslice_sepsets[t]) != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -966,10 +1014,14 @@ int em_learn(TimeSeries ts){
 				     ts->model->num_of_vars);
     
     /* The job */
-    for(v = 0; t < ts->length; t++){
-      for(t = 0; ts->model->num_of_vars; v++){
+    for(v = 0; v < ts->model->num_of_children; v++){
+
+      /* Use mappings for referencing correct values */
+
+      for(t = 0; t < ts->length; t++){
 	;
       }
+
     }
 
     /* Normalisation, creation of potentials and updating the model */

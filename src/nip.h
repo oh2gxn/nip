@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.20 2005-02-21 22:59:32 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.21 2005-02-23 13:59:40 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -9,6 +9,9 @@
 #include "Variable.h"
 #include "errorhandler.h"
 #include <stdlib.h>
+
+# define FORWARD  1
+# define BACKWARD 0
 
 typedef struct{
   int num_of_cliques;
@@ -25,10 +28,15 @@ typedef struct{
   int num_of_nexts;   /* Number of variables in the 'next' and 'previous' 
 		       * arrays*/
 
-  /* TODO: there should be a table for the child variables */
+  /* Undocumented features: */
+  Variable *children;  /* All the variables which have parents */
+  int num_of_children;
 
-  /* NOTE: Should there be distinct references to the cliques containing 
-   * 'nexts' and 'previous' variables? */
+  Clique front_clique; /* A memoization reference to the clique which mediates
+			* the message to the timeslices in the future */
+
+  Clique tail_clique;  /* The clique which handles the connection to the 
+			* timeslices in the past */
 }nip_type;
 
 typedef nip_type *Nip;

@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.53 2005-02-22 15:18:47 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.54 2005-02-23 13:59:40 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -174,7 +174,8 @@ Clique find_family(Clique *cliques, int num_of_cliques, Variable var);
 
 
 /* Finds a clique containing the specified set of variables. 
- * Returns NULL if no such Clique is found.
+ * Returns NULL if no such Clique is found. Note that this is usually
+ * more expensive than find_family().
  * Parameters:
  *  - cliques : an array of Cliques
  *  - num_of_cliques : the size of the array 'cliques'
