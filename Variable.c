@@ -1,9 +1,9 @@
 #include <string.h>
-#include "Variable.h"
 #include <stdlib.h>
+#include "Variable.h"
 
 /* Method for creating new variables */
-Variable new_variable(char* name, int cardinality) {
+Variable new_variable(char* name, int cardinality){
   int i;
   static long id = 0;
   Variable v = (Variable) malloc(sizeof(vtype));
@@ -19,7 +19,7 @@ Variable new_variable(char* name, int cardinality) {
     v->likelihood[i] = 1;
 
   return v;
- }
+}
 
 /* Method for testing variable equality. 
    This may be needed to keep potentials in order. INEQUALITIES ??? */

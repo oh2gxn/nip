@@ -1,8 +1,20 @@
+#include <stdlib.h>
 #include "Clique.h"
 #include "Variable.h"
 #include "potential.h"
 #include "errorhandler.h"
-#include <stdlib.h>
+
+Clique make_Clique(Variable[], int);
+int add_Sepset(Clique, Sepset);
+int free_Clique(Clique);
+Sepset make_Sepset(Variable[], int, Clique[]);
+int free_Sepset(Sepset);
+int unmark_Clique(Clique);
+int distribute_evidence(Clique);
+int collect_evidence(Clique, Sepset, Clique);
+int message_pass(Clique, Sepset, Clique);
+int marginalise(Clique, Variable, double[]);
+int insert_evidence(Clique, double *);
 
 /* Method for creating cliques (without pointers to sepsets) 
    - MVK: variables[] is an array of Variables (which are pointers) */
@@ -32,7 +44,6 @@ int free_Clique(Clique c){
     free(l1);
     l1=l2;
   }
-
   /* clean the rest */
   free_potential(c->p);
   free(c->variables); /* is this a good idea ? */
@@ -207,7 +218,6 @@ int marginalise(Clique c, Variable v, double r[]){
   }
   
   return(total_marginalise(c->p, r, i));
-
 }
 
 /* TODO  Returns an error code. */

@@ -1,5 +1,3 @@
-/* T‰h‰n saattaa tulla viel‰ lis‰‰ hienouksia. */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "potential.h" 
@@ -10,10 +8,11 @@ int copy_potential(potential, potential);
 double get_pvalue(potential, int[]);
 int set_pvalue(potential, int[], double);
 double *get_ppointer(potential, int[]);
+int inverse_mapping(potential, int, int[]);
+int choose_indices(potential, int[], int[], int[]);
 int general_marginalise(potential, potential, int[]);
 int total_marginalise(potential, double[], int);
 int update_potential(potential, potential, potential, int[]);
-int main();
 
 /* Make a num_of_vars -dimension potential array. */
 potential make_potential(int cardinality[], int num_of_vars){
