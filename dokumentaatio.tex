@@ -1,0 +1,220 @@
+% NIP - project documentation
+% Mikko Korpela, Antti Rasinen, Janne Toivola 2004
+% $Id: dokumentaatio.tex,v 1.1 2004-08-19 12:39:12 jatoivol Exp $
+
+\documentclass[12pt,a4paper]{report}
+%\bibliographystyle{unsrt}
+\setlength{\topmargin}{0mm}
+\setlength{\oddsidemargin}{0mm}
+\setlength{\textheight}{22cm}
+\setlength{\textwidth}{16cm}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage[english]{babel}
+\usepackage[dvips]{graphicx}
+\usepackage{amsmath}
+\usepackage{subfigure}
+\usepackage{tocbibind}
+\usepackage{fancyvrb}
+%\newcommand{\argmax}{\mathrm{argmax}}
+%\newcommand{\argmin}{\mathrm{argmin}}
+%\newcommand{\define}{\stackrel{\mathrm{def}}{=}}
+
+%--------------------
+% Place this in the preamble of your LaTeX file:
+% (c) Jaakko Hollmen, 2002
+
+\usepackage{ifthen}
+
+% Declare the variable doublespaced
+\newboolean{doublespaced}
+
+% Comment one of the following lines to either select
+% doublespaced or singlespaced:
+\setboolean{doublespaced}{false}
+%\setboolean{doublespaced}{true}
+
+\ifthenelse{\boolean{doublespaced}}
+{
+  % Double spaced text if variable "doublespaced" is true:
+  \renewcommand{\baselinestretch}{1.5}
+  \normalsize % necessary to execute the previous thing
+}
+{
+  % This is to be executed if doublespace is false:
+  % else = do nothing
+}
+%--------------------
+
+\title{NIP}
+\author{Antti Rasinen}
+\author{Mikko Korpela 54919L}
+\author{Janne Toivola 55173U}
+\begin{document}
+
+\pagestyle{empty}
+\setlength{\parindent}{0mm}
+\setlength{\parskip}{3mm}
+
+\large
+\textbf{The NIP project}\\
+
+\vspace{45mm}
+
+\begin{centering}
+\huge
+\textbf{Users manual}\\
+\end{centering}
+
+\parbox{5cm}{\ }
+\parbox{1em}{\vskip8cm}
+
+\normalsize
+\vspace{5mm}
+\begin{tabbing}
+The Team:\= Antti Rasinen\\
+         \> Mikko Korpela\\
+         \> Janne Toivola\\
+\vspace{5mm}
+
+\end{tabbing}
+%----------------------
+Date: \today
+%----------------------
+\eject\newpage
+
+\pagestyle{plain}
+
+\tableofcontents
+
+%\newpage
+%
+%\listoffigures
+
+\newpage
+\chapter{General description}
+
+Some introduction here...
+
+\section{Overview}
+
+Some outline of the system...
+
+\newpage
+\chapter{Subsystem descriptions}
+\section{Variables}
+\subsection{General}
+
+The idea and mathematical formulas...
+
+\subsection{The functionality description}
+
+The interface + how the stuff works...
+
+\subsection{Other possibilities}
+
+How the stuff could also work...
+
+
+\newpage
+\chapter{Subsystem descriptions}
+\section{Graphs}
+\subsection{General}
+
+The idea and mathematical formulas...
+
+\subsection{The functionality description}
+
+The interface + how the stuff works...
+
+\subsection{Other possibilities}
+
+How the stuff could also work...
+
+
+\newpage
+\chapter{Subsystem descriptions}
+\section{Potentials}
+\subsection{General}
+
+The idea and mathematical formulas...
+
+\subsection{The functionality description}
+
+The interface + how the stuff works...
+
+\subsection{Other possibilities}
+
+How the stuff could also work...
+
+
+\newpage
+\chapter{Subsystem descriptions}
+\section{Join trees} % Cliques and sepsets
+\subsection{General}
+
+The idea and mathematical formulas...
+
+\subsection{The functionality description}
+
+The interface + how the stuff works...
+
+\subsection{Other possibilities}
+
+How the stuff could also work...
+
+
+\newpage
+\chapter{Subsystem descriptions}
+\section{The Hugin net file parser}
+\subsection{General}
+
+The idea and mathematical formulas...
+
+\subsection{The functionality description}
+
+The interface + how the stuff works...
+
+\subsection{Other possibilities}
+
+How the stuff could also work...
+
+
+\newpage
+\chapter{Subsystem descriptions}
+\section{The timeslice handler} % Some system which handles time series?
+\subsection{General}
+
+The idea and mathematical formulas...
+
+\subsection{The functionality description}
+
+The interface + how the stuff works...
+
+\subsection{Other possibilities}
+
+How the stuff could also work...
+
+
+
+\newpage
+\chapter{System analysis}
+\section{The parser}
+
+\section{The graph}
+
+\section{The join tree}
+
+\section{The timeslice-monster}
+
+
+\newpage
+\chapter{Comments}
+
+
+\newpage
+%\appendix
+%\newpage
+%\bibliography{dokumentaatio}
+
+\end{document}
