@@ -21,7 +21,10 @@
  * same clique.
  */
 
+/*
 #define TEST
+#define TEST2
+*/
 
 int main(int argc, char *argv[]){
 

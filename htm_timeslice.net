@@ -132,14 +132,15 @@ class htm_timeslice
     }
 
     potential (B0 | S0)
-    { % Has to be marginalised from the P(B1 | S1 B0) below ?
+    { % Has to be a uniform probability distribution ?
 	data = (( 0.3333333333 0.3333333333 0.3333333333 )	%  S0=s1
 		( 0.3333333333 0.3333333333 0.3333333333 )	%  S0=s2
 		( 0.3333333333 0.3333333333 0.3333333333 ));	%  S0=s3
-% transient?
-%	data = (( 0.1283333333 0.0650 0.8066666667 )	%  S0=s1
-%		( 0.9033333333 0.0566666667 0.0400 )	%  S0=s2
-%		( 0.0793333333 0.5396666667 0.3810 ));	%  S0=s3
+
+      % An old guess...
+      %	data = (( 0.1283333333 0.0650 0.8066666667 )	%  S0=s1
+      %		( 0.9033333333 0.0566666667 0.0400 )	%  S0=s2
+      %		( 0.0793333333 0.5396666667 0.3810 ));	%  S0=s3
     }
 
     potential (B1 | S1 B0)
@@ -163,7 +164,7 @@ class htm_timeslice
     }
 
     potential (S0)
-    { % NOTE: Has to be marginalised from P(S1 | S0) above ?
+    {
 	data = ( 1 1 1 );
     }
 
