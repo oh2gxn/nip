@@ -7,6 +7,8 @@
 POT_SRCS=potential.c potentialtest.c
 CLI_SRCS=potential.c Variable.c Clique.c cliquetest.c
 PAR_SRCS=potential.c Variable.c Clique.c errorhandler.c fileio.c parser.c parsertest.c
+HUG_DEFS=huginnet.y
+HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
 
 # XXX Replace "cliquetest" below with the name you want for your program!
 POT_TARGET=potentialtest
@@ -21,6 +23,7 @@ CFLAGS=-O2 -g -Wall
 #CFLAGS=-Wall
 LD=gcc
 LDFLAGS=
+YY=bison
 
 # Link the math library in with the program, in case you use the
 # functions in <math.h>
@@ -32,7 +35,8 @@ LIBS=
 POT_OBJS=$(POT_SRCS:.c=.o)
 CLI_OBJS=$(CLI_SRCS:.c=.o)
 PAR_OBJS=$(PAR_SRCS:.c=.o)
-OBJS=POT_OBJS CLI_OBJS PAR_OBJS 
+HUG_OBJS=$(HUG_DEFS:.c=.o)
+OBJS=POT_OBJS CLI_OBJS PAR_OBJS HUG_OBJS
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program
@@ -51,8 +55,11 @@ $(POT_TARGET): $(POT_OBJS)
 $(CLI_TARGET): $(CLI_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(CLI_OBJS) $(LIBS)
 
-$(PAR_TARGET): $(PAR_OBJS)
+$(PAR_TARGET): $(PAR_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(PAR_OBJS) $(LIBS)
+
+$(HUG_SRCS): $(HUG_DEFS)
+	$(YY) $(HUG_DEFS)
 
 # With these lines, executing "make clean" removes the .o files that
 # are not needed after the program is compiled.

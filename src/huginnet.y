@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.9 2004-05-24 13:58:34 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.10 2004-05-25 13:42:21 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -19,17 +19,21 @@
   double *doublearray;
   char *name;
   char **stringarray;
+  Variable *variablearray;
 }
 
 %token node "node"
 %token potential "potential"
 %token states "states"
 %token label "label"
+%token position "position"
+%token data "data"
 %token <name> QUOTED_STRING
 %token <name> UNQUOTED_STRING
 %token <numval> NUMBER
 %type <stringarray> strings
-%type <doublearray> numbers
+%type <doublearray> numbers dataList
+%type <variablearray> symbols
 %type <name> labelDeclaration
 %type <intval> statesDeclaration
 
@@ -46,10 +50,11 @@ declaration:   nodeDeclaration {/* put the node somewhere */}
 ;
 
 nodeDeclaration:    node UNQUOTED_STRING '{' labelDeclaration 
-                                             statesDeclaration 
+                                             statesDeclaration
+                                             positionDeclaration
                                              parameters '}' {
   /* new_variable() ??? */
-  add_pvar(new_variable($2, $4, $5)); 
+  add_pvar(new_variable($2, strings_parsed, $5)); 
   reset_strings();}
 ;
 
@@ -65,7 +70,28 @@ labelDeclaration:     label '=' QUOTED_STRING ';' { $$ = $3 }
 statesDeclaration:    states '=' '(' strings ')' ';' { $$ = strings_parsed; }
 ;
 
+positionDeclaration:  position '=' '(' NUMBER NUMBER ')' ';' {/* ignore */}
+;
+
 unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
+;
+
+potentialDeclaration: potential '(' symbols ')' '{' dataList '}' { 
+  /* <Some AI to make decisions> */ 
+  Clique c = make_Clique($3, symbols_parsed);
+  potential p = create_Potential($3, symbols_parsed, $6); 
+  add_clique(c);
+  // This assumes that the first symbol is the one and only child variable!
+  initialise(c, $3[0], $3 + 1, p);
+  
+  /* ??? HOW THE PHUK CAN YOU CREATE SEPSETS ??? */
+
+  reset_symbols();}
+;
+
+symbols:       /* end of list */ { $$ = make_variable_array(); }
+             | QUOTED_STRING symbols { add_symbol($1); }
+             | QUOTED_STRING '|' symbols { add_symbol($1); }
 ;
 
 strings:       /* end of list */ { $$ = make_string_array(); }
@@ -77,12 +103,11 @@ numbers:       /* end of list */ { $$ = make_double_array(); }
 ;
 
 value:         QUOTED_STRING {/* ignore */}
-             | numbers { reset_doubles(); }
-             | strings { reset_strings(); }
+             | '(' numbers ')' { reset_doubles(); }
              | NUMBER {/* ignore */}
 ;
 
-potentialDeclaration: potential '{' '}' { /* <Some AI to make decisions> */ }
+dataList: data '=' '(' numbers ')' ';' { $$ = $4; }
 ;
 
 %%

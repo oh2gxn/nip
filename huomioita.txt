@@ -51,4 +51,7 @@ mukaan j‰rjestetyst‰ taulukosta. T‰m‰ on tarpeen, koska Huginin
 tiedostoformaatissa esim. potentiaalin P(C | BD) "v‰hiten merkitsev‰" 
 muuttuja on C, mutta ohjelmassamme oletetaan, ett‰ j‰rjestys on esim. BCD.
 
+25.5.2004
+* Mik‰s t‰‰ on?
+  http://www.gnu.org/software/libc/manual/html_node/Finding-Tokens-in-a-String.html#Finding%20Tokens%20in%20a%20String
 

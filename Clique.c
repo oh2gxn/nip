@@ -261,32 +261,31 @@ int message_pass(Clique c1, Sepset s, Clique c2){
 }
 
 
-int initialise(Clique c, Variable v, Variable parents[], potential p){
+int initialise(Clique c, Variable variables[], potential p){
   int i, j = 0, k = 0;
   int diff = c->p->num_of_vars - p->num_of_vars;
   int *extra_vars = NULL;
 
-  if(diff > 0)
+  if(diff > 0){
     extra_vars = (int *) calloc(diff, sizeof(int));
+    
+    /* JJ_NOTE: I'm convinced that there is a bug somewhere!
+     * What happens for example when diff==0 ?!?!? 
+     * - Fixed 18.5.2004 
+     * - Another heavy change 25.5.2004 */
+    
+    /***************************************************************/
+    /* HEY! variables[] NOT assumed to be in any particular order! */
+    /***************************************************************/
 
-  /* UNFINISHED! Who can make such a potential and how??? */
-
-  /* JJ_NOTE: I'm convinced that there is a bug somewhere!
-   * What happens for example when diff==0 ?!?!? 
-   * - Fixed 18.5.2004 */
-
-  /* initialisation with conditional distributions 
-     first: select the variables */
-  for(i=0; i < c->p->num_of_vars; i++){
-    if(j < (p->num_of_vars - 1) &&
-       equal_variables((c->variables)[i], parents[j])) /* or v? */
-      j++;                                             /* MVK: Look down */
-    else if(!equal_variables((c->variables)[i], v)){
-      if(diff > 0)
-	extra_vars[k++] = i;
-      // else there is an ERROR!!! (Namely invalid arguments)
+    /* initialisation with conditional distributions 
+       first: select the variables (in a stupid but working way) */
+    for(i=0; i < c->p->num_of_vars; i++){
+      for(j = 0; j < p->num_of_vars; j++){
+	if(!equal_variables((c->variables)[i], variables[j]))
+	  extra_vars[k++] = i;
+      }
     }
-    /* Else, if equal_variables((c->variables)[i], v), do nothing. */
   }
   /* rest the case */
   i = init_potential(p, c->p, extra_vars);

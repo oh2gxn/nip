@@ -78,7 +78,7 @@ int message_pass(Clique c1, Sepset s, Clique c2);
 /* Make up a better name for this */
 /* !!! p->num_of_vars equals "length of parents + 1" !!! 
  * Sum of the elements in the potential is assumed to be 1. */
-int initialise(Clique c, Variable v, Variable parents[], potential p);
+int initialise(Clique c, Variable variables[], potential p);
 
 /* This one calculates the probability distribution for a variable v
    according to the clique c. To make sense, the join tree should be 

@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.8 2004-05-24 13:58:34 jatoivol Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.9 2004-05-25 13:42:21 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -11,6 +11,7 @@
  */
 #define COMMENT_CHAR '#'
 
+#include "Clique.h"
 #include "Variable.h"
 #include "potential.h"
 #include <stdio.h>
@@ -28,6 +29,9 @@ static varlink first_var = 0; /* global stuff, sad but true */
 static varlink last_var = 0;
 static int vars_parsed = 0;
 
+static varlink first_temp_var = 0;
+static varlink last_temp_var = 0;
+static int symbols_parsed = 0;
 
 struct doublelist {
   double data;
@@ -38,8 +42,8 @@ struct doublelist {
 typedef struct doublelist doubleelement;
 typedef doubleelement *doublelink;
 
-static varlink first_double = 0;
-static varlink last_double = 0;
+static doublelink first_double = 0;
+static doublelink last_double = 0;
 static int doubles_parsed = 0;
 
 
@@ -59,8 +63,8 @@ static int strings_parsed = 0;
 
 struct cliquelist {
   Clique data;
-  struct stringlist *fwd;
-  struct stringlist *bwd;
+  struct cliquelist *fwd;
+  struct cliquelist *bwd;
 };
 
 typedef struct cliquelist cliqueelement;
@@ -96,10 +100,14 @@ void close_infile();
  */
 char *next_token(int *token_length);
 
+/* Adds a variable into a list for creating an array. The variable is 
+ * chosen from THE list of variables according to the given symbol. */
+int add_symbol(char *symbol);
+
 /* Adds a clique into the list of cliques. */
 int add_clique(Clique c);
 
-/* Adds a variable into the list of variables. */
+/* Adds a variable into THE list of variables. */
 int add_pvar(Variable var);
 
 /* Adds a number into the list of parsed numbers. */
@@ -107,6 +115,10 @@ int add_double(double d);
 
 /* Adds a string into the list of parsed strings. */
 int add_string(char* string);
+
+/* Creates an array from the variable references in the temp list. 
+ * The size will be symbols_parsed. */
+Variable* make_variable_array();
 
 /* Creates an array from the double values in the list. 
  * The size will be doubles_parsed. */
@@ -121,7 +133,10 @@ char** make_string_array();
  * of it and wants to reset the list for future use. */
 int reset_doubles();
 
-/* Removes everything from the list of strings. */
+/* Removes everything from the list of strings and resets the counter. */
 int reset_strings();
+
+/* Removes everything from the temporary list of variables. */
+int reset_symbols();
 
 #endif /* __PARSER_H__ */

@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.10 2004-05-24 13:58:34 jatoivol Exp $
+ * $Id: parser.c,v 1.11 2004-05-25 13:42:21 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -119,13 +119,39 @@ char *next_token(int *token_length){
   return token;
 }
 
+
+/* Adds a variable into a temporary list for creating an array. 
+ * The variable is chosen from THE list of variables 
+ * according to the given symbol. */
+int add_symbol(char *symbol){
+  varlink new = (varlink) malloc(sizeof(varelement));
+  varlink pointer = first_var;
+  if(pointer == 0)
+    return ERROR_INVALID_ARGUMENT; // didn't find the variable
+  // search for the variable reference
+  while(strcmp(symbol, pointer->data->symbol) != 0){
+    pointer = pointer->fwd;
+    if(pointer == 0)
+      return ERROR_INVALID_ARGUMENT; // didn't find the variable
+  }
+  new->data = pointer->data;
+  new->fwd = 0;
+  new->bwd = last_temp_var;
+  if(first_temp_var == 0)
+    first_temp_var = new;
+  last_temp_var = new;
+  symbols_parsed++;
+  return 0;
+}
+
+
 /* correctness? */
 int add_clique(Clique c){
   cliquelink new = (cliquelink) malloc(sizeof(cliqueelement));
   new->data = c;
   new->fwd = 0;
   new->bwd = last_clique;
-  if(first_clique = 0)
+  if(first_clique == 0)
     first_clique = new;
   last_clique = new;
   cliques_parsed++;
@@ -137,8 +163,8 @@ int add_pvar(Variable var){
   varlink new = (varlink) malloc(sizeof(varelement));
   new->data = var;
   new->fwd = 0;
-  new->bwd = last_double;
-  if(first_var = 0)
+  new->bwd = last_var;
+  if(first_var == 0)
     first_var = new;
   last_var = new;
   vars_parsed++;
@@ -151,7 +177,7 @@ int add_double(double d){
   new->data = d;
   new->fwd = 0;
   new->bwd = last_double;
-  if(first_double = 0)
+  if(first_double == 0)
     first_double = new;
   last_double = new;
   doubles_parsed++;
@@ -164,12 +190,25 @@ int add_string(char* string){
   new->data = string;
   new->fwd = 0;
   new->bwd = last_string;
-  if(first_string = 0)
+  if(first_string == 0)
     first_string = new;
   last_string = new;
   doubles_parsed++;
   return 0;
 }
+
+
+/* Creates an array from the double values in the list. 
+ * The size will be doubles_parsed. */
+Variable* make_variable_array(){
+  int i;
+  Variable* vars[symbols_parsed];
+  varlink pointer = first_temp_var;
+  for(i = 0; i < symbols_parsed; pointer = pointer->fwd, i++)
+    vars[i] = pointer->data;
+  return vars;
+}
+
 
 /* Creates an array from the double values in the list. 
  * The size will be doubles_parsed. */
@@ -210,9 +249,10 @@ int reset_doubles(){
   }
   first_double = 0;
   doubles_parsed = 0;
+  return 0;
 }
 
-/* Removes everything from the list of strings. */
+/* Removes everything from the list of strings and resets the counter. */
 int reset_strings(){
   stringlink ln = last_string;
   last_string = 0;
@@ -222,4 +262,18 @@ int reset_strings(){
   }
   first_string = 0;
   strings_parsed = 0;  
+  return 0;
+}
+
+/* Removes everything from the temporary list of variables. */
+int reset_symbols(){
+  varlink ln = last_temp_var;
+  last_temp_var = 0;
+  while(ln != 0){
+    ln = ln->bwd;
+    free(ln->fwd); /* correct? */
+  }
+  first_temp_var = 0;
+  symbols_parsed = 0;
+  return 0;
 }
