@@ -74,30 +74,50 @@ void ts_connect_future(Timeslice ts, Variable parent, Variable child)
 
 Graph* ts_unroll(Timeslice ts, unsigned T)
 {
-	int n, n_orig, i, iter;
+	int n, n_orig, i, j, iter, offset;
 	Graph* G;
 	Variable newvar;
-	Variable* newvars, *oldvars;
+	Variable* vars, *oldvars;
 	
 	n_orig = get_size(ts->G);
 	n = ts->n_SV + T*(n_orig - ts->n_FC) /*+ ts->n_FC*/;
 
 	G = new_graph(n);
-	newvars = (Variable) calloc(n_orig*T, sizeof(Variable));
+	vars = (Variable) calloc(n_orig*T, sizeof(Variable));
+	oldvars = get_variables(ts->G);
 	
 	/* First add every variable */
 	for (i = 0; i < ts->n_SV; i++)
 		add_variable(G, ts->	SV[i]);
-	oldvars = get_variables(ts->G);
 	for (iter = 0; iter < T; iter++)
 		for (i = 0; i < n_orig; i++)
 		{
 			/* XX copy variable */
-			newvars[iter*n_orig + i] = newvar;
+			vars[iter*n_orig + i] = newvar;
 			add_variable(G, newvar);	
 		}
-	/*for (i = 0; i < ts.n_FC; i++) XX add last future children? */
+	/*for (i = 0; i < ts->n_FC; i++) XX add last future children? */
 
+	/* Then add_children. */
+	for (i = 0; i < ts->n_SV; i++)		/* Starting vars */
+		for (j = 0; j < n_orig; j++)
+			if S_ADJM(ts, i, j)
+				add_child(G, ts->SV[i], vars[j]);
+	for (iter = 0; iter < T; iter++)
+	{
+		offset = iter*n_orig;
+		for (i = 0; i < n_orig; i++)
+		{
+			for (j = 0; j < n_orig; j++)
+			{
+				if (is_child(oldvars[i], oldvars[j]))
+					add_child(G, vars[offset+i], vars[offset+j]);
+				if (F_ADJM(ts, i, j) && iter!=T-1)
+					add_child(G, vars[offset+i], vars[n_orig+offset+j]);
+			}
+		}
+	}
 
-	
+	/* It's a wrap! */	
+	return G;
 }
