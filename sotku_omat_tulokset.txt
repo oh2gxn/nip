@@ -1,0 +1,99 @@
+Normalised probability of C1:
+result[0] = 0.395004
+result[1] = 0.604996
+
+Normalised probability of C2:
+result[0] = 0.602896
+result[1] = 0.397104
+
+Normalised probability of C3:
+result[0] = 0.022966
+result[1] = 0.977034
+
+Normalised probability of C4:
+result[0] = 0.097288
+result[1] = 0.902712
+
+Normalised probability of C5:
+result[0] = 0.559107
+result[1] = 0.440893
+
+Normalised probability of C6:
+result[0] = 0.248678
+result[1] = 0.751322
+
+Normalised probability of C7:
+result[0] = 0.724102
+result[1] = 0.275898
+
+Normalised probability of C8:
+result[0] = 0.853835
+result[1] = 0.146165
+
+Normalised probability of C9:
+result[0] = 0.478179
+result[1] = 0.521821
+
+Normalised probability of C10:
+result[0] = 0.139080
+result[1] = 0.860920
+
+Normalised probability of C11:
+result[0] = 0.854761
+result[1] = 0.145239
+
+Normalised probability of C12:
+result[0] = 0.109809
+result[1] = 0.890191
+
+Normalised probability of C13:
+result[0] = 0.331750
+result[1] = 0.668250
+
+Normalised probability of C14:
+result[0] = 0.742304
+result[1] = 0.257696
+
+Normalised probability of C15:
+result[0] = 0.875492
+result[1] = 0.124508
+
+Normalised probability of C16:
+result[0] = 0.916176
+result[1] = 0.083824
+
+Normalised probability of C17:
+result[0] = 0.463201
+result[1] = 0.536799
+
+Normalised probability of C18:
+result[0] = 0.780552
+result[1] = 0.219448
+
+Normalised probability of C19:
+result[0] = 0.500000
+result[1] = 0.500000
+
+Normalised probability of C20:
+result[0] = 0.367375
+result[1] = 0.632625
+
+Normalised probability of C21:
+result[0] = 0.496000
+result[1] = 0.504000
+
+Normalised probability of C22:
+result[0] = 0.262653
+result[1] = 0.737347
+
+Normalised probability of C23:
+result[0] = 0.754380
+result[1] = 0.245620
+
+Normalised probability of C24:
+result[0] = 0.869948
+result[1] = 0.130052
+
+Normalised probability of C25:
+result[0] = 0.574998
+result[1] = 0.425002
