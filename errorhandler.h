@@ -6,9 +6,10 @@
 #define ERROR_NULLPOINTER 1
 #define ERROR_DIVBYZERO 2
 #define ERROR_INVALID_ARGUMENT 3
+#define ERROR_OUTOFMEMORY 4
 
-#define GLOBAL_UPDATE 4
-#define GLOBAL_RETRACTION 5
+#define GLOBAL_UPDATE 100
+#define GLOBAL_RETRACTION 101
 
 /* Method for reporting an error. 
  * - errorcode is for example ERROR_DIVBYZERO
