@@ -183,7 +183,14 @@ int marginalise(Clique c, Variable v, double r[]){
   return(total_marginalise(c->p, r, i));
 }
 
-int insert_evidence(Clique c, double *data){
-  /* copy the pointer or the data? */
+int enter_evidence(Clique c, Variable v, double evidence[]){
+  int i;
+  
+  /* here will be the update of clique potential... */
+
+  /* update likelihood */
+  for(i = 0; i < v->cardinality; i++)
+    (v->likelihood)[i] = evidence[i];
+
   return 0;
 }

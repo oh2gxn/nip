@@ -71,7 +71,9 @@ int message_pass(Clique c1, Sepset s, Clique c2);
 - The returned value is an error code. */
 int marginalise(Clique c, Variable v, double r[]);
 
-/* This will change or be removed (Returns an error code.)*/
-int insert_evidence(Clique c, double *data);
+/* Method for entering evidence to a clique. 
+   sizeof(evidence) must equal variable->cardinality.
+   Returns an error code. */
+int enter_evidence(Clique c, Variable v, double evidence[]);
 
 #endif /* __CLIQUE_H__ */
