@@ -136,6 +136,32 @@ void test5(Graph* G)
 	printf("\tTest 5 done.\n");
 }
 
+void test6(Graph* G)
+{
+	Graph *Gm, *Gu;
+	int i,j,n,n_cliques;
+	Variable *v;
+	Clique* fooga;
+	
+	printf("\tTest 6... triangulate\n");
+	Gm = moralise(G);
+	Gu = make_undirected(Gm);
+	n_cliques = triangulate(Gu, &fooga);
+
+	n = get_size(Gu);
+	v = get_variables(Gu);
+
+	for (i=0;i<n;i++)
+	{
+		printf("\tAdjacency matrix:\n\t\t");
+		for (j=0; j<n; j++)
+			printf("%d ",is_child(Gu, v[i], v[j]));
+		printf("\n");
+	}
+
+	printf("\tTest6 done.\n");
+}
+
 void main(void)
 {
     Graph* G;
@@ -147,5 +173,6 @@ void main(void)
     test3(G);
     test4(G);
     test5(G);
+    test6(G);
 }
 
