@@ -51,7 +51,7 @@ int get_distribution_1(Variable v, Clique* cliques, int n, double** data)
     
     n_states = number_of_values(v);
     *data = (double*) calloc(n_states, sizeof(double));
-    c = find_family(cliques, n, &v, 1);
+    c = find_family(cliques, n, v);
     marginalise(c, v, *data);
     normalise(*data, n_states);
     

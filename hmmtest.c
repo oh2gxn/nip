@@ -121,7 +121,7 @@ int main(int argc, char *argv[]){
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       &interesting, 1);
+				       interesting);
       if(!clique_of_interest){
 	free_model(model);
 	free_timeseries(ts);
@@ -239,7 +239,7 @@ int main(int argc, char *argv[]){
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       &interesting, 1);
+				       interesting);
       if(!clique_of_interest){
 	free_model(model);
 	free_timeseries(ts);

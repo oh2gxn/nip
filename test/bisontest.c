@@ -43,8 +43,7 @@ static void test_probability(double **result, int *size_of_result,
 			     int num_of_cliques){
 
   /* Find the Clique that contains the family of the interesting Variable. */
-  Clique clique_of_interest = find_family(cliques, num_of_cliques, 
-					  &var, 1);
+  Clique clique_of_interest = find_family(cliques, num_of_cliques, var);
   if(!clique_of_interest){
     printf("In bisontest.c : No clique found! Sorry.\n");
     *size_of_result = 0;

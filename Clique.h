@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.52 2004-10-18 11:02:39 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.53 2005-02-22 15:18:47 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -163,16 +163,25 @@ int enter_evidence(Variable* vars, int nvars, Clique* cliques,
 		   int ncliques, Variable v, double evidence[]);
 
 
-/* Finds a clique containing a family of variables. Returns the first
- * found Clique that contains all the given variables.
+/* Finds a clique containing the family of the given variable.
  * Returns NULL if no such Clique is found.
  * Parameters:
  *  - cliques : an array of Cliques
  *  - num_of_cliques : the size of the array 'cliques'
- *  - variables : an array containing the family of variables
- *  - num_of_vars : the size of the array 'variables'
+ *  - var : the variable whos family is to be found
  */
-Clique find_family(Clique *cliques, int num_of_cliques,
+Clique find_family(Clique *cliques, int num_of_cliques, Variable var);
+
+
+/* Finds a clique containing the specified set of variables. 
+ * Returns NULL if no such Clique is found.
+ * Parameters:
+ *  - cliques : an array of Cliques
+ *  - num_of_cliques : the size of the array 'cliques'
+ *  - variables : the variables expected to be included in the clique
+ *  - num_of_vars : size of the given array of variables
+ */
+Clique find_clique(Clique *cliques, int num_of_cliques, 
 		   Variable *variables, int num_of_vars);
 
 

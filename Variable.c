@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.49 2005-02-22 10:11:51 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.50 2005-02-22 15:18:47 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -321,8 +321,46 @@ int number_of_values(Variable v){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return -1;
   }
-  else
-    return v->cardinality;
+  return v->cardinality;
+}
+
+
+int number_of_parents(Variable v){
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return -1;
+  }
+  return v->num_of_parents;
+}
+
+
+int set_parents(Variable v, Variable *parents, int nparents){
+  int i;
+  if(v == NULL || parents == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return ERROR_NULLPOINTER;
+  }
+  
+  v->parents = (Variable *) calloc(nparents, sizeof(Variable));
+  if(!(v->parents)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  for(i = 0; i < nparents; i++)
+    v->parents[i] = parents[i]; /* makes a copy of the array */
+  
+  v->num_of_parents = nparents;  
+  return NO_ERROR;
+}
+
+
+Variable* get_parents(Variable v){
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return NULL;
+  }
+  return v->parents;
 }
 
 

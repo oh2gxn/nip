@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.41 2005-02-14 21:41:47 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.42 2005-02-22 15:18:47 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -130,6 +130,7 @@ Some outline of the system... The parts and stuff...
 \newpage
 \chapter{Subsystem descriptions}
 % The nasty details
+
 \section{Variables}
 \subsection{General}
 All the variables $V$ are assumed to be discrete and have a certain
@@ -157,46 +158,57 @@ The data type \cdatatype{Variable} defined in \cfilename{Variable.h}
 is a pointer to a struct which has the following fields: 
 \begin{description}
 \item[symbol] is a short string used for identifying the variable. Maximum
-length is defined as \cdefine{VAR\_SYMBOL\_LENGTH} in
-\cfilename{Variable.h}. To ensure the correct operation of the system, the 
-symbol should be unique.
+  length is defined as \cdefine{VAR\_SYMBOL\_LENGTH} in 
+  \cfilename{Variable.h}. To ensure the correct operation of the system, the 
+  symbol should be unique.
 
 \item[name] is usually a longer name to describe the variable: it is
-called {\it label} in the Hugin net language files. This is NOT used for 
-identification of the variables and it doesn't need to be unique. 
-The maximum length is defined as \cdefine{VAR\_NAME\_LENGTH} in 
-\cfilename{Variable.h}.
+  called {\it label} in the Hugin net language files. This is NOT used for 
+  identification of the variables and it doesn't need to be unique. 
+  The maximum length is defined as \cdefine{VAR\_NAME\_LENGTH} in 
+  \cfilename{Variable.h}.
 
 \item[statenames] is an array of strings containing names for all
-possible states of the variable. The identification of data relies on
-these strings. The size of the statenames array i.e. number of
-strings should be the same as the number of states indicated by
-cardinality field described below.
+  possible states of the variable. The identification of data relies on
+  these strings. The size of the statenames array i.e. number of
+  strings should be the same as the number of states indicated by
+  cardinality field described below.
 
 \item[cardinality] is a positive integer which tells how many states
-the variable can have. It plays an important role in all calculations
-so it better be correct: the value is not meant to be altered.
+  the variable can have. It plays an important role in all calculations
+  so it better be correct: the value is not meant to be altered.
 
 \item[id] is an \cdatatype{unsigned long} used for identification
-inside the system. It is set automatically by the \cfunction{new\_variable} 
-function and should not be tampered after that.
+  inside the system. It is set automatically by the \cfunction{new\_variable} 
+  function and should not be tampered after that.
 
 \item[likelihood] is a \cdatatype{double} array describing the probability
-distribution of the states of the variable. It is used only for
-entering evidence into the system and likelihood arrays of the latent
-variables remain filled with ones. Size of the array equals
-cardinality, of course.
+  distribution of the states of the variable. It is used only for
+  entering evidence into the system and likelihood arrays of the latent
+  variables remain filled with ones. Size of the array equals
+  cardinality, of course.
 
 \item[previous] is used for describing the repetitive structure in
-timeslice models. It is a pointer to the variable which this variable
-will replace in previous timeslice. The pointer is \cdatatype{NULL} if 
-the model has no repetitive structure.
+  timeslice models. It is a pointer to the variable which this variable
+  will replace in previous timeslice. The pointer is \cdatatype{NULL} if 
+  the model has no repetitive structure.
 
 \item[next] is a same kind of pointer as \cstructfield{previous} above, 
-but this one tells which variable will be replaced in the next timeslice.
-The \cstructfield{previous} and \cstructfield{next} pointers should be 
-symmetrical i.e. if \examplecode{a->next == b} then 
-\examplecode{b->previous == a}.
+  but this one tells which variable will be replaced in the next timeslice.
+  The \cstructfield{previous} and \cstructfield{next} pointers should be 
+  symmetrical i.e. if \examplecode{a->next == b} then 
+  \examplecode{b->previous == a}.
+
+\item[parents] is an array of references to the parent variables 
+  (\examplecode{Variable[]}) or a null pointer if there are no parents.
+
+\item[num\_of\_parents] is a positive \cdatatype{integer} which tells the 
+  number of parents and thus the size of the \cstructfield{parents} array.
+
+\item[family\_clique] is a void pointer for so called memoization of family
+  cliques of variables. The pointer is initially NULL and is set only when 
+  the family clique is found the first time.
+
 \end{description}
 
 \cfilename{Variable.h} provides also data types for implementing lists of
@@ -225,80 +237,95 @@ The functions provided in \cfilename{Variable.c} are
 %The interface + how the stuff works...
 \begin{description}
 \item[new\_variable(symbol, name, states, cardinality)] creates a variable
-identified with the \cparameter{symbol} string. The \cparameter{name}
-string will be copied as the name field of the new variable. Both the
-\cparameter{symbol} and \cparameter{name} strings may be truncated to the
-allowed length. The states of the new variable will be named according to
-the given string array \cparameter{states}.  All the given strings are
-copied, so remember to free them after they become useless.
+  identified with the \cparameter{symbol} string. The \cparameter{name}
+  string will be copied as the name field of the new variable. Both the
+  \cparameter{symbol} and \cparameter{name} strings may be truncated to the
+  allowed length. The states of the new variable will be named according to
+  the given string array \cparameter{states}.  All the given strings are
+  copied, so remember to free them after they become useless. Initially, the 
+  variable will not have parents, so you have to set them separately.
 
 \item[copy\_variable(v)] returns an exact copy of the
-variable~\cparameter{v}. Note that also the id~field is copied and
-consequently there may not be two copies of the same variable in the same
-model.
+  variable~\cparameter{v}. Note that also the id~field is copied and
+  consequently there may not be two copies of the same variable in the same
+  model.
 
 \item[free\_variable(v)] frees the memory allocated for the
-variable~\cparameter{v}.
+  variable~\cparameter{v}.
 
 \item[equal\_variables(v1, v2)] returns 0 if either of the variables
-are null. Otherwise it will tell if the variables have equal id fields
-or not.
+  are null. Otherwise it will tell if the variables have equal id fields
+  or not.
 
 \item[get\_id(v)] will return the unsigned long id field of the
-variable~\cparameter{v}.
+  variable~\cparameter{v}.
 
 \item[get\_symbol(v)] returns the symbol of the variable~\cparameter{v}. It
-will not make a copy of the string so don't mess with it.
+  will not make a copy of the string so don't mess with it.
 
 \item[get\_stateindex(v, state)] tells the place of the string
-\cparameter{state} in the state name array of the
-variable~\cparameter{v}. This index can be used for interpreting various
-arrays describing probability distributions. 
+  \cparameter{state} in the state name array of the
+  variable~\cparameter{v}. This index can be used for interpreting various
+  arrays describing probability distributions. 
 
 \item[total\_num\_of\_vars()] is used only for aiding the Hugin net
-language file parser to return the total number of newly created
-variables. All the variables (created with the \cfunction{new\_variable}
-function) are accumulated in a list and this function can tell the size of
-that list.
+  language file parser to return the total number of newly created
+  variables. All the variables (created with the \cfunction{new\_variable}
+  function) are accumulated in a list and this function can tell the size of
+  that list.
 
 \item[get\_first\_variable()] gives the first element in the list of newly
-created variables mentioned above.
+  created variables mentioned above.
 
 \item[get\_last\_variable()] gives the last element in the list of newly
-created variables mentioned above.
+  created variables mentioned above.
 
 \item[reset\_Variable\_list()] will replace the list of recently created
-variables with \cdatatype{NULL} and set the size of the list to zero. This
-is used only for resetting the list after copying the list pointer to a new
-model. Otherwise all the models would share the same list of parsed
-variables.
+  variables with \cdatatype{NULL} and set the size of the list to zero. This
+  is used only for resetting the list after copying the list pointer to a new
+  model. Otherwise all the models would share the same list of parsed
+  variables.
 
 \item[next\_Variable(it)] will give the next variable pointed by the
-variable iterator~\cparameter{it} and advance the pointer to the next
-variable in the list. The function returns \cdatatype{NULL} if the iterator
-runs out of variables.
+  variable iterator~\cparameter{it} and advance the pointer to the next
+  variable in the list. The function returns \cdatatype{NULL} if the iterator
+  runs out of variables.
 
 \item[get\_parser\_variable(symbol)] aids the net language parser to find a
-variable, identified by the \cparameter{symbol} string, in the list of
-newly created variables.
+  variable, identified by the \cparameter{symbol} string, in the list of
+  newly created variables.
 
 \item[get\_variable(vars, nvars, symbol)] searches the \cdatatype{Variable
-array}~\cparameter{vars} for a variable identified by the string
-\cparameter{symbol}. Also the size of the array has to be specified as the
-\cdatatype{integer}~\cparameter{nvars}.
-
+  array}~\cparameter{vars} for a variable identified by the string
+  \cparameter{symbol}. Also the size of the array has to be specified as the
+  \cdatatype{integer}~\cparameter{nvars}.
+  
 \item[update\_likelihood(v, likelihood)] will set the likelihood array of
-variable~\cparameter{v} according to the given double array
-\cparameter{likelihood}. Size of the given array should be the same (or
-more) than the cardinality of the variable.
+  variable~\cparameter{v} according to the given double array
+  \cparameter{likelihood}. Size of the given array should be the same (or
+  more) than the cardinality of the variable.
 
 \item[reset\_likelihood(v)] fills the likelihood array of the
-variable~\cparameter{v} with ones. This means that the likelihood of the
-variable states will be uniform.
+  variable~\cparameter{v} with ones. This means that the likelihood of the
+  variable states will be uniform.
 
 \item[number\_of\_values(v)] returns the cardinality of the
-variable~\cparameter{v}. It is the exact number of states the variable has
-and will always have.
+  variable~\cparameter{v}. It is the exact number of states the variable has
+  and will always have.
+
+\item[number\_of\_parents(v)] tells how many parents the
+  variable~\cparameter{v} has.
+  
+\item[set\_parents(v, parents, nparents)] sets the parents for the
+  variable~\cparameter{v} by copying the references from the
+  \cparameter{parents}, which is an \cdatatype{array of Variables}. 
+  Size of the array must be specified by the \cparameter{nparents} 
+  \cdatatype{integer}.
+
+\item[get\_parents(v)] returns a reference to the parents of the 
+  variable~\cparameter{v}. After you get the pointer to the array of 
+  parents, DO NOT alter the content of the array. Note that the size of the
+  array can be found out with the \cfunction{number\_of\_parents} function.
 \end{description}
 
 

@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.41 2005-02-22 10:11:51 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.42 2005-02-22 15:18:47 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -24,10 +24,8 @@ struct nip_var {
   double *likelihood; /* likelihood of each value */
   struct nip_var *previous;
   struct nip_var *next;
-
   struct nip_var **parents; /* array of pointers to the parents */
   int num_of_parents;       /* number of parents */
-
   void *family_clique;      /* possible reference to the family clique */
 };
 
@@ -128,6 +126,18 @@ void reset_likelihood(Variable v);
 /* Returns the number of possible values in the Variable v. (-1 if v == NULL)
  */
 int number_of_values(Variable v);
+
+
+/* Tells how many parents the Variable has. */
+int number_of_parents(Variable v);
+
+
+/* Sets the parents for the Variable v. */
+int set_parents(Variable v, Variable *parents, int nparents);
+
+
+/* Tells which Variables (*p) are the parents of the Variable v. */
+Variable* get_parents(Variable v);
 
 
 /* Returns a new array (allocates memory!) that contains the given Variables

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.106 2004-10-18 14:25:29 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.107 2005-02-22 15:18:47 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -948,7 +948,7 @@ int global_retraction(Variable* vars, int nvars, Clique* cliques,
   /* Enter evidence back to the join tree. */
   for(i = 0; i < nvars; i++){
     v = vars[i];
-    c = find_family(cliques, ncliques, &v, 1);
+    c = find_family(cliques, ncliques, v);
     index = var_index(c, v);
 
     retval = update_evidence(v->likelihood, NULL, c->p, index);
@@ -1005,7 +1005,7 @@ int enter_evidence(Variable* vars, int nvars, Clique* cliques,
     return ERROR_NULLPOINTER;
   }
 
-  c = find_family(cliques, ncliques, &v, 1);
+  c = find_family(cliques, ncliques, v);
     
   if(!c){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);
@@ -1070,13 +1070,34 @@ static int var_index(Clique c, Variable v){
 }
 
 
-/*
- * At the moment, the first two parameters are useless.
- * If we change something, the parameters might be useful.
- */
-Clique find_family(Clique *cliques, int num_of_cliques,
-		   Variable *variables, int num_of_vars){
+Clique find_family(Clique *cliques, int num_of_cliques, Variable var){
+  int i, n;
+  Variable *family = NULL;
+  Clique found;
 
+  /* NOTE: uses memoization for finding families */
+  if(var->family_clique != NULL)
+    return (Clique)(var->family_clique);
+
+  n = number_of_parents(var);
+  family = (Variable*) calloc(n + 1, sizeof(Variable));
+  if(!family){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  for(i = 0; i < n; i++)
+    family[i] = var->parents[i];
+  family[n] = var;
+
+  found = find_clique(cliques, num_of_cliques, family, n+1);
+  var->family_clique = found; /* MEMOIZE! */
+  return found;
+}
+
+
+Clique find_clique(Clique *cliques, int num_of_cliques, 
+		   Variable *variables, int num_of_vars){
   int i, j, k;
   int ok;
 

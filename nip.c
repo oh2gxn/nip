@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.38 2005-02-21 22:59:32 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.39 2005-02-22 15:18:48 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -358,8 +358,10 @@ static int start_timeslice_message_pass(Nip model, Variable vars[], int nvars,
   int *mapping;
   Clique c = NULL;
 
-  c = find_family(model->cliques, model->num_of_cliques, vars, nvars);
+  /* TODO: this could be memoized */
+  c = find_clique(model->cliques, model->num_of_cliques, vars, nvars);
   assert(c != NULL);
+
   mapping = (int*) calloc(c->p->num_of_vars - nvars, sizeof(int));
   if(!mapping){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -390,8 +392,9 @@ static int finish_timeslice_message_pass(Nip model, Variable vars[], int nvars,
   int i, j, k;
   int *mapping;
   Clique c = NULL;
-  
-  c = find_family(model->cliques, model->num_of_cliques, vars, nvars);
+
+  /* TODO: This could be memoized! */
+  c = find_clique(model->cliques, model->num_of_cliques, vars, nvars);
   assert(c != NULL);
   mapping = (int*) calloc(c->p->num_of_vars - nvars, sizeof(int));
   if(!mapping){
@@ -546,7 +549,7 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       &temp, 1);
+				       temp);
       assert(clique_of_interest != NULL);
       
       /* 3. Marginalisation (the memory must have been allocated) */
@@ -782,7 +785,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       &temp, 1);
+				       temp);
       assert(clique_of_interest != NULL);
       
       /* 3. Marginalisation (the memory must have been allocated) */
@@ -1005,7 +1008,7 @@ double *get_probability(Nip model, Variable v){
 
   /* 1. Find the Clique that contains the interesting Variable */
   clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				   &v, 1);
+				   v);
   if(!clique_of_interest){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free(result);
@@ -1042,8 +1045,8 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars){
   printf("In get_joint_probability()\n");
 #endif
 
-  /* Find the Clique that contains the family of the interesting Variables */
-  clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+  /* Find the Clique that contains the interesting Variables */
+  clique_of_interest = find_clique(model->cliques, model->num_of_cliques, 
 				   vars, num_of_vars);
   if(!clique_of_interest){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);

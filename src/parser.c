@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.86 2004-10-15 11:47:58 jatoivol Exp $
+ * $Id: parser.c,v 1.87 2005-02-22 15:18:48 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1009,9 +1009,12 @@ int parsedVars2Graph(){
       }
     }
     
+    /* Add child - parent relations to variables themselves also */
+    set_parents(initlist->child, initlist->parents, 
+		initlist->data->num_of_vars - 1);
+
     initlist = initlist->fwd;
   }
-
   return NO_ERROR;
 }
 
@@ -1073,6 +1076,7 @@ int parsedPots2JTree(){
   Variable* vars;
   Variable var;
   Variable_iterator it;
+  Clique fam_clique = NULL;;
 
   /* <ugly patch> */
   nvars = total_num_of_vars();
@@ -1091,24 +1095,9 @@ int parsedPots2JTree(){
   }
   /* <\ugly patch> */
 
-  while(initlist != NULL){
-    
-    Variable *family = (Variable *) calloc(initlist->data->num_of_vars, 
-					   sizeof(Variable));
-    Clique fam_clique;
-
-    if(!family){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      return ERROR_OUTOFMEMORY;
-    }
-
-    family[0] = initlist->child;
-    for(i = 0; i < initlist->data->num_of_vars - 1; i++)
-      family[i + 1] = initlist->parents[i];
-
+  while(initlist != NULL){    
     fam_clique = find_family(nip_cliques, nip_num_of_cliques,
-			     family, initlist->data->num_of_vars);
-    free(family);
+			     initlist->child);
 
     if(fam_clique != NULL){
       if(initlist->data->num_of_vars > 1){
