@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.57 2004-06-17 06:26:09 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.58 2004-06-17 10:19:20 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -250,10 +250,12 @@ potential create_Potential(Variable variables[], int num_of_vars,
     fprintf(stderr, "In Clique.c: malloc failed\n");
     return NULL;
   }
+
   if((indices = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
     fprintf(stderr, "In Clique.c: malloc failed\n");
     return NULL;
   }
+
   if((temp_array = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
     fprintf(stderr, "In Clique.c: malloc failed\n");
     return NULL;
@@ -292,33 +294,39 @@ potential create_Potential(Variable variables[], int num_of_vars,
   /* Create a potential */
   p = make_potential(cardinality, num_of_vars, NULL);
   
-  /* Copy the contents to their correct places 
-   * JJT: In principle it is a bit ugly to do this 
-   * at this level. If potential.c changes, this has to 
-   * be revised too!!! */
-  for(i = 0; i < size_of_data; i++){
+  /*
+   * NULL data is accepted.
+   * In that case, potential will be uniformly distributed.
+   */
+  if(data != NULL)
 
-    /*
-     * Now this is the trickiest part.
-     * Find out indices (in the internal order of the program,
-     * determined by the Variable IDs).
-     */
-    inverse_mapping(p, i, indices); 
+    /* Copy the contents to their correct places 
+     * JJT: In principle it is a bit ugly to do this 
+     * at this level. If potential.c changes, this has to 
+     * be revised too!!! */
+    for(i = 0; i < size_of_data; i++){
 
-    /* calculate the address in the original array */
-    index = 0;
-    card_temp = 1;
+      /*
+       * Now this is the trickiest part.
+       * Find out indices (in the internal order of the program,
+       * determined by the Variable IDs).
+       */
+      inverse_mapping(p, i, indices); 
 
-    /* THE mapping */
-    for(j = 0; j < num_of_vars; j++){
-      index += indices[temp_array[j]] * card_temp;
-      card_temp *= cardinality[temp_array[j]];
+      /* calculate the address in the original array */
+      index = 0;
+      card_temp = 1;
+
+      /* THE mapping */
+      for(j = 0; j < num_of_vars; j++){
+	index += indices[temp_array[j]] * card_temp;
+	card_temp *= cardinality[temp_array[j]];
+      }
+
+      /* set the value (in a little ugly way) */
+      /* data is being copied => free(data) somewhere */
+      p->data[i] = data[index];
     }
-
-    /* set the value (in a little ugly way) */
-    /* data is being copied => free(data) somewhere */
-    p->data[i] = data[index];
-  }
 
   free(cardinality);
   free(indices);

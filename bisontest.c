@@ -10,7 +10,9 @@
 #define DEBUG_BISONTEST
 */
 
+/*
 #define EVIDENCE
+*/
 
 #define EVIDENCE1
 

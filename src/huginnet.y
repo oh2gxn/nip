@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.40 2004-06-11 13:53:29 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.41 2004-06-17 10:19:20 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -173,7 +173,11 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   add_initData(create_Potential(vars, 1, doubles), vars[0], NULL); 
   free(doubles); /* the data was copied at create_Potential */
   reset_doubles();
-  reset_symbols()
+}
+|                     token_potential '(' child ')' '{' '}' {
+  Variable vars[1];
+  vars[0] = $3;
+  add_initData(create_Potential(vars, 1, NULL), vars[0], NULL); 
 }
 ;
 
