@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.26 2004-06-03 15:20:07 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.27 2004-06-04 06:29:23 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -13,7 +13,7 @@
 #include "huginnet.h"
 
 #define YYERROR_VERBOSE
-#define DEBUG_BISON
+  //#define DEBUG_BISON
 %}
 
 /* BISON Declarations */
@@ -46,7 +46,7 @@
 %type <stringarray> strings statesDeclaration
 %type <doublearray> numbers dataList
 %type <variable> nodeDeclaration symbol
-%type <variablearray> symbols
+/* %type <variablearray> symbols */
 %type <name> labelDeclaration
 
 /* Grammar follows */
@@ -93,7 +93,6 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' statesDeclaration
                                              positionDeclaration
                                              parameters '}' {
   /* new_variable() */
-  int i;
   Variable v = new_variable($2, $5, $4, nip_strings_parsed); 
 
   reset_strings();
@@ -130,19 +129,21 @@ potentialDeclaration: token_potential '(' symbol '|' symbols ')' '{' dataList '}
   int i;
   Variable *vars = (Variable*) calloc(nip_symbols_parsed + 1,
 				      sizeof(Variable));
+  Variable *parents = make_variable_array();
   potential p;
-  if(!vars)
+
+  if(!vars || !parents)
     YYABORT;
   printf("nip_symbols_parsed = %d\n", nip_symbols_parsed); /* DEBUG */
   vars[0] = $3;
   for(i = 0; i < nip_symbols_parsed; i++)
-    vars[i + 1] = ($5)[i];
-
-  printf("WTF happens here !?!?\n");
+    vars[i + 1] = parents[i];
 
   p = create_Potential(vars, nip_symbols_parsed + 1, $8);
 
-  add_initData(p, $3, $5); 
+  printf("WTF happens here !?!?\n");
+
+  add_initData(p, $3, parents); 
   free($8); // the data was copied at create_Potential
   reset_doubles();
   reset_symbols();
@@ -155,7 +156,7 @@ symbol:        UNQUOTED_STRING { $$ = get_variable($1) }
 ;
 
 
-symbols:       /* end of list */ { $$ = make_variable_array() }
+symbols:       /* end of list */ { /* $$ = make_variable_array() */ }
              | symbol2 symbols { /* add_symbol($1) */ }
 ;
 
