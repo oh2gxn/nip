@@ -36,10 +36,9 @@ Graph* test1(void)
     return G;
 }
 
-Graph* test2(Graph* G)
+void test2(Graph* G)
 {
     Variable* v = get_variables(G);
-    int i, j;
     
     printf("\tTest 2... add_child, is_child\n");
 
@@ -72,5 +71,4 @@ void main(void)
     test2(G);
 
 }
-    
-    
+
