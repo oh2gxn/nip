@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.85 2004-08-18 11:08:48 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.86 2004-08-18 14:01:52 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -210,9 +210,9 @@ void remove_Sepset(Clique c, Sepset s){
 Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
 
   Sepset s;
-  int *cardinality;
-  int *reorder;
-  int *indices;
+  int *cardinality = NULL;
+  int *reorder = NULL;
+  int *indices = NULL;
   int i, j;
   unsigned long temp;
 
@@ -310,24 +310,25 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   free(cardinality); /* the array was copied ? */
   free(reorder);
   free(indices);
-  s->cliques[0] = cliques[0]; /* Hopefully the space was allocated! */
+  s->cliques[0] = cliques[0];
   s->cliques[1] = cliques[1];
+
   return s;
 }
 
 
 int free_Sepset(Sepset s){
 
-  if(!s)
-    return 0;
+  if(s){
+    if(s->old->num_of_vars)
+      free(s->variables);
+    
+    free_potential(s->old);
+    free_potential(s->new);
+    free(s->cliques);
+    free(s);
+  }
 
-  if(s->old->num_of_vars)
-    free(s->variables);
-
-  free_potential(s->old);
-  free_potential(s->new);
-   free(s->cliques);
-  free(s);
   return 0;
 }
 
