@@ -222,7 +222,7 @@ int main(int argc, char *argv[]){
     
     printf("-- t = %d --\n", t+1);
         
-    /* 0. Put some data in */
+    /* 2. Put some data in */
     for(i = 0; i < timeseries->num_of_nodes; i++)
       if(data[t][i] >= 0)
 	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
@@ -308,24 +308,24 @@ int main(int argc, char *argv[]){
       reset_likelihood(temp);
     global_retraction(nip_cliques[0]);
     
-
-    /* 1. Finish the message pass between timeslices */
-    clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-				     previous, num_of_nexts);
-    assert(clique_of_interest != NULL);
-    j = 0; k = 0;
-    for(i=0; i < clique_of_interest->p->num_of_vars; i++){
-      if(j < num_of_nexts &&
-	 equal_variables((clique_of_interest->variables)[i], previous[j]))
-	j++;
-      else {
-	temp_vars[k] = i;
-	k++;
+    if(t < timeseries->datarows - 1){
+      /* 1. Finish the message pass between timeslices */
+      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				       previous, num_of_nexts);
+      assert(clique_of_interest != NULL);
+      j = 0; k = 0;
+      for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+	if(j < num_of_nexts &&
+	   equal_variables((clique_of_interest->variables)[i], previous[j]))
+	  j++;
+	else {
+	  temp_vars[k] = i;
+	  k++;
+	}
       }
+      update_potential(timeslice_sepsets[t], NULL, 
+		       clique_of_interest->p, temp_vars);
     }
-    update_potential(timeslice_sepsets[t], NULL, 
-		     clique_of_interest->p, temp_vars);
-    
     free(temp_vars);
   }
   
@@ -349,11 +349,13 @@ int main(int argc, char *argv[]){
     
     printf("-- t = %d --\n", t+1);
 
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(data[t][i] >= 0)
-	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			    data[t][i]);
-    
+
+      for(i = 0; i < timeseries->num_of_nodes; i++)
+	if(data[t][i] >= 0)
+	  enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+			      data[t][i]);
+
+
     /* Message pass??? */
     clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				     previous, num_of_nexts);
@@ -364,6 +366,7 @@ int main(int argc, char *argv[]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
     }
+
 
     if(t > 0){
       j = 0; k = 0;
@@ -381,6 +384,16 @@ int main(int argc, char *argv[]){
     }
 
 
+    /* an inference */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+    collect_evidence(NULL, NULL, nip_cliques[0]);
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+    distribute_evidence(nip_cliques[0]);
+    
+  
+
     if(t < timeseries->datarows - 1){
       /*******************************************/
       /* FIX ME: there's a bug here somewhere!!! */
@@ -390,15 +403,13 @@ int main(int argc, char *argv[]){
       assert(clique_of_interest != NULL);
       j = 0; k = 0;
       for(i=0; i < clique_of_interest->p->num_of_vars; i++){
-	if(j < num_of_nexts &&
+	if(j < num_of_nexts && 
 	   equal_variables((clique_of_interest->variables)[i], next[j]))
 	  j++;
-	else {
-	  temp_vars[k] = i;
-	  k++;
-	}
+	else
+	  temp_vars[k++] = i;
       }
-      update_potential(timeslice_sepsets[t+1], timeslice_sepsets[t], 
+      update_potential(timeslice_sepsets[t+1], timeslice_sepsets[t],
 		       clique_of_interest->p, temp_vars);
     }
 
@@ -451,13 +462,6 @@ int main(int argc, char *argv[]){
     
 
     if(t > 0){
-      /* forget old evidence */
-      it = get_Variable_list();
-      while((temp = next_Variable(&it)) != NULL)
-	reset_likelihood(temp);
-      global_retraction(nip_cliques[0]);
-      
-
       /* Start a message pass between timeslices */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				       previous, num_of_nexts);
@@ -476,6 +480,13 @@ int main(int argc, char *argv[]){
       }
       general_marginalise(clique_of_interest->p, timeslice_sepsets[t],
 			  temp_vars);
+
+
+      /* forget old evidence */
+      it = get_Variable_list();
+      while((temp = next_Variable(&it)) != NULL)
+	reset_likelihood(temp);
+      global_retraction(nip_cliques[0]);
     }
 
     free(temp_vars);
