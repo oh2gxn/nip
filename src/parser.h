@@ -1,6 +1,6 @@
 /*
- * Definitions for the bison parser.
- * $Id: parser.h,v 1.29 2004-06-29 08:00:33 jatoivol Exp $
+ * Definitions for the bison parser and for other parsers.
+ * $Id: parser.h,v 1.30 2004-06-29 13:28:51 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -77,7 +77,9 @@ void close_yyparse_infile();
 
 /*
  * Opens a file by creating a datafile struct. The struct can be used 
- * for reading or writing after opening. Parameters:
+ * for reading or writing after opening.
+ * The function sets the file-position indicator to the beginning of the file.
+ * Parameters:
  * - filename : the name of the file to be opened
  * - separator : the separator character between fields
  * - write : 0 if the file is opened for reading only, 

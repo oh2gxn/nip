@@ -1,6 +1,7 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.48 2004-06-29 12:59:12 mvkorpel Exp $
+ * Also contains other functions for handling different files.
+ * $Id: parser.c,v 1.49 2004-06-29 13:28:50 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -323,6 +324,7 @@ datafile *open_datafile(char *filename, char separator,
 
   }
 
+  rewind(f->file);
   return f;
 }
 
@@ -623,7 +625,10 @@ int add_string(char* string){
 }
 
 
-/* correctness? */
+/*
+ * Adds a string to the beginning of the list s.
+ * Pointer s is altered so that it points to the new beginning of the list.
+ */
 static int add_to_stringlink(stringlink *s, char* string){
   stringlink new = (stringlink) malloc(sizeof(stringelement));
 
@@ -663,6 +668,10 @@ static int add_to_stringlink(stringlink *s, char* string){
   return NO_ERROR;
 }
 
+
+/*
+ * Checks if the given string is in the list s (search forward).
+ */
 static int search_stringlinks(stringlink s, char* string){
 
 #ifdef DEBUG_DATAFILE
