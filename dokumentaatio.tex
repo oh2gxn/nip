@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.5 2004-08-23 08:56:57 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.6 2004-08-23 14:03:24 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -274,7 +274,7 @@ The Hugin net file parser is made with Bison and consequently the
 makes it awkward to pass the results of parsing to the rest of the
 program. Our solution is to create a list of parsed variables in
 \verb+Variable.c+ but it could also be at \verb+parser.c+ in order to
-avoid having weird functions like \+get_parser_variable+.
+avoid having weird functions like \verb+get_parser_variable+.
 
 
 \newpage
@@ -293,7 +293,7 @@ The idea and mathematical formulas...
 
 \subsection{Other possibilities}
 
-How the stuff could also work...
+How the stuff could work also...
 
 
 \newpage
@@ -309,50 +309,96 @@ The idea and mathematical formulas...
 The data type {\it potential} defined in \verb+potential.h+ is a
 pointer to a struct which contains the following fields:
 \begin{description}
-\item[size_of_data]
+\item[size\_of\_data] is an {\it integer} telling the total number of 
+elements in the potential. It must be the product of all the elements 
+in the \textbf{cardinality} array (or one if the number of variables 
+equals zero).
 
-\item[cardinality]
+\item[cardinality] is an array of {\it integers}. The integers are the
+cardinalities of each variable the potential is related to. Thus the
+size of the array must be the same as the number of variables. Also
+the order of the cardinality array is significant because the
+variables are assumed to have a certain order.
 
-\item[num_of_vars]
+\item[num\_of\_vars] is an {\it integer} which tells the number of variables
+associated with the potential.
 
-\item[data]
+\item[data] is the {\it double} array describing a probability
+distribution of the associated variables. The size of this array is in
+the \textbf{size\_of\_data} field. The data in the array is arranged
+according to the order of the corresponding variables: the variable
+which has its cardinality first in the \textbf{cardinality} array is
+considered least significant in the sense of placing a value in the
+\textbf{data} array. 
 
 \end{description}
 
 
 \subsubsection{The functions}
-
+The functions provided for manipulating {\it potentials} are placed in
+potential.c and are as follows:
 \begin{description}
-\item[make_potential(cardinality, num_of_vars, data)]
+\item[make\_potential(cardinality, num\_of\_vars, data)] creates a
+potential struct according to the parameters and returns a pointer
+to it. The resulting potential will have its cardinalities of
+variables set according to the given \textbf{cardinality} array by
+copying the elements in it. The number of associated variables is
+given as the integer \textbf{num\_of\_vars}. 
 
-\item[free_potential(p)]
+The \textbf{data} parameter can be a null pointer or a {\it double} 
+array of the size equal to the product of the cardinalities of the 
+variables. In case of a null pointer, the potential will be
+initialised to uniform distribution. Otherwise the contents of 
+the \textbf{data} array in the potential struct will be copied from
+the given \textbf{data} array.
 
-\item[copy_potential(source, destination)]
+\item[free\_potential(p)] frees the memory allocated for the
+potential~\textbf{p}. 
 
-\item[get_pvalue(p, indices)]
+\item[copy\_potential(source, destination)] copies the distribution
+contained in the \textbf{source} potential to the given
+\textbf{destination} potential. Note that both of the potentials must
+be already existent and otherwise equal. Use the 
+\textbf{make\_potential} function if you need an entire new copy of 
+a potential.
 
-\item[set_pvalue(p, indices, value)]
+\item[get\_pvalue(p, indices)] retrieves the possibly non-normalised
+probability of the configuration of variables, described by the integer 
+array \textbf{indices}, from the potential~\textbf{p}. The
+\textbf{indices} array tells which value each of the associated
+variables are assigned: $n-1$ in the array corresponds to the $n$:th 
+value of the variable. The \textbf{indices} must be in the same order
+as the corresponding variables and their cardinalities in the
+potential~\textbf{p}. 
 
-\item[inverse_mapping(p, flat_index, indices)]
+\item[set\_pvalue(p, indices, value)] sets a {\it double}
+\textbf{value} in the potential~\textbf{p} the same way as 
+\verb+get_pvalue(p, indices)+ retrieves it. (See the description above.)
 
-\item[general_marginalise(source, destination, source_vars)]
+\item[inverse\_mapping(p, flat\_index, indices)] transforms a
+so-called flat index into the integer array \textbf{indices} according 
+to the potential~\textbf{p}. A flat index is an index used for addressing
+data in the potential and is therefore an integer between \verb+0+ and 
+\verb+p->size_of_data - 1+ inclusive.
 
-\item[total_marginalise(source, destination, variable)]
+\item[general\_marginalise(source, destination, source\_vars)] 
 
-\item[update_potential(numerator, denominator, target, extra_vars)]
+\item[total\_marginalise(source, destination, variable)] 
 
-\item[update_evidence(numerator, denominator, target, var)]
+\item[update\_potential(numerator, denominator, target, extra\_vars)] 
 
-\item[init_potential(probs, target, extra_vars)]
+\item[update\_evidence(numerator, denominator, target, var)] 
 
-\item[print_potential(p)]
+\item[init\_potential(probs, target, extra\_vars)] 
+
+\item[print\_potential(p)] 
 
 \end{description}
 
 
 \subsection{Other possibilities}
 
-How the stuff could also work...
+How the stuff could work also...
 
 
 \newpage
@@ -364,13 +410,19 @@ The idea and mathematical formulas...
 \subsection{The functionality description}
 %The interface + how the stuff works...
 \subsubsection{The data structures}
+%Sepsets
+
+%Lists of sepsets
+
+%Cliques
+
 
 \subsubsection{The functions}
 
 
 \subsection{Other possibilities}
 
-How the stuff could also work...
+How the stuff could work also...
 
 
 \newpage
@@ -385,7 +437,7 @@ The interface + how the stuff works...
 
 \subsection{Other possibilities}
 
-How the stuff could also work...
+How the stuff could work also...
 
 
 \newpage
@@ -400,7 +452,7 @@ The interface + how the stuff works...
 
 \subsection{Other possibilities}
 
-How the stuff could also work...
+How the stuff could work also...
 
 
 
