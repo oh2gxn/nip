@@ -487,7 +487,6 @@ int main(int argc, char *argv[]){
     free(temp_vars);
   }
 
-
   free_model(model);
 
   for(t = 0; t < timeseries->datarows; t++)
