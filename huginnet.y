@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.19 2004-06-02 12:18:48 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.20 2004-06-02 14:04:43 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -156,8 +156,8 @@ strings:       /* end of list */ { $$ = make_string_array() }
 
 /* This should ignore all brackets between numbers! */
 numbers:       /* end of list */ { $$ = make_double_array() }
-             | NUMBER numbers { add_number($1) }
-             | '(' NUMBER numbers ')' { add_number($2) } //nested lists?
+             | NUMBER numbers { add_double($1) }
+             | '(' NUMBER numbers ')' { add_double($2) } //nested lists?
 ;
 
 
