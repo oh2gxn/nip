@@ -232,11 +232,19 @@ int main(int argc, char *argv[]){
     /* Do the inference */
     /********************/
     
-    /* 1. Collect evidence */
-    collect_evidence();
+    /* 1. Unmark all Cliques */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
     
-    /* 2. Distribute evidence */
-    distribute_evidence();
+    /* 2. Collect evidence */
+    collect_evidence(NULL, NULL, nip_cliques[0]);
+    
+    /* 3. Unmark all Cliques */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+    
+    /* 4. Distribute evidence */
+    distribute_evidence(nip_cliques[0]);
     
     
     /* an experimental forward phase (a.k.a. filtering)... */
@@ -376,6 +384,16 @@ int main(int argc, char *argv[]){
     }
 
 
+    /* an inference */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+    collect_evidence(NULL, NULL, nip_cliques[0]);
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+    distribute_evidence(nip_cliques[0]);
+    
+  
+
     if(t < timeseries->datarows - 1){
       /*******************************************/
       /* FIX ME: there's a bug here somewhere!!! */
@@ -400,11 +418,19 @@ int main(int argc, char *argv[]){
     /* Do the inference */
     /********************/
     
-    /* 1. Collect evidence */
-    collect_evidence();
+    /* 1. Unmark all Cliques */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
     
-    /* 2. Distribute evidence */
-    distribute_evidence();
+    /* 2. Collect evidence */
+    collect_evidence(NULL, NULL, nip_cliques[0]);
+    
+    /* 3. Unmark all Cliques */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+    
+    /* 4. Distribute evidence */
+    distribute_evidence(nip_cliques[0]);
     
     
     /*********************************/

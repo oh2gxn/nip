@@ -111,9 +111,6 @@ int main(){
   initialise(clique_pile[1], variables[2], parentsC, model[1]);
   initialise(clique_pile[2], variables[4], parentsE, model[2]);
 
-  *get_cliques_pointer() = clique_pile;
-  set_num_of_cliques(3);
-
   /* DEBUG */
   /* printf("BCD before evidence:\n"); */
   /* for(i = 0; i < 24; i++) */ /* note1 */
@@ -130,8 +127,13 @@ int main(){
   /*  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);*/
 
   /* propagation: some action */
-  collect_evidence();
-  distribute_evidence();
+  for(i = 0; i < 3; i++)
+    unmark_Clique(clique_pile[i]);
+  collect_evidence(NULL, NULL, clique_pile[1]);
+
+  for(i = 0; i < 3; i++)
+    unmark_Clique(clique_pile[i]);
+  distribute_evidence(clique_pile[1]);
 
   /* DEBUG */
   /* printf("BCD after propagation:\n"); */
