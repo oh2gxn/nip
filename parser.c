@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.44 2004-06-29 06:57:10 mvkorpel Exp $
+ * $Id: parser.c,v 1.45 2004-06-29 08:00:33 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -141,8 +141,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!f->node_symbols){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	  free(f->name);
-	  free(f);
+	  free_datafile(f);
 	  return NULL;
 	}
 
@@ -150,9 +149,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!statenames){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	  free(f->name);
-	  free(f->node_symbols);
-	  free(f);
+	  free_datafile(f);
 	  return NULL;
 	}
 
@@ -160,9 +157,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!f->num_of_states){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	  free(f->name);
-	  free(f->node_symbols);
-	  free(f);
+	  free_datafile(f);
 	  free(statenames);
 	  return NULL;
 	}
@@ -171,10 +166,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!f->node_states){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	  free(f->name);
-	  free(f->node_symbols);
-	  free(f->num_of_states);
-	  free(f);
+	  free_datafile(f);
 	  free(statenames);
 	  return NULL;
 	}
@@ -187,13 +179,7 @@ datafile *open_datafile(char *filename, char separator,
 			      sizeof(char));
 	    if(!f->node_symbols[i]){
 	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	      free(f->name);
-	      for(j = 0; j < i; j++)
-		free(f->node_symbols[j]);
-	      free(f->node_symbols);
-	      free(f->num_of_states);
-	      free(f->node_states);
-	      free(f);
+	      free_datafile(f);
 	      free(statenames);
 	      return NULL; /* error horror */
 	    }
@@ -217,13 +203,7 @@ datafile *open_datafile(char *filename, char separator,
 	    f->node_symbols[i] = (char *) calloc(length_of_name, sizeof(char));
 	    if(!f->node_symbols[i]){
 	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	      free(f->name);
-	      for(j = 0; j < i; j++)
-		free(f->node_symbols[j]);
-	      free(f->node_symbols);
-	      free(f->num_of_states);
-	      free(f->node_states);
-	      free(f);
+	      free_datafile(f);
 	      free(statenames);
 	      return NULL; /* error horror */
 	    }
@@ -244,13 +224,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	  if(!token){
 	    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	    free(f->name);
-	    for(j = 0; j < f->num_of_nodes; j++)
-	      free(f->node_symbols[j]);
-	    free(f->node_symbols);
-	    free(f->num_of_states);
-	    free(f->node_states);
-	    free(f);
+	    free_datafile(f);
 	    free(statenames);
 	    return NULL;
 	  }
@@ -289,15 +263,7 @@ datafile *open_datafile(char *filename, char separator,
 
       if(!f->node_states[i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	free(f->name);
-	for(j = 0; j < f->num_of_nodes; j++)
-	  free(f->node_symbols[j]);
-	free(f->node_symbols);
-	free(f->num_of_states);
-	for(j = 0; j < i; j++)
-	  free(f->node_states[j]);
-	free(f->node_states);
-	free(f);
+	free_datafile(f);
 	free(statenames);
 	return NULL;
       }
@@ -348,6 +314,27 @@ void close_datafile(datafile *file){
 
   /* This function could probably also release the memory of "file", 
      leaving a pointer to "nowhere". */
+}
+
+
+void free_datafile(datafile *f){
+  
+  int j;
+  if(!f)
+    return;
+  free(f->name);
+  if(f->node_symbols){
+    for(j = 0; j < f->num_of_nodes; j++)
+      free(f->node_symbols[j]);
+    free(f->node_symbols);
+  }
+  free(f->num_of_states);
+  if(f->node_states){
+    for(j = 0; j < f->num_of_nodes; j++)
+      free(f->node_states[j]);
+    free(f->node_states);
+  }
+  free(f);
 }
 
 

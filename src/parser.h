@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser.
- * $Id: parser.h,v 1.28 2004-06-29 06:57:10 mvkorpel Exp $
+ * $Id: parser.h,v 1.29 2004-06-29 08:00:33 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -90,6 +90,10 @@ datafile *open_datafile(char *filename, char separator,
 
 /* Closes a file described by the datafile struct. */
 void close_datafile(datafile *file);
+
+
+/* Frees the memory used by (possibly partially allocated) datafile f. */
+void free_datafile(datafile *f);
 
 
 /* Gets the next token from the input file.
