@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
   int i, j, k, l, retval, t = 0;
   int num_of_hidden = 0;
   int nip_num_of_cliques;
-  double* quotient;
+  double** quotient;
   double*** result; /* probs of the hidden variables */
 
   Clique *nip_cliques;
@@ -134,7 +134,8 @@ int main(int argc, char *argv[]){
 
   /* Allocate some space for filtering */
   result = (double***) calloc(timeseries->datarows + 1, sizeof(double**));
-  if(!result){
+  quotient = (double**) calloc(num_of_hidden, sizeof(double*));
+  if(!(result && quotient)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
@@ -146,16 +147,23 @@ int main(int argc, char *argv[]){
     }
 
     for(i = 0; i < num_of_hidden; i++){
-      result[t][i] = (double*) calloc( number_of_values(hidden[i]), 
-					 sizeof(double));
+      result[t][i] = (double*) calloc(number_of_values(hidden[i]), 
+				      sizeof(double));
       if(!result[t][i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	return 1;
       }
     }
   }
+  for(i = 0; i < num_of_hidden; i++){
+    quotient[i] = (double*) calloc(number_of_values(hidden[i]), 
+				   sizeof(double));
+    if(!quotient[i]){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return 1;
+    }
+  }
 
-  
   /* Fill the data array */
   for(t = 0; t < timeseries->datarows; t++){
     retval = nextline_tokens(timeseries, ',', &tokens); /* 2. Read */
@@ -306,18 +314,10 @@ int main(int argc, char *argv[]){
 	  
 	  /* FIXME: Get rid of the quotient array */
 	  
-	  quotient = (double *) calloc(number_of_values(temp), 
-				       sizeof(double));
-	  if(!data){
-	    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	    return 1;
-	  }
+	  for(j = 0; j < number_of_values(temp); j++)
+	    quotient[i][j] = result[t + 1][i][j] / result[t][k][j]; 
 	  
-	  for(j = 0; j < number_of_values(temp); j++){
-	    quotient[j] = result[t + 1][i][j] / result[t][k][j]; 
-	  }
-	  enter_evidence(temp->previous, quotient);	  
-	  free(quotient);
+	  enter_evidence(temp->previous, quotient[i]);
 	}
       }
     }
