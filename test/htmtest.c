@@ -462,7 +462,7 @@ int main(int argc, char *argv[]){
     free(temp_vars);
   }
 
-  free_model(model);
+  /*free_model(model);*/
   
   return 0;
 }

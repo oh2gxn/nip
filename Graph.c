@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.32 2004-07-02 09:33:08 arasinen Exp $
+ * Graph.c $Id: Graph.c,v 1.33 2004-08-10 12:52:48 jatoivol Exp $
  */
 
 #include <string.h>
@@ -59,6 +59,7 @@ void free_graph(Graph* G) /* XX Onko täysin valmis? */
         
     free(G->adj_matrix);
     free(G->variables);
+    free(G->var_ind); /* JJT: WOOT? I added this here, but is it correct... */
     free(G);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.74 2004-08-09 15:02:23 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.75 2004-08-10 12:52:48 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -97,6 +97,8 @@ Clique make_Clique(Variable vars[], int num_of_vars){
 
 int free_Clique(Clique c){
   link l1, l2;
+  Clique cl1, cl2;
+  Sepset s;
 
   if(c == NULL)
     return ERROR_NULLPOINTER;
@@ -105,13 +107,16 @@ int free_Clique(Clique c){
   l1 = c->sepsets;
   while(l1 != NULL){
     l2 = l1->fwd;
+    cl1 = ((Sepset)l1->data)->cliques[0];
+    cl2 = ((Sepset)l1->data)->cliques[1];
+    s = (Sepset)l1->data;
 
-    /* Removes Sepsets from Cliques. */
-    remove_Sepset(((Sepset)l1->data)->cliques[0], (Sepset)l1->data);
-    remove_Sepset(((Sepset)l1->data)->cliques[1], (Sepset)l1->data);
+    /* Removes Sepsets from the Cliques. */
+    remove_Sepset(cl1, s);
+    remove_Sepset(cl2, s);
 
     /* Destroy the Sepset. */
-    free_Sepset(l1->data);
+    free_Sepset(s);
 
     l1=l2;
   }
@@ -171,10 +176,16 @@ int add_Sepset(Clique c, Sepset s){
 
 
 void remove_Sepset(Clique c, Sepset s){
+  link l;
 
-  link l = c->sepsets;
+  if(!(c && s)){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return;
+  }
+  l = c->sepsets;
   while(l != NULL){
-    if(l->data == s){
+    if(((Sepset)l->data) == s){
+
       if(l->bwd == NULL)
 	c->sepsets = l->fwd;
       else
@@ -314,6 +325,7 @@ potential create_Potential(Variable variables[], int num_of_vars,
     free(indices);
     return NULL;
   }
+
   if((reorder = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(cardinality);

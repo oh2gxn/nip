@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.34 2004-08-09 15:02:23 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.35 2004-08-10 12:52:48 jatoivol Exp $
  */
 
 #include <string.h>
@@ -114,8 +114,12 @@ Variable copy_variable(Variable v){
 
 void free_variable(Variable v){
   /* FIXME: remove the Variable from the list ? */
+  int i;
   if(v == NULL)
     return;
+  for(i = 0; i < v->cardinality; i++)
+    free(v->statenames[i]);
+  free(v->statenames);
   free(v->likelihood);
   free(v);
 }

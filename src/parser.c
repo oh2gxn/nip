@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.60 2004-08-09 15:02:24 jatoivol Exp $
+ * $Id: parser.c,v 1.61 2004-08-10 12:52:48 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -985,11 +985,10 @@ int Graph2JTree(){
   /* Construct the Cliques. */
   set_num_of_cliques(find_cliques(nip_graph, cliques));
 
-#ifdef DEBUG_PARSER
-  printf("In parser.c: %d cliques found.\n", get_num_of_cliques());
-#endif
+  free_graph(nip_graph); /* Get rid of the graph (?) */
+  nip_graph = NULL;
 
-  return 0; /* find_sepsets(*cliques, get_num_of_cliques()); */
+  return 0; 
 }
 
 
@@ -1114,42 +1113,42 @@ void print_parsed_stuff(){
   }
 }
 
-void set_nip_statenames(char **states){
 
+void set_nip_statenames(char **states){
   nip_statenames = states;
 }
 
-char** get_nip_statenames(){
 
+char** get_nip_statenames(){
   return nip_statenames;
 }
 
-void set_nip_label(char *label){
 
+void set_nip_label(char *label){
   nip_label = label;
 }
 
-char* get_nip_label(){
 
+char* get_nip_label(){
   return nip_label;
 }
 
-void set_nip_next(char *next){
 
+void set_nip_next(char *next){
   nip_next = next;
 }
 
-char* get_nip_next(){
 
+char* get_nip_next(){
   return nip_next;
 }
 
-int get_nip_symbols_parsed(){
 
+int get_nip_symbols_parsed(){
   return nip_symbols_parsed;
 }
 
-int get_nip_strings_parsed(){
 
+int get_nip_strings_parsed(){
   return nip_strings_parsed;
 }

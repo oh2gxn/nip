@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.3 2004-08-10 08:49:34 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.4 2004-08-10 12:52:48 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -62,8 +62,9 @@ void free_model(Nip model){
   Variable v = next_Variable(&it);
 
   /* 1. Free Cliques and adjacent Sepsets */
-  for(i = 0; i < model->num_of_cliques; i++)
+  for(i = 0; i < model->num_of_cliques; i++){
     free_Clique(model->cliques[i]);
+  }
   free(model->cliques);
 
   /* 2. Free Variables */
