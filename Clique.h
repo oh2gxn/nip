@@ -109,7 +109,11 @@ int distribute_evidence(Clique c);
 int collect_evidence(Clique c1, Sepset s12, Clique c2);
 
 
-/* Method for passing messages between cliques. Returns an error code. */
+/*
+ * Method for passing messages between cliques.
+ * The message goes from Clique c1 through Sepset s to Clique c2.
+ * Returns an error code.
+ */
 int message_pass(Clique c1, Sepset s, Clique c2);
 
 

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.56 2004-06-16 14:26:39 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.57 2004-06-17 06:26:09 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -468,17 +468,14 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   s->old = s->new;
   s->new = temp;
 
-  /*
-   * CHECK THIS!!! Jos "+ 1" poistetaan, tuloksena on kakkaa.
-   */
-  source_vars = (int *) calloc(c1->p->num_of_vars - s->new->num_of_vars + 1,
+  source_vars = (int *) calloc(c1->p->num_of_vars - s->new->num_of_vars,
 			       sizeof(int));
   if(!source_vars){
     fprintf(stderr, "In Clique.c: Calloc failed.\n");
     return ERROR_OUTOFMEMORY;
   }
 
-  extra_vars = (int *) calloc(c2->p->num_of_vars - s->new->num_of_vars + 1,
+  extra_vars = (int *) calloc(c2->p->num_of_vars - s->new->num_of_vars,
 			      sizeof(int));
   if(!extra_vars){
     fprintf(stderr, "In Clique.c: Calloc failed.\n");
@@ -486,8 +483,10 @@ int message_pass(Clique c1, Sepset s, Clique c2){
     return ERROR_OUTOFMEMORY;
   }
 
-  /* marginalise (projection)
-     first: select the variables */
+  /*
+   * Marginalise (projection).
+   * First: select the variables. This relies on the order of variables.
+   */
   for(i=0; i < c1->p->num_of_vars; i++){
     if(j < s->new->num_of_vars &&
        equal_variables((c1->variables)[i], (s->variables)[j]))
@@ -496,13 +495,17 @@ int message_pass(Clique c1, Sepset s, Clique c2){
       source_vars[k] = i;
       k++;
     }
-  } /* then: do da job */
+  }
+
+  /* Information flows from Clique c1 to Sepset s. */
   general_marginalise(c1->p, s->new, source_vars);
 
   j = 0; k = 0;
 
-  /* update (absorption) 
-     first: select the variables */
+  /*
+   * Update (absorption).
+   * First: select the variables. This relies on the order of variables.
+   */
   for(i=0; i < c2->p->num_of_vars; i++){
     if(j < s->new->num_of_vars &&
        equal_variables((c2->variables)[i], (s->variables)[j]))
@@ -511,7 +514,9 @@ int message_pass(Clique c1, Sepset s, Clique c2){
       extra_vars[k] = i;
       k++;
     }
-  } /* rest the case */
+  }
+
+  /* Information flows from Sepset s to Clique c2. */
   update_potential(s->new, s->old, c2->p, extra_vars);
 
   free(source_vars);
