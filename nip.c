@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.32 2005-01-27 23:53:10 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.33 2005-02-10 10:03:56 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -27,6 +27,8 @@
  * - EM algorithm for estimating parameters of the model
  *   - invent a concise and efficient way of computing each of the parameters
  *   - find a neat way to replace the original parameters of the model
+ *     - reset model (needed?)
+ *     - initialise with saved potentials? (see parser.c line 1115)
  *   - determine the parameters of the algorithm ???
  *****/
 
