@@ -1,5 +1,5 @@
 /*
- * Graph.h $Id: Graph.h,v 1.19 2004-06-21 06:48:15 mvkorpel Exp $
+ * Graph.h $Id: Graph.h,v 1.20 2004-08-12 10:49:00 jatoivol Exp $
  */
 
 #ifndef __GRAPH_H__
@@ -86,13 +86,12 @@ Graph* moralise(Graph* G);
  * Does not modify G.
  */
 
-int find_cliques(Graph* Gu, Clique** cliques_p);
+int find_cliques(Graph* G, Clique** cliques_p);
 /* Triangulates G and finds the cliques.
- * Parameter Gm: moralised undirected graph
+ * Parameter G: moralised undirected graph
  * Parameter cliques_p: pointer to a clique array
- * MVK UPDATE: I think there should be only one asterisk in cliques_p, changed
  * Returns the number of cliques.
- * Modifies Gm.
+ * Modifies G.
  */
 
 /* Internal helper */

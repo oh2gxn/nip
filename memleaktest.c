@@ -29,7 +29,9 @@ int main(int argc, char *argv[]){
   char ***states;
   potential p;
   Clique cl[2];
+  Clique *cl2 = NULL;
   Sepset s;
+  Graph *g;
 
   /* This works OK, no memory leaks. */
   printf("Allocating and freeing potentials:\n");
@@ -116,8 +118,27 @@ int main(int argc, char *argv[]){
     free_Clique(cl[1]);
   }
 
+
+  /* TODO: Test the free_graph function */
+  printf("\nAllocating and freeing Graphs:\n");
+  for(i = 0; i < n; i++){
+    g = new_graph(3);
+    add_variable(g, vars[0]);
+    add_variable(g, vars[1]);
+    add_variable(g, vars[2]);
+    add_child(g, vars[1], vars[0]);
+    add_child(g, vars[1], vars[2]);
+    assert(find_cliques(g, &cl2) == 2);
+    printf("\rIteration %d of %d                               ", i + 1, n);
+    free_graph(g);
+    free_Clique(cl2[0]);
+    free_Clique(cl2[1]);
+  }
+
+
   /* Free some memory */
   for(i = 0; i < 3; i++){
+    free_variable(vars[i]);
     free(states[i][0]);
     free(states[i][1]);
     free(symbols[i]);
@@ -130,9 +151,6 @@ int main(int argc, char *argv[]){
   free(states);
   free(symbols);
   free(names);
-
-  /* TODO: Test the free_graph function */
-
 
 #endif
 
