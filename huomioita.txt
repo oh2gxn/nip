@@ -1,0 +1,15 @@
+Sekalaisia huomioita:
+
+* voisi olla järkevää yhdistää myös moralisaatio find_cliquesiin
+* pitäisikö tässä heappikin tehdä. lienee järkevintä.
+* konstikasta tulee olemaan ja kellokin 8.00
+* Variable.c:n new_variable näyttää työläältä
+  * toistaa strncpy:n toiminnan (onko tarpeellista rajoittaa nimiä?)
+  * id tuntuu konseptina hankalalta, equal-vertailu kosahtaa NULLiin
+    ja pointteri tekee saman (ellei sitten haluta muuttujille järjestystä...
+    sen saisi Graphista. selvitä.)
+  * Variable v ei-pointteri -tyyppinen, mutta käytetään nuolella?
+* Myös Graph nähtävästi ei-pointteri. Mieti korjaus kun ei väsytä.
+* potential copy_potential näyttää NULL-robustilta
+* Clique.c:ssä heilutellaan ei-pointteri Sepsetiä paluuarvona. Eihän oo 
+  iso rakenne?
