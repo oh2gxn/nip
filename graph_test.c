@@ -206,12 +206,12 @@ void test7(Graph* G)
 	n_cliques = find_cliques(G, &cliques);
 	for (i = 0; i < n_cliques; i++)
 	{
-		printf("\t\tClique %i\n", i);
+		printf("\t\tClique %i: ", i);
 		ci = cliques[i];
 		n_vars = ci->p->num_of_vars;
 		for (j = 0; j < n_vars; j++)
-			printf("\t\t\tVariable %s: %s\n", ci->variables[j]->symbol, 
-											  ci->variables[j]->name);
+			printf("%s ", ci->variables[j]->symbol);
+		printf("\n");
 	
 	}
 
