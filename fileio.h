@@ -1,5 +1,5 @@
 /*
- * fileio.h $Id: fileio.h,v 1.5 2004-03-22 14:16:07 mvkorpel Exp $
+ * fileio.h $Id: fileio.h,v 1.6 2004-04-01 12:39:31 mvkorpel Exp $
  */
 
 #ifndef __FILEIO_H__
@@ -17,6 +17,8 @@ int count_words(const char *s, int *chars);
  * The string must be null terminated.
  * Tokens are like (white space separated) words, but every
  * '(', ')', '=', '{'. '}', and ';' is a separate token.
+ * Additionally, quoted strings are each counted as one token.
+ * POSSIBLE PROBLEMS with un-paired quotes?
  * If chars is not a null pointer, the number of characters in the string
  * is placed there.
  */

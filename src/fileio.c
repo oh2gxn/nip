@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.6 2004-03-22 14:16:07 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.7 2004-04-01 12:39:31 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -39,11 +39,23 @@ int count_tokens(const char *s, int *chars){
   int tokens = 0, state = 0;
   if(chars)
     *chars = 0;
+
+  /* States:
+   *  0: waiting for start of token
+   *  1: processing token (not quoted string)
+   *  2: processing quoted string
+   */
   while (*s != '\0'){
-    if((*s == '(') || (*s == ')') || (*s == '{') ||
-       (*s == '=') || (*s == ';')){
+
+    if(state != 2 &&
+       ((*s == '(') || (*s == ')') || (*s == '{') ||
+	(*s == '=') || (*s == ';'))){
       tokens++;
       state = 0;
+    }
+    else if(state != 2 && (*s == '"')){
+      state = 2;
+      tokens++;
     }
     else if(state == 0){
       if((*s != ' ') && (*s != '\t') && (*s != '\n')){
@@ -51,8 +63,12 @@ int count_tokens(const char *s, int *chars){
 	state = 1;
       }
     }
-    else if((*s == ' ') || (*s == '\t') || (*s == '\n'))
+    else if(state == 1 &&
+	    ((*s == ' ') || (*s == '\t') || (*s == '\n')))
       state = 0;
+    else if(state == 2 && (*s == '"'))
+      state = 0;
+
     s++;
     if(chars)
       (*chars)++;
@@ -85,13 +101,41 @@ int *tokenise(const char s[], int n, int mode){
     return NULL;
   }
 
+  /*
+    if(state != 2 &&
+       ((*s == '(') || (*s == ')') || (*s == '{') ||
+	(*s == '=') || (*s == ';'))){
+      tokens++;
+      state = 0;
+    }
+    else if(state != 2 && (*s == '"')){
+      state = 2;
+      tokens++;
+    }
+    else if(state == 0){
+      if((*s != ' ') && (*s != '\t') && (*s != '\n')){
+	tokens++;	  
+	state = 1;
+      }
+    }
+    else if(state == 1 &&
+	    ((*s == ' ') || (*s == '\t') || (*s == '\n')))
+      state = 0;
+    else if(state == 2 && (*s == '"'))
+      state = 0;
+  */
+
   while (s[i] != '\0'){
-    if(mode == 1 &&
+    if(mode == 1 && state != 2 &&
        ((*s == '(') || (*s == ')') || (*s == '{') ||
 	(*s == '=') || (*s == ';'))){
       state = 0;
       indices[j++] = i;
       indices[j++] = i + 1;
+    }
+    else if(mode == 1 && state != 2 && (*s == '"')){
+      state = 2;
+      indices[j++] = i;
     }
     else if(state == 0){
       if((s[i] != ' ') && (s[i] != '\t') && (s[i] != '\n')){
@@ -99,13 +143,19 @@ int *tokenise(const char s[], int n, int mode){
 	state = 1;
       }
     }
-    else if((s[i] == ' ') || (s[i] == '\t') || (s[i] == '\n')){
+    else if(state == 1 &&
+	    (s[i] == ' ') || (s[i] == '\t') || (s[i] == '\n')){
       indices[j++] = i;
-      /* We have found enough words */
-      if(j == arraysize)
-	break;
       state = 0;
     }
+    else if(mode == 1 && state == 2 && (*s == '"')){
+      indices[j++] = i + 1;
+      state = 0;
+    }
+
+    /* Have we found enough words? If so, break out. */
+    if(j == arraysize)
+      break;
     i++;
   }
 

@@ -1,9 +1,10 @@
-/* huginnet.y $Id: huginnet.y,v 1.7 2004-03-23 13:25:23 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.8 2004-04-01 12:39:31 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
 %{
 #include <stdio.h>
+#include <stdlib.h>
 #include "Graph.h"
 #include "Variable.h"
 #include "parser.h"
@@ -21,10 +22,9 @@
 %token potential "potential"
 %token states "states"
 %token label "label"
-%token <name> NODEID
-%token <name> STRING
+%token <name> QUOTED_STRING
+%token <name> UNQUOTED_STRING
 %token <numval> NUMBER
-%token UNKNOWN
 
 /* Grammar follows */
 /* NOT READY!!! Procedures and arrays in C do not mix well with the more 
@@ -38,7 +38,7 @@ declaration:   nodedecl {/* put the node somewhere */}
              | potdecl {/* put the potential somewhere */}
 ;
 
-nodedecl:      node NODEID '{' parameters  '}' {/* new_variable() */}
+nodedecl:      node UNQUOTED_STRING '{' parameters  '}' {/* new_variable() */}
 ;
 
 /* probably not the easiest way... think again: LALR(1) */
@@ -48,21 +48,21 @@ parameters:    /* end of definitions */
 	     | unknown_decl parameters
 ;
 
-labeldecl:     label '=' STRING ';'
+labeldecl:     label '=' QUOTED_STRING ';'
 ;
 
 /* JJT: I think this is not the best way either... cardinality??? */
-statesdecl:    states '=' '(' STRING strings ')' ';'
+statesdecl:    states '=' '(' QUOTED_STRING strings ')' ';'
 ;
 
 strings:       /* end of list */
-             | STRING strings
+             | QUOTED_STRING strings
 ;
 
-unknown_decl:  UNKNOWN '=' value ';' /* ignore */
+unknown_decl:  UNQUOTED_STRING '=' value ';' /* ignore */
 ;
 
-value:         STRING /* Should there be $$ = $1 or something*/
+value:         QUOTED_STRING /* Should there be $$ = $1 or something*/
              | list
              | NUMBER
 ;
@@ -72,7 +72,7 @@ list:          '(' strlistitems ')'
 ;
 
 strlistitems:  /* empty */
-             | STRING strlistitems
+             | QUOTED_STRING strlistitems
 ;
 
 numlistitems:  /* sumthin */
@@ -102,6 +102,8 @@ yylex (void)
 {
   int tokenlength;
   char *token = next_token(&tokenlength);
+  char *nullterminated;
+  double numval;
 
   /* EOF or error */
   if(tokenlength <= 0)
@@ -144,34 +146,51 @@ yylex (void)
     /* End of literal string tokens */
 
     /* Regular tokens (not literal string) */
-    /* STRING (enclosed in double quotes) */
+    /* QUOTED_STRING (enclosed in double quotes) */
     if(token[0] == '"' &&
        token[tokenlength - 1] == '"'){
-      char *stringval = (char *) calloc(tokenlength - 1, sizeof(char));
-      if(!stringval){
+      nullterminated = (char *) calloc(tokenlength - 1, sizeof(char));
+      if(!nullterminated){
 	report_error(ERROR_OUTOFMEMORY, 0);
 	free(token);
 	return 0; /* In the case of an (unlikely) error, stop the parser */
       }
       /* For the semantic value of the string, strip off double quotes
        * and insert terminating null character. */
-      strncpy(stringval, &(token[1]), tokenlength - 2);
-      stringval[tokenlength - 2] = '\0';
-      yylval.name = stringval;
+      strncpy(nullterminated, &(token[1]), tokenlength - 2);
+      nullterminated[tokenlength - 2] = '\0';
+      yylval.name = nullterminated;
 
       free(token);
-      return STRING;
+      return QUOTED_STRING;
     }
 
-    /* NUMBER */    
+    nullterminated = (char *) calloc(tokenlength + 1, sizeof(char));
+    if(!nullterminated){
+      report_error(ERROR_OUTOFMEMORY, 0);
+      free(token);
+      return 0; /* In the case of an (unlikely) error, stop the parser */
+    }
+    strncpy(nullterminated, token, tokenlength);
+    nullterminated[tokenlength] = '\0';
 
-    /* NODEID */
+    /* NUMBER ? */
+    errno = 0;
+    numval = strtod(nullterminated, 0);
+    /* No error, so the token is a valid double. */
+    if(errno == 0){
+      yylval.numval = numval;
+      free(token);
+      free(nullterminated);
+      return NUMBER;
+    }
+      
+    /* Everything else is UNQUOTED_STRING */
+    yylval.name = nullterminated;
 
-    /* UNKNOWN */
-    else
-      return UNKNOWN;
+    free(token);
+    return UNQUOTED_STRING;
 
-    /* End of regular tokens */
   }
 
 }
