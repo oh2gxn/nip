@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.15 2004-08-31 08:41:36 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.16 2004-08-31 12:51:47 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -9,6 +9,9 @@
 #include "errorhandler.h"
 #include <stdlib.h>
 #include <string.h>
+
+#define DEBUG_NIP
+
 
 extern int yyparse();
 
@@ -259,6 +262,10 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 
   Variable *vars_sorted;
 
+#ifdef DEBUG_NIP
+  printf("In get_joint_probability()\n");
+#endif
+
   /* Find the Clique that contains the family of the interesting Variables */
   clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				   vars, num_of_vars);
@@ -273,6 +280,18 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return NULL;
   }
+
+#ifdef DEBUG_NIP
+  printf("Variables in given order:\n");
+  for(i = 0; i < num_of_vars; i++)
+    printf("Symbol: %s\tId: %ld\n", vars[i]->symbol, vars[i]->id);
+
+  printf("\n");
+
+  printf("Variables in sorted order:\n");
+  for(i = 0; i < num_of_vars; i++)
+    printf("Symbol: %s\tId: %ld\n", vars_sorted[i]->symbol, vars_sorted[i]->id);
+#endif
 
   cardinality = (int *) calloc(num_of_vars, sizeof(int));
   if(!cardinality){
