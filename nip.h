@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.16 2004-11-10 15:54:40 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.17 2005-02-10 15:32:38 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -143,12 +143,14 @@ void make_consistent(Nip model);
 
 /* Computes the most likely state sequence of the variables, given the 
  * time series. In other words, this function implements the idea also 
- * known as the Viterbi algorithm. */
+ * known as the Viterbi algorithm. 
+ * NOTE: this is not implemented yet! */
 TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts);
 
 
 /* Teaches the given model according to the given time series with 
- * EM-algorithm. Returns an error code as an integer. */
+ * EM-algorithm. Returns an error code as an integer. 
+ * NOTE: this is not implemented yet! */
 int em_learn(Nip model, TimeSeries observations);
 
 

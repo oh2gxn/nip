@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.39 2005-01-19 16:00:52 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.40 2005-02-10 15:32:37 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -17,6 +17,7 @@
 \usepackage{tocbibind}
 \usepackage{fancyvrb}
 \usepackage{times}
+\usepackage{hyperref}
 %\newcommand{\argmax}{\mathrm{argmax}}
 %\newcommand{\argmin}{\mathrm{argmin}}
 %\newcommand{\define}{\stackrel{\mathrm{def}}{=}}
@@ -932,7 +933,7 @@ associated variables are given as the \cdatatype{Variable array}
 remember to free it (but not the contents). The clique will not have 
 any adjacent sepsets initially. Sepsets must be added separately.
 
-\item[free\_Clique(c)] frees the memory allocated by a the 
+\item[free\_Clique(c)] frees the memory allocated by the 
 \cdatatype{Clique}~\cparameter{c}. It will not free the memory allocated for 
 the corresponding \cdatatype{Variables}, but all the adjacent 
 \cdatatype{Sepsets} are freed and removed automatically so that rest

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.33 2005-02-10 10:03:56 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.34 2005-02-10 15:32:38 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -16,20 +16,38 @@
 */
 
 /***** 
- * TODO: 
+ * DONE:
  * + some sort of a function for the forward-backward algorithm
  *   + a data type that can be returned by the algorithm (how to index?)
  *   + some abstraction for a time series (structure and access to data..?)
- *
+ *   + NOTE: this turned out to need linear space requirement w.r.t. time 
+ *           (assuming sepsets between timeslices have a constant size)
+
+ * TODO: 
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *   - another forward-like algorithm with elements of dynamic programming
- *
+
+ 
  * - EM algorithm for estimating parameters of the model
- *   - invent a concise and efficient way of computing each of the parameters
- *   - find a neat way to replace the original parameters of the model
- *     - reset model (needed?)
+ *   - Invent a concise and efficient way of computing each of the parameters.
+ *     - in which order? ("Time-First" or "Family-First")
+ *     - one kind of solution:
+ *       1: run forward-backward-inference -> UncertainSeries == P(x | t)
+ *       2: sum up the "soft" frequencies of the events -> #(pa(x) -> x)
+ *       3: normalise the results and create suitable potentials out of them
+ *          -> P(x | pa(x))
+ *
+ *   - Find a neat way to replace the original parameters of the model.
+ *     - gather a potential for each family of variables
+ *       - "HOUSTON, WE HAVE A PROBLEM!"... 
+ *         Do we know which are the parents and which are the children?
+ *         - An obvious solution is to save an array of pointers to the 
+ *           family members (or just parents) to the child Variable
+ *           
  *     - initialise with saved potentials? (see parser.c line 1115)
- *   - determine the parameters of the algorithm ???
+ *
+ *   - Determine the parameters of the algorithm
+ *     - when to stop?
  *****/
 
 extern int yyparse();
