@@ -282,8 +282,8 @@ int main(int argc, char *argv[]){
   for(i = 0; i < num_of_hidden; i++){
     /* old posteriors become new priors */
     temp = hidden[i];
-    if(temp->next)
-      update_likelihood(temp, filtered[timeseries->datarows - 1][i]);
+    /*    if(temp->next)
+	  update_likelihood(temp, filtered[timeseries->datarows - 1][i]);*/
   }
   
   global_retraction(nip_cliques[0]);
@@ -294,9 +294,9 @@ int main(int argc, char *argv[]){
     printf("-- t = %d --\n", t);
     
     /* 0. Put some data in */
-    for(i = 0; i < timeseries->num_of_nodes; i++)
+    /*    for(i = 0; i < timeseries->num_of_nodes; i++)
       enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			  data[t][i]);
+      data[t][i]);*/
     
     for(i = 0; i < num_of_hidden; i++)
       if(hidden[i]->next == NULL)
