@@ -6,6 +6,8 @@
 #include "potential.h"
 #include "errorhandler.h"
 
+#define PRINT_CLIQUES
+
 extern int yyparse();
 
 
@@ -28,10 +30,6 @@ int main(int argc, char *argv[]){
   Variable_iterator it;
 
   datafile* timeseries;
-
-#ifdef PRINT_CLIQUES
-  link sepsetlist;
-#endif
 
   /*************************************/
   /* Some experimental timeslice stuff */
@@ -63,17 +61,7 @@ int main(int argc, char *argv[]){
 
 
 #ifdef PRINT_CLIQUES
-  printf("Found Cliques:\n");
-  for(i = 0; i < nip_num_of_cliques; i++){
-    clique_of_interest = nip_cliques[i];
-    print_Clique(clique_of_interest);
-    sepsetlist = clique_of_interest->sepsets;
-    while(sepsetlist){
-      print_Sepset((Sepset)sepsetlist->data);
-      sepsetlist = sepsetlist->fwd;
-    }
-    printf("\n");
-  }
+  print_Cliques();
 #endif
 
   /*****************************/

@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.39 2004-07-01 14:06:06 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.40 2004-07-07 05:08:52 mvkorpel Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -194,6 +194,12 @@ int find_sepsets(Clique *cliques, int num_of_cliques);
  * Prints the variables of the given Clique.
  */
 void print_Clique(Clique c);
+
+
+/*
+ * Prints all the Cliques in the join tree.
+ */
+void print_Cliques();
 
 
 /*

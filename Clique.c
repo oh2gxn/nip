@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.70 2004-07-02 14:37:53 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.71 2004-07-07 05:08:52 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -955,6 +955,29 @@ void print_Clique(Clique c){
 
 }
 
+void print_Cliques(){
+
+  int i;
+  Clique clique_of_interest;
+  link sepsetlist;
+
+  /* Get references to the results of parsing */
+  Clique *nip_cliques = *get_cliques_pointer();
+  int nip_num_of_cliques = get_num_of_cliques();
+
+  printf("Found Cliques:\n");
+  for(i = 0; i < nip_num_of_cliques; i++){
+    clique_of_interest = nip_cliques[i];
+    print_Clique(clique_of_interest);
+    sepsetlist = clique_of_interest->sepsets;
+    while(sepsetlist){
+      print_Sepset((Sepset)sepsetlist->data);
+      sepsetlist = sepsetlist->fwd;
+    }
+    printf("\n");
+  }
+
+}
 
 void print_Sepset(Sepset s){
 
