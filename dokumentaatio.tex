@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.6 2004-08-23 14:03:24 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.7 2004-08-25 11:50:16 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -270,8 +270,8 @@ and will always have.
 
 \subsection{Other possibilities}
 The Hugin net file parser is made with Bison and consequently the 
-\verb+yyparse+ function may not return a list of variables etc. This 
-makes it awkward to pass the results of parsing to the rest of the
+\verb+yyparse+ function is not able to return a list of variables etc. 
+This makes it awkward to pass the results of parsing to the rest of the
 program. Our solution is to create a list of parsed variables in
 \verb+Variable.c+ but it could also be at \verb+parser.c+ in order to
 avoid having weird functions like \verb+get_parser_variable+.
@@ -323,7 +323,7 @@ variables are assumed to have a certain order.
 \item[num\_of\_vars] is an {\it integer} which tells the number of variables
 associated with the potential.
 
-\item[data] is the {\it double} array describing a probability
+\item[data] is the {\it double array} describing a probability
 distribution of the associated variables. The size of this array is in
 the \textbf{size\_of\_data} field. The data in the array is arranged
 according to the order of the corresponding variables: the variable
@@ -345,8 +345,8 @@ variables set according to the given \textbf{cardinality} array by
 copying the elements in it. The number of associated variables is
 given as the integer \textbf{num\_of\_vars}. 
 
-The \textbf{data} parameter can be a null pointer or a {\it double} 
-array of the size equal to the product of the cardinalities of the 
+The \textbf{data} parameter can be a null pointer or a {\it double 
+array} of the size equal to the product of the cardinalities of the 
 variables. In case of a null pointer, the potential will be
 initialised to uniform distribution. Otherwise the contents of 
 the \textbf{data} array in the potential struct will be copied from
@@ -376,22 +376,63 @@ potential~\textbf{p}.
 \verb+get_pvalue(p, indices)+ retrieves it. (See the description above.)
 
 \item[inverse\_mapping(p, flat\_index, indices)] transforms a
-so-called flat index into the integer array \textbf{indices} according 
+so-called flat index into the {\it integer array} \textbf{indices} according 
 to the potential~\textbf{p}. A flat index is an index used for addressing
 data in the potential and is therefore an integer between \verb+0+ and 
-\verb+p->size_of_data - 1+ inclusive.
+\verb+p->size_of_data - 1+ inclusive. Shortly, this function is made for
+finding out which configuration of states of the variables corresponds
+to each element in the potential. Note that the \textbf{indices} array 
+is not allocated by the function.
 
-\item[general\_marginalise(source, destination, source\_vars)] 
+\item[general\_marginalise(source, destination, source\_vars)] is one
+of the most useful functions since it computes the marginalisation
+i.e. a sum over the variables indicated by the given {\it integer
+array} \textbf{source\_vars} and places the result in the given
+\textbf{destination} potential. To make any sense, the number of
+associated variables in \textbf{source} must be greater than in
+\textbf{destination}. The implementation assumes that the variables 
+common to the potentials are in the same order. Consequently, all the 
+variables in a system must have a total and static ordering in
+order to keep all the sets of variables shared by neigbouring clique
+potentials in order.
 
-\item[total\_marginalise(source, destination, variable)] 
+The {\it integer array} \textbf{source\_vars} indicates which
+variables are marginalised away. It consists of indices ranging from
+\verb+0+ to \verb+source->num_of_vars - 1+ inclusive. The array
+must be arranged in ascending order and the size must equal the
+difference in the numbers of associated variables in the potentials. 
+Simply, a zero in the array tells the function to marginalise over the 
+first variable. Note that the result is not normalised.
+
+\item[total\_marginalise(source, destination, variable)] can be used
+for finding out the probability distribution of a single variable
+according to the \textbf{source} potential. The function is similar to
+the \textbf{general\_marginalise} but instead of telling which
+variables to marginalise away, the user must indicate which
+variable is left unmarginalised. The parameter \textbf{variable} is 
+an {\it integer} ranging from \verb+0+ to
+\verb+source->num_of_vars - 1+ inclusive. Zero indicates the first
+variable in the potential.
+
+Another difference arises from the fact that the probability 
+distribution of a single variable fits into a one-dimensional array. 
+The place to put the resulting {\it double array} 
+(\textbf{destination}) is given to the function as one of the
+parameters. Size of the array must be equal (or greater) to the
+cardinality of the desired variable, so remember to allocate one
+before calling this function. Note that the result is not normalised.
 
 \item[update\_potential(numerator, denominator, target, extra\_vars)] 
 
+
 \item[update\_evidence(numerator, denominator, target, var)] 
+
 
 \item[init\_potential(probs, target, extra\_vars)] 
 
-\item[print\_potential(p)] 
+
+\item[print\_potential(p)] is mainly for debugging purposes. It prints 
+the contents of the potential~\textbf{p} to the standard output.
 
 \end{description}
 
