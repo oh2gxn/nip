@@ -10,7 +10,7 @@ int copy_potential(potential, potential);
 double get_pvalue(potential, int[], int);
 int set_pvalue(potential, int[], int, double);
 double *get_ppointer(potential, int[], int);
-int marginalise(potential, potential, int[]);
+int general_marginalise(potential, potential, int[]);
 int update_potential(potential, potential, potential, int[]);
 int main();
 
@@ -138,8 +138,9 @@ int choose_indices(potential source, int source_indices[],
    from clique to sepset. It is best that sepsets have two static potentials 
    which take turns as the old and the new potential.
    TAKE CARE OF THE ORDER OF VARIABLES! 
--source: potential to be marginalised
--destination: potential to put the answer, variables will be in the same order
+-source: the potential to be marginalised
+-destination: the potential to put the answer into, variables will be 
+              in the same order
 -source_vars: indices of the marginalised variables in source potential
              (ascending order and between 0...num_of_vars-1 inclusive!) 
 EXAMPLE: If sepset variables are the second (i.e. 1) and third (i.e. 2) 
@@ -147,7 +148,8 @@ variable in a five variable clique, the call is
 marginalise(cliquePotential, newSepsetPotential, {0, 3, 4}) 
 -Returns an error code.
 */
-int marginalise(potential source, potential destination, int source_vars[]){
+int general_marginalise(potential source, potential destination, 
+			int source_vars[]){
 
   int i;
   int *source_indices, *dest_indices;
@@ -182,10 +184,49 @@ int marginalise(potential source, potential destination, int source_vars[]){
   free(dest_indices); /* is allocating and freeing slow??? */
 
   /* JJ NOTE: WHAT IF EACH POTENTIAL HAD A SMALL ARRAY CALLED temp_indices ??? 
-     The space is needed anyway in marginalise() and update()... */
+     The space is needed anyway in general_marginalise() and update()... */
 
   return 0;
 }
+
+
+/* Method for finding out the probability distribution of a single variable 
+   according to a clique potential. This one is marginalisation too, but 
+   this one is not generic. The outcome is not normalized. 
+-source: the potential to be marginalised
+-destination: the double array for the answer
+              SIZE OF THE ARRAY MUST BE CORRECT (check it from the variable)
+-variable: the index of the variable of interest 
+*/
+int total_marginalise(potential source, double[] destination, int variable){
+  int i, j, x, index;
+  int *source_indices;
+  double *potvalue;
+
+  /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) 
+                         |  |  |
+     variable index:     0  1  2 */
+  source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
+
+  /* initialization */
+  for(i = 0; i < source->cardinality[variable]; i++)
+    destination[i] = 0;
+
+  for(i = 0; i < source->size_of_data; i++){
+    /* partial inverse mapping to find out the destination index 
+       NOT SURE IF THIS WORKS */
+    flat_index = i;
+    for(j = source->num_of_vars - 1; j >= variable; j--){
+      x /= source->cardinality[j];
+      index = flat_index / x;    /* integer division */
+      flat_index -= index * x;
+    }
+    destination[index] += source->data[i];
+  }
+  free(source_indices);
+  return 0;
+}
+
 
 /* Method for updating target potential by multiplying with enumerator 
    potential and dividing with denominator potential. Useful in message 

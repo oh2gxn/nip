@@ -171,7 +171,7 @@ int message_pass(Clique c1, Sepset s, Clique c2){
       k++;
     }
   } /* then: do da job */
-  marginalise(c1->p, s->new, source_vars);
+  general_marginalise(c1->p, s->new, source_vars);
 
   j = 0; k = 0;
   /* update (absorption) 
@@ -189,9 +189,14 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   return 0;
 }
 
+/* TODO */
+int marginalise(Variable var){
+  return 0;
+}
 
 /* TODO  Returns an error code. */
 int insert_evidence(Clique c, double *data){
   /* copy the pointer or the data? */
   return 0;
 }
+

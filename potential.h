@@ -39,8 +39,9 @@ int inverse_mapping(potential p, int big_index, int indices[]);
    from clique to sepset. It is best that sepsets have two static potentials 
    which take turns as the old and the new potential.
    TAKE CARE OF THE ORDER OF VARIABLES! 
--source: potential to be marginalised
--destination: potential to put the answer, variables will be in the same order
+-source: the potential to be marginalised
+-destination: the potential to put the answer into, variables will be 
+              in the same order
 -source_vars: indices of the marginalised variables in source potential
              (ascending order and between 0...num_of_vars-1 inclusive!) 
 EXAMPLE: If sepset variables are the second (i.e. 1) and third (i.e. 2) 
@@ -48,7 +49,18 @@ variable in a five variable clique, the call is
 marginalise(cliquePotential, newSepsetPotential, {0, 3, 4}) 
 -Returns an error code.
 */
-int marginalise(potential source, potential destination, int source_vars[]);
+int general_marginalise(potential source, potential destination, 
+			int source_vars[]);
+
+/* Method for finding out the probability distribution of a single variable 
+   according to a clique potential. This one is marginalisation too, but 
+   this one is not generic. The outcome is not normalized. 
+-source: the potential to be marginalised
+-destination: the double array for the answer
+              SIZE OF THE ARRAY MUST BE CORRECT (check it from the variable)
+-variable: the index of the variable of interest 
+*/
+int total_marginalise(potential source, double[] destination, int variable);
 
 /* Method for updating target potential by multiplying with enumerator 
    potential and dividing with denominator potential. Useful in message 

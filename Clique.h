@@ -61,6 +61,9 @@ int collect_evidence(Clique c1, Clique c2);
 /* Method for passing messages between cliques. Returns an error code. */
 int message_pass(Clique c1, Sepset s, Clique c2);
 
+/* TODO */
+int marginalise(Variable var);
+
 /* This will change or be removed (Returns an error code.)*/
 int insert_evidence(Clique c, double *data);
 
