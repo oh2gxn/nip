@@ -115,3 +115,11 @@ Sekalaisia huomioita:
 * Ajateltiin eilen, ett‰ ei kannata viel‰ yhdist‰‰ "Clique unmark" -hommaa,
   koska koko ohjelman rakenne on v‰h‰n hakusessa. Jonkinlainen "nip"-rakenne
   olisi kai hyv‰ olla. Mutta mit‰ seuraavaksi?
+--
+
+5.8.2004 (Janne ja Mikko)
+* Mietit‰‰n, mink‰laisia rakenneuudistuksia tehd‰‰n. Parasta olisi, jos homma
+  saataisiin yksisuuntaiseksi, eli uusi "nip"-systeemi tulee vanhan p‰‰lle.
+
+* nip.c:hen joku "parse_model" tms. joka k‰ynnist‰‰ parserin ja kopioi
+  muuttujalistan ja klikkitaulukon (ainakin) malliin. Palauttaa mallin.
