@@ -151,9 +151,9 @@ void test6(Graph* G)
 	n = get_size(Gu);
 	v = get_variables(Gu);
 
+	printf("\tAdjacency matrix:\n");
 	for (i=0;i<n;i++)
 	{
-		printf("\tAdjacency matrix:\n\t\t");
 		for (j=0; j<n; j++)
 			printf("%d ",is_child(Gu, v[i], v[j]));
 		printf("\n");
