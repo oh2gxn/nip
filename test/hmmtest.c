@@ -9,55 +9,24 @@
 
 extern int yyparse();
 
-/*
- * Calculate the probability distribution of Variable "var".
- * The family of var must be among the Cliques in cliques[]
- * (the size of which is num_of_cliques).
- * This function allocates memory for the array "result". The size of
- * the array is returned in "size_of_result".
- */
-static void test_probability(double **result, 
-			     Variable var, Clique cliques[],
-			     int num_of_cliques){
-
-  /* Find the Clique that contains the family of the interesting Variable. */
-  Clique clique_of_interest = find_family(cliques, num_of_cliques, 
-					  &var, 1);
-  if(!clique_of_interest){
-    printf("In hmmtest.c : No clique found! Sorry.\n");
-    return;
-  }  
-
-  /* Allocate memory for the result */
-  *result = (double *) calloc(number_of_values(var), sizeof(double));
-  if(!result){
-    printf("In hmmtest.c : Calloc failed.\n");
-    return;
-  }
-
-  /* marginalisation */
-  marginalise(clique_of_interest, var, *result);
-
-  /* normalisation */
-  normalise(*result, number_of_values(var));
-
-}
-
-
 int main(int argc, char *argv[]){
 
+  char **data;
   int i, retval;
   int nip_num_of_cliques;
-
   double* result;
 
   Clique *nip_cliques;
+  Clique clique_of_interest;
 
   Variable interesting;
 
   datafile* timeseries;
 
 
+  /*****************************************/
+  /* Parse the model from a Hugin NET file */
+  /*****************************************/
   /* -- Start parsing the network definition file */
   if(argc < 4){
     printf("Give the names of the net-file, ");
@@ -75,24 +44,36 @@ int main(int argc, char *argv[]){
     return retval;
   /* The input file has been parsed. -- */
 
+
+  /* Get references to the results of parsing */
   nip_cliques = *get_cliques_pointer();
   nip_num_of_cliques = get_num_of_cliques();
 
 
-  /* read the data from file */
-  timeseries = open_datafile(argv[2], ',', 0, 1);
+
+  /*****************************/
+  /* read the data from a file */
+  /*****************************/
+  timeseries = open_datafile(argv[2], ',', 0, 1); /* 1. Open */
   if(timeseries == NULL){
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
     fprintf(stderr, "%s\n", argv[2]);
     return -1;
   }
 
+  retval = nextline_tokens(timeseries, ',', &data); /* 2. Read */
 
-  /*****************************************/
-  /* FIXME: insert the reading stuff here. */
-  /*****************************************/
+  for(i = 0; i < retval; i++) /* 3. Insert into model */
+    enter_observation(get_variable((timeseries->node_symbols)[i]), data[i]);
+
+  for(i = 0; i < retval; i++) /* 4. Dump away */
+    free(data[i]);
 
 
+
+  /********************/
+  /* Do the inference */
+  /********************/
   /* propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
@@ -109,11 +90,38 @@ int main(int argc, char *argv[]){
     return 1;
   }
 
-  test_probability(&result, interesting, nip_cliques, nip_num_of_cliques);
 
+
+  /*********************************/
+  /* Check the result of inference */
+  /*********************************/
+  /* 1. Find the Clique that contains the family of the interesting Variable */
+  clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+					  &interesting, 1);
+  if(!clique_of_interest){
+    printf("In hmmtest.c : No clique found! Sorry.\n");
+    return 1;
+  }  
+
+  /* 2. Allocate memory for the result */
+  result = (double *) calloc(number_of_values(interesting), sizeof(double));
+  if(!result){
+    printf("In hmmtest.c : Calloc failed.\n");
+    return 1;
+  }
+
+  /* 3. Marginalisation */
+  marginalise(clique_of_interest, interesting, result);
+
+  /* 4. Normalisation */
+  normalise(result, number_of_values(interesting));
+
+
+  /* 5. Print the result */
   printf("Normalised probability of %s:\n", get_symbol(interesting));
   for(i = 0; i < number_of_values(interesting); i++)
-    printf("P(%s=%d) = %f\n", get_symbol(interesting), i, result[i]);
+    printf("P(%s=%s) = %f\n", get_symbol(interesting), 
+	   (interesting->statenames)[i], result[i]);
 
   printf("\n");
 
