@@ -272,13 +272,13 @@ int main(int argc, char *argv[]){
       printf("\n");
     }    
     /* ------------------------------------- */
-    
-
-    
 
 
     /* Reset the join tree and new priors from the posteriors by entering
      * evidence. */
+
+    /* Set new likelihoods for every Variable and run global_retraction. */
+    /* update_likelihood, global_retraction ... don't enter evidence yet */
 
   }
   
