@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.33 2004-08-10 12:52:48 jatoivol Exp $
+ * Graph.c $Id: Graph.c,v 1.34 2004-08-11 12:19:41 jatoivol Exp $
  */
 
 #include <string.h>
@@ -59,7 +59,7 @@ void free_graph(Graph* G) /* XX Onko täysin valmis? */
         
     free(G->adj_matrix);
     free(G->variables);
-    free(G->var_ind); /* JJT: WOOT? I added this here, but is it correct... */
+    free(G->var_ind); /* JJT: I added this here, but is it correct... */
     free(G);
 }
 
@@ -96,7 +96,7 @@ int get_graph_index(Graph* G, Variable v)
             if (equal_variables(G->variables[i], v))
                 return i;
 
-	return -1;
+    return -1;
 } 
 
 int get_neighbours(Graph* G, Variable* neighbours, Variable V)
@@ -170,7 +170,8 @@ static void sort_variables(Graph* G)
         G->max_id = (id > G->max_id)?id:G->max_id;
     }
     
-    G->var_ind = (unsigned long*) calloc(G->max_id - G->min_id +1, sizeof(long));
+    G->var_ind = (unsigned long*) calloc(G->max_id - G->min_id +1, 
+					 sizeof(long));
 	
     for (i = 0; i < G->size; i++)
 	   G->var_ind[get_id(G->variables[i]) - G->min_id] = i;
@@ -279,6 +280,11 @@ int find_cliques(Graph* G, Clique** cliques_p)
     Gu = make_undirected(Gm);
     n_cliques = triangulate(Gu, cliques_p);
     find_sepsets(*cliques_p, n_cliques);    
+
+    /* JJT: I added some free_graph stuff here, because I suspected
+     * memory leaks... */
+    free_graph(Gu);
+    free_graph(Gm);
 
     return n_cliques;
 }

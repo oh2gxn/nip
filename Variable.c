@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.35 2004-08-10 12:52:48 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.36 2004-08-11 12:19:42 jatoivol Exp $
  */
 
 #include <string.h>
@@ -27,9 +27,6 @@ static int variable_name(Variable v, const char *name){
 }
 
 
-/*
- * NOTE: "the ownership" of the states (array of strings) changes.
- */
 Variable new_variable(const char* symbol, const char* name, 
 		      char** states, int cardinality){
   static long id = VAR_MIN_ID;
@@ -55,8 +52,21 @@ Variable new_variable(const char* symbol, const char* name,
     /* DANGER! The name can be omitted and consequently be NULL */
     v->name[0] = '\0';
 
-  /* "the ownership" of the states (array of strings) changes */
-  v->statenames = states;
+  if(states){
+    v->statenames = (char **) calloc(cardinality, sizeof(char *));
+    if(!(v->statenames)){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free_variable(v);
+      return NULL;
+    }else
+      for(i = 0; i < cardinality; i++){
+	v->statenames[i] = (char *) calloc(strlen(states[i]) + 1, 
+					   sizeof(char));
+	strcpy(v->statenames[i], states[i]);
+      }
+  }
+  else
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */
@@ -117,8 +127,9 @@ void free_variable(Variable v){
   int i;
   if(v == NULL)
     return;
-  for(i = 0; i < v->cardinality; i++)
-    free(v->statenames[i]);
+  if(v->statenames)
+    for(i = 0; i < v->cardinality; i++)
+      free(v->statenames[i]);
   free(v->statenames);
   free(v->likelihood);
   free(v);
@@ -173,6 +184,13 @@ varlink get_last_variable(){
 
 
 void reset_Variable_list(){
+  varlink l = nip_first_var;
+  varlink temp;
+  while(l){
+    temp = l->fwd;
+    free(l);
+    l = temp;
+  }
   nip_first_var = NULL;
   nip_last_var = NULL;
   nip_vars_parsed = 0;
