@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.46 2004-08-25 11:14:41 mvkorpel Exp $
+ * Clique.h $Id: Clique.h,v 1.47 2004-08-26 14:19:43 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -15,13 +15,13 @@ struct sepsetlist {
 };
 
 typedef struct sepsetlist element;
-typedef element *link;
+typedef element *Sepset_link;
 
 typedef struct {
   potential p;
   potential original_p;
   Variable *variables; /* p contains num_of_vars */
-  link sepsets;
+  Sepset_link sepsets;
   int num_of_sepsets;
   int mark; /* the way to prevent endless loops */
 } cliquetype;
@@ -30,7 +30,7 @@ typedef cliquetype *Clique;
 typedef struct {
   potential old;   /* previous potential */
   potential new;   /* current potential */
-  Variable *variables; /* p contains num_of_vars */
+  Variable *variables; /* old and new contain num_of_vars */
   Clique *cliques; /* always between two cliques */
 } sepsettype;
 

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.94 2004-08-25 11:14:41 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.95 2004-08-26 14:19:43 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -144,7 +144,7 @@ Clique make_Clique(Variable vars[], int num_of_vars){
 
 
 void free_Clique(Clique c){
-  link l1, l2;
+  Sepset_link l1, l2;
   Clique cl1, cl2;
   Sepset s;
 
@@ -184,7 +184,7 @@ int add_Sepset(Clique c, Sepset s){
   Clique two;
 #endif
 
-  link new = (link) malloc(sizeof(element));
+  Sepset_link new = (Sepset_link) malloc(sizeof(element));
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
@@ -229,7 +229,7 @@ int add_Sepset(Clique c, Sepset s){
 
 
 static void remove_Sepset(Clique c, Sepset s){
-  link l;
+  Sepset_link l;
 
   if(!(c && s)){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -568,7 +568,7 @@ int sepset_num_of_vars(Sepset s){
 int distribute_evidence(Clique c){
 
   int retval;
-  link l;
+  Sepset_link l;
   Sepset s;
 
 #ifdef DEBUG_CLIQUE
@@ -625,7 +625,7 @@ int distribute_evidence(Clique c){
 int collect_evidence(Clique c1, Sepset s12, Clique c2){
 
   int retval;
-  link l;
+  Sepset_link l;
   Sepset s;
 
   /* mark */
@@ -1126,7 +1126,7 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
  * Cliques must be unmarked before calling this.
  */
 static int clique_search(Clique one, Clique two){
-  link l = one->sepsets;
+  Sepset_link l = one->sepsets;
   Sepset s;
 
 #ifdef DEBUG_CLIQUE
@@ -1190,7 +1190,7 @@ void print_Cliques(){
 
   int i;
   Clique clique_of_interest;
-  link sepsetlist;
+  Sepset_link sepsetlist;
 
   /* Get references to the results of parsing */
   Clique *nip_cliques = *get_cliques_pointer();
@@ -1253,7 +1253,7 @@ static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 		      void (*sFuncPointer)(Sepset)){
   /* a lot of copy-paste from collect/distribute_evidence and clique_search */
 
-  link l = start->sepsets;
+  Sepset_link l = start->sepsets;
   Sepset s;
   
   if(start == NULL) /* error? */
