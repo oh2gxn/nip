@@ -4,6 +4,8 @@
 #include <string.h>
 #include "Graph.h"
 #include "Variable.h"
+#include "Clique.h"
+#include "potential.h"
 
 void print_adjm(Graph* G)
 {
@@ -153,7 +155,7 @@ void test5(Graph* G)
 	printf("\tTest 5 done.\n");
 }
 
-void test6()
+Graph* test6()
 {
 	Graph *G, *Gu, *Gm;
 	int i,n=8;
@@ -191,11 +193,34 @@ void test6()
 	print_adjm(Gu);
 	
 	printf("\tTest 6 done.\n");
+	return G;
+}
+
+void test7(Graph* G)
+{
+	Clique* cliques;
+	Clique ci;
+	int i, j, n_cliques, n_vars;
+	
+	printf("\tTest 7... find_cliques\n");
+	n_cliques = find_cliques(G, &cliques);
+	for (i = 0; i < n_cliques; i++)
+	{
+		printf("\t\tClique %i\n", i);
+		ci = cliques[i];
+		n_vars = ci->p->num_of_vars;
+		for (j = 0; j < n_vars; j++)
+			printf("\t\t\tVariable %s: %s\n", ci->variables[j]->symbol, 
+											  ci->variables[j]->name);
+	
+	}
+
+	printf("\tTest 7 done.\n");	
 }
 
 void main(void)
 {
-    Graph* G;
+    Graph *G, *G2;
     printf("-------------------------------\n");
     printf("Testing graphs:\n");
     
@@ -204,6 +229,7 @@ void main(void)
     test3(G);
     test4(G);
     test5(G);
-    test6();
+    G2=test6();
+    test7(G2);
 }
 
