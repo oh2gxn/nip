@@ -5,12 +5,12 @@
 
 #define YYBISON 1  /* Identify Bison output.  */
 
-#define	node	258
-#define	potential	259
-#define	states	260
-#define	label	261
-#define	position	262
-#define	data	263
+#define	token_node	258
+#define	token_potential	259
+#define	token_states	260
+#define	token_label	261
+#define	token_position	262
+#define	token_data	263
 #define	QUOTED_STRING	264
 #define	UNQUOTED_STRING	265
 #define	NUMBER	266
@@ -103,9 +103,9 @@ static const short yyrhs[] = {    20,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    63,    74,    75,    79,    80,    84,    95,    96,   100,   105,
-   111,   115,   119,   136,   141,   142,   146,   147,   152,   153,
-   154,   158,   159,   160,   164
+    63,    76,    77,    81,    82,    86,    97,    98,   102,   107,
+   113,   117,   121,   139,   144,   145,   149,   150,   155,   156,
+   157,   161,   162,   163,   167
 };
 #endif
 
@@ -693,63 +693,66 @@ case 1:
 {
   /* final stuff here */
 
-  // Create the graph between parsing nodes and potentials.
-  // Graph structure and clique initialisation data 
-  // will be in initData after parsing potentials!
+  /*
+   * Create the graph between parsing nodes and potentials.
+   * Graph structure and clique initialisation data 
+   * will be in initData after parsing potentials!
+   */
 
   reset_initData();
     break;}
 case 2:
-#line 74 "huginnet.y"
-{ nip_graph = new_Graph(nip_vars_parsed) ;
+#line 76 "huginnet.y"
+{ nip_graph = new_graph(nip_vars_parsed) ;
     break;}
 case 3:
-#line 75 "huginnet.y"
+#line 77 "huginnet.y"
 { add_pvar(yyvsp[-1].variable) ;
     break;}
 case 4:
-#line 79 "huginnet.y"
+#line 81 "huginnet.y"
 {/* initialisation data ready at first_initData */;
     break;}
 case 5:
-#line 80 "huginnet.y"
+#line 82 "huginnet.y"
 {/* potential somewhere? */;
     break;}
 case 6:
-#line 87 "huginnet.y"
+#line 89 "huginnet.y"
 {
   /* new_variable() */
-  Variable v = new_variable(yyvsp[-6].name, yyvsp[-4].name, yyvsp[-3].stringarray, strings_parsed); 
+  Variable v = new_variable(yyvsp[-6].name, yyvsp[-4].name, yyvsp[-3].stringarray, nip_strings_parsed); 
   reset_strings();
   yyval.variable = v;
     break;}
 case 9:
-#line 100 "huginnet.y"
+#line 102 "huginnet.y"
 { yyval.name = yyvsp[-1].name ;
     break;}
 case 10:
-#line 105 "huginnet.y"
+#line 107 "huginnet.y"
 { 
-  // makes an array of strings out of the parsed list of strings
+  /* makes an array of strings out of the parsed list of strings */
   yyval.stringarray = yyvsp[-2].stringarray ;
     break;}
 case 11:
-#line 111 "huginnet.y"
+#line 113 "huginnet.y"
 {/* ignore */;
     break;}
 case 12:
-#line 115 "huginnet.y"
+#line 117 "huginnet.y"
 {/* ignore */;
     break;}
 case 13:
-#line 119 "huginnet.y"
+#line 121 "huginnet.y"
 { 
-  //*******************************************************************
-  /* FIXME: This is still wrong. Variables should be added to the graph
-   * and the relations should be marked. */
-  //*******************************************************************
+  /*
+   * FIXME: This is still wrong. Variables should be added to the graph
+   * and the relations should be marked.
+   */
 
-  // OBVIOUSLY the parents should be separated from the children somehow!
+
+  /* OBVIOUSLY the parents should be separated from the children somehow! */
 
   Variable vars[nip_symbols_parsed + 1];
   int i;
@@ -760,51 +763,51 @@ case 13:
   reset_symbols();
     break;}
 case 14:
-#line 136 "huginnet.y"
+#line 139 "huginnet.y"
 { yyval.variable = get_variable(yyvsp[0].name) ;
     break;}
 case 15:
-#line 141 "huginnet.y"
+#line 144 "huginnet.y"
 { yyval.variablearray = make_variable_array() ;
     break;}
 case 16:
-#line 142 "huginnet.y"
+#line 145 "huginnet.y"
 { add_symbol(yyvsp[-1].name) ;
     break;}
 case 17:
-#line 146 "huginnet.y"
+#line 149 "huginnet.y"
 { yyval.stringarray = make_string_array() ;
     break;}
 case 18:
-#line 147 "huginnet.y"
+#line 150 "huginnet.y"
 { add_string(yyvsp[-1].name) ;
     break;}
 case 19:
-#line 152 "huginnet.y"
+#line 155 "huginnet.y"
 { yyval.doublearray = make_double_array() ;
     break;}
 case 20:
-#line 153 "huginnet.y"
+#line 156 "huginnet.y"
 { add_number(yyvsp[-1].numval) ;
     break;}
 case 21:
-#line 154 "huginnet.y"
+#line 157 "huginnet.y"
 { add_number(yyvsp[-2].numval) ;
     break;}
 case 22:
-#line 158 "huginnet.y"
+#line 161 "huginnet.y"
 { free(yyvsp[0].name) /* ignore */;
     break;}
 case 23:
-#line 159 "huginnet.y"
+#line 162 "huginnet.y"
 { reset_doubles() /* ignore */;
     break;}
 case 24:
-#line 160 "huginnet.y"
+#line 163 "huginnet.y"
 {/* ignore */;
     break;}
 case 25:
-#line 164 "huginnet.y"
+#line 167 "huginnet.y"
 { yyval.doublearray = yyvsp[-2].doublearray ;
     break;}
 }
@@ -1005,7 +1008,7 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 167 "huginnet.y"
+#line 170 "huginnet.y"
 
 /* Lexical analyzer */
 /* JJT: I did some reading. Might get nasty, if there has to be a token 
@@ -1078,35 +1081,35 @@ yylex (void)
     if(tokenlength == 5 &&
        strncmp("label", token, 5) == 0){
       free(token);
-      return label;
+      return token_label;
     }
     /* node */
     if(tokenlength == 4){
       if(strncmp("node", token, 4) == 0){
 	free(token);
-	return node;
+	return token_node;
       }else if(strncmp("data", token, 4) == 0){
 	free(token);
-	return data;
+	return token_data;
       }
     }
     /* potential */
     if(tokenlength == 9 &&
        strncmp("potential", token, 9) == 0){
       free(token);
-      return potential;
+      return token_potential;
     }
     /* states */
     if(tokenlength == 6 &&
        strncmp("states", token, 6) == 0){
       free(token);
-      return states;
+      return token_states;
     }
     /* position */
     if(tokenlength == 8 &&
        strncmp("position", token, 8) == 0){
       free(token);
-      return position;
+      return token_position;
     }
     /* End of literal string tokens */
 

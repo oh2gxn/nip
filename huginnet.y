@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.16 2004-05-31 11:18:19 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.17 2004-06-01 14:35:38 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -29,12 +29,12 @@
 /* (The "ownership" of strings changes.)                          */
 /******************************************************************/
 
-%token node "node"
-%token potential "potential"
-%token states "states"
-%token label "label"
-%token position "position"
-%token data "data"
+%token token_node "node"
+%token token_potential "potential"
+%token token_states "states"
+%token token_label "label"
+%token token_position "position"
+%token token_data "data"
 %token <name> QUOTED_STRING
 %token <name> UNQUOTED_STRING
 %token <numval> NUMBER
@@ -63,15 +63,17 @@
 input:  nodes potentials {
   /* final stuff here */
 
-  // Create the graph between parsing nodes and potentials.
-  // Graph structure and clique initialisation data 
-  // will be in initData after parsing potentials!
+  /*
+   * Create the graph between parsing nodes and potentials.
+   * Graph structure and clique initialisation data 
+   * will be in initData after parsing potentials!
+   */
 
   reset_initData()}
 ;
 
 
-nodes:         /* empty */ { nip_graph = new_Graph(nip_vars_parsed) }
+nodes:         /* empty */ { nip_graph = new_graph(nip_vars_parsed) }
              | nodeDeclaration nodes { add_pvar($1) }
 ;
 
@@ -81,12 +83,12 @@ potentials:    /* empty */ {/* initialisation data ready at first_initData */}
 ;
 
 
-nodeDeclaration:    node UNQUOTED_STRING '{' labelDeclaration 
+nodeDeclaration:    token_node UNQUOTED_STRING '{' labelDeclaration 
                                              statesDeclaration
                                              positionDeclaration
                                              parameters '}' {
   /* new_variable() */
-  Variable v = new_variable($2, $4, $5, strings_parsed); 
+  Variable v = new_variable($2, $4, $5, nip_strings_parsed); 
   reset_strings();
   $$ = v}
 ;
@@ -97,18 +99,18 @@ parameters:    /* end of definitions */
 ;
 
 
-labelDeclaration:     label '=' QUOTED_STRING ';' { $$ = $3 }
+labelDeclaration:     token_label '=' QUOTED_STRING ';' { $$ = $3 }
 ;
 
 
 /* JJT: cardinality == strings_parsed ? */
-statesDeclaration:    states '=' '(' strings ')' ';' { 
-  // makes an array of strings out of the parsed list of strings
+statesDeclaration:    token_states '=' '(' strings ')' ';' { 
+  /* makes an array of strings out of the parsed list of strings */
   $$ = $4 }
 ;
 
 
-positionDeclaration:  position '=' '(' NUMBER NUMBER ')' ';' {/* ignore */}
+positionDeclaration:  token_position '=' '(' NUMBER NUMBER ')' ';' {/* ignore */}
 ;
 
 
@@ -116,13 +118,14 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
 ;
 
 
-potentialDeclaration: potential '(' symbol '|' symbols ')' '{' dataList '}' { 
-  //*******************************************************************
-  /* FIXME: This is still wrong. Variables should be added to the graph
-   * and the relations should be marked. */
-  //*******************************************************************
+potentialDeclaration: token_potential '(' symbol '|' symbols ')' '{' dataList '}' { 
+  /*
+   * FIXME: This is still wrong. Variables should be added to the graph
+   * and the relations should be marked.
+   */
 
-  // OBVIOUSLY the parents should be separated from the children somehow!
+
+  /* OBVIOUSLY the parents should be separated from the children somehow! */
 
   Variable vars[nip_symbols_parsed + 1];
   int i;
@@ -161,7 +164,7 @@ value:         QUOTED_STRING { free($1) /* ignore */}
 ;
 
 
-dataList: data '=' '(' numbers ')' ';' { $$ = $4 }
+dataList: token_data '=' '(' numbers ')' ';' { $$ = $4 }
 ;
 
 %%
@@ -236,35 +239,35 @@ yylex (void)
     if(tokenlength == 5 &&
        strncmp("label", token, 5) == 0){
       free(token);
-      return label;
+      return token_label;
     }
     /* node */
     if(tokenlength == 4){
       if(strncmp("node", token, 4) == 0){
 	free(token);
-	return node;
+	return token_node;
       }else if(strncmp("data", token, 4) == 0){
 	free(token);
-	return data;
+	return token_data;
       }
     }
     /* potential */
     if(tokenlength == 9 &&
        strncmp("potential", token, 9) == 0){
       free(token);
-      return potential;
+      return token_potential;
     }
     /* states */
     if(tokenlength == 6 &&
        strncmp("states", token, 6) == 0){
       free(token);
-      return states;
+      return token_states;
     }
     /* position */
     if(tokenlength == 8 &&
        strncmp("position", token, 8) == 0){
       free(token);
-      return position;
+      return token_position;
     }
     /* End of literal string tokens */
 

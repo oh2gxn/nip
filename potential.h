@@ -1,15 +1,15 @@
 #ifndef __POTENTIAL_H__
 #define __POTENTIAL_H__
 
-struct pot_array {
+typedef struct pot_array_t {
   int size_of_data;
   int *cardinality;
   int num_of_vars;
   double *data;
-};
+} ptype;
 
-typedef struct pot_array ptype;
-typedef ptype *potential;
+/* typedef struct pot_array ptype; */
+typedef ptype* potential;
 
 /* Make a num_of_vars -dimension potential array. 
  * The potential array data[] can be null, if it is not known. */
