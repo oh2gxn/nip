@@ -15,7 +15,7 @@ Variable new_variable(char* name, int cardinality) {
 
 /* Method for testing variable equality. 
    This may be needed to keep potentials in order. INEQUALITIES ??? */
-int equal(Variable v1, Variable v2){
+int equal_variables(Variable v1, Variable v2){
   return (v1.id == v2.id);
 }
 

@@ -13,7 +13,7 @@ typedef struct {
 Variable new_variable(char* name, int cardinality);
 
 /* Checks if two variables are the same */
-int equal(Variable v1, Variable v2);
+int equal_variables(Variable v1, Variable v2);
 
 /* The order of variables is essential for working with potentials. */
 unsigned long get_id(Variable v);
