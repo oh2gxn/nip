@@ -163,6 +163,8 @@ int main(int argc, char *argv[]){
     for(i = 0; i < retval; i++){
       data[t][i] = 
 	get_stateindex(get_variable((timeseries->node_symbols)[i]), tokens[i]);
+
+      /* Should missing data be allowed? */
       assert(data[t][i] >= 0);
     }
 

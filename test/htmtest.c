@@ -120,8 +120,10 @@ int main(int argc, char *argv[]){
   while(temp != NULL){
     j = 1;
     for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(equal_variables(temp, get_variable(timeseries->node_symbols[i])))
+      if(equal_variables(temp, get_variable(timeseries->node_symbols[i]))){
 	j = 0;
+	break;
+      }
     if(j)
       hidden[k++] = temp;
 
@@ -178,6 +180,8 @@ int main(int argc, char *argv[]){
     for(i = 0; i < retval; i++){
       data[t][i] = 
 	get_stateindex(get_variable((timeseries->node_symbols)[i]), tokens[i]);
+
+      /* Should missing data be allowed? */
       assert(data[t][i] >= 0);
     }
 
