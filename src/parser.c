@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.45 2004-06-29 08:00:33 jatoivol Exp $
+ * $Id: parser.c,v 1.46 2004-06-29 08:40:50 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -19,6 +19,10 @@
 
 /*
 #define PRINT_TOKENS
+*/
+
+/*
+#define DEBUG_DATAFILE
 */
 
 static varlink nip_first_temp_var = NULL;
@@ -97,6 +101,10 @@ datafile *open_datafile(char *filename, char separator,
     return NULL;
   }
 
+#ifdef DEBUG_DATAFILE
+  printf("Now in open_datafile (1)\n");
+#endif
+
   if(write)
     f->file = fopen(filename,"w");
   else
@@ -129,6 +137,10 @@ datafile *open_datafile(char *filename, char separator,
    * This includes names of nodes and their states.
    */
   if(!write){
+
+#ifdef DEBUG_DATAFILE
+    printf("Now in open_datafile (2)\n");
+#endif
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
       num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0);
@@ -172,6 +184,10 @@ datafile *open_datafile(char *filename, char separator,
 	}
 
 	if(nodenames){
+
+#ifdef DEBUG_DATAFILE
+	  printf("Now in open_datafile (3)\n");
+#endif
 	  for(i = 0; i < num_of_tokens; i++){
 
 	    f->node_symbols[i] =
@@ -217,6 +233,10 @@ datafile *open_datafile(char *filename, char separator,
 	 kinds of observations for each node). */
       if(linecounter != 0 || (linecounter == 0 && !nodenames)){
 
+#ifdef DEBUG_DATAFILE
+	printf("Now in open_datafile (4), linecounter == %d\n", linecounter);
+#endif
+
 	for(i = 0; i < num_of_tokens; i++){
 
 	  token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
@@ -229,14 +249,33 @@ datafile *open_datafile(char *filename, char separator,
 	    return NULL;
 	  }
 
+#ifdef DEBUG_DATAFILE
+	  printf("Now in open_datafile (5), linecounter == %d\n", linecounter);
+#endif
+
 	  strncpy(token, &(last_line[token_bounds[2*i]]),
 		  token_bounds[2*i+1] - token_bounds[2*i]);
 
+#ifdef DEBUG_DATAFILE
+	  printf("Now in open_datafile (6), linecounter == %d\n", linecounter);
+#endif
+
 	  token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
 
+#ifdef DEBUG_DATAFILE
+	  printf("Now in open_datafile (7), linecounter == %d\n", linecounter);
+#endif
+
 	  if(!(search_stringlinks(statenames[i], token) ||
-	       nullobservation(token)))
+	       nullobservation(token))){
+#ifdef DEBUG_DATAFILE
+	    printf("Now in open_datafile (8), linecounter == %d, token == %s\n", linecounter, token);
+#endif
 	    add_to_stringlink(&(statenames[i]), token);
+#ifdef DEBUG_DATAFILE
+	    printf("Now in open_datafile (9), linecounter == %d, token == %s\n", linecounter, token);
+#endif
+	  }
 	  else
 	    free(token);
 	}
@@ -567,16 +606,38 @@ int add_string(char* string){
 static int add_to_stringlink(stringlink *s, char* string){
   stringlink new = (stringlink) malloc(sizeof(stringelement));
 
+#ifdef DEBUG_DATAFILE
+  printf("add_to_stringlink called\n");
+#endif
+
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
 
+  if(s == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return ERROR_NULLPOINTER;
+  }
+
   new->data = string;
   new->fwd = *s;
   new->bwd = NULL;
-  (*s)->bwd = new;
+
+#ifdef DEBUG_DATAFILE
+  printf("add_to_stringlink (1)\n");
+#endif
+  if(*s != NULL)
+    (*s)->bwd = new;
+#ifdef DEBUG_DATAFILE
+  printf("add_to_stringlink (2)\n");
+#endif
+
   *s = new;
+
+#ifdef DEBUG_DATAFILE
+  printf("add_to_stringlink finished OK\n");
+#endif
 
   return NO_ERROR;
 }
