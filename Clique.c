@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.46 2004-06-14 12:20:53 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.47 2004-06-14 14:11:16 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -640,7 +640,7 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
     return ERROR_OUTOFMEMORY;
   }
 
-  vars = &isect;
+  *vars = isect;
   *n = realsize;
 
   return 0;
