@@ -12,7 +12,10 @@
 
 int main(int argc, char *argv[]){
   
-  int i, n = atoi(argv[2]);
+  int i, j;
+  int n = atoi(argv[2]);
+  int num_of_cliques;
+
   Nip model;
 
 #ifdef FOO
@@ -130,11 +133,11 @@ int main(int argc, char *argv[]){
     add_variable(g, vars[2]);
     add_child(g, vars[1], vars[0]);
     add_child(g, vars[1], vars[2]);
-    assert(find_cliques(g, &cl2) == 2); /* THIS LEAKS! */
+    num_of_cliques = find_cliques(g, &cl2); /* THIS LEAKS! */
     printf("\rIteration %d of %d                               ", i + 1, n);
     free_graph(g);
-    free_Clique(cl2[0]);
-    free_Clique(cl2[1]);
+    for(j = 0; j < num_of_cliques; j++)
+      free_Clique(cl2[j]);
   }
   printf("\rDone.                                             \n");
 

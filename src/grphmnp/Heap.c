@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.13 2004-08-13 07:15:58 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.14 2004-08-13 11:07:07 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -173,7 +173,7 @@ void heapify(Heap* H, int i)
         flag = 0;   
         l = LEFT(i); r = RIGHT(i);
     
-        /* Note the different between l (ell) and i (eye) */
+        /* Note the difference between l (ell) and i (eye) */
     
         min = (l < H->heap_size && lessthan(H->heap_items[l], H->heap_items[i]))? l:i;
             
@@ -273,10 +273,12 @@ void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 	   Copy hi first, because Vs[0] must be the generating node */
 	n_total = hi->n + min_cluster->n;
 	cluster_vars = (Variable*) calloc(n_total, sizeof(Variable));
+
 	/*for (i = 0; i < hi->n; i++)
 		cluster_vars[i] = hi->Vs[i];
 	for (i = 0; i < min_cluster->n; i++)
 		cluster_vars[hi->n +i] = min_cluster[i];*/
+
 	memcpy(cluster_vars, hi->Vs, hi->n*sizeof(Variable));
 	memcpy(cluster_vars+hi->n, min_cluster->Vs, 
 		   min_cluster->n*sizeof(Variable));
@@ -291,14 +293,24 @@ void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 			if (cluster_vars[j] == NULL) continue;
 			if (equal_variables(v_i, cluster_vars[j]) ||
 				equal_variables(V_removed, cluster_vars[j]))
-				cluster_vars[j] = NULL;					
+				cluster_vars[j] = NULL;
 		}
 		cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
 	}
 		
 	hi->n = n_vars;
+
+	/* FIXME: WTF? hi->Vs korvataan uudella taulukolla,
+	 * mutta vanhaa ei saa vapauttaa???
+	 *
+	 * Antti, mistä on kyse?
+	 */
+	/*	free(hi->Vs);*/
+
 	hi->Vs = (Variable*) calloc(n_vars, sizeof(Variable));
 	memcpy(hi->Vs, cluster_vars, n_vars*sizeof(Variable));
+
+	free(cluster_vars);
 
     hi->primary_key = edges_added(G, hi->Vs, hi->n);
     hi->secondary_key = cluster_weight(hi->Vs, hi->n);
@@ -311,7 +323,7 @@ void free_heap(Heap* H){
   if(!H)
     return;
 
-  for(i = 0; i < H->heap_size; i++){
+  for(i = 0; i < H->orig_size; i++){
 
     /* Free each heap item */
     free((H->heap_items)[i].Vs);
