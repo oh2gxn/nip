@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.1 2004-08-19 12:39:12 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.2 2004-08-20 09:52:17 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -63,7 +63,7 @@
 
 \begin{centering}
 \huge
-\textbf{Users manual}\\
+\textbf{System description}\\ % Any better names for this?
 \end{centering}
 
 \parbox{5cm}{\ }
@@ -109,7 +109,93 @@ The idea and mathematical formulas...
 
 \subsection{The functionality description}
 
-The interface + how the stuff works...
+\subsubsection{The data structure}
+The data type ''Variable'' defined in \verb+Variable.h+ is a pointer 
+to a struct which has the following fields: 
+\begin{description}
+\item[symbol] is a short string used to identify the variable. Maximum
+length is defined as \textbf{VAR\_SYMBOL\_LENGTH} in
+\verb+Variable.h+. To ensure the correct operation of the system, the 
+symbol should be unique.
+
+\item[name] is a little longer name to describe the variable: it is
+called {\it label} in the Hugin net files. This is NOT used for 
+identification of the variables and it doesn't need to be unique. 
+The maximum length is defined as \textbf{VAR\_NAME\_LENGTH} in 
+\verb+Variable.h+.
+
+\item[statenames] is an array of strings containing names for all
+possible states of the variable. The identification of data relies on
+these strings. The size of the statenames array i.e. number of
+strings should be the same as the number of states indicated by
+cardinality field described below.
+
+\item[cardinality] is a positive integer which tells how many states
+the variable can have. It plays an important role in all calculations
+to it better be correct.
+
+\item[id] is an {\it unsigned long} used for identification inside the
+system. It is set automatically by the \verb+new_variable+ function
+and should not be tampered after that.
+
+\item[likelihood] is a {\it double} array describing the probability
+distribution of the states of the variable. It is used only for
+entering evidence into the system and likelihood arrays of the latent
+variables remain filled with ones.
+
+\item[previous] is used to describe the repetitive structure in
+timeslice models. It is a pointer to the variable which this variable
+will replace in previous timeslice. The pointer is {\it NULL} if the
+model has no repetitive structure.
+
+\item[next] is a same kind of pointer as \textbf{previous} above, but
+this one tells which variable will be replaced in the next timeslice.
+The \textbf{previous} and \textbf{next} pointers should be symmetrical
+i.e. if \verb+a->next == b+ then \verb+b->previous == a+.
+\end{description}
+
+% FIXME: add the description of variable list structure here
+
+\subsubsection{The functions}
+The functions provided in \verb+Variable.c+ are
+%The interface + how the stuff works...
+\begin{description}
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\item[]
+
+\end{description}
+
 
 \subsection{Other possibilities}
 
@@ -123,9 +209,13 @@ How the stuff could also work...
 
 The idea and mathematical formulas...
 
-\subsection{The functionality description}
 
-The interface + how the stuff works...
+\subsection{The functionality description}
+%The interface + how the stuff works...
+\subsubsection{The data structures}
+
+\subsubsection{The functions}
+
 
 \subsection{Other possibilities}
 
@@ -140,8 +230,11 @@ How the stuff could also work...
 The idea and mathematical formulas...
 
 \subsection{The functionality description}
+%The interface + how the stuff works...
+\subsubsection{The data structure}
 
-The interface + how the stuff works...
+\subsubsection{The functions}
+
 
 \subsection{Other possibilities}
 
@@ -156,8 +249,11 @@ How the stuff could also work...
 The idea and mathematical formulas...
 
 \subsection{The functionality description}
+%The interface + how the stuff works...
+\subsubsection{The data structures}
 
-The interface + how the stuff works...
+\subsubsection{The functions}
+
 
 \subsection{Other possibilities}
 
