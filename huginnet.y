@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.12 2004-05-26 14:40:49 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.13 2004-05-28 13:28:20 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -18,6 +18,7 @@
   double *doublearray;
   char *name;
   char **stringarray;
+  Variable variable;
   Variable *variablearray;
 }
 
@@ -39,84 +40,118 @@
 %token <numval> NUMBER
 %type <stringarray> strings statesDeclaration
 %type <doublearray> numbers dataList
+%type <variable> nodeDeclaration
 %type <variablearray> symbols
 %type <name> labelDeclaration
 
 /* Grammar follows */
 /* NOT READY!!! 
  * TODO:
- * - create sepsets somehow
- * - make it parse nested lists as data
+ * + the input should be divided into two parts: nodes and potentials: DONE
+ *   (all the node declarations should be before potential declarations)
+ * - create cliques correctly (with Graph.h)
+ * - create sepsets somehow   (with Graph.h)
+ * + make it parse nested lists as data: DONE (correctly?)
  * - find out what to do with the parsed stuff! */
+
+/* A PROBLEM: The graph is not entirely known until the end of the 
+ * file has been reached, but the cliques are needed immediately!
+ * Solutions:
+ * - defer the initialisation of cliques until the graph is ready 
+ * - X ? */
 %%
-input:         /* empty string */
-             | declaration input
+input:  nodes potentials {
+  /* final stuff here */
+
+  // Create the graph between parsing nodes and potentials.
+  // Graph structure and clique initialisation data 
+  // will be in initData after parsing potentials!
+
+  reset_initData();}
 ;
 
-declaration:   nodeDeclaration {/* put the node somewhere */}
-             | potentialDeclaration {/* put the clique somewhere */}
+
+nodes:         /* empty */ {/* nodes ready: new_Graph()? */}
+             | nodeDeclaration nodes { add_pvar($1); }
 ;
+
+
+potentials:    /* empty */ {/* initialisation data ready at first_initData */}
+             | potentialDeclaration potentials {/* potential somewhere? */}
+;
+
 
 nodeDeclaration:    node UNQUOTED_STRING '{' labelDeclaration 
                                              statesDeclaration
                                              positionDeclaration
                                              parameters '}' {
-  /* new_variable() ??? */
-  add_pvar(new_variable($2, $4, $5, strings_parsed)); 
-  reset_strings();}
+  /* new_variable() */
+  Variable v = new_variable($2, $4, $5, strings_parsed); 
+  reset_strings();
+  $$ = v;}
 ;
 
-/* probably not the easiest way... think again: LALR(1) */
+
 parameters:    /* end of definitions */
              | unknownDeclaration parameters
 ;
 
+
 labelDeclaration:     label '=' QUOTED_STRING ';' { $$ = $3 }
 ;
 
-/* JJT: cardinality??? */
-statesDeclaration:    states '=' '(' strings ')' ';' { $$ = strings_parsed; }
+
+/* JJT: cardinality == strings_parsed ? */
+statesDeclaration:    states '=' '(' strings ')' ';' { 
+  // makes an array of strings out of the parsed list of strings
+  $$ = $4; }
 ;
+
 
 positionDeclaration:  position '=' '(' NUMBER NUMBER ')' ';' {/* ignore */}
 ;
 
+
 unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
 ;
 
+
 potentialDeclaration: potential '(' symbols ')' '{' dataList '}' { 
-  /* <Some AI to make decisions> */ 
+  //*******************************************************************
+  /* FIXME: This is still wrong. Variables should be added to the graph
+   * and the relations should be marked. */
+  //*******************************************************************
 
-  /* FIXME: This is totally wrong. This part should use the graph 
-   *        implementation to create cliques and sepsets according to 
-   *        the variables denoted by symbols. */
+  // OBVIOUSLY the parents should be separated from the children somehow!
 
-  Clique c = make_Clique($3, symbols_parsed);
-  potential p = create_Potential($3, symbols_parsed, $6); 
-  add_clique(c);
-  // This assumes that the first symbol is the one and only child variable!
-  initialise(c, $3, p);
-
+  add_initData(create_Potential($3, symbols_parsed, $6), $3); 
   reset_symbols();}
 ;
+
 
 symbols:       /* end of list */ { $$ = make_variable_array(); }
              | QUOTED_STRING symbols { add_symbol($1); }
              | QUOTED_STRING '|' symbols { add_symbol($1); }
 ;
 
+
 strings:       /* end of list */ { $$ = make_string_array(); }
              | QUOTED_STRING strings { add_string($1); }
 ;
 
+
+/* This should ignore all brackets between numbers! */
 numbers:       /* end of list */ { $$ = make_double_array(); }
              | NUMBER numbers { add_number($1); }
+             | '(' NUMBER numbers ')' { add_number($2); } //nested lists?
 ;
 
+
 value:         QUOTED_STRING { free($1); /* ignore */}
-             | '(' numbers ')' { reset_doubles(); }
+             | '(' numbers ')' { reset_doubles(); /* ignore */}
              | NUMBER {/* ignore */}
 ;
+
 
 dataList: data '=' '(' numbers ')' ';' { $$ = $4; }
 ;
@@ -167,10 +202,14 @@ yylex (void)
       return label;
     }
     /* node */
-    if(tokenlength == 4 &&
-       strncmp("node", token, 4) == 0){
-      free(token);
-      return node;
+    if(tokenlength == 4){
+      if(strncmp("node", token, 4) == 0){
+	free(token);
+	return node;
+      }else if(strncmp("data", token, 4) == 0){
+	free(token);
+	return data;
+      }
     }
     /* potential */
     if(tokenlength == 9 &&
@@ -183,6 +222,12 @@ yylex (void)
        strncmp("states", token, 6) == 0){
       free(token);
       return states;
+    }
+    /* position */
+    if(tokenlength == 8 &&
+       strncmp("position", token, 8) == 0){
+      free(token);
+      return position;
     }
     /* End of literal string tokens */
 

@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.12 2004-05-25 14:47:28 jatoivol Exp $
+ * $Id: parser.c,v 1.13 2004-05-28 13:28:20 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -124,17 +124,11 @@ char *next_token(int *token_length){
  * The variable is chosen from THE list of variables 
  * according to the given symbol. */
 int add_symbol(char *symbol){
+  Variable v = get_variable(symbol);
+  if(v == NULL)
+    return ERROR_INVALID_ARGUMENT;
   varlink new = (varlink) malloc(sizeof(varelement));
-  varlink pointer = first_var;
-  if(pointer == 0)
-    return ERROR_INVALID_ARGUMENT; // didn't find the variable
-  // search for the variable reference
-  while(strcmp(symbol, pointer->data->symbol) != 0){
-    pointer = pointer->fwd;
-    if(pointer == 0)
-      return ERROR_INVALID_ARGUMENT; // didn't find the variable
-  }
-  new->data = pointer->data;
+  new->data = v;
   new->fwd = 0;
   new->bwd = last_temp_var;
   if(first_temp_var == 0)
@@ -145,18 +139,36 @@ int add_symbol(char *symbol){
 }
 
 
+/* Gets the parsed variable according to the symbol. */
+Variable get_variable(char *symbol){
+  varlink pointer = first_var;
+  if(pointer == 0)
+    return NULL; // didn't find the variable
+  
+  // search for the variable reference
+  while(strcmp(symbol, pointer->data->symbol) != 0){
+    pointer = pointer->fwd;
+    if(pointer == 0)
+      return NULL; // didn't find the variable
+  }
+  return pointer->data;
+}
+
+
 /* correctness? */
-int add_clique(Clique c){
-  cliquelink new = (cliquelink) malloc(sizeof(cliqueelement));
-  new->data = c;
+int add_initData(potential p, Variable* vars){
+  initDataLink new = (initDataLink) malloc(sizeof(initDataElement));
+  new->data = p;
+  new->variables = vars;
   new->fwd = 0;
-  new->bwd = last_clique;
-  if(first_clique == 0)
-    first_clique = new;
-  last_clique = new;
-  cliques_parsed++;
+  new->bwd = last_initData;
+  if(first_initData == 0)
+    first_initData = new;
+  last_initData = new;
+  initData_parsed++;
   return 0;
 }
+
 
 /* correctness? */
 int add_pvar(Variable var){
@@ -171,6 +183,7 @@ int add_pvar(Variable var){
   return 0;
 }
 
+
 /* correctness? */
 int add_double(double d){
   doublelink new = (doublelink) malloc(sizeof(doubleelement));
@@ -183,6 +196,7 @@ int add_double(double d){
   doubles_parsed++;
   return 0;
 }
+
 
 /* correctness? */
 int add_string(char* string){
@@ -225,6 +239,7 @@ double* make_double_array(){
   return new;
 }
 
+
 /* Creates an array from the strings in the list. 
  * The size will be strings_parsed. */
 char** make_string_array(){
@@ -237,6 +252,7 @@ char** make_string_array(){
   }
   return new;
 }
+
 
 /* Removes everything from the list of doubles. This is likely to be used 
  * after the parser has parsed doubles to the list, created an array out 
@@ -254,6 +270,7 @@ int reset_doubles(){
   return 0;
 }
 
+
 /* Removes everything from the list of strings and resets the counter. 
  * The actual memory for the strings is not freed, only the list. */
 int reset_strings(){
@@ -268,6 +285,7 @@ int reset_strings(){
   return 0;
 }
 
+
 /* Removes everything from the temporary list of variables. */
 int reset_symbols(){
   varlink ln = last_temp_var;
@@ -278,5 +296,21 @@ int reset_symbols(){
   }
   first_temp_var = 0;
   symbols_parsed = 0;
+  return 0;
+}
+
+
+/* Frees some memory after parsing. */
+int reset_initData(){
+  initDataLink ln = last_initData;
+  last_initData = 0;
+  while(ln != 0){
+    free_potential(ln->data); // hopefully the potential was used
+    free(ln->variables); // see calloc in make_variable_array();
+    ln = ln->bwd;
+    free(ln->fwd); /* correct? */
+  }
+  first_initData = 0;
+  initData_parsed = 0;  
   return 0;
 }

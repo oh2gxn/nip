@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h> // DEBUG!!
 #include "Clique.h"
 #include "Variable.h"
 #include "potential.h"
@@ -118,12 +117,6 @@ potential create_Potential(Variable variables[], int num_of_vars,
     cardinality[i] = variables[reorder[i]]->cardinality;
   }
 
-  /* DEBUG!!! */
-  //for(i = 0; i < num_of_vars; i++){
-  //  printf("Debug: indices[%d] = %d\n", i, indices[i]);
-  //  printf("Debug: reorder[%d] = %d\n", i, reorder[i]);    
-  //}
-
   /* Create a potential */
   p = make_potential(cardinality, num_of_vars, NULL);
   
@@ -147,9 +140,6 @@ potential create_Potential(Variable variables[], int num_of_vars,
 
     // set the value (in a little ugly way)
     p->data[i] = data[index];
-
-    /* DEBUG!!! */
-    printf("Debug: i=%d, index=%d\n", i, index);
   }
 
   return p;

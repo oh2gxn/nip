@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.9 2004-05-25 13:42:21 jatoivol Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.10 2004-05-28 13:28:20 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -61,18 +61,19 @@ static stringlink last_string = 0;
 static int strings_parsed = 0;
 
 
-struct cliquelist {
-  Clique data;
-  struct cliquelist *fwd;
-  struct cliquelist *bwd;
+struct initDataList {
+  potential data;
+  Variable* variables;
+  struct initDataList *fwd;
+  struct initDataList *bwd;
 };
 
-typedef struct cliquelist cliqueelement;
-typedef cliqueelement *cliquelink;
+typedef struct initDataList initDataElement;
+typedef initDataElement *initDataLink;
 
-static cliquelink first_clique = 0;
-static cliquelink last_clique = 0;
-static int cliques_parsed = 0;
+static initDataLink first_initData = 0;
+static initDataLink last_initData = 0;
+static int initData_parsed = 0;
 
 
 /* The current input file */
@@ -104,8 +105,12 @@ char *next_token(int *token_length);
  * chosen from THE list of variables according to the given symbol. */
 int add_symbol(char *symbol);
 
-/* Adds a clique into the list of cliques. */
-int add_clique(Clique c);
+/* Gets the parsed variable according to the symbol. */
+Variable get_variable(char *symbol);
+
+/* Adds a potential and the correspondent variable references into a list.
+ * The "ownership" of the vars[] array changes! */
+int add_initData(potential p, Variable* vars);
 
 /* Adds a variable into THE list of variables. */
 int add_pvar(Variable var);
@@ -138,5 +143,8 @@ int reset_strings();
 
 /* Removes everything from the temporary list of variables. */
 int reset_symbols();
+
+/* Frees some memory after parsing. */
+int reset_initData();
 
 #endif /* __PARSER_H__ */

@@ -30,6 +30,7 @@ typedef union {
   double *doublearray;
   char *name;
   char **stringarray;
+  Variable variable;
   Variable *variablearray;
 } YYSTYPE;
 #include <stdio.h>
@@ -42,11 +43,11 @@ typedef union {
 
 
 
-#define	YYFINAL		64
+#define	YYFINAL		70
 #define	YYFLAG		-32768
 #define	YYNTBASE	19
 
-#define YYTRANSLATE(x) ((unsigned)(x) <= 266 ? yytranslate[x] : 33)
+#define YYTRANSLATE(x) ((unsigned)(x) <= 266 ? yytranslate[x] : 34)
 
 static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -80,30 +81,31 @@ static const char yytranslate[] = {     0,
 
 #if YYDEBUG != 0
 static const short yyprhs[] = {     0,
-     0,     1,     4,     6,     8,    17,    18,    21,    26,    33,
-    41,    46,    54,    55,    58,    62,    63,    66,    67,    70,
-    72,    76,    78
+     0,     3,     4,     7,     8,    11,    20,    21,    24,    29,
+    36,    44,    49,    57,    58,    61,    65,    66,    69,    70,
+    73,    78,    80,    84,    86
 };
 
-static const short yyrhs[] = {    -1,
-    20,    19,     0,    21,     0,    27,     0,     3,    10,    12,
-    23,    24,    25,    22,    13,     0,     0,    26,    22,     0,
-     6,    14,     9,    15,     0,     5,    14,    16,    29,    17,
-    15,     0,     7,    14,    16,    11,    11,    17,    15,     0,
-    10,    14,    31,    15,     0,     4,    16,    28,    17,    12,
-    32,    13,     0,     0,     9,    28,     0,     9,    18,    28,
-     0,     0,     9,    29,     0,     0,    11,    30,     0,     9,
-     0,    16,    30,    17,     0,    11,     0,     8,    14,    16,
-    30,    17,    15,     0
+static const short yyrhs[] = {    20,
+    21,     0,     0,    22,    20,     0,     0,    28,    21,     0,
+     3,    10,    12,    24,    25,    26,    23,    13,     0,     0,
+    27,    23,     0,     6,    14,     9,    15,     0,     5,    14,
+    16,    30,    17,    15,     0,     7,    14,    16,    11,    11,
+    17,    15,     0,    10,    14,    32,    15,     0,     4,    16,
+    29,    17,    12,    33,    13,     0,     0,     9,    29,     0,
+     9,    18,    29,     0,     0,     9,    30,     0,     0,    11,
+    31,     0,    16,    11,    31,    17,     0,     9,     0,    16,
+    31,    17,     0,    11,     0,     8,    14,    16,    31,    17,
+    15,     0
 };
 
 #endif
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    49,    50,    53,    54,    57,    67,    68,    71,    75,    78,
-    81,    84,    97,    98,    99,   102,   103,   106,   107,   110,
-   111,   112,   115
+    63,    74,    75,    79,    80,    84,    95,    96,   100,   105,
+   111,   115,   119,   132,   133,   134,   138,   139,   144,   145,
+   146,   150,   151,   152,   156
 };
 #endif
 
@@ -113,74 +115,74 @@ static const short yyrline[] = { 0,
 static const char * const yytname[] = {   "$","error","$undefined.","\"node\"",
 "\"potential\"","\"states\"","\"label\"","\"position\"","\"data\"","QUOTED_STRING",
 "UNQUOTED_STRING","NUMBER","'{'","'}'","'='","';'","'('","')'","'|'","input",
-"declaration","nodeDeclaration","parameters","labelDeclaration","statesDeclaration",
+"nodes","potentials","nodeDeclaration","parameters","labelDeclaration","statesDeclaration",
 "positionDeclaration","unknownDeclaration","potentialDeclaration","symbols",
 "strings","numbers","value","dataList", NULL
 };
 #endif
 
 static const short yyr1[] = {     0,
-    19,    19,    20,    20,    21,    22,    22,    23,    24,    25,
-    26,    27,    28,    28,    28,    29,    29,    30,    30,    31,
-    31,    31,    32
+    19,    20,    20,    21,    21,    22,    23,    23,    24,    25,
+    26,    27,    28,    29,    29,    29,    30,    30,    31,    31,
+    31,    32,    32,    32,    33
 };
 
 static const short yyr2[] = {     0,
-     0,     2,     1,     1,     8,     0,     2,     4,     6,     7,
-     4,     7,     0,     2,     3,     0,     2,     0,     2,     1,
-     3,     1,     6
+     2,     0,     2,     0,     2,     8,     0,     2,     4,     6,
+     7,     4,     7,     0,     2,     3,     0,     2,     0,     2,
+     4,     1,     3,     1,     6
 };
 
-static const short yydefact[] = {     1,
-     0,     0,     1,     3,     4,     0,    13,     2,     0,    13,
-     0,     0,     0,    13,    14,     0,     0,     0,     0,    15,
-     0,     0,     0,     0,     6,     0,     0,     8,    16,     0,
-     0,     0,     6,     0,    12,    16,     0,     0,     0,     5,
-     7,    18,    17,     0,     0,    20,    22,    18,     0,    18,
-     0,     9,     0,     0,    11,    19,     0,     0,    21,    23,
-    10,     0,     0,     0
+static const short yydefact[] = {     2,
+     0,     4,     2,     0,     0,     1,     4,     3,     0,    14,
+     5,     0,     0,    14,     0,     0,     0,     0,    14,    15,
+     0,     0,     0,     0,     7,    16,     0,     9,    17,     0,
+     0,     0,     7,     0,     0,    17,     0,     0,     0,     6,
+     8,     0,    13,    18,     0,     0,    22,    24,    19,     0,
+    19,    10,     0,    19,     0,     0,    12,     0,     0,    20,
+    19,    23,     0,    11,     0,    25,    21,     0,     0,     0
 };
 
-static const short yydefgoto[] = {     8,
-     3,     4,    32,    13,    19,    25,    33,     5,    11,    37,
-    51,    49,    27
+static const short yydefgoto[] = {    68,
+     2,     6,     3,    32,    13,    18,    25,    33,     7,    15,
+    37,    56,    50,    35
 };
 
-static const short yypact[] = {     8,
-    -5,    -3,     8,-32768,-32768,     2,    -2,-32768,     9,    -9,
-    -1,     3,    13,    -2,-32768,     7,    11,    10,    14,-32768,
-    15,    12,     6,    16,    18,    17,    19,-32768,    20,    21,
-    22,    25,    18,    23,-32768,    20,    24,    29,    -8,-32768,
--32768,    31,-32768,    28,    33,-32768,-32768,    31,    30,    31,
-    32,-32768,    34,    35,-32768,-32768,    38,    39,-32768,-32768,
--32768,    26,    46,-32768
+static const short yypact[] = {     1,
+    -1,    10,     1,     3,     0,-32768,    10,-32768,    11,     9,
+-32768,     5,    15,    -7,     4,    13,    12,    16,     9,-32768,
+    17,    18,     8,    14,    20,-32768,    19,-32768,    22,    21,
+    24,    23,    20,    25,    27,    22,    26,    30,    -4,-32768,
+-32768,    28,-32768,-32768,    31,    34,-32768,-32768,   -10,    32,
+   -10,-32768,    33,   -10,    37,    35,-32768,    36,    39,-32768,
+   -10,-32768,    40,-32768,    41,-32768,-32768,    42,    49,-32768
 };
 
-static const short yypgoto[] = {    47,
--32768,-32768,     0,-32768,-32768,-32768,-32768,-32768,    -4,   -11,
-   -46,-32768,-32768
+static const short yypgoto[] = {-32768,
+    29,    44,-32768,    -8,-32768,-32768,-32768,-32768,-32768,    -6,
+    -2,   -51,-32768,-32768
 };
 
 
-#define	YYLAST		54
+#define	YYLAST		58
 
 
-static const short yytable[] = {    10,
-    46,    54,    47,    56,     6,    15,    10,    48,    14,    20,
-     1,     2,     7,     9,    12,    16,    17,    18,    21,    22,
-    24,    29,    26,    23,    43,    63,    28,    31,    36,    30,
-    34,    35,    41,     0,     0,    39,    38,    40,    42,    45,
-    44,    50,    52,    53,    55,    64,    62,     0,    57,     0,
-    58,    59,    60,    61
+static const short yytable[] = {    58,
+    54,    14,    60,     1,    47,    55,    48,    20,     4,    65,
+    19,    49,    26,     5,     9,    10,    12,    14,    16,    17,
+    21,    22,    24,    29,    41,    23,    34,    30,    27,    31,
+    36,     8,    28,    44,     0,    40,    38,    39,    42,    43,
+    46,    69,    45,    51,    53,    52,    57,    61,    70,    59,
+    11,    62,    63,    64,    66,     0,     0,    67
 };
 
-static const short yycheck[] = {     9,
-     9,    48,    11,    50,    10,    10,     9,    16,    18,    14,
-     3,     4,    16,    12,     6,    17,    14,     5,    12,     9,
-     7,    16,     8,    14,    36,     0,    15,    10,     9,    14,
-    14,    13,    33,    -1,    -1,    14,    16,    13,    16,    11,
-    17,    11,    15,    11,    15,     0,     0,    -1,    17,    -1,
-    17,    17,    15,    15
+static const short yycheck[] = {    51,
+    11,     9,    54,     3,     9,    16,    11,    14,    10,    61,
+    18,    16,    19,     4,    12,    16,     6,     9,    14,     5,
+    17,     9,     7,    16,    33,    14,     8,    14,    12,    10,
+     9,     3,    15,    36,    -1,    13,    16,    14,    14,    13,
+    11,     0,    17,    16,    11,    15,    15,    11,     0,    17,
+     7,    17,    17,    15,    15,    -1,    -1,    17
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
 #line 3 "bison.simple"
@@ -680,93 +682,118 @@ yyreduce:
 
   switch (yyn) {
 
+case 1:
+#line 63 "huginnet.y"
+{
+  /* final stuff here */
+
+  // Create the graph between parsing nodes and potentials.
+  // Graph structure and clique initialisation data 
+  // will be in initData after parsing potentials!
+
+  reset_initData();;
+    break;}
+case 2:
+#line 74 "huginnet.y"
+{/* nodes ready: new_Graph()? */;
+    break;}
 case 3:
-#line 53 "huginnet.y"
-{/* put the node somewhere */;
+#line 75 "huginnet.y"
+{ add_pvar(yyvsp[-1].variable); ;
     break;}
 case 4:
-#line 54 "huginnet.y"
-{/* put the clique somewhere */;
+#line 79 "huginnet.y"
+{/* initialisation data ready at first_initData */;
     break;}
 case 5:
-#line 60 "huginnet.y"
-{
-  /* new_variable() ??? */
-  add_pvar(new_variable(yyvsp[-6].name, yyvsp[-4].name, yyvsp[-3].stringarray, strings_parsed)); 
-  reset_strings();;
+#line 80 "huginnet.y"
+{/* potential somewhere? */;
     break;}
-case 8:
-#line 71 "huginnet.y"
-{ yyval.name = yyvsp[-1].name ;
+case 6:
+#line 87 "huginnet.y"
+{
+  /* new_variable() */
+  Variable v = new_variable(yyvsp[-6].name, yyvsp[-4].name, yyvsp[-3].stringarray, strings_parsed); 
+  reset_strings();
+  yyval.variable = v;;
     break;}
 case 9:
-#line 75 "huginnet.y"
-{ yyval.stringarray = strings_parsed; ;
+#line 100 "huginnet.y"
+{ yyval.name = yyvsp[-1].name ;
     break;}
 case 10:
-#line 78 "huginnet.y"
-{/* ignore */;
+#line 105 "huginnet.y"
+{ 
+  // makes an array of strings out of the parsed list of strings
+  yyval.stringarray = yyvsp[-2].stringarray; ;
     break;}
 case 11:
-#line 81 "huginnet.y"
+#line 111 "huginnet.y"
 {/* ignore */;
     break;}
 case 12:
-#line 84 "huginnet.y"
-{ 
-  /* <Some AI to make decisions> */ 
-  Clique c = make_Clique(yyvsp[-4].variablearray, symbols_parsed);
-  potential p = create_Potential(yyvsp[-4].variablearray, symbols_parsed, yyvsp[-1].doublearray); 
-  add_clique(c);
-  // This assumes that the first symbol is the one and only child variable!
-  initialise(c, yyvsp[-4].variablearray, p);
-  
-  /* ??? HOW THE PHUK CAN YOU CREATE SEPSETS ??? */
-
-  reset_symbols();;
-    break;}
-case 13:
-#line 97 "huginnet.y"
-{ yyval.variablearray = make_variable_array(); ;
-    break;}
-case 14:
-#line 98 "huginnet.y"
-{ add_symbol(yyvsp[-1].name); ;
-    break;}
-case 15:
-#line 99 "huginnet.y"
-{ add_symbol(yyvsp[-2].name); ;
-    break;}
-case 16:
-#line 102 "huginnet.y"
-{ yyval.stringarray = make_string_array(); ;
-    break;}
-case 17:
-#line 103 "huginnet.y"
-{ add_string(yyvsp[-1].name); ;
-    break;}
-case 18:
-#line 106 "huginnet.y"
-{ yyval.doublearray = make_double_array(); ;
-    break;}
-case 19:
-#line 107 "huginnet.y"
-{ add_number(yyvsp[-1].numval); ;
-    break;}
-case 20:
-#line 110 "huginnet.y"
-{ free(yyvsp[0].name); /* ignore */;
-    break;}
-case 21:
-#line 111 "huginnet.y"
-{ reset_doubles(); ;
-    break;}
-case 22:
-#line 112 "huginnet.y"
+#line 115 "huginnet.y"
 {/* ignore */;
     break;}
+case 13:
+#line 119 "huginnet.y"
+{ 
+  //*******************************************************************
+  /* FIXME: This is still wrong. Variables should be added to the graph
+   * and the relations should be marked. */
+  //*******************************************************************
+
+  // OBVIOUSLY the parents should be separated from the children somehow!
+
+  add_initData(create_Potential(yyvsp[-4].variablearray, symbols_parsed, yyvsp[-1].doublearray), yyvsp[-4].variablearray); 
+  reset_symbols();;
+    break;}
+case 14:
+#line 132 "huginnet.y"
+{ yyval.variablearray = make_variable_array(); ;
+    break;}
+case 15:
+#line 133 "huginnet.y"
+{ add_symbol(yyvsp[-1].name); ;
+    break;}
+case 16:
+#line 134 "huginnet.y"
+{ add_symbol(yyvsp[-2].name); ;
+    break;}
+case 17:
+#line 138 "huginnet.y"
+{ yyval.stringarray = make_string_array(); ;
+    break;}
+case 18:
+#line 139 "huginnet.y"
+{ add_string(yyvsp[-1].name); ;
+    break;}
+case 19:
+#line 144 "huginnet.y"
+{ yyval.doublearray = make_double_array(); ;
+    break;}
+case 20:
+#line 145 "huginnet.y"
+{ add_number(yyvsp[-1].numval); ;
+    break;}
+case 21:
+#line 146 "huginnet.y"
+{ add_number(yyvsp[-2].numval); ;
+    break;}
+case 22:
+#line 150 "huginnet.y"
+{ free(yyvsp[0].name); /* ignore */;
+    break;}
 case 23:
-#line 115 "huginnet.y"
+#line 151 "huginnet.y"
+{ reset_doubles(); /* ignore */;
+    break;}
+case 24:
+#line 152 "huginnet.y"
+{/* ignore */;
+    break;}
+case 25:
+#line 156 "huginnet.y"
 { yyval.doublearray = yyvsp[-2].doublearray; ;
     break;}
 }
@@ -967,7 +994,7 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 118 "huginnet.y"
+#line 159 "huginnet.y"
 
 /* Lexical analyzer */
 /* JJT: I did some reading. Might get nasty, if there has to be a token 
@@ -1014,10 +1041,14 @@ yylex (void)
       return label;
     }
     /* node */
-    if(tokenlength == 4 &&
-       strncmp("node", token, 4) == 0){
-      free(token);
-      return node;
+    if(tokenlength == 4){
+      if(strncmp("node", token, 4) == 0){
+	free(token);
+	return node;
+      }else if(strncmp("data", token, 4) == 0){
+	free(token);
+	return data;
+      }
     }
     /* potential */
     if(tokenlength == 9 &&
@@ -1030,6 +1061,12 @@ yylex (void)
        strncmp("states", token, 6) == 0){
       free(token);
       return states;
+    }
+    /* position */
+    if(tokenlength == 8 &&
+       strncmp("position", token, 8) == 0){
+      free(token);
+      return position;
     }
     /* End of literal string tokens */
 
