@@ -1,10 +1,13 @@
 #include "parser.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]){
 
   int i, j;
+  int num_of_tokens;
   datafile *file;
+  char **tokens;
 
   if(argc < 2){
     printf("Filename must be given!\n");
@@ -27,6 +30,19 @@ int main(int argc, char *argv[]){
       printf("%s ", file->node_states[i][j]);
     printf("\n");
   }
+
+  printf("\nReading tokens one line at a time.\n");
+
+  while((num_of_tokens = nextline_tokens(file, ',', &tokens)) >= 0){
+
+    for(i = 0; i < num_of_tokens; i++){
+      printf("%s ", tokens[i]);
+      free(tokens[i]);
+    }
+    printf("\n");
+    free(tokens);
+  }
+
   close_datafile(file);
 
   return 0;

@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.50 2004-06-30 07:58:52 mvkorpel Exp $
+ * $Id: parser.c,v 1.51 2004-06-30 08:31:42 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -192,6 +192,7 @@ datafile *open_datafile(char *filename, char separator,
 	}
 
 	if(nodenames){
+	  f->firstline_labels = 1;
 
 #ifdef DEBUG_DATAFILE
 	  printf("Now in open_datafile (3)\n");
@@ -216,6 +217,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	}
 	else{
+	  f->firstline_labels = 0;
 
 	  for(i = 0; i < num_of_tokens; i++){
 
@@ -334,6 +336,8 @@ datafile *open_datafile(char *filename, char separator,
   }
 
   rewind(f->file);
+  f->line_now = 0;
+
   return f;
 }
 
@@ -406,8 +410,18 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
     return -1;
   }
 
+  /* Skip the first line if it contains node labels. */
+  if(f->firstline_labels && f->line_now == 0){
+    if(fgets(line, MAX_LINELENGTH, f->file) == NULL)
+      return -1;
+    else
+      f->line_now++;
+  }
+
   if(fgets(line, MAX_LINELENGTH, f->file) == NULL)
     return -1;
+  else
+    f->line_now++;
 
   num_of_tokens = count_tokens(line, NULL, 0, &separator, 1, 0, 0);
   token_bounds = tokenise(line, num_of_tokens, 0, &separator, 1, 0, 0);
@@ -449,7 +463,8 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
 
     token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
 
-    *tokens[i] = token;
+    /* Children, remember what papa said: always use parentheses... */
+    (*tokens)[i] = token;
   }
 
   free(token_bounds);
