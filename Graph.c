@@ -5,11 +5,28 @@
 
 Graph* new_graph(unsigned n)
 {
+    int i;
     Graph* newgraph = (Graph*) malloc(sizeof(Graph));
     newgraph->size = n; newgraph->top = 0;
-    newgraph->adj_matrix = (int**) calloc(n*n, sizeof(int));
+    newgraph->adj_matrix = (int**) calloc(n, sizeof(int*));
+    for(i=0; i<n; i++){
+      newgraph->adj_matrix[i] = (int*) calloc(n, sizeof(int));
+      memset(newgraph->adj_matrix[i], 0, n*sizeof(int));
+    }
     newgraph->variables = (Variable*) calloc(n, sizeof(Variable));
     return newgraph;
+}
+
+void free_graph(Graph* G){
+  int size, i;
+  if(G == NULL)
+    return;
+  size = G->size;
+  for(i = 0; i < size; i++)
+    free(G->adj_matrix[i]);
+  free(G->adj_matrix);
+  free(G->variables);
+  free(G);
 }
 
 int add_variable(Graph* G, Variable v)
@@ -38,10 +55,10 @@ int add_child(Graph* G, Variable parent, Variable child)
 
     for (i = 0; i < G->size; i++)
     {
-	if (G->variables[i] == parent)
-	    parent_i = i;
-	if (G->variables[i] == child)
-	    child_i = i;
+      if (G->variables[i] == parent)
+	parent_i = i;
+      if (G->variables[i] == child)
+	child_i = i;
     }
 
     if (parent_i == -1 || child_i == -1)
@@ -101,8 +118,8 @@ void moralise(Graph* Gm, Graph* G)
                 for (j = i+1; j < n; j++) /* parents of v which are > i */
                 {
                     Gm->adj_matrix[i][j] |= G->adj_matrix[j][v];
-                    Gm->adj_matrix[j][i] |= G->adj_matrix[j][v];                    
-                }
+                    Gm->adj_matrix[j][i] |= G->adj_matrix[j][v];
+		}
 }
 
 /* Not specified Graph.h -- internal helper function */
@@ -115,7 +132,7 @@ void triangulate(Graph* Gm)
     n = Gm->size;
     Gm_copy = new_graph(n);
     for (i = 0; i < n; i++)
-        add_variable(Gm_copy, Gm->variables[i]);
+      add_variable(Gm_copy, Gm->variables[i]);
         
     memcpy(Gm_copy->adj_matrix[0], Gm->adj_matrix[0], n*n*sizeof(int));
     

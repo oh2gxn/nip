@@ -16,11 +16,14 @@ Graph* new_graph(unsigned n);
  * Parameter n: number of variables in a graph.
  */
 
+void free_graph(Graph* G);
+/* Frees the memory used by the Graph G.
+ */
+
 int add_variable(Graph* G, Variable v);
 /* Adds a new variable (ie. a node) to the graph. 
  * Parameter G: the graph
  * Parameter v: the variable to be added
- * Returns a graph.
  */
 
 int add_all_variables(Graph* G, Variable vars[]);
