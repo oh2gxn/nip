@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.101 2004-09-07 10:16:37 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.102 2004-09-20 21:13:00 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -896,7 +896,10 @@ int initialise(Clique c, Variable child, Variable parents[], potential p){
 
   /* Some extra work is done here,
    * because only the last initialisation counts. */
-  copy_potential(c->p, c->original_p);
+  copy_potential(c->p, c->original_p); /* FIXME */
+  /* This should be an optional phase: in timeslice models 
+   * some clique potentials need to be initialised but still 
+   * be retractable... */
 
   free(extra_vars); /* free(NULL) is O.K. */
   return NO_ERROR;
