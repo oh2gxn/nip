@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.47 2004-06-29 11:45:22 mvkorpel Exp $
+ * $Id: parser.c,v 1.48 2004-06-29 12:59:12 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -57,8 +57,6 @@ static int add_to_stringlink(stringlink *s, char* string);
 static int search_stringlinks(stringlink s, char* string);
 
 static int nullobservation(char *token);
-
-static int min(int i1, int i2);
 
 int open_yyparse_infile(const char *filename){
   if(!nip_yyparse_infile_open){
@@ -240,7 +238,9 @@ datafile *open_datafile(char *filename, char separator,
 	printf("Now in open_datafile (4), linecounter == %d\n", linecounter);
 #endif
 
-	for(i = 0; i < min(f->num_of_nodes, num_of_tokens); i++){
+	for(i = 0;
+	    i < (f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens);
+	    i++){
 
 	  token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
 				  sizeof(char));
@@ -324,15 +324,6 @@ datafile *open_datafile(char *filename, char separator,
   }
 
   return f;
-}
-
-
-static int min(int i1, int i2){
-
-  if(i1 < i2)
-    return i1;
-  else
-    return i2;
 }
 
 
