@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.68 2004-07-01 12:49:28 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.69 2004-07-01 14:06:06 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -36,7 +36,7 @@ static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 
 static int clique_marked(Clique c);
 
-static int global_retraction(Clique c);
+/*static int global_retraction(Clique c);*/
 
 static void retract_Clique(Clique c);
 
@@ -569,7 +569,11 @@ int initialise(Clique c, Variable child, Variable parents[], potential p){
 
   if(diff > 0){
     extra_vars = (int *) calloc(diff, sizeof(int));
-    
+    if(!extra_vars){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return ERROR_OUTOFMEMORY;
+    }    
+
     /***************************************************************/
     /* HEY! parents[] NOT assumed to be in any particular order!   */
     /***************************************************************/
@@ -579,12 +583,13 @@ int initialise(Clique c, Variable child, Variable parents[], potential p){
     for(i=0; i < c->p->num_of_vars; i++){
       var = (c->variables)[i];
       extra = 1;
-      for(j = 0; j < p->num_of_vars - 1; j++){
-	if(equal_variables(var, parents[j]) ||
-	   equal_variables(var, child)){
+
+      for(j = 0; j < p->num_of_vars - 1; j++)
+	if(equal_variables(var, parents[j]))
 	  extra = 0;
-	}
-      }
+      if(equal_variables(var, child))
+	extra = 0;
+
       if(extra)
 	extra_vars[k++] = i;
     }
@@ -627,7 +632,7 @@ int normalise(double result[], int array_size){
 }
 
 
-static int global_retraction(Clique c){
+int global_retraction(Clique c){
 
   int index;
   Variable v;

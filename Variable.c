@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.31 2004-07-01 12:49:28 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.32 2004-07-01 14:06:07 jatoivol Exp $
  */
 
 #include <string.h>
@@ -10,7 +10,6 @@
 
 static varlink nip_first_var = NULL;
 static varlink nip_last_var = NULL;
-static varlink list_pointer = NULL;
 static int nip_vars_parsed = 0;
 
 static int variable_name(Variable v, const char *name);

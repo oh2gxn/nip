@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.38 2004-07-01 12:49:28 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.39 2004-07-01 14:06:06 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -136,6 +136,10 @@ int marginalise(Clique c, Variable v, double r[]);
 int normalise(double result[], int array_size);
 
 
+/* Method for backing away from impossibilities in observation. */
+int global_retraction(Clique c);
+
+
 /*
  * Function for entering an observation to a clique tree.
  * The observed state of the variable is given as a string.
@@ -143,6 +147,13 @@ int normalise(double result[], int array_size);
  */
 int enter_observation(Variable v, char *state);
 
+
+/*
+ * Function for entering an observation to a clique tree.
+ * The observed state of the variable is given as an index.
+ * (See get_stateindex() at Variable.h)
+ * Returns an error code.
+ */
 int enter_i_observation(Variable v, int index);
 
 

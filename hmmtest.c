@@ -235,17 +235,47 @@ int main(int argc, char *argv[]){
     
     /* 5. Normalisation */
     normalise(result, number_of_values(interesting));
-    
-    
+
     /* 6. Print the result */
     printf("Normalised probability of %s:\n", get_symbol(interesting));
     for(i = 0; i < number_of_values(interesting); i++)
       printf("P(%s=%s) = %f\n", get_symbol(interesting), 
-	     (interesting->statenames)[i], result[i]);
-    
+	     (interesting->statenames)[i], result[i]);    
     printf("\n");
-    
+
+
     /* an experimental forward phase (a.k.a. filtering)... */
+    /* ---------- copy...paste --------------- */
+    /* Calculates the filtered values */
+    for(i = 0; i < num_of_hidden; i++){
+      
+      interesting = hidden[i];
+      if(!interesting){
+	printf("In hmmtest.c : Variable of interest not found.\n");
+	return 1;
+      }
+    
+      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				       &interesting, 1);
+      if(!clique_of_interest){
+	printf("In hmmtest.c : No clique found! Sorry.\n");
+	return 1;
+      }  
+    
+      marginalise(clique_of_interest, interesting, filtered[t][i]);
+      
+      normalise(filtered[t][i], number_of_values(interesting));    
+      
+      for(j = 0; j < number_of_values(interesting); j++)
+	printf("P(%s(%d)=%s) = %f\n", get_symbol(interesting), t,
+	     (interesting->statenames)[j], filtered[t][i][j]);
+      printf("\n");
+    }    
+    /* ------------------------------------- */
+    
+
+    
+
 
     /* Reset the join tree and new priors from the posteriors by entering
      * evidence. */
