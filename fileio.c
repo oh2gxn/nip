@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.9 2004-05-14 14:13:55 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.10 2004-05-17 12:59:38 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -14,6 +14,8 @@
 #define STRING_NODE "node"
 #define STRING_STATES "states"
 #define STRING_LABEL "label"
+
+//#define DEBUG_IO
 
 int count_words(const char *s, int *chars){
   int words = 0, state = 0;
@@ -36,7 +38,8 @@ int count_words(const char *s, int *chars){
 }
 
 int count_tokens(const char *s, int *chars){
-  int tokens = 0, state = 0;
+  int tokens = 0, state = 0, i;
+  char ch;
   if(chars)
     *chars = 0;
 
@@ -49,13 +52,22 @@ int count_tokens(const char *s, int *chars){
 
     if(state != 2 &&
        ((*s == '(') || (*s == ')') || (*s == '{') || (*s == '}') ||
-	(*s == '=') || (*s == ';'))){
+	(*s == '=') || (*s == ';') || (*s == ','))){
       tokens++;
       state = 0;
     }
     else if(state != 2 && (*s == '"')){
-      state = 2;
-      tokens++;
+
+      /* Check if we have a matching '"' */
+      i = 1;
+      while((ch = s[i++]) != '\0')
+	if(ch == '"'){
+
+	  /* Quoted string starts from here. */
+	  state = 2;
+	  tokens++;
+	  break;
+	}
     }
     else if(state == 0){
       if((*s != ' ') && (*s != '\t') && (*s != '\n')){
@@ -79,7 +91,8 @@ int count_tokens(const char *s, int *chars){
 
 int *tokenise(const char s[], int n, int mode){
   int *indices;
-  int i = 0, j = 0, state = 0, arraysize = 2*n;
+  int i = 0, j = 0, state = 0, arraysize = 2*n, k;
+  char ch, ch2;
 
   if(s == NULL){
     report_error(ERROR_NULLPOINTER, 0);
@@ -101,10 +114,10 @@ int *tokenise(const char s[], int n, int mode){
     return NULL;
   }
 
-  while (s[i] != '\0'){
+  while ((ch = s[i]) != '\0'){
     if(mode == 1 && state != 2 &&
-       ((*s == '(') || (*s == ')') || (*s == '{') || (*s == '}') ||
-	(*s == '=') || (*s == ';'))){
+       ((ch == '(') || (ch == ')') || (ch == '{') || (ch == '}') ||
+	(ch == '=') || (ch == ';') || (ch == ','))){
 
       /* If we were not done processing the previous token,
        * mark it as done.
@@ -117,22 +130,37 @@ int *tokenise(const char s[], int n, int mode){
       indices[j++] = i;
       indices[j++] = i + 1;
     }
-    else if(mode == 1 && state != 2 && (*s == '"')){
-      state = 2;
-      indices[j++] = i;
+    else if(mode == 1 && state != 2 && (ch == '"')){
+
+      /* Check if we have a matching '"' */
+      k = i + 1;
+      while((ch2 = s[k++]) != '\0')
+	if(ch2 == '"'){
+
+	  /* If we were not done processing the previous token,
+	   * mark it as done.
+	   */
+	  if(state == 1)
+	    indices[j++] = i;
+
+	  /* Quoted string starts from here. */
+	  state = 2;
+	  indices[j++] = i;
+	  break;
+	}
     }
     else if(state == 0){
-      if((s[i] != ' ') && (s[i] != '\t') && (s[i] != '\n')){
+      if((ch != ' ') && (ch != '\t') && (ch != '\n')){
 	indices[j++] = i;
 	state = 1;
       }
     }
     else if(state == 1 &&
-	    ((s[i] == ' ') || (s[i] == '\t') || (s[i] == '\n'))){
+	    ((ch == ' ') || (ch == '\t') || (ch == '\n'))){
       indices[j++] = i;
       state = 0;
     }
-    else if(mode == 1 && state == 2 && (*s == '"')){
+    else if(mode == 1 && state == 2 && (ch == '"')){
       indices[j++] = i + 1;
       state = 0;
     }
@@ -141,6 +169,9 @@ int *tokenise(const char s[], int n, int mode){
     if(j == arraysize)
       break;
     i++;
+#ifdef DEBUG_IO
+    printf("i = %d, state = %d\n", i, state);
+#endif
   }
 
   /* Mark the end of a word that extends to the end of the string */
@@ -149,6 +180,14 @@ int *tokenise(const char s[], int n, int mode){
 
   /* Not enough words */
   else if(j < arraysize - 1){
+#ifdef DEBUG_IO
+    printf("tokenise ei loytanyt tarpeeksi sanoja\n", i);
+    printf("j = %d, arraysize = %d\n", j, arraysize);
+    printf("indices =\n");
+    for(i = 0; i < j; i++)
+      printf("%d ", indices[i]);
+    printf("\n");
+#endif
     free(indices);
     return NULL;
   }

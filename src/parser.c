@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.8 2004-05-14 14:13:55 mvkorpel Exp $
+ * $Id: parser.c,v 1.9 2004-05-17 12:59:38 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -8,6 +8,8 @@
 #include "parser.h"
 #include "fileio.h"
 #include "errorhandler.h"
+
+//#define DEBUG_PARSER
 
 int open_infile(const char *file){
   if(!file_open){
@@ -76,6 +78,9 @@ char *next_token(int *token_length){
       if(!indexarray){
 	report_error(ERROR_GENERAL, 0);
 	*token_length = 0;
+#ifdef DEBUG_PARSER
+	printf("tokenise kosahti...\n");
+#endif
 	return NULL;
       }
 
