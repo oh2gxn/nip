@@ -1,3 +1,4 @@
+#include "<tring.h>
 #include "Graph.h"
 
 Graph new_graph(unsigned n)
@@ -22,6 +23,7 @@ int add_variable(Graph G, Variable v)
 
 int add_all_variables(Graph G, Variable* vars)
 {
+    free(G->variables);
     G->variables = vars; /* Mostly (dangerous) syntactic syrup. */
     /* XX Ei paluuarvoa... */
 }
@@ -67,7 +69,7 @@ Graph moralise(Graph G)
         return NULL;
     
     n = G->size;
-    vars = G->variables;
+    vars = G->variables; /* XX aiheuttaako ongelmia tuhottaessa */
     
     Gm = new_graph(n);
     add_all_variables(Gm, vars);
@@ -108,4 +110,30 @@ Graph moralise(Graph G)
     }
     
     return Gm;
+}
+
+/* Not specified Graph.h -- internal helper function */
+void triangulate(Graph Gm)
+{
+    int i,j,n;
+    Graph Gm_copy;
+    
+    /* Step 1: Copy Gm */
+    n = Gm->size;
+    Gm_copy = new_graph(n);
+    for (i = 0; i < n; i++)
+        add_variable(Gm_copy, Gm->variables[i]);
+        
+    memcpy(Gm_copy->adj_matrix[0], Gm->adj_matrix[0], n*n*sizeof(int));
+    
+    /* Step 2: Triangulate Gm */
+}
+
+int find_cliques(Graph Gm, Clique** cliques_p)
+{
+    /* XX NULL-tarkastukset uupuu */
+
+    triangulate(Gm);
+
+
 }

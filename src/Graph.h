@@ -51,6 +51,7 @@ Graph moralise(Graph G);
 /* Moralises a DAG. (Brit. spelling)
  * Parameter G: An unmoral graph.
  * Returns the moralised graph Gm.
+ * Does not modify G.
  */
 
 int find_cliques(Graph Gm, Clique** cliques_p)
@@ -58,6 +59,7 @@ int find_cliques(Graph Gm, Clique** cliques_p)
  * Parameter Gm: moralised graph
  * Parameter cliques_p: pointer to a clique array
  * Returns the number of cliques.
+ * Modifies Gm.
  */
 
 
