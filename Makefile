@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.26 2004-08-09 15:02:23 jatoivol Exp $
+# $Id: Makefile,v 1.27 2004-08-10 08:49:34 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -13,7 +13,8 @@ BIS_SRCS=$(HUG_SRCS) $(PAR_SRCS)
 IO_SRCS=fileio.c errorhandler.c
 DF_SRCS=$(PAR_SRCS)
 HMM_SRCS=nip.c $(BIS_SRCS)
-HTM_SRCS=nip.c $(BIS_SRCS)
+HTM_SRCS=$(HMM_SRCS)
+MLT_SRCS=$(HTM_SRCS)
 
 # XXX Replace "cliquetest" below with the name you want for your program!
 POT_TARGET=potentialtest
@@ -25,7 +26,8 @@ BIS_TARGET=bisontest
 DF_TARGET=datafiletest
 HMM_TARGET=hmmtest
 HTM_TARGET=htmtest
-TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET)
+MLT_TARGET=memleaktest
+TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) $(MLT_TARGET)
 
 # You should not need to modify anything below this line...
 # Sets the name and some flags for the C compiler and linker
@@ -56,7 +58,8 @@ IO_OBJS=$(IO_SRCS:.c=.o) iotest.o
 DF_OBJS=$(DF_SRCS:.c=.o) datafiletest.o
 HMM_OBJS=$(HMM_SRCS:.c=.o) hmmtest.o
 HTM_OBJS=$(HTM_SRCS:.c=.o) htmtest.o
-OBJS=$(HTM_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o bisontest.o iotest.o datafiletest.o hmmtest.o
+MLT_OBJS=$(MLT_SRCS:.c=.o) memleaktest.o
+OBJS=$(HTM_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o bisontest.o iotest.o datafiletest.o hmmtest.o memleaktest.o
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program
@@ -64,7 +67,7 @@ OBJS=$(HTM_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o bisontes
 # NOTE the tab character! Syntax of a rule:
 # <target>: <dependencies>
 # \t<command>
-all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET)
+all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) $(MLT_TARGET)
 
 # The program depends on the object files in $(OBJS). Make knows how
 # to compile a .c file into an object (.o) file; this rule tells it
@@ -95,6 +98,9 @@ $(HMM_TARGET): $(HMM_OBJS) $(HUG_OBJS)
 
 $(HTM_TARGET): $(HTM_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(HTM_OBJS) $(LIBS)
+
+$(MLT_TARGET): $(MLT_OBJS) $(HUG_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(MLT_OBJS) $(LIBS)
 
 $(HUG_SRCS): $(HUG_DEFS)
 	$(YY) $(YYFLAGS) $(HUG_DEFS)

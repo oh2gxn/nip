@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.2 2004-08-09 15:02:24 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.3 2004-08-10 08:49:34 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -16,34 +16,36 @@ typedef struct{
   Clique *cliques;
   varlink first_var;
   varlink last_var;
-}nip;
+}nip_type;
+
+typedef nip_type *Nip;
 
 
 /* Makes the model forget all the given evidence. */
-void reset_model(nip model);
+void reset_model(Nip model);
 
 
 /* Creates a model according to the net file. 
  * The single parameter is the name of the net file as a string. */
-nip* parse_model(char* file);
+Nip parse_model(char* file);
 
 
 /* This provides a way to get rid of a model and free some memory. */
-void free_model(nip model);
+void free_model(Nip model);
 
 
 /* This is a function for telling the model about observations. 
  * In case of an error, a non-zero value is returned. */
-int insert_hard_evidence(nip model, char* variable, char* observation);
+int insert_hard_evidence(Nip model, char* variable, char* observation);
 
 
 /* If an observation has some uncertainty, the evidence can be inserted 
  * with this procedure. The returned value is 0 if everything went well. */
-int insert_soft_evidence(nip model, char* variable, double* distribution);
+int insert_soft_evidence(Nip model, char* variable, double* distribution);
 
-Variable get_Variable(nip model, char* symbol);
+Variable get_Variable(Nip model, char* symbol);
 
-void make_consistent(nip model);
+void make_consistent(Nip model);
 
 /********************************************************************
  * TODO: a set of functions for reading the results of inference from 

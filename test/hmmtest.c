@@ -11,8 +11,6 @@
 #define PRINT_CLIQUES
 */
 
-extern int yyparse();
-
 
 int main(int argc, char *argv[]){
 
@@ -23,8 +21,7 @@ int main(int argc, char *argv[]){
   double** quotient;
   double*** result; /* probs of the hidden variables */
 
-  nip model;
-  nip* a_temporary_pointer;
+  Nip model;
   Clique clique_of_interest;
 
   Variable *hidden;
@@ -47,12 +44,10 @@ int main(int argc, char *argv[]){
     return 0;
   }
   else
-    a_temporary_pointer = parse_model(argv[1]);
+    model = parse_model(argv[1]);
 
-  if(a_temporary_pointer == NULL)
+  if(model == NULL)
     return -1;
-  else
-    model = *a_temporary_pointer;
   /* The input file has been parsed. -- */
 
 #ifdef PRINT_CLIQUES
@@ -73,7 +68,7 @@ int main(int argc, char *argv[]){
 
   /* Figure out the number of hidden variables and variables that substitute
    * some other variable in the next timeslice. */
-  it = model.first_var;
+  it = model->first_var;
   temp = next_Variable(&it);
   while(temp != NULL){
     j = 1;
@@ -86,7 +81,7 @@ int main(int argc, char *argv[]){
     temp = next_Variable(&it);
   }
 
-  assert(num_of_hidden == (model.num_of_vars - timeseries->num_of_nodes));
+  assert(num_of_hidden == (model->num_of_vars - timeseries->num_of_nodes));
 
   /* Allocate arrays for hidden variables. */
   hidden = (Variable *) calloc(num_of_hidden, sizeof(Variable));
@@ -96,7 +91,7 @@ int main(int argc, char *argv[]){
   }
 
   /* Fill the arrays */
-  it = model.first_var;
+  it = model->first_var;
   temp = next_Variable(&it);
   i = 0;
   l = 0;
@@ -209,7 +204,7 @@ int main(int argc, char *argv[]){
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
-      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       &interesting, 1);
       if(!clique_of_interest){
 	printf("In hmmtest.c : No clique found! Sorry.\n");
@@ -240,13 +235,14 @@ int main(int argc, char *argv[]){
 	  update_likelihood(temp->next, result[t][i]);
       }
       
-      global_retraction(model.first_var, model.cliques, model.num_of_cliques);
+      global_retraction(model->first_var, model->cliques,
+			model->num_of_cliques);
       
       /* 0. Put some data in */
       for(i = 0; i < timeseries->num_of_nodes; i++)
 	if(data[t][i] >= 0)
-	  enter_i_observation(model.first_var, model.cliques, 
-			      model.num_of_cliques,
+	  enter_i_observation(model->first_var, model->cliques, 
+			      model->num_of_cliques,
 			      get_Variable(model, 
 					   timeseries->node_symbols[i]), 
 			      data[t][i]);
@@ -274,16 +270,16 @@ int main(int argc, char *argv[]){
     if(t > 0){
       for(i = 0; i < timeseries->num_of_nodes; i++)
 	if(data[t - 1][i] >= 0)
-	  enter_i_observation(model.first_var, model.cliques, 
-			      model.num_of_cliques, 
+	  enter_i_observation(model->first_var, model->cliques, 
+			      model->num_of_cliques, 
 			      get_variable((timeseries->node_symbols)[i]), 
 			      data[t - 1][i]);
       
       for(i = 0; i < num_of_hidden; i++){
 	temp = hidden[i];
 	if(temp->next != NULL)
-	  enter_evidence(model.first_var, model.cliques, 
-			 model.num_of_cliques, temp->next, result[t-1][i]);
+	  enter_evidence(model->first_var, model->cliques, 
+			 model->num_of_cliques, temp->next, result[t-1][i]);
       }
     }      
     
@@ -302,8 +298,8 @@ int main(int argc, char *argv[]){
 	  for(j = 0; j < number_of_values(temp); j++)
 	    quotient[i][j] = result[t + 1][i][j] / result[t][k][j]; 
 	  
-	  enter_evidence(model.first_var, model.cliques, 
-			 model.num_of_cliques, 
+	  enter_evidence(model->first_var, model->cliques, 
+			 model->num_of_cliques, 
 			 temp->previous, quotient[i]);
 	}
       }
@@ -327,7 +323,7 @@ int main(int argc, char *argv[]){
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
-      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       &interesting, 1);
       if(!clique_of_interest){
 	printf("In hmmtest.c : No clique found! Sorry.\n");
@@ -354,6 +350,3 @@ int main(int argc, char *argv[]){
   
   return 0;
 }
-
-
-

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.2 2004-08-09 15:02:24 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.3 2004-08-10 08:49:34 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -12,18 +12,18 @@
 
 extern int yyparse();
 
-void reset_model(nip model){
+void reset_model(Nip model){
   Variable temp;
-  Variable_iterator it = model.first_var;
+  Variable_iterator it = model->first_var;
   while((temp = next_Variable(&it)) != NULL)
     reset_likelihood(temp);
-  global_retraction(model.first_var, model.cliques, model.num_of_cliques);
+  global_retraction(model->first_var, model->cliques, model->num_of_cliques);
 }
 
 
-nip* parse_model(char* file){
+Nip parse_model(char* file){
   int retval;
-  nip* new = (nip*) malloc(sizeof(nip));
+  Nip new = (Nip) malloc(sizeof(nip_type));
 
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -56,15 +56,15 @@ nip* parse_model(char* file){
 }
 
 
-void free_model(nip model){
+void free_model(Nip model){
   int i;
-  Variable_iterator it = model.first_var;
+  Variable_iterator it = model->first_var;
   Variable v = next_Variable(&it);
 
   /* 1. Free Cliques and adjacent Sepsets */
-  for(i = 0; i < model.num_of_cliques; i++)
-    free_Clique(model.cliques[i]);
-  free(model.cliques);
+  for(i = 0; i < model->num_of_cliques; i++)
+    free_Clique(model->cliques[i]);
+  free(model->cliques);
 
   /* 2. Free Variables */
   while(v != NULL){
@@ -74,38 +74,38 @@ void free_model(nip model){
     v = next_Variable(&it);
   }
 
-  free(model.last_var);
-  free(&model);
+  free(model->last_var);
+  free(model);
 }
 
 
-int insert_hard_evidence(nip model, char* variable, char* observation){
+int insert_hard_evidence(Nip model, char* variable, char* observation){
   int ret;
   Variable v = get_Variable(model, variable);
   if(v == NULL)
     return ERROR_INVALID_ARGUMENT;
-  ret = enter_observation(model.first_var, model.cliques, model.num_of_vars, 
-			  v, observation);
+  ret = enter_observation(model->first_var, model->cliques,
+			  model->num_of_vars, v, observation);
   make_consistent(model);
   return ret;
 }
 
 
-int insert_soft_evidence(nip model, char* variable, double* distribution){
+int insert_soft_evidence(Nip model, char* variable, double* distribution){
   int ret;
   Variable v = get_Variable(model, variable);
   if(v == NULL)
     return ERROR_INVALID_ARGUMENT;
-  ret =  enter_evidence(model.first_var, model.cliques, model.num_of_cliques,
-			v, distribution);
+  ret =  enter_evidence(model->first_var, model->cliques,
+			model->num_of_cliques, v, distribution);
   make_consistent(model);
   return ret;
 }
 
 
-Variable get_Variable(nip model, char* symbol){
+Variable get_Variable(Nip model, char* symbol){
   Variable v;
-  Variable_iterator it = model.first_var;
+  Variable_iterator it = model->first_var;
   v = next_Variable(&it);
 
   if(v == NULL)
@@ -123,12 +123,12 @@ Variable get_Variable(nip model, char* symbol){
 }
 
 
-void make_consistent(nip model){
+void make_consistent(Nip model){
   int i;
-  for (i = 0; i < model.num_of_cliques; i++)
-    unmark_Clique(model.cliques[i]);
-  collect_evidence(NULL, NULL, model.cliques[0]);
-  for (i = 0; i < model.num_of_cliques; i++)
-    unmark_Clique(model.cliques[i]);
-  distribute_evidence(model.cliques[0]);
+  for (i = 0; i < model->num_of_cliques; i++)
+    unmark_Clique(model->cliques[i]);
+  collect_evidence(NULL, NULL, model->cliques[0]);
+  for (i = 0; i < model->num_of_cliques; i++)
+    unmark_Clique(model->cliques[i]);
+  distribute_evidence(model->cliques[0]);
 }

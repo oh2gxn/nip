@@ -25,9 +25,6 @@
  */
 
 
-extern int yyparse();
-
-
 int main(int argc, char *argv[]){
 
   char** tokens;
@@ -39,8 +36,7 @@ int main(int argc, char *argv[]){
   int num_of_nexts = 0;
   double** result; /* probs of the hidden variables */
   
-  nip model;
-  nip* a_temporary_pointer;
+  Nip model;
   Clique clique_of_interest;
   
   potential *timeslice_sepsets;
@@ -70,12 +66,10 @@ int main(int argc, char *argv[]){
     return 0;
   }
   else
-    a_temporary_pointer = parse_model(argv[1]);
+    model = parse_model(argv[1]);
 
-  if(a_temporary_pointer == NULL)
+  if(model == NULL)
     return -1;
-  else
-    model = *a_temporary_pointer;
   /* The input file has been parsed. -- */
 
 #ifdef PRINT_CLIQUES
@@ -95,7 +89,7 @@ int main(int argc, char *argv[]){
 
   /* Figure out the number of hidden variables and variables 
    * that substitute some other variable in the next timeslice. */
-  it = model.first_var;
+  it = model->first_var;
   temp = next_Variable(&it);
   while(temp != NULL){
     j = 1;
@@ -112,7 +106,7 @@ int main(int argc, char *argv[]){
     temp = next_Variable(&it);
   }
 
-  assert(num_of_hidden == (model.num_of_vars - timeseries->num_of_nodes));
+  assert(num_of_hidden == (model->num_of_vars - timeseries->num_of_nodes));
 
   /* Allocate arrays for hidden variables. */
   hidden = (Variable *) calloc(num_of_hidden, sizeof(Variable));
@@ -125,7 +119,7 @@ int main(int argc, char *argv[]){
   }
 
   /* Fill the arrays */
-  it = model.first_var;
+  it = model->first_var;
   temp = next_Variable(&it);
   k = 0;
   m = 0;
@@ -235,7 +229,9 @@ int main(int argc, char *argv[]){
     /* Put some data in */
     for(i = 0; i < timeseries->num_of_nodes; i++)
       if(data[t][i] >= 0)
-	enter_i_observation(get_Variable(model, 
+	enter_i_observation(model->first_var, model->cliques, 
+			    model->num_of_cliques, 
+			    get_Variable(model, 
 					 timeseries->node_symbols[i]), 
 			    data[t][i]);
     
@@ -257,7 +253,7 @@ int main(int argc, char *argv[]){
       
       /* 1. Find the Clique that contains the family of 
        * the interesting Variables */
-      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       &interesting, 1);
       assert(clique_of_interest != NULL);
       
@@ -277,7 +273,7 @@ int main(int argc, char *argv[]){
 
     /* Start a message pass between timeslices */
     /* NOTE: Let's hope the "next" variables are in the same clique! */
-    clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
+    clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				     next, num_of_nexts);
     assert(clique_of_interest != NULL);
     temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
@@ -306,7 +302,7 @@ int main(int argc, char *argv[]){
     
     if(t < timeseries->datarows - 1){
       /* Finish the message pass between timeslices */
-      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       previous, num_of_nexts);
       assert(clique_of_interest != NULL);
       j = 0; k = 0;
@@ -345,13 +341,15 @@ int main(int argc, char *argv[]){
 
     for(i = 0; i < timeseries->num_of_nodes; i++)
       if(data[t][i] >= 0)
-	enter_i_observation(get_Variable(model, 
+	enter_i_observation(model->first_var, model->cliques, 
+			    model->num_of_cliques, 
+			    get_Variable(model, 
 					 timeseries->node_symbols[i]), 
 			    data[t][i]);
     
     
     /* Message pass??? */
-    clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
+    clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				     previous, num_of_nexts);
     assert(clique_of_interest != NULL);
     temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
@@ -386,7 +384,7 @@ int main(int argc, char *argv[]){
       /*******************************************/
       /* FIX ME: there's a bug here somewhere!!! */
       /*******************************************/
-      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       next, num_of_nexts);
       assert(clique_of_interest != NULL);
       j = 0; k = 0;
@@ -419,7 +417,7 @@ int main(int argc, char *argv[]){
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
-      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       &interesting, 1);
       assert(clique_of_interest != NULL);
       
@@ -439,7 +437,7 @@ int main(int argc, char *argv[]){
 
     if(t > 0){
       /* Start a message pass between timeslices */
-      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       previous, num_of_nexts);
       assert(clique_of_interest != NULL);
       /* NOTE: Let's hope the "previous" variables are in correct order */
