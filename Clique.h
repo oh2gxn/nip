@@ -1,10 +1,19 @@
 #ifndef __CLIQUE_H__
 #define __CLIQUE_H__
 
+struct sepsetlist {
+  Sepset *data;
+  struct sepsetlist *fwd;
+  struct sepsetlist *bwd;
+};
+
+typedef struct sepsetlist element;
+typedef element *link;
+
 typedef struct {
   potential p;
   Variable **variables;
-  Sepset **sepsets;
+  link sepsets;
   int num_of_sepsets;
 } Clique;
 
@@ -15,10 +24,10 @@ typedef struct {
   Clique* cliques[2];
 } Sepset;
 
-/* TODO */
-Clique make_Clique();
+Clique make_Clique(Variable **variables, int num_of_vars);
 
-/* TODO */
-Sepset make_Sepset();
+void add_sepset(Clique *c, Sepset *s);
+
+Sepset make_Sepset(Variable **variables, int num_of_vars, Clique **cliques);
 
 #endif /* __CLIQUE_H__ */

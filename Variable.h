@@ -10,7 +10,7 @@ typedef struct {
 } Variable;
 
 /* Creates a new Variable */
-Variable new_variable(/*XX auki*/);
+Variable new_variable(char* name, int cardinality);
 
 /* Checks if two variables are the same (by address)*/
 int equal(Variable v1, Variable v2);
