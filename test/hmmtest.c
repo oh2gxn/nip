@@ -29,6 +29,9 @@ int main(int argc, char *argv[]){
 
   datafile* timeseries;
 
+#ifdef PRINT_CLIQUES
+  link sepsetlist;
+#endif
 
   /*************************************/
   /* Some experimental timeslice stuff */
@@ -58,6 +61,20 @@ int main(int argc, char *argv[]){
   nip_cliques = *get_cliques_pointer();
   nip_num_of_cliques = get_num_of_cliques();
 
+
+#ifdef PRINT_CLIQUES
+  printf("Found Cliques:\n");
+  for(i = 0; i < nip_num_of_cliques; i++){
+    clique_of_interest = nip_cliques[i];
+    print_Clique(clique_of_interest);
+    sepsetlist = clique_of_interest->sepsets;
+    while(sepsetlist){
+      print_Sepset((Sepset)sepsetlist->data);
+      sepsetlist = sepsetlist->fwd;
+    }
+    printf("\n");
+  }
+#endif
 
   /*****************************/
   /* read the data from a file */
@@ -244,10 +261,10 @@ int main(int argc, char *argv[]){
       global_retraction(nip_cliques[0]);
       
       /* 0. Put some data in */
-      
       for(i = 0; i < timeseries->num_of_nodes; i++)
-	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			    data[t][i]);
+	if(data[t][i] >= 0)
+	  enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+			      data[t][i]);
     }
   }
   
