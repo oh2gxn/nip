@@ -5,7 +5,9 @@
 #include "potential.h"
 #include "errorhandler.h"
 
+/*
 #define DEBUG_CLIQUE
+*/
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
@@ -167,11 +169,30 @@ int free_Sepset(Sepset s){
 
 potential create_Potential(Variable variables[], int num_of_vars, 
 			   double data[]){
-  /* THIS IS TRICKY: we have to reorder the array and stuff... */
+  /*
+   * Suppose we get an array of Variables with IDs {5, 2, 3, 4, 0, 1}.
+   * In this case, temp_array will be              {5, 2, 3, 4, 0, 1},
+   * and reorder will be                           {4, 5, 1, 2, 3, 0}.
+   *
+   * If we get Variables with IDs                  {6, 9, 3, 1, 5, 8},
+   * temp_array will be                            {3, 5, 1, 0, 2, 4},
+   * and reorder will be                           {3, 2, 4, 0, 5, 1}.
+   *
+   * temp_array is an array {x_0, x_1, ..., x_N-1}, where x_i
+   * is a number indicating how many smaller IDs there are in
+   * the variables[] array than the ID of variables[i]
+   *
+   * reorder is an array {x_0, x_1, ..., x_N-1}, where x_i is
+   * the index in variables[] of the Variable with the (i+1) -smallest ID.
+   * For example, x_0 tells us where in the original array we can find
+   * the Variable with the smallest ID.
+   */
+
   int i, j, card_temp, index, size_of_data = 1;
 
   int *cardinality;
   int *indices;
+  int *temp_array;
   int *reorder;
 
   unsigned long temp;
@@ -182,6 +203,10 @@ potential create_Potential(Variable variables[], int num_of_vars,
     return NULL;
   }
   if((indices = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
+    fprintf(stderr, "In Clique.c: malloc failed\n");
+    return NULL;
+  }
+  if((temp_array = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
     fprintf(stderr, "In Clique.c: malloc failed\n");
     return NULL;
   }
@@ -202,7 +227,7 @@ potential create_Potential(Variable variables[], int num_of_vars,
 
   /* init (needed?) */
   for(i = 0; i < num_of_vars; i++)
-    indices[i] = 0;
+    temp_array[i] = 0;
 
   /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
@@ -210,12 +235,19 @@ potential create_Potential(Variable variables[], int num_of_vars,
     temp = get_id(variables[i]);
     for(j = 0; j < num_of_vars; j++){
       if(get_id(variables[j]) > temp)
-	indices[j]++; /* counts how many greater variables there are */
+	temp_array[j]++; /* counts how many greater variables there are */
     }
   }
 
   for(i = 0; i < num_of_vars; i++)
-    reorder[indices[i]] = i; /* fill the reordering */
+    reorder[temp_array[i]] = i; /* fill the reordering */
+
+
+#ifdef DEBUG_CLIQUE
+  for(i = 0; i < num_of_vars; i++)
+    printf("temp_array[%d]: %d, reorder[%d]: %d\n", 
+	   i, temp_array[i], i, reorder[i]);
+#endif
   
   /* Figure out some stuff */
   for(i = 0; i < num_of_vars; i++){
@@ -237,17 +269,22 @@ potential create_Potential(Variable variables[], int num_of_vars,
    * at this level. If potential.c changes, this has to 
    * be revised too!!! */
   for(i = 0; i < size_of_data; i++){
-    /* Now this is the trickiest part */
-    /* find out indices */
+
+    /*
+     * Now this is the trickiest part.
+     * Find out indices (in the internal order of the program,
+     * determined by the Variable IDs).
+     */
     inverse_mapping(p, i, indices); 
 
     /* calculate the address in the original array */
     index = 0;
     card_temp = 1;
+
     /* THE mapping */
     for(j = 0; j < num_of_vars; j++){
-      index += indices[reorder[j]] * card_temp;
-      card_temp *= cardinality[reorder[j]];
+      index += indices[temp_array[j]] * card_temp;
+      card_temp *= cardinality[temp_array[j]];
     }
 
     /* set the value (in a little ugly way) */
@@ -257,6 +294,7 @@ potential create_Potential(Variable variables[], int num_of_vars,
 
   free(cardinality);
   free(indices);
+  free(temp_array);
   free(reorder);
 
   return p;

@@ -4,6 +4,8 @@
 #include "potential.h" 
 #include "errorhandler.h"
 
+/*#define DEBUG_POTENTIAL*/
+
 int choose_indices(potential source, int source_indices[],
 		   int dest_indices[], int source_vars[]);
 
@@ -111,12 +113,14 @@ int inverse_mapping(potential p, int big_index, int indices[]){
  * dest_indices[] must be of the right size. Returns an error code.
  */
 int choose_indices(potential source, int source_indices[],
-		    int dest_indices[], int source_vars[]){
+		   int dest_indices[], int source_vars[]){
+
   /* JJ NOTE: What if this is done only once to form some sort of 
    *          mask and then the mask could be more efficient for 
    *          the rest of the calls..? */
   int i, j = 0, k = 0;
 
+  /* Warning: Write Only Code (TM) */
   for(i = 0; i < source->num_of_vars; i++){    
     if(i == source_vars[j])
       j++;
@@ -246,10 +250,22 @@ int update_evidence(double numerator[], double denominator[],
     /* some of the work above is useless (only one index is used) */
     source_index = target_indices[var];
 
+#ifdef DEBUG_POTENTIAL
+    printf("In update_evidence: %f * %f\n", target->data[i],
+	   numerator[source_index]);
+#endif
+
     target->data[i] *= numerator[source_index];  /* THE multiplication */
 
-    if(denominator[source_index] != 0)
+    if(denominator[source_index] != 0){
+
+#ifdef DEBUG_POTENTIAL
+      printf("In update_evidence: %f / %f\n", target->data[i],
+	     denominator[source_index]);
+#endif
+
       target->data[i] /= denominator[source_index];  /* THE division */
+    }
     /* ----------------------------------------------------------- */
     /* It is assumed that: denominator[i]==0 => numerator[i]==0 !!!*/
     /* ----------------------------------------------------------- */
@@ -290,5 +306,29 @@ int init_potential(potential probs, potential target, int extra_vars[]){
   free(target_indices);
 
   return 0;
+
+}
+
+void print_potential(potential p){
+
+  int big_index, i;
+  int *indices = (int *) calloc(p->num_of_vars, sizeof(int));
+
+  if(!indices)
+    return;
+
+  for(big_index = 0; big_index < p->size_of_data; big_index++){
+    inverse_mapping(p, big_index, indices);
+    printf("P(");
+    for(i = 0; i < p->num_of_vars; i++){
+      printf("%d", indices[i]);
+      if(i != p->num_of_vars - 1)
+	printf(", ");
+    }
+    printf(") = %f\n", p->data[big_index]);
+    
+  }
+
+  free(indices);
 
 }

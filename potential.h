@@ -104,4 +104,6 @@ int update_evidence(double enumerator[], double denominator[],
  */
 int init_potential(potential probs, potential target, int extra_vars[]);
 
+void print_potential(potential p);
+
 #endif

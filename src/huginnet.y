@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.37 2004-06-10 23:19:52 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.38 2004-06-11 11:42:07 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -10,12 +10,19 @@
 #include "Variable.h"
 #include "parser.h"
 #include "errorhandler.h"
-#include "huginnet.h"
 
 #define YYERROR_VERBOSE
-  /*
+
+/*
 #define DEBUG_BISON
-  */
+*/
+
+int
+yylex (void);
+
+void
+yyerror (const char *s);  /* Called by yyparse on error */
+
 %}
 
 /* BISON Declarations */
@@ -158,7 +165,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   printf("nip_symbols_parsed = %d\n", nip_symbols_parsed);
 #endif
 
-  vars[0] = $3;
+  vars[0] = $3; 
   for(i = 0; i < nip_symbols_parsed; i++)
     vars[i + 1] = parents[i];
 
