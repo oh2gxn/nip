@@ -156,10 +156,11 @@ void message_pass(Clique c1, Sepset s, Clique c2){
   /* marginalise (projection)
      first: select the variables */
   for(i=0; i < c1->p->num_of_vars; i++){
-    if(equal_variables(*((c1->variables)[i]), *((s->variables)[j])))
+    if(j < s->new->num_of_vars &&
+       equal_variables(*((c1->variables)[i]), *((s->variables)[j])))
       j++;
     else {
-      source_vars[k] = i; /* --- DOES j OVERFLOW ??? --- */
+      source_vars[k] = i;
       k++;
     }
   } /* then: do da job */
@@ -169,14 +170,15 @@ void message_pass(Clique c1, Sepset s, Clique c2){
   /* update (absorption) 
      first: select the variables */
   for(i=0; i < c2->p->num_of_vars; i++){
-    if(equal_variables(*((c2->variables)[i]), *((s->variables)[j])))
+    if(j < s->new->num_of_vars &&
+       equal_variables(*((c2->variables)[i]), *((s->variables)[j])))
       j++;
     else {
-      extra_vars[k] = i; /* --- DOES j OVERFLOW ??? --- */
+      extra_vars[k] = i;
       k++;
     }
   } /* rest the case */
-  update(s->new, s->old, c2->p, extra_vars);
+  update_potential(s->new, s->old, c2->p, extra_vars);
 }
 
 
