@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.15 2004-11-09 14:18:44 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.16 2004-11-10 15:54:40 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -44,7 +44,7 @@ typedef struct{
 
   int length;
   int **data;         /* The time series */
-  /* JJ NOTES: Should there be a cache for extremely large time series? */
+  /* JJ NOTE: Should there be a cache for extremely large time series? */
 }time_series_type;
 
 typedef time_series_type *TimeSeries;

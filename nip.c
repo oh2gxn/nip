@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.29 2004-11-09 14:18:44 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.30 2004-11-10 15:54:40 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -842,7 +842,76 @@ void make_consistent(Nip model){
 
 /* Most likely state sequence of the variables given the timeseries. */
 TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
-  return NULL;
+  int i, j, k, l, t;
+  TimeSeries mlss;
+
+  /* Allocate some space for the results */
+  mlss = (TimeSeries)malloc(sizeof(time_series_type));
+  if(!mlss){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  mlss->model = model;
+  mlss->num_of_hidden = model->num_of_vars - nvars;
+  mlss->hidden = (Variable*) calloc(mlss->num_of_hidden, sizeof(Variable));
+  mlss->observed = (Variable*) calloc(nvars, sizeof(Variable));
+  mlss->length = ts->length;
+  mlss->data = (int**) calloc(mlss->length, sizeof(int*));
+  if(!(mlss->data && mlss->observed && mlss->hidden)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(mlss->data); /* useless? */
+    free(mlss->observed);
+    free(mlss->hidden);
+    free(mlss);
+    return NULL;
+  }
+
+  for(t=0; t < mlss->length; t++){
+    mlss->data[t] = (int*) calloc(nvars, sizeof(int));
+    if(!(mlss->data[t])){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      while(t > 0)
+	free(mlss->data[--t]);
+      free(mlss->data);
+      free(mlss->observed);
+      free(mlss->hidden);
+      free(mlss);
+      return NULL;
+    }
+  }
+
+  /* Copy the variable references */
+  memcpy(mlss->observed, vars, nvars*sizeof(Variable));
+
+  /* Find out the "hidden", or more like uninteresting, variables */
+  l = 0;
+  for(i=0; i < model->num_of_vars; i++){
+    if(l == mlss->num_of_hidden)
+      break;
+
+    k = 1;
+    for(j=0; j < nvars; j++){
+      if(equal_variables(model->variables[i], vars[j])){
+	k = 0;
+	break;
+      }
+    }
+    
+    if(k)
+      mlss->hidden[l++] = model->variables[i];
+  }
+
+  /* TODO: write the algorithm here 
+   * - allocate a (massive?) chunk of memory for intermediate results 
+   * - do a sort of forward inference on the best states 
+   *   - for each variable of interest separately?
+   *   - by inserting the last state of a hidden variable as hard evidence?
+   *     (or is the goal to maximize the probability of observations)
+   * - find out the result by iterating backwards the best choices
+   */
+
+  return mlss;
 }
 
 
