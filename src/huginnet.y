@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.14 2004-05-28 13:41:06 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.15 2004-05-31 10:36:54 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -40,7 +40,7 @@
 %token <numval> NUMBER
 %type <stringarray> strings statesDeclaration
 %type <doublearray> numbers dataList
-%type <variable> nodeDeclaration
+%type <variable> nodeDeclaration symbol
 %type <variablearray> symbols
 %type <name> labelDeclaration
 
@@ -71,7 +71,7 @@ input:  nodes potentials {
 ;
 
 
-nodes:         /* empty */ {/* nodes ready: new_Graph()? */}
+nodes:         /* empty */ { nip_graph = new_Graph(nip_vars_parsed); }
              | nodeDeclaration nodes { add_pvar($1); }
 ;
 
@@ -81,7 +81,6 @@ potentials:    /* empty */ {/* initialisation data ready at first_initData */}
 ;
 
 
-// FIXME: Put another rule here to support symbols of one character!!!!
 nodeDeclaration:    node UNQUOTED_STRING '{' labelDeclaration 
                                              statesDeclaration
                                              positionDeclaration
@@ -117,7 +116,7 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
 ;
 
 
-potentialDeclaration: potential '(' symbols ')' '{' dataList '}' { 
+potentialDeclaration: potential '(' symbol '|' symbols ')' '{' dataList '}' { 
   //*******************************************************************
   /* FIXME: This is still wrong. Variables should be added to the graph
    * and the relations should be marked. */
@@ -125,14 +124,22 @@ potentialDeclaration: potential '(' symbols ')' '{' dataList '}' {
 
   // OBVIOUSLY the parents should be separated from the children somehow!
 
-  add_initData(create_Potential($3, symbols_parsed, $6), $3); 
+  Variable vars[symbols_parsed + 1];
+  int i;
+  vars[0] = $3;
+  for(i = 0; i < symbols_parsed; i++)
+    vars[i + 1] = $5[i];
+  add_initData(create_Potential(vars, symbols_parsed + 1, $8), $3, $5); 
   reset_symbols();}
+;
+
+symbol:        UNQUOTED_STRING { $$ = get_variable($1); }
+
 ;
 
 
 symbols:       /* end of list */ { $$ = make_variable_array(); }
-             | QUOTED_STRING symbols { add_symbol($1); }
-             | QUOTED_STRING '|' symbols { add_symbol($1); }
+             | UNQUOTED_STRING symbols { add_symbol($1); }
 ;
 
 
@@ -189,8 +196,37 @@ yylex (void)
   /* Single character */
   else if(tokenlength == 1){
     int retval = *token;
-    free(token);
-    return retval;
+
+    nullterminated = (char *) calloc(2, sizeof(char));
+    if(!nullterminated){
+      report_error(ERROR_OUTOFMEMORY, 0);
+      free(token);
+      return 0; /* In the case of an (unlikely) error, stop the parser */
+    }
+    nullterminated[0] = *token;
+    nullterminated[1] = '\0';
+
+    /* Single letter ('A' - 'Z' or 'a' - 'z') is UNQUOTED_STRING. */
+    if(isalpha(*token)){
+      yylval.name = nullterminated;
+      free(token);
+      return UNQUOTED_STRING;
+    }
+
+    /* Single digit ('0' - '9') is NUMBER. */
+    else if(isdigit(*token)){
+      yylval.numval = strtod(nullterminated, 0);
+      free(token);
+      free(nullterminated);
+      return NUMBER;
+    }
+
+    /* Other chars (';' '(', ')', etc. ) */
+    else {
+      free(token);
+      free(nullterminated);
+      return retval;
+    }
   }
 
   /* Multicharacter tokens */

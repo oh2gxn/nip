@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.10 2004-05-28 13:28:20 jatoivol Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.11 2004-05-31 10:36:54 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -14,6 +14,7 @@
 #include "Clique.h"
 #include "Variable.h"
 #include "potential.h"
+#include "Graph.h"
 #include <stdio.h>
 
 struct varlist {
@@ -25,13 +26,15 @@ struct varlist {
 typedef struct varlist varelement;
 typedef varelement *varlink;
 
-static varlink first_var = 0; /* global stuff, sad but true */
-static varlink last_var = 0;
-static int vars_parsed = 0;
+static varlink nip_first_var = NULL; /* global stuff, sad but true */
+static varlink nip_last_var = NULL;
+static int nip_vars_parsed = 0;
 
-static varlink first_temp_var = 0;
-static varlink last_temp_var = 0;
-static int symbols_parsed = 0;
+static varlink nip_first_temp_var = NULL;
+static varlink nip_last_temp_var = NULL;
+static int nip_symbols_parsed = 0;
+
+static Graph *nip_graph = NULL;
 
 struct doublelist {
   double data;
@@ -42,9 +45,9 @@ struct doublelist {
 typedef struct doublelist doubleelement;
 typedef doubleelement *doublelink;
 
-static doublelink first_double = 0;
-static doublelink last_double = 0;
-static int doubles_parsed = 0;
+static doublelink nip_first_double = 0;
+static doublelink nip_last_double = 0;
+static int nip_doubles_parsed = 0;
 
 
 struct stringlist {
@@ -56,14 +59,15 @@ struct stringlist {
 typedef struct stringlist stringelement;
 typedef stringelement *stringlink;
 
-static stringlink first_string = 0;
-static stringlink last_string = 0;
-static int strings_parsed = 0;
+static stringlink nip_first_string = 0;
+static stringlink nip_last_string = 0;
+static int nip_strings_parsed = 0;
 
 
 struct initDataList {
   potential data;
-  Variable* variables;
+  Variable child;
+  Variable* parents;
   struct initDataList *fwd;
   struct initDataList *bwd;
 };
@@ -71,16 +75,16 @@ struct initDataList {
 typedef struct initDataList initDataElement;
 typedef initDataElement *initDataLink;
 
-static initDataLink first_initData = 0;
-static initDataLink last_initData = 0;
-static int initData_parsed = 0;
+static initDataLink nip_first_initData = 0;
+static initDataLink nip_last_initData = 0;
+static int nip_initData_parsed = 0;
 
 
 /* The current input file */
-static FILE *parser_infile = NULL;
+static FILE *nip_parser_infile = NULL;
 
 /* Is there a file open? 0 if no, 1 if yes. */
-static int file_open = 0;
+static int nip_file_open = 0;
 
 /* Opens an input file. Returns 0 if file was opened or if some file was
  * already open. Returns ERROR_GENERAL if an error occurred
@@ -94,8 +98,8 @@ void close_infile();
 
 /* Gets the next token from the input file.
  * Returns the token. token_length is the length of the token.
- * The token is a null terminated string.
- * *token_length doesn't include the null character.
+ * The token is a NULL terminated string.
+ * *token_length doesn't include the NULL character.
  * After the token has been used, PLEASE free the memory allocated for it.
  * If token_length == 0, there are no more tokens.
  */
@@ -110,7 +114,7 @@ Variable get_variable(char *symbol);
 
 /* Adds a potential and the correspondent variable references into a list.
  * The "ownership" of the vars[] array changes! */
-int add_initData(potential p, Variable* vars);
+int add_initData(potential p, Variable child, Variable* parents);
 
 /* Adds a variable into THE list of variables. */
 int add_pvar(Variable var);

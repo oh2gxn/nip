@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.13 2004-05-28 13:28:20 jatoivol Exp $
+ * $Id: parser.c,v 1.14 2004-05-31 10:36:54 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -12,20 +12,20 @@
 //#define DEBUG_PARSER
 
 int open_infile(const char *file){
-  if(!file_open){
-    parser_infile = fopen(file,"r");
-    if (!parser_infile)
+  if(!nip_file_open){
+    nip_parser_infile = fopen(file,"r");
+    if (!nip_parser_infile)
       return ERROR_GENERAL; /* fopen(...) failed */
     else
-      file_open = 1;
+      nip_file_open = 1;
   }
   return 0;
 }
 
 void close_infile(){
-  if(file_open){
-    fclose(parser_infile);
-    file_open = 0;
+  if(nip_file_open){
+    fclose(nip_parser_infile);
+    nip_file_open = 0;
   }
 }
 
@@ -46,20 +46,18 @@ char *next_token(int *token_length){
   /* The token we return */
   char *token;
 
-  //int nexttoken_length;
-
   /* Return if some evil mastermind gives us a NULL pointer */
   if(!token_length)
     return NULL;
 
   /* Return if input file is not open */
-  if(!file_open)
+  if(!nip_file_open)
     return NULL;
 
   /* Read new line if needed and do other magic... */
   while(read_line){
     /* Read the line and check for EOF */
-    if(!(fgets(last_line, MAX_LINELENGTH, parser_infile))){
+    if(!(fgets(last_line, MAX_LINELENGTH, nip_parser_infile))){
       *token_length = 0;
       return NULL;
     }
@@ -103,7 +101,7 @@ char *next_token(int *token_length){
   /* Copy the token */
   strncpy(token, &(last_line[indexarray[0]]), *token_length);
 
-  /* Null terminate the token. */
+  /* NULL terminate the token. */
   token[*token_length] = '\0';
 
   indexarray += 2;
@@ -130,25 +128,25 @@ int add_symbol(char *symbol){
   varlink new = (varlink) malloc(sizeof(varelement));
   new->data = v;
   new->fwd = 0;
-  new->bwd = last_temp_var;
-  if(first_temp_var == 0)
-    first_temp_var = new;
-  last_temp_var = new;
-  symbols_parsed++;
+  new->bwd = nip_last_temp_var;
+  if(nip_first_temp_var == NULL)
+    nip_first_temp_var = new;
+  nip_last_temp_var = new;
+  nip_symbols_parsed++;
   return 0;
 }
 
 
 /* Gets the parsed variable according to the symbol. */
 Variable get_variable(char *symbol){
-  varlink pointer = first_var;
-  if(pointer == 0)
+  varlink pointer = nip_first_var;
+  if(pointer == NULL)
     return NULL; // didn't find the variable
   
   // search for the variable reference
   while(strcmp(symbol, pointer->data->symbol) != 0){
     pointer = pointer->fwd;
-    if(pointer == 0)
+    if(pointer == NULL)
       return NULL; // didn't find the variable
   }
   return pointer->data;
@@ -156,16 +154,17 @@ Variable get_variable(char *symbol){
 
 
 /* correctness? */
-int add_initData(potential p, Variable* vars){
+int add_initData(potential p, Variable child, Variable* parents){
   initDataLink new = (initDataLink) malloc(sizeof(initDataElement));
   new->data = p;
-  new->variables = vars;
+  new->child = child;
+  new->parents = parents;
   new->fwd = 0;
-  new->bwd = last_initData;
-  if(first_initData == 0)
-    first_initData = new;
-  last_initData = new;
-  initData_parsed++;
+  new->bwd = nip_last_initData;
+  if(nip_first_initData == 0)
+    nip_first_initData = new;
+  nip_last_initData = new;
+  nip_initData_parsed++;
   return 0;
 }
 
@@ -175,11 +174,11 @@ int add_pvar(Variable var){
   varlink new = (varlink) malloc(sizeof(varelement));
   new->data = var;
   new->fwd = 0;
-  new->bwd = last_var;
-  if(first_var == 0)
-    first_var = new;
-  last_var = new;
-  vars_parsed++;
+  new->bwd = nip_last_var;
+  if(nip_first_var == NULL)
+    nip_first_var = new;
+  nip_last_var = new;
+  nip_vars_parsed++;
   return 0;
 }
 
@@ -189,11 +188,11 @@ int add_double(double d){
   doublelink new = (doublelink) malloc(sizeof(doubleelement));
   new->data = d;
   new->fwd = 0;
-  new->bwd = last_double;
-  if(first_double == 0)
-    first_double = new;
-  last_double = new;
-  doubles_parsed++;
+  new->bwd = nip_last_double;
+  if(nip_first_double == NULL)
+    nip_first_double = new;
+  nip_last_double = new;
+  nip_doubles_parsed++;
   return 0;
 }
 
@@ -203,11 +202,11 @@ int add_string(char* string){
   stringlink new = (stringlink) malloc(sizeof(stringelement));
   new->data = string;
   new->fwd = 0;
-  new->bwd = last_string;
-  if(first_string == 0)
-    first_string = new;
-  last_string = new;
-  doubles_parsed++;
+  new->bwd = nip_last_string;
+  if(nip_first_string == NULL)
+    nip_first_string = new;
+  nip_last_string = new;
+  nip_strings_parsed++;
   return 0;
 }
 
@@ -216,9 +215,9 @@ int add_string(char* string){
  * The size will be doubles_parsed. */
 Variable* make_variable_array(){
   int i;
-  Variable* vars = (Variable*) calloc(symbols_parsed, sizeof(Variable));
-  varlink pointer = first_temp_var;
-  for(i = 0; i < symbols_parsed; i++){
+  Variable* vars = (Variable*) calloc(nip_symbols_parsed, sizeof(Variable));
+  varlink pointer = nip_first_temp_var;
+  for(i = 0; i < nip_symbols_parsed; i++){
     vars[i] = pointer->data;
     pointer = pointer->fwd;
   }
@@ -229,10 +228,10 @@ Variable* make_variable_array(){
 /* Creates an array from the double values in the list. 
  * The size will be doubles_parsed. */
 double* make_double_array(){
-  double* new = (double*) calloc(doubles_parsed, sizeof(double));
+  double* new = (double*) calloc(nip_doubles_parsed, sizeof(double));
   int i;
-  doublelink ln = first_double;
-  for(i = 0; i < doubles_parsed; i++){
+  doublelink ln = nip_first_double;
+  for(i = 0; i < nip_doubles_parsed; i++){
     new[i] = ln->data; // the data is copied here (=> not lost in reset)
     ln = ln->fwd;
   }
@@ -243,10 +242,10 @@ double* make_double_array(){
 /* Creates an array from the strings in the list. 
  * The size will be strings_parsed. */
 char** make_string_array(){
-  char** new = (char**) calloc(strings_parsed, sizeof(char*));
+  char** new = (char**) calloc(nip_strings_parsed, sizeof(char*));
   int i;
-  stringlink ln = first_string;
-  for(i = 0; i < strings_parsed; i++){
+  stringlink ln = nip_first_string;
+  for(i = 0; i < nip_strings_parsed; i++){
     new[i] = ln->data; // char[] references copied
     ln = ln->fwd;
   }
@@ -259,14 +258,14 @@ char** make_string_array(){
  * of it and wants to reset the list for future use. 
  * JJT: DO NOT TOUCH THE ACTUAL DATA, OR IT WILL BE LOST. */
 int reset_doubles(){
-  doublelink ln = last_double;
-  last_double = 0;
+  doublelink ln = nip_last_double;
+  nip_last_double = NULL;
   while(ln != 0){
     ln = ln->bwd;
     free(ln->fwd); /* correct? */
   }
-  first_double = 0;
-  doubles_parsed = 0;
+  nip_first_double = NULL;
+  nip_doubles_parsed = 0;
   return 0;
 }
 
@@ -274,43 +273,43 @@ int reset_doubles(){
 /* Removes everything from the list of strings and resets the counter. 
  * The actual memory for the strings is not freed, only the list. */
 int reset_strings(){
-  stringlink ln = last_string;
-  last_string = 0;
+  stringlink ln = nip_last_string;
+  nip_last_string = NULL;
   while(ln != 0){
     ln = ln->bwd;
     free(ln->fwd); /* correct? */
   }
-  first_string = 0;
-  strings_parsed = 0;  
+  nip_first_string = NULL;
+  nip_strings_parsed = 0;  
   return 0;
 }
 
 
 /* Removes everything from the temporary list of variables. */
 int reset_symbols(){
-  varlink ln = last_temp_var;
-  last_temp_var = 0;
+  varlink ln = nip_last_temp_var;
+  nip_last_temp_var = NULL;
   while(ln != 0){
     ln = ln->bwd;
     free(ln->fwd); /* correct? */
   }
-  first_temp_var = 0;
-  symbols_parsed = 0;
+  nip_first_temp_var = NULL;
+  nip_symbols_parsed = 0;
   return 0;
 }
 
 
 /* Frees some memory after parsing. */
 int reset_initData(){
-  initDataLink ln = last_initData;
-  last_initData = 0;
+  initDataLink ln = nip_last_initData;
+  nip_last_initData = NULL;
   while(ln != 0){
     free_potential(ln->data); // hopefully the potential was used
-    free(ln->variables); // see calloc in make_variable_array();
+    free(ln->parents); // see calloc in make_variable_array();
     ln = ln->bwd;
     free(ln->fwd); /* correct? */
   }
-  first_initData = 0;
-  initData_parsed = 0;  
+  nip_first_initData = NULL;
+  nip_initData_parsed = 0;  
   return 0;
 }

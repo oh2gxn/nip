@@ -43,11 +43,11 @@ typedef union {
 
 
 
-#define	YYFINAL		70
+#define	YYFINAL		71
 #define	YYFLAG		-32768
 #define	YYNTBASE	19
 
-#define YYTRANSLATE(x) ((unsigned)(x) <= 266 ? yytranslate[x] : 34)
+#define YYTRANSLATE(x) ((unsigned)(x) <= 266 ? yytranslate[x] : 35)
 
 static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -82,7 +82,7 @@ static const char yytranslate[] = {     0,
 #if YYDEBUG != 0
 static const short yyprhs[] = {     0,
      0,     3,     4,     7,     8,    11,    20,    21,    24,    29,
-    36,    44,    49,    57,    58,    61,    65,    66,    69,    70,
+    36,    44,    49,    59,    61,    62,    65,    66,    69,    70,
     73,    78,    80,    84,    86
 };
 
@@ -90,12 +90,12 @@ static const short yyrhs[] = {    20,
     21,     0,     0,    22,    20,     0,     0,    28,    21,     0,
      3,    10,    12,    24,    25,    26,    23,    13,     0,     0,
     27,    23,     0,     6,    14,     9,    15,     0,     5,    14,
-    16,    30,    17,    15,     0,     7,    14,    16,    11,    11,
-    17,    15,     0,    10,    14,    32,    15,     0,     4,    16,
-    29,    17,    12,    33,    13,     0,     0,     9,    29,     0,
-     9,    18,    29,     0,     0,     9,    30,     0,     0,    11,
-    31,     0,    16,    11,    31,    17,     0,     9,     0,    16,
-    31,    17,     0,    11,     0,     8,    14,    16,    31,    17,
+    16,    31,    17,    15,     0,     7,    14,    16,    11,    11,
+    17,    15,     0,    10,    14,    33,    15,     0,     4,    16,
+    29,    18,    30,    17,    12,    34,    13,     0,    10,     0,
+     0,    10,    30,     0,     0,     9,    31,     0,     0,    11,
+    32,     0,    16,    11,    32,    17,     0,     9,     0,    16,
+    32,    17,     0,    11,     0,     8,    14,    16,    32,    17,
     15,     0
 };
 
@@ -104,8 +104,8 @@ static const short yyrhs[] = {    20,
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
     63,    74,    75,    79,    80,    84,    95,    96,   100,   105,
-   111,   115,   119,   132,   133,   134,   138,   139,   144,   145,
-   146,   150,   151,   152,   156
+   111,   115,   119,   136,   141,   142,   146,   147,   152,   153,
+   154,   158,   159,   160,   164
 };
 #endif
 
@@ -116,73 +116,79 @@ static const char * const yytname[] = {   "$","error","$undefined.","\"node\"",
 "\"potential\"","\"states\"","\"label\"","\"position\"","\"data\"","QUOTED_STRING",
 "UNQUOTED_STRING","NUMBER","'{'","'}'","'='","';'","'('","')'","'|'","input",
 "nodes","potentials","nodeDeclaration","parameters","labelDeclaration","statesDeclaration",
-"positionDeclaration","unknownDeclaration","potentialDeclaration","symbols",
+"positionDeclaration","unknownDeclaration","potentialDeclaration","symbol","symbols",
 "strings","numbers","value","dataList", NULL
 };
 #endif
 
 static const short yyr1[] = {     0,
     19,    20,    20,    21,    21,    22,    23,    23,    24,    25,
-    26,    27,    28,    29,    29,    29,    30,    30,    31,    31,
-    31,    32,    32,    32,    33
+    26,    27,    28,    29,    30,    30,    31,    31,    32,    32,
+    32,    33,    33,    33,    34
 };
 
 static const short yyr2[] = {     0,
      2,     0,     2,     0,     2,     8,     0,     2,     4,     6,
-     7,     4,     7,     0,     2,     3,     0,     2,     0,     2,
+     7,     4,     9,     1,     0,     2,     0,     2,     0,     2,
      4,     1,     3,     1,     6
 };
 
 static const short yydefact[] = {     2,
-     0,     4,     2,     0,     0,     1,     4,     3,     0,    14,
-     5,     0,     0,    14,     0,     0,     0,     0,    14,    15,
-     0,     0,     0,     0,     7,    16,     0,     9,    17,     0,
-     0,     0,     7,     0,     0,    17,     0,     0,     0,     6,
-     8,     0,    13,    18,     0,     0,    22,    24,    19,     0,
-    19,    10,     0,    19,     0,     0,    12,     0,     0,    20,
-    19,    23,     0,    11,     0,    25,    21,     0,     0,     0
+     0,     4,     2,     0,     0,     1,     4,     3,     0,     0,
+     5,     0,     0,    14,     0,     0,     0,     0,    15,     0,
+     0,     0,     7,    15,     0,     9,    17,     0,     0,     0,
+     7,    16,     0,    17,     0,     0,     0,     6,     8,     0,
+    18,     0,     0,    22,    24,    19,     0,     0,     0,    10,
+     0,    19,     0,     0,    12,     0,    13,     0,    20,    19,
+    23,    19,    11,     0,     0,    21,     0,    25,     0,     0,
+     0
 };
 
-static const short yydefgoto[] = {    68,
-     2,     6,     3,    32,    13,    18,    25,    33,     7,    15,
-    37,    56,    50,    35
+static const short yydefgoto[] = {    69,
+     2,     6,     3,    30,    13,    18,    23,    31,     7,    15,
+    25,    35,    54,    47,    49
 };
 
-static const short yypact[] = {     1,
-    -1,    10,     1,     3,     0,-32768,    10,-32768,    11,     9,
--32768,     5,    15,    -7,     4,    13,    12,    16,     9,-32768,
-    17,    18,     8,    14,    20,-32768,    19,-32768,    22,    21,
-    24,    23,    20,    25,    27,    22,    26,    30,    -4,-32768,
--32768,    28,-32768,-32768,    31,    34,-32768,-32768,   -10,    32,
-   -10,-32768,    33,   -10,    37,    35,-32768,    36,    39,-32768,
-   -10,-32768,    40,-32768,    41,-32768,-32768,    42,    49,-32768
+static const short yypact[] = {     0,
+    -5,     3,     0,    -1,    -4,-32768,     3,-32768,     7,     4,
+-32768,     1,    11,-32768,     2,     8,     5,    14,    12,     9,
+    10,    13,    15,    12,     6,-32768,    19,    16,    17,    20,
+    15,-32768,    18,    19,    21,    23,    -7,-32768,-32768,    27,
+-32768,    22,    25,-32768,-32768,   -10,    24,    26,    28,-32768,
+    29,   -10,    31,    30,-32768,    32,-32768,    34,-32768,   -10,
+-32768,   -10,-32768,    33,    35,-32768,    36,-32768,    43,    44,
+-32768
 };
 
 static const short yypgoto[] = {-32768,
-    29,    44,-32768,    -8,-32768,-32768,-32768,-32768,-32768,    -6,
-    -2,   -51,-32768,-32768
+    42,    46,-32768,   -13,-32768,-32768,-32768,-32768,-32768,-32768,
+    37,    38,   -52,-32768,-32768
 };
 
 
-#define	YYLAST		58
+#define	YYLAST		72
 
 
-static const short yytable[] = {    58,
-    54,    14,    60,     1,    47,    55,    48,    20,     4,    65,
-    19,    49,    26,     5,     9,    10,    12,    14,    16,    17,
-    21,    22,    24,    29,    41,    23,    34,    30,    27,    31,
-    36,     8,    28,    44,     0,    40,    38,    39,    42,    43,
-    46,    69,    45,    51,    53,    52,    57,    61,    70,    59,
-    11,    62,    63,    64,    66,     0,     0,    67
+static const short yytable[] = {    59,
+    52,    44,     1,    45,     4,    53,     5,    64,    46,    65,
+     9,    10,    12,    14,    16,    17,    20,    39,    21,    19,
+    22,    24,    33,    26,    29,    27,    28,    34,     0,    40,
+    37,    36,    38,    43,    48,    51,    50,    42,    55,    56,
+    57,    60,    70,    71,     8,    58,    61,    62,    63,    66,
+    68,    67,    11,     0,     0,     0,     0,     0,     0,     0,
+    32,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+     0,    41
 };
 
-static const short yycheck[] = {    51,
-    11,     9,    54,     3,     9,    16,    11,    14,    10,    61,
-    18,    16,    19,     4,    12,    16,     6,     9,    14,     5,
-    17,     9,     7,    16,    33,    14,     8,    14,    12,    10,
-     9,     3,    15,    36,    -1,    13,    16,    14,    14,    13,
-    11,     0,    17,    16,    11,    15,    15,    11,     0,    17,
-     7,    17,    17,    15,    15,    -1,    -1,    17
+static const short yycheck[] = {    52,
+    11,     9,     3,    11,    10,    16,     4,    60,    16,    62,
+    12,    16,     6,    10,    14,     5,     9,    31,    14,    18,
+     7,    10,    17,    15,    10,    16,    14,     9,    -1,    12,
+    14,    16,    13,    11,     8,    11,    15,    17,    15,    14,
+    13,    11,     0,     0,     3,    17,    17,    16,    15,    17,
+    15,    17,     7,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+    24,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+    -1,    34
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
 #line 3 "bison.simple"
@@ -695,7 +701,7 @@ case 1:
     break;}
 case 2:
 #line 74 "huginnet.y"
-{/* nodes ready: new_Graph()? */;
+{ nip_graph = new_Graph(nip_vars_parsed); ;
     break;}
 case 3:
 #line 75 "huginnet.y"
@@ -745,55 +751,60 @@ case 13:
 
   // OBVIOUSLY the parents should be separated from the children somehow!
 
-  add_initData(create_Potential(yyvsp[-4].variablearray, symbols_parsed, yyvsp[-1].doublearray), yyvsp[-4].variablearray); 
+  Variable vars[symbols_parsed + 1];
+  int i;
+  vars[0] = yyvsp[-6].variable;
+  for(i = 0; i < symbols_parsed; i++)
+    vars[i + 1] = yyvsp[-4].variablearray[i];
+  add_initData(create_Potential(vars, symbols_parsed + 1, yyvsp[-1].doublearray), yyvsp[-6].variable, yyvsp[-4].variablearray); 
   reset_symbols();;
     break;}
 case 14:
-#line 132 "huginnet.y"
-{ yyval.variablearray = make_variable_array(); ;
+#line 136 "huginnet.y"
+{ yyval.variable = get_variable(yyvsp[0].name); ;
     break;}
 case 15:
-#line 133 "huginnet.y"
-{ add_symbol(yyvsp[-1].name); ;
+#line 141 "huginnet.y"
+{ yyval.variablearray = make_variable_array(); ;
     break;}
 case 16:
-#line 134 "huginnet.y"
-{ add_symbol(yyvsp[-2].name); ;
+#line 142 "huginnet.y"
+{ add_symbol(yyvsp[-1].name); ;
     break;}
 case 17:
-#line 138 "huginnet.y"
+#line 146 "huginnet.y"
 { yyval.stringarray = make_string_array(); ;
     break;}
 case 18:
-#line 139 "huginnet.y"
+#line 147 "huginnet.y"
 { add_string(yyvsp[-1].name); ;
     break;}
 case 19:
-#line 144 "huginnet.y"
+#line 152 "huginnet.y"
 { yyval.doublearray = make_double_array(); ;
     break;}
 case 20:
-#line 145 "huginnet.y"
+#line 153 "huginnet.y"
 { add_number(yyvsp[-1].numval); ;
     break;}
 case 21:
-#line 146 "huginnet.y"
+#line 154 "huginnet.y"
 { add_number(yyvsp[-2].numval); ;
     break;}
 case 22:
-#line 150 "huginnet.y"
+#line 158 "huginnet.y"
 { free(yyvsp[0].name); /* ignore */;
     break;}
 case 23:
-#line 151 "huginnet.y"
+#line 159 "huginnet.y"
 { reset_doubles(); /* ignore */;
     break;}
 case 24:
-#line 152 "huginnet.y"
+#line 160 "huginnet.y"
 {/* ignore */;
     break;}
 case 25:
-#line 156 "huginnet.y"
+#line 164 "huginnet.y"
 { yyval.doublearray = yyvsp[-2].doublearray; ;
     break;}
 }
@@ -994,7 +1005,7 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 159 "huginnet.y"
+#line 167 "huginnet.y"
 
 /* Lexical analyzer */
 /* JJT: I did some reading. Might get nasty, if there has to be a token 
@@ -1027,8 +1038,37 @@ yylex (void)
   /* Single character */
   else if(tokenlength == 1){
     int retval = *token;
-    free(token);
-    return retval;
+
+    nullterminated = (char *) calloc(2, sizeof(char));
+    if(!nullterminated){
+      report_error(ERROR_OUTOFMEMORY, 0);
+      free(token);
+      return 0; /* In the case of an (unlikely) error, stop the parser */
+    }
+    nullterminated[0] = *token;
+    nullterminated[1] = '\0';
+
+    /* Single letter ('A' - 'Z' or 'a' - 'z') is UNQUOTED_STRING. */
+    if(isalpha(*token)){
+      yylval.name = nullterminated;
+      free(token);
+      return UNQUOTED_STRING;
+    }
+
+    /* Single digit ('0' - '9') is NUMBER. */
+    else if(isdigit(*token)){
+      yylval.numval = strtod(nullterminated, 0);
+      free(token);
+      free(nullterminated);
+      return NUMBER;
+    }
+
+    /* Other chars (';' '(', ')', etc. ) */
+    else {
+      free(token);
+      free(nullterminated);
+      return retval;
+    }
   }
 
   /* Multicharacter tokens */
