@@ -42,11 +42,12 @@ int main(){
   double probB[] = {0.25, 0.25, 0.40, 0.10};
   double probD[] = {0.2, 0.3, 0.5};
 
-  variables[0] = new_variable("A", nameA, 3);
-  variables[1] = new_variable("B", nameB, 4);
-  variables[2] = new_variable("C", nameC, 2); /* note1 */
-  variables[3] = new_variable("D", nameD, 3);
-  variables[4] = new_variable("E", nameE, 2);
+  // Create the variables (without statenames)
+  variables[0] = new_variable("A", nameA, NULL, 3);
+  variables[1] = new_variable("B", nameB, NULL, 4);
+  variables[2] = new_variable("C", nameC, NULL, 2); /* note1 */
+  variables[3] = new_variable("D", nameD, NULL, 3);
+  variables[4] = new_variable("E", nameE, NULL, 2);
 
   /* create some cliques and sepsets (with too many shortcuts...) 
    * This is normally the job of the graph implementation. */
@@ -64,9 +65,9 @@ int main(){
 
   /* initialization: This information is usually parsed from a file. */
   potential model[4]; // the fourth potential is extra
-  Variable parentsA[2];
-  Variable parentsC[2];
-  Variable parentsE[1];
+  //Variable parentsA[2];
+  //Variable parentsC[2]; //parents not needed after 25.5.2004
+  //Variable parentsE[1];
   cardinality[0] = 3;
   cardinality[1] = 4;
   cardinality[2] = 2; /* note1 */
@@ -90,12 +91,12 @@ int main(){
   for(i = 0; i < 24; i++)
     printf("Correct=%f, Reordered=%f\n", model[1]->data[i], model[3]->data[i]);
 
-  parentsA[0] = variables[1]; parentsA[1] = variables[2];
-  parentsC[0] = variables[1]; parentsC[1] = variables[3];
-  parentsE[0] = variables[3];
-  initialise(clique_pile[0], variables[0], parentsA, model[0]);
-  initialise(clique_pile[1], variables[2], parentsC, model[1]);
-  initialise(clique_pile[2], variables[4], parentsE, model[2]);
+  //parentsA[0] = variables[1]; parentsA[1] = variables[2];
+  //parentsC[0] = variables[1]; parentsC[1] = variables[3];
+  //parentsE[0] = variables[3];
+  initialise(clique_pile[0], variables, model[0]);
+  initialise(clique_pile[1], &variables[1], model[1]);
+  initialise(clique_pile[2], &variables[3], model[2]);
 
   /* DEBUG */
   //printf("BCD before evidence:\n");

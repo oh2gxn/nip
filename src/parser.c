@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.11 2004-05-25 13:42:21 jatoivol Exp $
+ * $Id: parser.c,v 1.12 2004-05-25 14:47:28 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -46,7 +46,7 @@ char *next_token(int *token_length){
   /* The token we return */
   char *token;
 
-  int nexttoken_length;
+  //int nexttoken_length;
 
   /* Return if some evil mastermind gives us a NULL pointer */
   if(!token_length)
@@ -202,10 +202,12 @@ int add_string(char* string){
  * The size will be doubles_parsed. */
 Variable* make_variable_array(){
   int i;
-  Variable* vars[symbols_parsed];
+  Variable* vars = (Variable*) calloc(symbols_parsed, sizeof(Variable));
   varlink pointer = first_temp_var;
-  for(i = 0; i < symbols_parsed; pointer = pointer->fwd, i++)
+  for(i = 0; i < symbols_parsed; i++){
     vars[i] = pointer->data;
+    pointer = pointer->fwd;
+  }
   return vars;
 }
 
@@ -217,7 +219,7 @@ double* make_double_array(){
   int i;
   doublelink ln = first_double;
   for(i = 0; i < doubles_parsed; i++){
-    new[i] = ln->data;
+    new[i] = ln->data; // the data is copied here (=> not lost in reset)
     ln = ln->fwd;
   }
   return new;
@@ -230,7 +232,7 @@ char** make_string_array(){
   int i;
   stringlink ln = first_string;
   for(i = 0; i < strings_parsed; i++){
-    new[i] = ln->data;
+    new[i] = ln->data; // char[] references copied
     ln = ln->fwd;
   }
   return new;
@@ -252,7 +254,8 @@ int reset_doubles(){
   return 0;
 }
 
-/* Removes everything from the list of strings and resets the counter. */
+/* Removes everything from the list of strings and resets the counter. 
+ * The actual memory for the strings is not freed, only the list. */
 int reset_strings(){
   stringlink ln = last_string;
   last_string = 0;

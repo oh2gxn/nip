@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.17 2004-05-20 22:02:21 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.18 2004-05-25 14:47:28 jatoivol Exp $
  */
 
 #include <string.h>
@@ -8,7 +8,8 @@
 #include "potential.h"
 #include "errorhandler.h"
 
-Variable new_variable(const char* symbol, const char* name, int cardinality){
+Variable new_variable(const char* symbol, const char* name, 
+		      const char** states, int cardinality){
   static long id = VAR_MIN_ID;
   int i;
   double *dpointer;
@@ -25,6 +26,9 @@ Variable new_variable(const char* symbol, const char* name, int cardinality){
     /* DANGER! The name can be omitted and consequently be NULL */
     v->name[0] = '\0';
 
+  // "the ownership" of the states (array of strings) changes
+  variable_statenames(v, states); 
+
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */
   for(dpointer=v->likelihood, i=0; i < cardinality; *dpointer++ = 1, i++);
@@ -38,6 +42,12 @@ int variable_name(Variable v, const char *name){
   strncpy(v->name, name, VAR_NAME_LENGTH);
   v->name[VAR_NAME_LENGTH] = '\0';
   return NO_ERROR;
+}
+
+// "the ownership" of the states (array of strings) changes
+int variable_statenames(Variable v, const char **states){
+  v->statenames = states;
+  return 0;
 }
 
 Variable copy_variable(Variable v){

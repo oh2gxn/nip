@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.10 2004-05-25 13:42:21 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.11 2004-05-25 14:47:28 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -14,13 +14,19 @@
 /* BISON Declarations */
 /* These are the data types for semantic values. */
 %union {
-  int intval;
   double numval;
   double *doublearray;
   char *name;
   char **stringarray;
   Variable *variablearray;
 }
+
+/******************************************************************/
+/* NOTE ABOUT STRINGS! ********************************************/
+/* The memory for the strings is allocated in yylex() and should  */
+/* be freed if the string is copied or not used!                  */
+/* (The "ownership" of strings changes.)                          */
+/******************************************************************/
 
 %token node "node"
 %token potential "potential"
@@ -31,11 +37,10 @@
 %token <name> QUOTED_STRING
 %token <name> UNQUOTED_STRING
 %token <numval> NUMBER
-%type <stringarray> strings
+%type <stringarray> strings statesDeclaration
 %type <doublearray> numbers dataList
 %type <variablearray> symbols
 %type <name> labelDeclaration
-%type <intval> statesDeclaration
 
 /* Grammar follows */
 /* NOT READY!!! Procedures and arrays in C do not mix well with the more 
@@ -46,7 +51,7 @@ input:         /* empty string */
 ;
 
 declaration:   nodeDeclaration {/* put the node somewhere */}
-             | potentialDeclaration {/* put the potential somewhere */}
+             | potentialDeclaration {/* put the clique somewhere */}
 ;
 
 nodeDeclaration:    node UNQUOTED_STRING '{' labelDeclaration 
@@ -54,7 +59,7 @@ nodeDeclaration:    node UNQUOTED_STRING '{' labelDeclaration
                                              positionDeclaration
                                              parameters '}' {
   /* new_variable() ??? */
-  add_pvar(new_variable($2, strings_parsed, $5)); 
+  add_pvar(new_variable($2, $4, $5, strings_parsed)); 
   reset_strings();}
 ;
 
@@ -102,7 +107,7 @@ numbers:       /* end of list */ { $$ = make_double_array(); }
              | NUMBER numbers { add_number($1); }
 ;
 
-value:         QUOTED_STRING {/* ignore */}
+value:         QUOTED_STRING { free($1); /* ignore */}
              | '(' numbers ')' { reset_doubles(); }
              | NUMBER {/* ignore */}
 ;
