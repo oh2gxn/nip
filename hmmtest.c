@@ -197,19 +197,11 @@ int main(int argc, char *argv[]){
     /* Do the inference */
     /********************/
     
-    /* 1. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
+    /* 1. Collect evidence */
+    collect_evidence();
     
-    /* 2. Collect evidence */
-    collect_evidence(NULL, NULL, nip_cliques[0]);
-    
-    /* 3. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 4. Distribute evidence */
-    distribute_evidence(nip_cliques[0]);
+    /* 2. Distribute evidence */
+    distribute_evidence();
     
     
     /* an experimental forward phase (a.k.a. filtering)... */
@@ -326,19 +318,11 @@ int main(int argc, char *argv[]){
     /* Do the inference */
     /********************/
     
-    /* 1. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 2. Collect evidence */
-    collect_evidence(NULL, NULL, nip_cliques[0]);
-    
-    /* 3. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 4. Distribute evidence */
-    distribute_evidence(nip_cliques[0]);
+    /* 1. Collect evidence */
+    collect_evidence();
+
+    /* 2. Distribute evidence */
+    distribute_evidence();
     
     
     
@@ -354,10 +338,7 @@ int main(int argc, char *argv[]){
        *    the interesting Variable */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				       &interesting, 1);
-      if(!clique_of_interest){
-	printf("In hmmtest.c : No clique found! Sorry.\n");
-	return 1;
-      }  
+      assert(clique_of_interest != NULL);
       
       /* 3. Marginalisation (the memory must have been allocated) */
       marginalise(clique_of_interest, interesting, result[t][i]);

@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.40 2004-07-07 05:08:52 mvkorpel Exp $
+ * Clique.h $Id: Clique.h,v 1.41 2004-07-09 11:44:17 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -73,15 +73,6 @@ potential create_Potential(Variable variables[], int num_of_vars,
 int free_Potential(potential p);
 
 
-/* Method for unmarking a clique: call this to every clique before 
-   collecting or distributing evidence. Returns an error code. */
-int unmark_Clique(Clique c);
-
-
-/* Method for marking a clique. Returns an error code. */
-int mark_Clique(Clique c);
-
-
 /* Tells how many variables the clique contains. */
 int clique_num_of_vars(Clique c);
 
@@ -95,19 +86,15 @@ Variable clique_get_Variable(Clique c, int i);
 
 
 /*
- * Call Distribute-Evidence for c. Returns an error code.
- * Remember to UNMARK Cliques before calling this.
+ * Call Distribute-Evidence for the join tree. Returns an error code.
  */
-int distribute_evidence(Clique c);
+int distribute_evidence();
 
 
 /*
- * Call Collect-Evidence from Clique c1 (or nullpointer) for Clique c2. 
- * Sepset s12 is the sepset between c1 and c2 or nullpointer to get
- * started. Returns an error code.
- * Remember to UNMARK Cliques before calling this.
+ * Call Collect-Evidence for the join tree. Returns an error code.
  */
-int collect_evidence(Clique c1, Sepset s12, Clique c2);
+int collect_evidence();
 
 
 /* Make up a better name for this */

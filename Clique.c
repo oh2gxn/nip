@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.71 2004-07-07 05:08:52 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.72 2004-07-09 11:44:17 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -31,10 +31,17 @@ static int var_index(Clique c, Variable v);
 
 static int clique_search(Clique one, Clique two);
 
+static int recursive_clique_search(Clique one, Clique two);
+
 static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 		      void (*sFuncPointer)(Sepset));
 
-static int clique_marked(Clique c);
+static void recursive_jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
+				void (*sFuncPointer)(Sepset));
+
+static int recursive_distribute(Clique c);
+
+static int recursive_collect(Clique c1, Sepset s12, Clique c2);
 
 /*static int global_retraction(Clique c);*/
 
@@ -371,30 +378,6 @@ int free_Potential(potential p){
 }
 
 
-int unmark_Clique(Clique c){
-  if(c == NULL)
-    return ERROR_INVALID_ARGUMENT;
-  c->mark = 0;
-  return 0;
-}
-
-
-int mark_Clique(Clique c){
-  if(c == NULL)
-    return ERROR_INVALID_ARGUMENT;
-  c->mark = 1;
-  return 0;
-}
-
-
-/*
- * Returns 0 if clique is not marked, 1 if it is. (This could be a macro...)
- */
-static int clique_marked(Clique c){
-  return c->mark;
-}
-
-
 int clique_num_of_vars(Clique c){
   return c->p->num_of_vars; /* macro? */
 }
@@ -412,7 +395,15 @@ Variable clique_get_Variable(Clique c, int i){
 }
 
 
-int distribute_evidence(Clique c){
+int distribute_evidence(){
+  int i;
+  for(i = 0; i < nip_num_of_cliques; i++)
+    (nip_cliques[i])->mark = 0;
+  return recursive_distribute(nip_cliques[0]);
+}
+
+
+static int recursive_distribute(Clique c){
 
   link l;
   Sepset s;
@@ -429,9 +420,9 @@ int distribute_evidence(Clique c){
   l = c->sepsets;
   while (l != 0){
     s = l->data;
-    if(!clique_marked(s->cliques[0]))
+    if(!(s->cliques[0]->mark))
       message_pass(c, s, s->cliques[0]); /* pass a message */
-    else if(!clique_marked(s->cliques[1]))
+    else if(!(s->cliques[1]->mark))
       message_pass(c, s, s->cliques[1]); /* pass a message */
     l = l->fwd;
   }
@@ -440,17 +431,25 @@ int distribute_evidence(Clique c){
   l = c->sepsets;
   while (l != 0){
     s = l->data;
-    if(!clique_marked(s->cliques[0]))
-      distribute_evidence(s->cliques[0]);
-    else if(!clique_marked(s->cliques[1]))
-      distribute_evidence(s->cliques[1]);
+    if(!(s->cliques[0]->mark))
+      recursive_distribute(s->cliques[0]);
+    else if(!(s->cliques[1]->mark))
+      recursive_distribute(s->cliques[1]);
     l = l->fwd;
   }
   return 0;
 }
 
 
-int collect_evidence(Clique c1, Sepset s12, Clique c2){
+int collect_evidence(){
+  int i;
+  for(i = 0; i < nip_num_of_cliques; i++)
+    nip_cliques[i]->mark = 0;
+  return recursive_collect(NULL, NULL, nip_cliques[0]);
+}
+
+
+static int recursive_collect(Clique c1, Sepset s12, Clique c2){
 
   link l;
   Sepset s;
@@ -462,10 +461,10 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
   l = c2->sepsets;
   while (l != NULL){
     s = l->data;
-    if(!clique_marked(s->cliques[0]))
-      collect_evidence(c2, s, s->cliques[0]);
-    else if(!clique_marked(s->cliques[1]))
-      collect_evidence(c2, s, s->cliques[1]);
+    if(!(s->cliques[0]->mark))
+      recursive_collect(c2, s, s->cliques[0]);
+    else if(!(s->cliques[1]->mark))
+      recursive_collect(c2, s, s->cliques[1]);
     l = l->fwd;
   }
 
@@ -642,9 +641,6 @@ int global_retraction(Clique c){
   printf("Now in global_retraction\n");
 #endif
 
-  for(index = 0; index < nip_num_of_cliques; index++)
-    unmark_Clique(nip_cliques[index]);
-
   /* Reset all the potentials back to original. */
   jtree_dfs(c, retract_Clique, retract_Sepset);
 
@@ -794,12 +790,11 @@ Clique find_family(Clique *cliques, int num_of_cliques,
 int find_sepsets(Clique *cliques, int num_of_cliques){
 
   int inserted = 0;
-  int i;
   Sepset s;
   Clique one, two;
 
 #ifdef DEBUG_CLIQUE
-  int j, k;
+  int i, j, k;
   int ok = 1;
 #endif
 
@@ -821,10 +816,6 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
     one = s->cliques[0];
     two = s->cliques[1];
 
-    /* Unmark MUST be done before searching (clique_search). */
-    for(i = 0; i < num_of_cliques; i++)
-      unmark_Clique(cliques[i]);
-
     /* Prevent loops by checking if the Cliques
      * are already in the same tree. */
     if(!clique_search(one, two)){
@@ -840,23 +831,8 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
       print_Clique(two);
 #endif
 
-
-      /* unmark_Clique is only called for debug purposes, because
-       * add_Sepset calls clique_search. */
-#ifdef DEBUG_CLIQUE
-
-      /* Unmark MUST be done before searching (clique_search). */
-      for(i = 0; i < num_of_cliques; i++)
-	unmark_Clique(cliques[i]);
-#endif
       add_Sepset(one, s);
 
-#ifdef DEBUG_CLIQUE
-
-      /* Unmark MUST be done before searching (clique_search). */
-      for(i = 0; i < num_of_cliques; i++)
-	unmark_Clique(cliques[i]);
-#endif
       add_Sepset(two, s);
       inserted++;
     }
@@ -866,10 +842,6 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 #ifdef DEBUG_CLIQUE
   for(i = 0; i < num_of_cliques - 1; i++)
     for(j = i + 1; j < num_of_cliques; j++){
-
-      /* Unmark MUST be done before searching (clique_search). */
-      for(k = 0; k < num_of_cliques; k++)
-	unmark_Clique(cliques[k]);
 
       if(!clique_search(cliques[i], cliques[j])){
 	ok = 0;
@@ -892,9 +864,15 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 /*
  * Finds out if two Cliques are in the same tree.
  * Returns 1 if they are, 0 if not.
- * Cliques must be unmarked before calling this.
  */
 static int clique_search(Clique one, Clique two){
+  int i;
+  for(i = 0; i < nip_num_of_cliques; i++)
+    nip_cliques[i]->mark = 0; 
+  return recursive_clique_search(one, two);
+}
+
+static int recursive_clique_search(Clique one, Clique two){
   link l = one->sepsets;
   Sepset s;
 
@@ -923,18 +901,18 @@ static int clique_search(Clique one, Clique two){
   /* call neighboring cliques */
   while (l != NULL){
     s = (Sepset)(l->data);
-    if(!clique_marked(s->cliques[0])){
+    if(!(s->cliques[0]->mark)){
 #ifdef DEBUG_CLIQUE
       printf("In clique_search: s->cliques[0] not marked.\n");
 #endif
-      if(clique_search(s->cliques[0], two))
+      if(recursive_clique_search(s->cliques[0], two))
 	return 1; /* TRUE */
     }
-    else if(!clique_marked(s->cliques[1])){
+    else if(!(s->cliques[1]->mark)){
 #ifdef DEBUG_CLIQUE
       printf("In clique_search: s->cliques[1] not marked.\n");
 #endif
-      if(clique_search(s->cliques[1], two))
+      if(recursive_clique_search(s->cliques[1], two))
 	return 1; /* TRUE */
     }
     l = l->fwd;
@@ -1020,6 +998,15 @@ static void retract_Sepset(Sepset s){
  */
 static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 		      void (*sFuncPointer)(Sepset)){
+  int i;
+  for(i = 0; i < nip_num_of_cliques; i++)
+    nip_cliques[i]->mark = 0;
+  recursive_jtree_dfs(start, cFuncPointer, sFuncPointer);
+}
+
+
+static void recursive_jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
+		      void (*sFuncPointer)(Sepset)){
   /* a lot of copy-paste from collect/distribute_evidence and clique_search */
 
   link l = start->sepsets;
@@ -1037,15 +1024,15 @@ static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
   /* call neighboring cliques */
   while (l != NULL){
     s = (Sepset)(l->data);
-    if(!clique_marked(s->cliques[0])){
+    if(!(s->cliques[0]->mark)){
       if(sFuncPointer)
 	sFuncPointer(s);
-      jtree_dfs(s->cliques[0], cFuncPointer, sFuncPointer);
+      recursive_jtree_dfs(s->cliques[0], cFuncPointer, sFuncPointer);
     }
-    else if(!clique_marked(s->cliques[1])){
+    else if(!(s->cliques[1]->mark)){
       if(sFuncPointer)
 	sFuncPointer(s);
-      jtree_dfs(s->cliques[1], cFuncPointer, sFuncPointer);
+      recursive_jtree_dfs(s->cliques[1], cFuncPointer, sFuncPointer);
     }
     l = l->fwd;
   }

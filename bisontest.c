@@ -222,14 +222,8 @@ int main(int argc, char *argv[]){
   test_evidence(observed[2], probs[2]);
 
   /* a propagation */
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
-  collect_evidence(NULL, NULL, nip_cliques[0]);
-
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
-  distribute_evidence(nip_cliques[0]);
-
+  collect_evidence();
+  distribute_evidence();
 
 
   /* marginalisation */
@@ -274,13 +268,8 @@ int main(int argc, char *argv[]){
 
 
   /* a propagation */
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
-  collect_evidence(NULL, NULL, nip_cliques[0]);
-
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
-  distribute_evidence(nip_cliques[0]);
+  collect_evidence();
+  distribute_evidence();
 
   /* marginalisation */
   if(argc > 2)
