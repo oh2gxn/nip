@@ -86,3 +86,10 @@ Sekalaisia huomioita:
 11.6.2004 (Janne ja Mikko)
 * Klikeillä ei taida olla sepsettejä. Ei nimittäin etene distribute_evidence
   mihinkään. Nyt viikonloppua viettämään.
+--
+
+17.6.2004 (Janne ja Mikko)
+* Melko monimutkainen Huginilla tehty verkko onnistutaan laskemaan oikein,
+  JOS riippumattomien muuttujien jakaumaa ei yritetä asettaa .net -tiedoston
+  potentiaaleilla. Tasajakauma (1 1 ... 1) siis toimii mutta muunlainen
+  näköjään ei. Miten tällaiset tilanteet pitäisi hoitaa? enter_evidence ?

@@ -182,6 +182,8 @@ int find_sepsets(Clique *cliques, int num_of_cliques);
  */
 int clique_search(Clique one, Clique two);
 
+void jtree_dfs();
+
 
 /*
  * Finds the intersection of two Cliques. Creates an array of those
