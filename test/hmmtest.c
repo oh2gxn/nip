@@ -278,13 +278,19 @@ int main(int argc, char *argv[]){
       
       printf("-- t = %d --\n", t);
       
+
+      if(t > 0){
+	for(i = 0; i < timeseries->num_of_nodes; i++)
+	  if(data[t - 1][i] >= 0)
+	    enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+				data[t - 1][i]);
       
-      for(i = 0; i < num_of_hidden; i++){
-	temp = hidden[i];
-	if(temp->next == NULL)
-	  enter_evidence(temp, result[t][i]);
-      }
-      
+	for(i = 0; i < num_of_hidden; i++){
+	  temp = hidden[i];
+	  if(temp->next != NULL)
+	    enter_evidence(temp->next, result[t-1][i]);
+	}
+      }      
       
       if(t < timeseries->datarows){
 	
