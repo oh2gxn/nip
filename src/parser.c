@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.20 2004-06-07 07:50:12 mvkorpel Exp $
+ * $Id: parser.c,v 1.21 2004-06-07 11:38:01 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -18,6 +18,8 @@ varlink nip_last_temp_var = NULL;
 int nip_symbols_parsed = 0;
 
 Graph *nip_graph = NULL;
+Clique *nip_cliques = NULL;
+int nip_num_of_cliques = 0;
 
 doublelink nip_first_double = NULL;
 doublelink nip_last_double = NULL;

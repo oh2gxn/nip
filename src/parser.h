@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.13 2004-06-03 15:20:07 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.14 2004-06-07 11:38:02 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -35,6 +35,8 @@ extern varlink nip_last_temp_var;
 extern int nip_symbols_parsed;
 
 extern Graph *nip_graph;
+extern Clique *nip_cliques;
+extern int nip_num_of_cliques;
 
 struct doublelist {
   double data;

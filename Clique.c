@@ -5,7 +5,7 @@
 #include "potential.h"
 #include "errorhandler.h"
 
-#define DEBUG_CLIQUE
+/* #define DEBUG_CLIQUE */
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
@@ -86,7 +86,7 @@ int free_Sepset(Sepset s){
 
 potential create_Potential(Variable variables[], int num_of_vars, 
 			   double data[]){
-  // THIS IS TRICKY: we have to reorder the array and stuff...
+  /* THIS IS TRICKY: we have to reorder the array and stuff... */
   int i, j, card_temp, index, size_of_data = 1;
 
   /* Kommentoidaan t‰m‰ pois, ja v‰‰nnet‰‰n samat malloc:in avulla
@@ -104,16 +104,17 @@ potential create_Potential(Variable variables[], int num_of_vars,
 
 
   if((cardinality = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-	  fprintf(stderr, "Homma kusee!!! (malloc, \n");
+    fprintf(stderr, "In Clique.c: malloc failed\n");
+    return NULL;
   }
   if((indices = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-	  fprintf(stderr, "Homma kusee!!! (malloc, \n");
+    fprintf(stderr, "In Clique.c: malloc failed\n");
+    return NULL;
   }
   if((reorder = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-	  fprintf(stderr, "Homma kusee!!! (malloc, \n");
+    fprintf(stderr, "In Clique.c: malloc failed\n");
+    return NULL;
   }
-  fprintf(stdout, "Homma toimii!\n");
-  fflush(NULL);
 
 #ifdef DEBUG_CLIQUE
   printf("In create_Potential: num_of_vars = %d\n", num_of_vars);
@@ -135,16 +136,16 @@ potential create_Potential(Variable variables[], int num_of_vars,
     temp = get_id(variables[i]);
     for(j = 0; j < num_of_vars; j++){
       if(get_id(variables[j]) > temp)
-	indices[j]++; // counts how many greater variables there are
+	indices[j]++; /* counts how many greater variables there are */
     }
   }
 
   for(i = 0; i < num_of_vars; i++)
-    reorder[indices[i]] = i; // fill the reordering
+    reorder[indices[i]] = i; /* fill the reordering */
   
   /* Figure out some stuff */
   for(i = 0; i < num_of_vars; i++){
-    size_of_data *= variables[i]->cardinality; // optimal?
+    size_of_data *= variables[i]->cardinality; /* optimal? */
     cardinality[i] = variables[reorder[i]]->cardinality;
   }
 
@@ -157,10 +158,10 @@ potential create_Potential(Variable variables[], int num_of_vars,
    * be revised too!!! */
   for(i = 0; i < size_of_data; i++){
     /* Now this is the trickiest part */
-    // find out indices
+    /* find out indices */
     inverse_mapping(p, i, indices); 
 
-    // calculate the address in the original array
+    /* calculate the address in the original array */
     index = 0;
     card_temp = 1;
     /* THE mapping */
@@ -169,8 +170,9 @@ potential create_Potential(Variable variables[], int num_of_vars,
       card_temp *= cardinality[reorder[j]];
     }
 
-    // set the value (in a little ugly way)
-    p->data[i] = data[index]; // data is being copied => free(data) somewhere
+    /* set the value (in a little ugly way) */
+    /* data is being copied => free(data) somewhere */
+    p->data[i] = data[index];
   }
 
   return p;
@@ -312,9 +314,9 @@ int initialise(Clique c, Variable v, Variable parents[], potential p){
     }
   }
   /* rest the case */
-  set_probability(v, p); // was this the intention??
+  set_probability(v, p); /* was this the intention?? */
   i = init_potential(p, c->p, extra_vars);
-  free(extra_vars); // free(NULL) is O.K.
+  free(extra_vars); /* free(NULL) is O.K. */
   return (i);
 }
 
@@ -370,7 +372,8 @@ int enter_evidence(Clique c, Variable v, double evidence[]){
   /* JJ NOTE: update_evidence or enter_evidence should be 
    *          'fail fast' and there could be global retraction 
    *	      upon failure. 
-   *	      Zeros are a menace! */
+   *	      Zeros are a menace!
+   */
 
   return 0;
 }

@@ -30,7 +30,9 @@ Graph* test1(void)
     Graph *G;
     Variable v[4];
     Variable *w;
-    char *symbol, *name;
+    char symbol[VAR_SYMBOL_LENGTH]; /* MVK: Must reserve some memory (?)*/
+    char name[VAR_NAME_LENGTH];
+    /* char *symbol, *name; */
     
     int i;
 
@@ -218,7 +220,7 @@ void test7(Graph* G)
 	printf("\tTest 7 done.\n");	
 }
 
-void main(void)
+int main(void)
 {
     Graph *G, *G2;
     printf("-------------------------------\n");
@@ -231,5 +233,7 @@ void main(void)
     test5(G);
     G2=test6();
     test7(G2);
+
+    return 0;
 }
 

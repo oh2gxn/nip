@@ -9,24 +9,35 @@
 
 int main(){
   
-  int i, GRAPHS = 100000;
+  int i, j;
+  int GRAPHS = 100000;
   Graph *gr = new_graph(5);
   Graph **graphs = (Graph **) calloc(GRAPHS, sizeof(Graph *));
-  char *name_a = "einari";
-  char *name_b = "jalmari";
-  char *name_c = "jokke";
-  char *name_d = "spede";
-  char *name_e = "tauno";
+  char *symbol_a = "einari";
+  char *symbol_b = "jalmari";
+  char *symbol_c = "jokke";
+  char *symbol_d = "spede";
+  char *symbol_e = "tauno";
+  char *name_a = "elostelija";
+  char *name_b = "jaloviina";
+  char *name_c = "gggggrrrrrrrrrrrrrrr";
+  char *name_d = "pasanen";
+  char *name_e = "tappi";
+  char *states_a[] = {"a", "b", "c"};
+  char *states_b[] = {"d", "e", "f", "g"};
+  char *states_c[] = {"h", "i"};
+  char *states_d[] = {"j", "k", "l"};
+  char *states_e[] = {"m", "n"};
   Variable *variables = (Variable *) calloc(5, sizeof(Variable));
 
   /* Nyt on meill‰ verkko... Koko? */
   printf("Size of graph is %d.\n", get_size(gr));
 
-  variables[0] = new_variable(name_a, 3);
-  variables[1] = new_variable(name_b, 4);
-  variables[2] = new_variable(name_c, 2);
-  variables[3] = new_variable(name_d, 3);
-  variables[4] = new_variable(name_e, 2);
+  variables[0] = new_variable(symbol_a, name_a, states_a, 3);
+  variables[1] = new_variable(symbol_b, name_b, states_b, 4);
+  variables[2] = new_variable(symbol_c, name_c, states_c, 2);
+  variables[3] = new_variable(symbol_d, name_d, states_d, 3);
+  variables[4] = new_variable(symbol_e, name_e, states_e, 2);
 
   /* Lis‰t‰‰n muuttujat verkkoon. */
   for(i = 0; i < 7; i++)
@@ -52,7 +63,8 @@ int main(){
   /* Luodaan monta verkkoa, joilla on yhteiset muuttujat. */
   for(i = 0; i < GRAPHS; i++){
     graphs[i] = new_graph(5);
-    add_all_variables(graphs[i], variables);
+    for(j = 0; j < 5; j++)
+      add_variable(graphs[i], variables[j]);
     /* Lis‰t‰‰n muuttujien v‰liset riippuvuudet. */
     if(add_child(graphs[i], variables[1], variables[0]) != 0 ||
        add_child(graphs[i], variables[1], variables[2]) != 0 ||

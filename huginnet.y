@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.30 2004-06-07 07:50:12 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.31 2004-06-07 11:38:01 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -14,7 +14,8 @@
 #include "potential.h" /* for DEBUG purposes */
 
 #define YYERROR_VERBOSE
-#define DEBUG_BISON
+/* #define DEBUG_BISON */
+
 %}
 
 /* BISON Declarations */
@@ -73,10 +74,38 @@ input:  nodes potentials {
    */
 
 #ifdef DEBUG_BISON
-  int i, j, k;
+  int j, k;
   int temp_index;
   unsigned long biggest_found, biggest_ready;
   initDataLink list = nip_first_initData;
+#endif
+
+  int i;
+  varlink list_of_vars = nip_first_var;
+  initDataLink initlist = nip_first_initData;
+
+  /* Add parsed variables to the graph. */
+  while(list_of_vars != NULL){
+
+    add_variable(nip_graph, list_of_vars->data);
+    list_of_vars = list_of_vars->fwd;
+  }
+
+  /* Add child - parent relations to the graph. */
+  while(initlist != NULL){
+
+    for(i = 0; i < initlist->data->num_of_vars - 1; i++)
+      add_child(nip_graph, initlist->parents[i], initlist->child);
+
+    initlist = initlist->fwd;
+  }
+
+  /* Construct the join tree. */
+  nip_num_of_cliques = find_cliques(nip_graph, &nip_cliques);
+
+  printf("In huginnet.y: %d cliques found.\n", nip_num_of_cliques);
+
+#ifdef DEBUG_BISON
   /*    while(list != NULL){
     printf("P(%s |", list->child->symbol);
     for(i = 0; i < list->data->num_of_vars - 1; i++)
