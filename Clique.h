@@ -190,13 +190,21 @@ void print_Clique(Clique c);
 
 
 /*
+ * Prints the variables of the given Sepset.
+ */
+void print_Sepset(Sepset s);
+
+
+/*
  * A generic function for traversing the join tree. 
  * Cliques must be unmarked before calling this.
  * Parameters:
  * - a clique where the DFS starts
  * - a function pointer to the function to be used for every Clique on the way
+ * - a function pointer to the function to be used for every Sepset on the way
  */
-void jtree_dfs(Clique start, void (*funcPointer)(Clique));
+void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
+	       void (*sFuncPointer)(Sepset));
 
 
 /*
