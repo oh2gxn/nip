@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.25 2004-09-21 14:11:35 arasinen Exp $
+% $Id: dokumentaatio.tex,v 1.26 2004-09-23 13:11:20 arasinen Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -31,8 +31,8 @@
 % Try to keep it consistent...
 
 \newcommand{\cdatatype}[1]{{\it #1}}
-\newcommand{\examplecode}[1]{\verb+#1+}
-\newcommand{\cfilename}[1]{\verb+#1+}
+\newcommand{\examplecode}[1]{\texttt{#1}}
+\newcommand{\cfilename}[1]{\texttt{#1}}
 \newcommand{\cdefine}[1]{\textbf{#1}}
 \newcommand{\cparameter}[1]{\textbf{#1}}
 
@@ -365,13 +365,15 @@ The \cdatatype{Heap} is used to keep the potential cliques in a sorted
 data structure. Any search structure would suffice here; the heap is
 probably the most efficient.
 
-This step requires a dynamically updatable Heap. The weights in
-neighbouring nodes change when the minimum weight node is
-removed. This also means that the heap implementation must be tied in
-with the \cdatatype{Graph}. This has led to number of tradeoffs and
+This step requires a dynamically updatable Heap. The weights in 
+neighbouring nodes change when the minimum weight node is 
+removed. This also means that the heap implementation must be tied in 
+with the \cdatatype{Graph}. This has led to number of tradeoffs and 
 possible pitfalls.
 
+ 
 XX
+
 
 \subsubsection{cls2clq}
 
