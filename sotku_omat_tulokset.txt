@@ -1,3 +1,5 @@
+Omat (virheelliset) tulokset tiedoston "hugin_sotku.net" pohjalta.
+
 Normalised probability of C1:
 result[0] = 0.395004
 result[1] = 0.604996
