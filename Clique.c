@@ -46,13 +46,18 @@ Clique make_Clique(Variable vars[], int num_of_vars){
   for(i = 0; i < num_of_vars; i++){
     cardinality[i] = vars[reorder[i]]->cardinality;
     c->variables[i] = vars[reorder[i]];
-#ifdef DEBUG_CLIQUE
-    printf("Id of c->variables[%d] is %lu.\n", i, get_id(c->variables[i]));
-#endif
   }
+
 #ifdef DEBUG_CLIQUE
-    printf("\n");
-#endif
+  
+  for(i = 0; i < num_of_vars; i++)
+    ;
+  for(i = 0; i < num_of_vars; i++)
+    ;
+  for(i = 0; i < num_of_vars; i++)
+    ;
+#endif  
+
   c->p = make_potential(cardinality, num_of_vars, NULL);
   free(cardinality);
   free(indices);
@@ -98,15 +103,50 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   Sepset s = (Sepset) malloc(sizeof(sepsettype));
   s->cliques = (Clique *) calloc(2, sizeof(Clique));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
-  int i;
+  int *reorder = (int *) calloc(num_of_vars, sizeof(int));
+  int *indices = (int *) calloc(num_of_vars, sizeof(int));
+  int i, j;
+  unsigned long temp;
   s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
+
+  if(!s || !cardinality || !reorder || !indices || 
+     !s->variables || !s->cliques){ /* fail-fast OR operation? */
+    fprintf(stderr, "In Clique.c: malloc failed.\n");
+    return NULL;
+  }    
+
+  /* reorder[i] is the place of i:th variable (in the sense of this program) 
+   * in the array variables[].
+   * Because of this, vars[] can be given in any order.
+   */
+
+  /* init (needed?) */
+  for(i = 0; i < num_of_vars; i++)
+    indices[i] = 0;
+
+  /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
+   * Note the temporary use of indices array. */
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = vars[i]->cardinality;
-    s->variables[i] = vars[i];
+    temp = get_id(vars[i]);
+    for(j = 0; j < num_of_vars; j++){
+      if(get_id(vars[j]) > temp)
+	indices[j]++; /* counts how many greater variables there are */
+    }
+  }
+
+  for(i = 0; i < num_of_vars; i++)
+    reorder[indices[i]] = i; /* fill the reordering */
+
+
+  for(i = 0; i < num_of_vars; i++){
+    cardinality[i] = vars[reorder[i]]->cardinality;
+    s->variables[i] = vars[reorder[i]];
   }
   s->old = make_potential(cardinality, num_of_vars, NULL);
   s->new = make_potential(cardinality, num_of_vars, NULL);
   free(cardinality); /* the array was copied ? */
+  free(reorder);
+  free(indices);
   s->cliques[0] = cliques[0]; /* Hopefully the space was allocated! */
   s->cliques[1] = cliques[1];
   return s;

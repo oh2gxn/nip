@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.25 2004-06-09 15:02:44 jatoivol Exp $
+ * $Id: parser.c,v 1.26 2004-06-10 19:27:52 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -459,9 +459,14 @@ int parsedPots2JTree(){
 
 
 void print_parsed_stuff(){
-  int i, j, k;
+  int i; 
+
+#ifdef SUSI  
+  int j, k;
   int temp_index;
   unsigned long biggest_found, biggest_ready;
+#endif
+
   initDataLink list = nip_first_initData;
 
   /* Traverse through the list of parsed potentials. */
