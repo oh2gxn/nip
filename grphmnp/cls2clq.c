@@ -26,7 +26,7 @@ int is_subset(Cluster_list* cl_head, int* var_set, int size)
         flag = 0;
         for (i = 0; i < size; i++)
         {
-            if (var_set[i] & !cl_i->variable_set[i])
+            if (var_set[i] && !cl_i->variable_set[i])
             {
                 flag = 1; /* var_set not a subset of cl_i */
                 break;

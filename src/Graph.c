@@ -281,7 +281,7 @@ int find_cliques(Graph* G, Clique** cliques_p)
 
     Gm = moralise(G);
     Gu = make_undirected(Gm);
-    n_cliques = triangulate(Gm, cliques_p);
+    n_cliques = triangulate(Gu, cliques_p);
 
     return n_cliques;
 }

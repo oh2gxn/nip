@@ -145,7 +145,9 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
     
     min = H->heap_items[0];
 
+#ifdef DEBUG
 	printf("Eliminated node: %s (%i)\n", min.Vs[0]->symbol, min.n);
+#endif    
     
     H->heap_items[0] = H->heap_items[H->heap_size -1];
     H->heap_size--;
