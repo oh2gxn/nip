@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.21 2005-02-23 13:59:40 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.22 2005-03-14 14:04:49 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -66,6 +66,17 @@ typedef struct{
 typedef uncertain_series_type *UncertainSeries;
 
 
+typedef struct{
+  Nip model;      /* child variables and their parents etc. */
+  int length;     /* length of the time series */
+  potential **families; /* probability distribution of 
+			 * every family (ordered by model->children) 
+			 * on each timestep */
+}family_series_type;
+
+typedef family_series_type *FamilySeries;
+
+
 /* Makes the model forget all the given evidence. */
 void reset_model(Nip model);
 
@@ -84,7 +95,8 @@ void free_model(Nip model);
 TimeSeries read_timeseries(Nip model, char* datafile);
 
 
-/* A method for freeing the huge chunk of memory used by a time series. */
+/* A method for freeing the huge chunk of memory used by a time series. 
+ * Note that this does not free the model. */
 void free_timeseries(TimeSeries ts);
 
 
@@ -98,6 +110,15 @@ void free_uncertainseries(UncertainSeries ucs);
 
 /* Tells the length of the uncertain time series. */
 int uncertainseries_length(UncertainSeries ucs);
+
+
+/* A method for freeing the memory used by a series of family distributions. 
+ * This one does not free the model referenced by fs. */
+void free_familyseries(FamilySeries fs);
+
+
+/* Tells the length of the series of family distributions. */
+int familyseries_length(FamilySeries fs);
 
 
 /* A method for reading an observation from the time series. 
@@ -128,6 +149,15 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars);
  * and the number of the variables. */
 UncertainSeries forward_backward_inference(TimeSeries ts, 
 					   Variable vars[], int nvars);
+
+
+/* This one computes the joint probability distributions for every 
+ * family (child variable + its parents) and for every time step according 
+ * to the timeseries.
+ * It uses both forward and backward propagation, so the result of time 
+ * step t is affected by the whole timeseries. 
+ */
+FamilySeries family_inference(TimeSeries ts);
 
 
 /* This is a function for telling the model about observations. 

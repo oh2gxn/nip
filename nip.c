@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.43 2005-03-07 16:46:23 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.44 2005-03-14 14:04:49 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -299,18 +299,36 @@ int timeseries_length(TimeSeries ts){
 
 void free_uncertainseries(UncertainSeries ucs){
   int i, t;
-  for(t = 0; t < ucs->length; t++){
-    for(i = 0; i < ucs->num_of_vars; i++)
-      free(ucs->data[t][i]);
-    free(ucs->data[t]);
+  if(ucs){
+    for(t = 0; t < ucs->length; t++){
+      for(i = 0; i < ucs->num_of_vars; i++)
+	free(ucs->data[t][i]);
+      free(ucs->data[t]);
+    }
+    free(ucs->variables);
+    free(ucs);
   }
-  free(ucs->variables);
-  free(ucs);
 }
 
 
 int uncertainseries_length(UncertainSeries ucs){
   return ucs->length;
+}
+
+
+void free_familyseries(FamilySeries fs){
+  int t, c;
+  if(fs){
+    for(t=0; t < fs->length; t++)
+      for(c=0; c < fs->model->num_of_children; c++)
+	free_potential(fs->families[t][c]);
+    free(fs);
+  }
+}
+
+
+int familyseries_length(FamilySeries fs){
+  return fs->length;
 }
 
 
@@ -527,8 +545,12 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
     results->data[t] = (double**) calloc(nvars, sizeof(double*));
     if(!results->data[t]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      while(t > 0)
-	free(results->data[--t]);
+      t--;
+      while(t > 0){
+	for(i = 0; i < nvars; i++)
+	  free(results->data[t][i]); /* Fixed 14.3.2005. Did it help? */
+	free(results->data[t--]);
+      }
       free(results->variables); /* t == -1 */
       free(results);
       free(cardinalities);
@@ -540,13 +562,14 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
 					     sizeof(double));
       if(!results->data[t][i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	i--;
 	while(i > 0)
-	  free(results->data[t][--i]);
+	  free(results->data[t][i--]);
+	free(results->data[t--]);
 	while(t > 0){
-	  t--;
 	  for(i = 0; i < nvars; i++)
 	    free(results->data[t][i]);
-	  free(results->data[t]);
+	  free(results->data[t--]);
 	}
 	free(results->variables); /* t == -1 */
 	free(results);
@@ -686,8 +709,12 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
     results->data[t] = (double**) calloc(nvars, sizeof(double*));
     if(!results->data[t]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      while(t > 0)
-	free(results->data[--t]);
+      t--;
+      while(t > 0){
+	for(i = 0; i < nvars; i++)
+	  free(results->data[t][i]); /* Fixed 14.3.2005. Did it help? */
+	free(results->data[t--]);
+      }
       free(results->variables); /* t == -1 */
       free(results);
       free(cardinalities);
@@ -699,13 +726,252 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
 					     sizeof(double));
       if(!results->data[t][i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	i--;
 	while(i > 0)
-	  free(results->data[t][--i]);
+	  free(results->data[t][i--]);
+	free(results->data[t--]);
 	while(t > 0){
-	  t--;
 	  for(i = 0; i < nvars; i++)
 	    free(results->data[t][i]);
-	  free(results->data[t]);
+	  free(results->data[t--]);
+	}
+	free(results->variables); /* t == -1 */
+	free(results);
+	free(cardinalities);
+	return NULL;
+      }
+    }
+  }
+
+
+  /* Allocate some space for the intermediate potentials */
+  timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
+
+  /* Initialise intermediate potentials */
+  for(t = 0; t <= ts->length; t++){
+    timeslice_sepsets[t] = make_potential(cardinalities, model->num_of_nexts, 
+					  NULL);
+  }
+  free(cardinalities);
+
+
+  /*****************/
+  /* Forward phase */
+  /*****************/
+  for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
+    
+    /* Put some data in */
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			    ts->observed[i], ts->data[t][i]);
+    
+    
+    if(t > 0)
+      if(finish_timeslice_message_pass(model, FORWARD, 
+				       timeslice_sepsets[t-1], 
+				       NULL)                   != NO_ERROR){
+
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	free_uncertainseries(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return NULL;
+      }
+    
+    /* Do the inference */
+    make_consistent(model);
+    
+    /* Start a message pass between timeslices */
+    if(start_timeslice_message_pass(model, FORWARD,
+				    timeslice_sepsets[t]) != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      free_uncertainseries(results);
+      for(i = 0; i <= ts->length; i++)
+	free_potential(timeslice_sepsets[i]);
+      free(timeslice_sepsets);
+      return NULL;
+    }
+
+    /* Forget old evidence */
+    reset_model(model);
+  }
+  
+  /******************/
+  /* Backward phase */
+  /******************/
+  
+  /* forget old evidence */
+  reset_model(model);
+  
+  for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
+    
+    /* Put some evidence in */
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			      ts->observed[i], ts->data[t][i]);
+
+    /* Pass the message from the past */
+    if(t > 0)
+      if(finish_timeslice_message_pass(model, FORWARD, 
+				       timeslice_sepsets[t-1], 
+				       NULL)                   != NO_ERROR){
+
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	free_uncertainseries(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return NULL;
+      }
+    
+    /* Pass the message from the future */
+    if(t < ts->length - 1)
+      if(finish_timeslice_message_pass(model, BACKWARD, 
+				       timeslice_sepsets[t+1], 
+				       timeslice_sepsets[t]) != NO_ERROR){
+
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	free_uncertainseries(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return NULL;
+      }
+
+    /* Do the inference */
+    make_consistent(model);
+    
+    /* Write the results */
+    for(i = 0; i < results->num_of_vars; i++){
+      
+      /* 1. Decide which Variable you are interested in */
+      temp = results->variables[i];
+      
+      /* 2. Find the Clique that contains the family of 
+       *    the interesting Variable */
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				       temp);
+      assert(clique_of_interest != NULL);
+      
+      /* 3. Marginalisation (the memory must have been allocated) */
+      marginalise(clique_of_interest, temp, results->data[t][i]);
+      
+      /* 4. Normalisation */
+      normalise(results->data[t][i], number_of_values(temp));
+    }
+    
+
+    if(t > 0)
+      if(start_timeslice_message_pass(model, BACKWARD, 
+				      timeslice_sepsets[t]) != NO_ERROR){
+
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	free_uncertainseries(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return NULL;
+      }
+
+    /* forget old evidence */
+    reset_model(model);
+  }
+
+  /* free the intermediate potentials */
+  for(t = 0; t <= ts->length; t++)
+    free_potential(timeslice_sepsets[t]);
+  free(timeslice_sepsets);
+
+  return results;
+}
+
+
+/* My apologies: this function is probably the worst copy-paste case ever. */
+FamilySeries family_inference(TimeSeries ts){
+  int i, k, t;
+  int *cardinalities = NULL;
+  Variable temp;
+  potential *timeslice_sepsets = NULL;
+  Clique clique_of_interest;
+  FamilySeries results = NULL;
+  Nip model = ts->model;
+
+  /* Allocate an array for describing the dimensions of timeslice sepsets */
+  if(model->num_of_nexts > 0){
+    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+    if(!cardinalities){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return NULL;
+    }
+  }
+
+  /* Fill the array */
+  k = 0;
+  for(i = 0; i < ts->num_of_hidden; i++){
+    temp = ts->hidden[i];
+    if(temp->next)
+      cardinalities[k++] = number_of_values(temp);
+  }
+
+  /* Allocate some space for the results */
+  results = (FamilySeries) malloc(sizeof(family_series_type));
+  if(!results){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(cardinalities);
+    return NULL;
+  }
+  
+  results->model = ts->model; /* Some shared properties... */
+  results->length = ts->length;
+
+  results->families = (potential**) calloc(ts->length, sizeof(potential*));
+  if(!results->families){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(results);
+    free(cardinalities);
+    return NULL;
+  }
+  
+  for(t = 0; t < results->length; t++){
+    results->families[t] = 
+      (potential*) calloc(results->model->num_of_children, sizeof(potential));
+    if(!results->families[t]){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      t--;
+      while(t > 0){
+	for(i = 0; i < results->model->num_of_children; i++)
+	  free_potential(results->families[t][i]);
+	free(results->families[t--]);
+      }
+      free(results); /* t == -1 */
+      free(cardinalities);
+      return NULL;
+    }
+
+
+    for(i = 0; i < results->model->num_of_children; i++){
+
+
+    /* XXX: Unfinished!!! Let's make potentials instead of double arrays. */
+
+
+      results->data[t][i] = (double*) calloc(number_of_values(vars[i]),
+					     sizeof(double));
+      if(!results->data[t][i]){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	i--;
+	while(i > 0)
+	  free(results->data[t][i--]);
+	free(results->data[t--]);
+	while(t > 0){
+	  for(i = 0; i < nvars; i++)
+	    free(results->data[t][i]);
+	  free(results->data[t--]);
 	}
 	free(results->variables); /* t == -1 */
 	free(results);
@@ -992,8 +1258,8 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
 }
 
 
-/* Teaches the given model according to the given time series with 
- * EM-algorithm. Returns an error code as an integer. */
+/* Teaches the given model (ts->model) according to the given time series 
+ * (ts) with EM-algorithm. Returns an error code as an integer. */
 int em_learn(TimeSeries ts){
   int i, j, n;
   int v;
@@ -1002,6 +1268,7 @@ int em_learn(TimeSeries ts){
   int *var_map;
   UncertainSeries ucs = NULL;
   potential *parameters;
+  Variable c;
 
   /* Reserve some memory for calculation */
   parameters = (potential*) calloc(ts->model->num_of_children, 
@@ -1022,7 +1289,7 @@ int em_learn(TimeSeries ts){
     for(i = 1; i < n; i++)
       card[i] = ts->model->children[v]->parents[i]->cardinality;
 
-    parameters[v] = make_potential(card, n, NULL); /* the action is here */
+    parameters[v] = make_potential(card, n, NULL); /* the true action */
     free(card);
   }
 
@@ -1032,41 +1299,55 @@ int em_learn(TimeSeries ts){
     ucs = forward_backward_inference(ts,
 				     ts->model->variables,
 				     ts->model->num_of_vars);
+    /* FIXME: this is not enough. Instead of individual prob. distributions,
+     * we need joint distributions of children and their parents. */
 
-    /* Pointers to the potentials..? */
-    
+
+
+
+
     /* M-Step: First the parameter estimation... */
     for(v = 0; v < ts->model->num_of_children; v++){
-      n = ts->model->children[v]->num_of_parents + 1;
+      c = ts->model->children[v];
+      n = c->num_of_parents + 1;
 
       /* Reminder: Use mappings for referencing correct values */
       var_map = (int*) calloc(n, sizeof(int));
       if(!var_map){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);	
-	for(v = 0; v < ts->model->num_of_children; v++){
-	  free_potential(parameters[v]);
+	for(i = 0; i < ts->model->num_of_children; i++){
+	  free_potential(parameters[i]);
 	}
 	free(parameters);
 	free_uncertainseries(ucs);
 	return ERROR_OUTOFMEMORY;
       }
 
-      /* 1. Find out the structure of the potential */
-
-      /* 2. Calculate mapping "potential index -> time series index" */
+      /* Plain ol' cubic search for finding the "potential->ucs" mapping */
+      for(j = 0; j < ucs->num_of_vars; j++){
+	if(equal_variables(c, ucs->variables[j]))
+	  var_map[0] = j;
+      }
+      for(i = 1; i < n; i++){
+	for(j = 0; j < ucs->num_of_vars; j++){
+	  if(equal_variables(c->parents[i], ucs->variables[j]))
+	    var_map[i] = j;
+	}
+      }
       
       /* 3. Traverse through the potential with a flat index 
        *    (+ flat->multidimensional conversion + the mapping above) */
-
+      
       /* A special case can be found at HMModel.java lines 290-314 */
-
+      
       for(t = 0; t < ts->length; t++){
 	; /* unfinished... */
       }
-
+      
       /* Normalisation of potentials? */
       ;
       
+      free(var_map);
     }
 
     /* ... then the model modification */
@@ -1108,8 +1389,7 @@ double *get_probability(Nip model, Variable v){
   }
 
   /* 1. Find the Clique that contains the interesting Variable */
-  clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				   v);
+  clique_of_interest = find_family(model->cliques, model->num_of_cliques, v);
   if(!clique_of_interest){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free(result);
@@ -1243,7 +1523,7 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars){
 
   /* NORMALISE? */
 
-  /* FREE MEMORY!!! */
+  /* FREE THE MEMORY!!! */
   free_potential(destination);
   free(vars_sorted);
   free(cardinality);
