@@ -232,8 +232,8 @@ int main(int argc, char *argv[]){
 
 
   /* Allocate some space for the intermediate potentials */
-  timeslice_sepsets = (potential *) calloc(timeseries->datarows, 
-					sizeof(potential));  
+  timeslice_sepsets = (potential *) calloc(timeseries->datarows + 1, 
+					   sizeof(potential));
   /* Initialise intermediate potentials */
   for(t = 0; t <= timeseries->datarows; t++){
     timeslice_sepsets[t] = make_potential(cardinalities, num_of_nexts, NULL);
@@ -490,7 +490,7 @@ int main(int argc, char *argv[]){
   free_model(model);
 
   for(t = 0; t < timeseries->datarows; t++)
-    free(data[i]);
+    free(data[t]);
   free(data);
 
   for(i = 0; i < num_of_hidden; i++)
