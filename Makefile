@@ -1,7 +1,3 @@
-# This is a copy of Makefile on the programming course T2 :
-
-# A skeleton Makefile for the C programming assignment
-# Please modify the parts marked with XXX below!
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
 POT_SRCS=potential.c potentialtest.c
