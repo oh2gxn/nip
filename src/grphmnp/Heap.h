@@ -1,3 +1,7 @@
+/*
+ * Heap.h $Id: Heap.h,v 1.9 2004-06-21 06:12:27 mvkorpel Exp $
+ */
+
 #ifndef __HEAP_H__
 #define __HEAP_H__
 

@@ -1,3 +1,7 @@
+/*
+ * cls2clq.h $Id: cls2clq.h,v 1.3 2004-06-21 06:12:27 mvkorpel Exp $
+ */
+
 #ifndef __CLS2CLQ_H__
 #define __CLS2CLQ_H__
 

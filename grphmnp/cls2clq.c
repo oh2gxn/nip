@@ -1,3 +1,7 @@
+/*
+ * cls2clq.c $Id: cls2clq.c,v 1.4 2004-06-21 06:12:27 mvkorpel Exp $
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include "cls2clq.h"

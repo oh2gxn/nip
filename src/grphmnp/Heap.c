@@ -1,3 +1,7 @@
+/*
+ * Heap.c $Id: Heap.c,v 1.12 2004-06-21 06:12:27 mvkorpel Exp $
+ */
+
 #include <stdlib.h>
 #include "../Variable.h"
 #include "../Graph.h"
