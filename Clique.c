@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.45 2004-06-14 10:56:47 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.46 2004-06-14 12:20:53 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -535,27 +535,77 @@ Clique find_family(Clique *cliques, int num_of_cliques,
 }
 
 
-void find_sepsets(Clique *cliques, int num_of_cliques){
+int find_sepsets(Clique *cliques, int num_of_cliques){
 
+  int inserted = 0;
   int i;
+  Sepset s;
+  Clique one, two;
 
   Heap *H = build_sepset_heap(cliques, num_of_cliques);
 
   if(!H){
     fprintf(stderr, "In Clique.C: build_sepset_heap returned NULL.\n");
-    return;
+    return ERROR_GENERAL;
   }
 
-  for(i = 0; i < num_of_cliques - 1; i++){
+  while(inserted < num_of_cliques - 1){
 
+    /* Extract the "best" candidate sepset from the heap. */
+    if(extract_min_sepset(H, &s)){
+      fprintf(stderr, "In Clique.c: find_sepsets failed after %d sepsets.\n",
+	      inserted);
+      return ERROR_GENERAL;
+    }
 
+    one = s->cliques[0];
+    two = s->cliques[1];
 
+    /* Unmark MUST be done before searching (clique_search). */
+    for(i = 0; i < num_of_cliques; i++)
+      unmark_Clique(cliques[i]);
+
+    /* Prevent loops by checking if the Cliques
+     * are already in the same tree. */
+    if(!clique_search(one, two)){
+      add_Sepset(one, s);
+      add_Sepset(two, s);
+      inserted++;
+    }
 
   }
 
+  return 0;
 
 }
 
+
+int clique_search(Clique one, Clique two){
+  link l = one->sepsets;
+  Sepset s;
+
+  /* mark */
+  one->mark = 1;
+
+  /* NOTE: this defines the equality of cliques. */
+  if(one == two)
+    return 1;
+
+  /* call neighboring cliques */
+  while (l != 0){
+    s = l->data;
+    if(s->cliques[0]->mark == 0){
+      if(clique_search(s->cliques[0], two))
+	return 1;
+    }
+    else if(s->cliques[1]->mark == 0)
+      if(clique_search(s->cliques[1], two))
+	return 1;
+    l = l->fwd;
+  }
+
+  return 0;
+}
 
 int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
 

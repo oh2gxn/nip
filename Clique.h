@@ -121,11 +121,20 @@ Clique find_family(Clique *cliques, int num_of_cliques,
 /*
  * Constructs Sepsets and inserts them between the Cliques to form a
  * join tree.
+ * Returns an error code.
  * Parameters:
  *  - cliques : an array of Cliques
  *  - num_of_cliques : the number of Cliques in the given array
  */
-void find_sepsets(Clique *cliques, int num_of_cliques);
+int find_sepsets(Clique *cliques, int num_of_cliques);
+
+
+/*
+ * Finds out if two Cliques are in the same tree.
+ * Returns 1 if they are, 0 if not.
+ * Cliques must be unmarked before calling this.
+ */
+int clique_search(Clique one, Clique two);
 
 
 /*

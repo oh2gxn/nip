@@ -1,11 +1,12 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.30 2004-06-14 08:41:16 mvkorpel Exp $
+ * $Id: parser.c,v 1.31 2004-06-14 12:20:53 mvkorpel Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "Graph.h"
+#include "Clique.h"
 #include "parser.h"
 #include "fileio.h"
 #include "errorhandler.h"
@@ -427,8 +428,10 @@ int Graph2JTree(){
 #endif
 
   /* We also need Sepsets. */
-
-  return 0;
+#ifdef DEBUG_PARSER
+  printf("In parser.c: Making Sepsets.\n");
+#endif
+  return find_sepsets(nip_cliques, nip_num_of_cliques);
 }
 
 

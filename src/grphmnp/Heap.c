@@ -2,6 +2,7 @@
 #include "../Variable.h"
 #include "../Graph.h"
 #include "Heap.h"
+#include "../errorhandler.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -223,8 +224,24 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
 
 int extract_min_sepset(Heap* H, Sepset* sepset)
 {
+    Heap_item min;	/* Cluster with smallest weight */
 
-  return 0;
+    /* Empty heap, nothing to extract. */
+    if (H->heap_size < 1)
+      return ERROR_GENERAL;
+    
+    min = H->heap_items[0];
+
+    H->heap_items[0] = H->heap_items[H->heap_size -1];
+    H->heap_size--;
+    
+    /* Rebuild the heap. Is this enough? */
+    heapify(H, 0);
+    
+    *sepset = min.s; 
+
+    return 0;
+
 }
 
 int get_heap_index(Heap* H, Variable v)
