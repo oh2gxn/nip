@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.43 2004-06-21 06:12:12 mvkorpel Exp $
+ * huginnet.y $Id: huginnet.y,v 1.44 2004-06-21 06:48:15 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -18,10 +18,10 @@
 #define DEBUG_BISON
 */
 
-int
+static int
 yylex (void);
 
-void
+static void
 yyerror (const char *s);  /* Called by yyparse on error */
 
 %}
@@ -247,7 +247,7 @@ dataList: token_data '=' '(' numbers ')' ';' { $$ = make_double_array() }
 
 #include <ctype.h>
 
-int
+static int
 yylex (void)
 {
   int tokenlength;
@@ -398,7 +398,7 @@ yylex (void)
 
 }
 
-void
+static void
 yyerror (const char *s)  /* Called by yyparse on error */
 {
   printf ("%s\n", s);

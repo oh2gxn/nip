@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.23 2004-06-17 15:28:49 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.24 2004-06-21 06:48:15 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -7,6 +7,32 @@
 #include "Variable.h"
 #include "potential.h"
 #include "errorhandler.h"
+
+static int variable_name(Variable v, const char *name);
+
+static int variable_statenames(Variable v, char **states);
+
+/*
+ * Gives the Variable a verbose name.
+ */
+static int variable_name(Variable v, const char *name){
+  if(!name)
+    return ERROR_NULLPOINTER; /* possibly a normal situation */
+  strncpy(v->name, name, VAR_NAME_LENGTH);
+  v->name[VAR_NAME_LENGTH] = '\0';
+  return NO_ERROR;
+}
+
+
+/*
+ * Gives the Variable the names of the states if needed. 
+ * NOTE: "the ownership" of the states (array of strings) changes.
+ */
+static int variable_statenames(Variable v, char **states){
+  v->statenames = states;
+  return 0;
+}
+
 
 Variable new_variable(const char* symbol, const char* name, 
 		      char** states, int cardinality){
@@ -39,22 +65,6 @@ Variable new_variable(const char* symbol, const char* name,
   for(dpointer=v->likelihood, i=0; i < cardinality; *dpointer++ = 1, i++);
 
   return v;
-}
-
-
-int variable_name(Variable v, const char *name){
-  if(!name)
-    return ERROR_NULLPOINTER; /* possibly a normal situation */
-  strncpy(v->name, name, VAR_NAME_LENGTH);
-  v->name[VAR_NAME_LENGTH] = '\0';
-  return NO_ERROR;
-}
-
-
-/* "the ownership" of the states (array of strings) changes */
-int variable_statenames(Variable v, char **states){
-  v->statenames = states;
-  return 0;
 }
 
 

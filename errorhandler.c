@@ -5,11 +5,11 @@
 #include <stdio.h>
 #include "errorhandler.h"
 
-/* A global variable for counting errors */
-int ERROR_COUNTER = 0;
+/* A variable for counting errors */
+static int ERROR_COUNTER = 0;
 
 /* Errorcode of the last error */
-int ERRORCODE = NO_ERROR; 
+static int ERRORCODE = NO_ERROR; 
 
 void report_error(char *srcFile, int line, int errorcode, int verbose){
   ERRORCODE = errorcode;

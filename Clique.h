@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.34 2004-06-21 06:12:12 mvkorpel Exp $
+ * Clique.h $Id: Clique.h,v 1.35 2004-06-21 06:48:15 mvkorpel Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -81,10 +81,6 @@ int unmark_Clique(Clique c);
 int mark_Clique(Clique c);
 
 
-/* Returns 0 if clique is not marked, 1 if it is. (This could be a macro...) */
-int clique_marked(Clique c);
-
-
 /* Tells how many variables the clique contains. */
 int clique_num_of_vars(Clique c);
 
@@ -113,46 +109,40 @@ int distribute_evidence(Clique c);
 int collect_evidence(Clique c1, Sepset s12, Clique c2);
 
 
-/*
- * Method for passing messages between cliques.
- * The message goes from Clique c1 through Sepset s to Clique c2.
- * Returns an error code.
- */
-int message_pass(Clique c1, Sepset s, Clique c2);
-
-
 /* Make up a better name for this */
-/* !!! p->num_of_vars equals "length of parents + 1" !!! 
+/*
+ * !!! p->num_of_vars equals "length of parents + 1" !!! 
  * Sum of the elements in the potential is assumed to be 1. 
- * The "ownership" of the potential changes. */
+ * The "ownership" of the potential changes.
+ */
 int initialise(Clique c, Variable child, Variable parents[], potential p);
 
 
-/* This one calculates the probability distribution for a variable v
-   according to the clique c. To make sense, the join tree should be 
-   made consistent before this. 
-- The result is placed in the array r
-- The returned value is an error code. */
+/*
+ * This one calculates the probability distribution for a variable v
+ * according to the clique c. To make sense, the join tree should be 
+ * made consistent before this. 
+ * - The result is placed in the array r
+ * - The returned value is an error code.
+ */
 int marginalise(Clique c, Variable v, double r[]);
 
 
-/* Normalises the array. Divides every member by their sum.
+/*
+ * Normalises the array. Divides every member by their sum.
  * The function modifies the given array.
  */
 int normalise(double result[], int array_size);
 
 
-/* Method for entering evidence to a clique. 
-   sizeof(evidence) must equal variable->cardinality.
-   Returns an error code. *** NOTE: If this returns GLOBAL_RETRACTION, 
-   it failed and an initialisation should be made before calling this 
-   again.*/
+/*
+ * Method for entering evidence to a clique. 
+ * sizeof(evidence) must equal variable->cardinality.
+ * Returns an error code. *** NOTE: If this returns GLOBAL_RETRACTION, 
+ * it failed and an initialisation should be made before calling this 
+ * again.
+ */
 int enter_evidence(Clique c, Variable v, double evidence[]);
-
-
-/* Method for checking if Variable v is part of Clique c.
-   Returns -1 if not, else the index of v among the Variables in c. */
-int var_index(Clique c, Variable v);
 
 
 /* Finds a clique containing a family of variables. Returns the first
@@ -180,15 +170,7 @@ int find_sepsets(Clique *cliques, int num_of_cliques);
 
 
 /*
- * Finds out if two Cliques are in the same tree.
- * Returns 1 if they are, 0 if not.
- * Cliques must be unmarked before calling this.
- */
-int clique_search(Clique one, Clique two);
-
-
-/*
- * Prints the variables of the given Clique. Can be used with jtree_dfs.
+ * Prints the variables of the given Clique.
  */
 void print_Clique(Clique c);
 
@@ -197,18 +179,6 @@ void print_Clique(Clique c);
  * Prints the variables of the given Sepset.
  */
 void print_Sepset(Sepset s);
-
-
-/*
- * A generic function for traversing the join tree. 
- * Cliques must be unmarked before calling this.
- * Parameters:
- * - a clique where the DFS starts
- * - a function pointer to the function to be used for every Clique on the way
- * - a function pointer to the function to be used for every Sepset on the way
- */
-void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
-	       void (*sFuncPointer)(Sepset));
 
 
 /*

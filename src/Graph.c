@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.30 2004-06-21 06:12:12 mvkorpel Exp $
+ * Graph.c $Id: Graph.c,v 1.31 2004-06-21 06:48:15 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -10,6 +10,8 @@
 #include "Clique.h"
 #include "grphmnp/Heap.h"
 #include "grphmnp/cls2clq.h"
+
+static void sort_variables(Graph* G);
 
 /*** GRAPH MANAGEMENT ***/
 
@@ -155,7 +157,7 @@ int add_child(Graph* G, Variable parent, Variable child)
     return get_id(v1) - get_id(v2);
 }*/
 
-void sort_variables(Graph* G) 
+static void sort_variables(Graph* G) 
 {
     int i, id;
 	

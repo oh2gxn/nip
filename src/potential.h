@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.20 2004-06-21 06:12:12 mvkorpel Exp $
+ * potential.h $Id: potential.h,v 1.21 2004-06-21 06:48:15 mvkorpel Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -35,9 +35,6 @@ double get_pvalue(potential p, int indices[]);
  * Syntactic sugar.
  */
 int set_pvalue(potential p, int indices[], double value);
-
-/* Returns a pointer to the potential with given variable values (indices). */
-double *get_ppointer(potential p, int indices[]);
 
 /* Mapping from flat index to n-dimensional index, where n is the number of
  * variables in potential p. Returns an error code. 

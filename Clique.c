@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.62 2004-06-18 11:35:02 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.63 2004-06-21 06:48:14 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -16,6 +16,17 @@
 /*
 #define DEBUG_CLIQUE
 */
+
+static int message_pass(Clique c1, Sepset s, Clique c2);
+
+static int var_index(Clique c, Variable v);
+
+static int clique_search(Clique one, Clique two);
+
+static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
+		      void (*sFuncPointer)(Sepset));
+
+static int clique_marked(Clique c);
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
@@ -359,7 +370,10 @@ int mark_Clique(Clique c){
 }
 
 
-int clique_marked(Clique c){
+/*
+ * Returns 0 if clique is not marked, 1 if it is. (This could be a macro...)
+ */
+static int clique_marked(Clique c){
   return c->mark;
 }
 
@@ -455,7 +469,12 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
 }
 
 
-int message_pass(Clique c1, Sepset s, Clique c2){
+/*
+ * Method for passing messages between cliques.
+ * The message goes from Clique c1 through Sepset s to Clique c2.
+ * Returns an error code.
+ */
+static int message_pass(Clique c1, Sepset s, Clique c2){
   int i, j = 0, k = 0;
   int *source_vars;
   int *extra_vars;
@@ -625,7 +644,11 @@ int enter_evidence(Clique c, Variable v, double evidence[]){
 }
 
 
-int var_index(Clique c, Variable v){
+/*
+ * Method for checking if Variable v is part of Clique c.
+ * Returns -1 if not, else the index of v among the Variables in c.
+ */
+static int var_index(Clique c, Variable v){
   int var = 0;
   while(!equal_variables(v, c->variables[var])){
     var++;
@@ -765,7 +788,12 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 }
 
 
-int clique_search(Clique one, Clique two){
+/*
+ * Finds out if two Cliques are in the same tree.
+ * Returns 1 if they are, 0 if not.
+ * Cliques must be unmarked before calling this.
+ */
+static int clique_search(Clique one, Clique two){
   link l = one->sepsets;
   Sepset s;
 
@@ -839,8 +867,16 @@ void print_Sepset(Sepset s){
 }
 
 
-void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
-	       void (*sFuncPointer)(Sepset)){
+/*
+ * A generic function for traversing the join tree. 
+ * Cliques must be unmarked before calling this.
+ * Parameters:
+ * - a clique where the DFS starts
+ * - a function pointer to the function to be used for every Clique on the way
+ * - a function pointer to the function to be used for every Sepset on the way
+ */
+static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
+		      void (*sFuncPointer)(Sepset)){
   /* a lot of copy-paste from collect/distribute_evidence and clique_search */
 
   link l = start->sepsets;

@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.33 2004-06-17 15:28:50 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.34 2004-06-21 06:48:15 mvkorpel Exp $
  * Functions for handling potentials. 
  */
 
@@ -11,9 +11,59 @@
 
 /*#define DEBUG_POTENTIAL*/
 
-int choose_indices(potential source, int source_indices[],
-		   int dest_indices[], int source_vars[],
-		   int size_of_source_vars);
+static double *get_ppointer(potential p, int indices[]);
+
+static int choose_indices(potential source, int source_indices[],
+			  int dest_indices[], int source_vars[],
+			  int size_of_source_vars);
+
+/*
+ * Returns a pointer to the potential with given variable values (indices).
+ */
+static double *get_ppointer(potential p, int indices[]){
+
+  int index = 0;
+  int i;
+  int card_temp = 1;
+
+  /* THE mapping (JJ: I made this clearer on 22.5.2004)*/
+  for(i = 0; i < p->num_of_vars; i++){
+    index += indices[i] * card_temp;
+    card_temp *= p->cardinality[i];
+  }
+
+  return &(p->data[index]);
+
+}
+
+
+/*
+ * Drops the indices that are marginalised or multiplied. 
+ * source_vars must be in ascending order (see marginalise(...)). 
+ * dest_indices[] must be of the right size. Returns an error code.
+ */
+static int choose_indices(potential source, int source_indices[],
+			  int dest_indices[], int source_vars[],
+			  int size_of_source_vars){
+
+  /* JJ NOTE: What if this is done only once to form some sort of 
+   *          mask and then the mask could be more efficient for 
+   *          the rest of the calls..? */
+  int i, j = 0, k = 0;
+
+  /* Warning: Write Only Code (TM) */
+  for(i = 0; i < source->num_of_vars; i++){    
+
+    if(j < size_of_source_vars && i == source_vars[j])
+      j++;
+    else{
+      dest_indices[k] = source_indices[i];
+      k++;
+    }
+  } 
+  return NO_ERROR;
+}
+
 
 potential make_potential(int cardinality[], int num_of_vars, double data[]){
 
@@ -100,23 +150,6 @@ int set_pvalue(potential p, int indices[], double value){
 }
 
 
-double *get_ppointer(potential p, int indices[]){
-
-  int index = 0;
-  int i;
-  int card_temp = 1;
-
-  /* THE mapping (JJ: I made this clearer on 22.5.2004)*/
-  for(i = 0; i < p->num_of_vars; i++){
-    index += indices[i] * card_temp;
-    card_temp *= p->cardinality[i];
-  }
-
-  return &(p->data[index]);
-
-}
-
-
 int inverse_mapping(potential p, int big_index, int indices[]){
 
   int x = p->size_of_data;
@@ -131,33 +164,6 @@ int inverse_mapping(potential p, int big_index, int indices[]){
     big_index -= indices[i] * x;
   }
 
-  return NO_ERROR;
-}
-
-
-/* Drops the indices that are marginalised or multiplied. 
- * source_vars must be in ascending order (see marginalise(...)). 
- * dest_indices[] must be of the right size. Returns an error code.
- */
-int choose_indices(potential source, int source_indices[],
-		   int dest_indices[], int source_vars[],
-		   int size_of_source_vars){
-
-  /* JJ NOTE: What if this is done only once to form some sort of 
-   *          mask and then the mask could be more efficient for 
-   *          the rest of the calls..? */
-  int i, j = 0, k = 0;
-
-  /* Warning: Write Only Code (TM) */
-  for(i = 0; i < source->num_of_vars; i++){    
-
-    if(j < size_of_source_vars && i == source_vars[j])
-      j++;
-    else{
-      dest_indices[k] = source_indices[i];
-      k++;
-    }
-  } 
   return NO_ERROR;
 }
 

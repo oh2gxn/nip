@@ -36,8 +36,9 @@ int yyparse();
  * This function allocates memory for the array "result". The size of
  * the array is returned in "size_of_result".
  */
-void test_probability(double **result, int *size_of_result,
-		      Variable var, Clique cliques[], int num_of_cliques){
+static void test_probability(double **result, int *size_of_result,
+			     Variable var, Clique cliques[],
+			     int num_of_cliques){
 
   /* Find the Clique that contains the family of the interesting Variable. */
   Clique clique_of_interest = find_family(cliques, num_of_cliques, 
@@ -69,8 +70,8 @@ void test_probability(double **result, int *size_of_result,
 /*
  * Enter some evidence of Variable "observed".
  */
-void test_evidence(Variable observed, double data[], Clique cliques[],
-		  int num_of_cliques){
+static void test_evidence(Variable observed, double data[], Clique cliques[],
+			  int num_of_cliques){
 
   int i;
   Clique clique_of_interest =

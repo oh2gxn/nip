@@ -1,5 +1,5 @@
 /*
- * Graph.h $Id: Graph.h,v 1.18 2004-06-21 06:12:12 mvkorpel Exp $
+ * Graph.h $Id: Graph.h,v 1.19 2004-06-21 06:48:15 mvkorpel Exp $
  */
 
 #ifndef __GRAPH_H__
@@ -95,7 +95,6 @@ int find_cliques(Graph* Gu, Clique** cliques_p);
  * Modifies Gm.
  */
 
-void sort_variables(Graph* G); 
 /* Internal helper */
 Graph* make_undirected(Graph* G);
 int triangulate(Graph* Gm, Clique** clique_p);
