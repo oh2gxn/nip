@@ -1,5 +1,5 @@
 /*
- * fileio.h $Id: fileio.h,v 1.11 2004-06-29 11:45:22 mvkorpel Exp $
+ * fileio.h $Id: fileio.h,v 1.12 2004-09-01 11:23:32 jatoivol Exp $
  */
 
 #ifndef __FILEIO_H__
@@ -21,12 +21,12 @@ int count_words(const char *s, int *chars);
  *     the input string
  * - *chars:
  *     the number of characters in s is stored here
- * - quoted_strings:
+ * - q_strings:
  *     if != 0, strings enclosed in "" are considered one token
  * - separators:
  *     Each character in this string acts as a separator between tokens.
  *     White space is a separator, too.
- * - numof_separators:
+ * - n_separators:
  *     the number of characters in *separators
  * - sep_tokens:
  *     if != 0, separators are themselves considered to be tokens
@@ -34,8 +34,8 @@ int count_words(const char *s, int *chars);
  *     if != 0, whitespace is a separator of tokens,
  *     but is not considered a token itself
  */
-int count_tokens(const char *s, int *chars, int quoted_strings,
-		 char *separators, int numof_separators, int sep_tokens,
+int count_tokens(const char *s, int *chars, int q_strings,
+		 char *separators, int n_separators, int sep_tokens,
 		 int wspace_sep);
 
 /*
@@ -46,8 +46,8 @@ int count_tokens(const char *s, int *chars, int quoted_strings,
  * Returns NULL if the string contains less than n words.
  * See the parameters of count_tokens.
  */
-int *tokenise(const char s[], int n, int quoted_strings,
-	      char *separators, int numof_separators, int sep_tokens,
+int *tokenise(const char s[], int n, int q_strings,
+	      char *separators, int n_separators, int sep_tokens,
 	      int wspace_sep);
 
 /*

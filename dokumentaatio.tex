@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.13 2004-08-31 13:51:42 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.14 2004-09-01 11:23:32 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -690,7 +690,9 @@ The parser for reading models from Hugin net files is written in two
 files: \verb+huginnet.y+ contains the lexer and description of the
 files for the Bison parser generator and \verb+parser.c+ contains lots
 of helper functions for the parser. The data structures used for
-parsing are defined in the \verb+parser.h+ file.
+parsing are defined in the \verb+parser.h+ file. There's also a file
+named \verb+fileio.c+ which contains functions for tokenising the
+lines read from files.
 
 \subsubsection{The data structures}
 The \verb+parser.h+ file defines several data types used with the
@@ -806,87 +808,164 @@ data file.
 
 
 \subsubsection{The functions}
-% sumthin
+The file created by Bison, \verb+huginnet.tab.c+, contains the
+function which starts the Hugin net file parser for reading a model
+from a file.
 \begin{description}
-\item[yyparse()]
+\item[yyparse()] must be included as an {\it external} function. 
+(like \verb+extern int yyparse();+) It is the function which causes 
+a model being parsed from a file. Use the helper functions at 
+\verb+parser.c+ to open the net file prior to parsing, to close it
+after the execution and to dig out the newly created
+model.
+\end{description}
+
+For the sake of completeness, the lexer is described too. The file 
+\verb+huginnet.y+ contains the following function
+\begin{description}
+\item[yylex()] is used only by the parser created with Bison parser
+generator. The function reads tokens from the input file, recognises
+them and passes them to the parser appropriately.
+\end{description}
+It uses extensively the helper functions found in
+\verb+fileio.c+. These are as follows
+% fileio.c
+\begin{description}
+\item[count\_words(s, chars)] returns the number of words in the 
+{\it string}~\textbf{s}. The words are separated by white space and
+\textbf{s} must be null terminated. If the {\it integer pointer}
+\textbf{chars} is not a null pointer, the number of characters
+in~\textbf{s} written there.
+
+\item[count\_tokens(s, chars, q\_strings, separators,
+n\_separators, sep\_tokens, wspace\_sep)] counts the number of
+tokens in the null terminated {\it string}~\textbf{s}. The result is
+returned as an {\it integer}. The number of characters in the string
+is written to the integer referenced by the {\it integer pointer}
+\textbf{chars}. 
+
+Rest of the parameters make the function extremely versatile. The 
+{\it integer} \textbf{q\_strings} indicates whether possible
+substrings enclosed in double quotes ('') should be considered as
+single tokens or not. The {\it character array} \textbf{separators} 
+may be used for specifying additional separators. Each character in the 
+array behaves as a separator. A white space is always a separator. The
+number of the additional separators must be specified as the {\it
+integer} \textbf{n\_separators}.
+
+The {\it integer} \textbf{sep\_tokens} is used as a flag to indicate
+whether the separators themselves should be considered as tokens or
+not. Finally, the {\it integer} \textbf{wspace\_sep} indicates whether
+white space should be considered as a separator token or just a plain 
+separator.
+
+\item[tokenise(s, n, q\_strings, separators, n\_separators, 
+sep\_tokens, wspace\_sep)] is the tool for finding \textbf{n} first 
+tokens in the null terminated {\it string}~\textbf{s}. The function 
+returns an {array of integers} which tells where each token begins 
+and where they end. The first integer in the array tells which
+character in the string begins the first token. The second
+integer tells the place of the first character NOT included in the
+first token. The third and fourth integers tell the placement of the
+second token and so on.
+
+Rest of the parameters are similar to the ones in the 
+\textbf{count\_tokens} function. The {\it integer} \textbf{q\_strings}
+indicates whether we want quoted strings to be single tokens or
+not. The {\it character array} \textbf{separators} specify separators
+in addition to white space and the {\it integer}
+\textbf{n\_separators} tells the number of additional separators. The
+{\it integer} \textbf{sep\_tokens} indicates whether we want the
+separators to be tokens as well. If the {\it integer}
+\textbf{wspace\_sep} is not zero, the white space will behave as
+separator but will not be considered as a token even if the other
+possible separators are.
+
+\item[split(s, indices, n)] uses the {\it integer array}
+\textbf{indices} (made by the \textbf{tokenise} function) to split the
+null terminated {\it string}~\textbf{s} into \textbf{n} strings. 
+The function returns the strings as an array. ({\it char**} i.e. an
+array of character arrays)
+\end{description}
+
+
+Most of the actions executed by the net file parser is done by the
+functions in \verb+parser.c+. The functions are as follows
+\begin{description}
+\item[open\_yyparse\_infile(filename)] 
+
+\item[close\_yyparse\_infile()] 
+
+\item[open\_datafile(filename, separator, write, nodenames)] 
+
+\item[close\_datafile(file)] 
+
+\item[nextline\_tokens(f, separator, tokens)] 
+
+\item[next\_token(token\_length)] 
+
+\item[add\_symbol(v)] 
+
+\item[add\_initData(p, child, parents)] 
+
+\item[add\_time\_init(var, next)] 
+
+\item[add\_double(d)] 
+
+\item[add\_string(string)] 
+
+\item[make\_variable\_array()] 
+
+\item[make\_double\_array()] 
+
+\item[make\_string\_array()] 
+
+\item[reset\_doubles()] 
+
+\item[reset\_strings()] 
+
+\item[reset\_symbols()] 
+
+\item[reset\_initData()] 
+
+\item[reset\_timeinit()] 
+
+\item[init\_new\_Graph()] 
+
+\item[parsedVars2Graph()] 
+
+\item[time2Vars()] 
+
+\item[Graph2JTree()] 
+
+\item[parsedPots2JTree()] 
+
+\item[print\_parsed\_stuff()] 
+
+\item[set\_nip\_statenames(states)] 
+
+\item[get\_nip\_statenames()] 
+
+\item[set\_nip\_label(label)] 
+
+\item[get\_nip\_label()] 
+
+\item[set\_nip\_next(next)] 
+
+\item[get\_nip\_next()] 
+
+\item[get\_nip\_symbols\_parsed()] 
+
+\item[get\_nip\_strings\_parsed()] 
+
+\item[get\_num\_of\_cliques()] 
+
+\item[get\_cliques\_pointer()] 
+
+\item[reset\_Clique\_array()] 
 
 \end{description}
 
-% sumthin
-\begin{description}
-\item[open\_yyparse\_infile(filename)]
-
-\item[close\_yyparse\_infile()]
-
-\item[open\_datafile(filename, separator, write, nodenames)]
-
-\item[close\_datafile(file)]
-
-\item[nextline\_tokens(f, separator, tokens)]
-
-\item[next\_token(token\_length)]
-
-\item[add\_symbol(v)]
-
-\item[add\_initData(p, child, parents)]
-
-\item[add\_time\_init(var, next)]
-
-\item[add\_double(d)]
-
-\item[add\_string(string)]
-
-\item[make\_variable\_array()]
-
-\item[make\_double\_array()]
-
-\item[make\_string\_array()]
-
-\item[reset\_doubles()]
-
-\item[reset\_strings()]
-
-\item[reset\_symbols()]
-
-\item[reset\_initData()]
-
-\item[reset\_timeinit()]
-
-\item[init\_new\_Graph()]
-
-\item[parsedVars2Graph()]
-
-\item[time2Vars()]
-
-\item[Graph2JTree()]
-
-\item[parsedPots2JTree()]
-
-\item[print\_parsed\_stuff()]
-
-\item[set\_nip\_statenames(states)]
-
-\item[get\_nip\_statenames()]
-
-\item[set\_nip\_label(label)]
-
-\item[get\_nip\_label()]
-
-\item[set\_nip\_next(next)]
-
-\item[get\_nip\_next()]
-
-\item[get\_nip\_symbols\_parsed()]
-
-\item[get\_nip\_strings\_parsed()]
-
-\item[get\_num\_of\_cliques()]
-
-\item[get\_cliques\_pointer()]
-
-\item[reset\_Clique\_array()]
-
-\end{description}
 
 \subsection{Other possibilities}
 

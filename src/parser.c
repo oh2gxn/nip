@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.81 2004-08-30 11:48:55 jatoivol Exp $
+ * $Id: parser.c,v 1.82 2004-09-01 11:23:32 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -150,9 +150,14 @@ datafile *open_datafile(char *filename, char separator,
   if(!write){
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
+      printf("a line of data read\n");
       num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
       token_bounds =
 	tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 0);
+
+      /* JJT 1.9.2004: A sort of bug fix. Ignore empty lines */
+      if(num_of_tokens == 0)
+	continue;
 
       if(!token_bounds){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);

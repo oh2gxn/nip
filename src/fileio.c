@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.18 2004-08-19 15:11:27 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.19 2004-09-01 11:23:32 jatoivol Exp $
  */
 
 #include <ctype.h>
@@ -17,8 +17,8 @@ int count_words(const char *s, int *chars){
 
 }
 
-int count_tokens(const char *s, int *chars, int quoted_strings,
-		 char *separators, int numof_separators, int sep_tokens,
+int count_tokens(const char *s, int *chars, int q_strings,
+		 char *separators, int n_separators, int sep_tokens,
 		 int wspace_sep){
   int i;
   int tokens = 0, state = 0;
@@ -36,7 +36,7 @@ int count_tokens(const char *s, int *chars, int quoted_strings,
   while (*s != '\0'){
 
     if(separators)
-      for(i = 0; i < numof_separators; i++)
+      for(i = 0; i < n_separators; i++)
 	if(*s == separators[i]){
 	  separator_found = 1;
 	  break;
@@ -48,7 +48,7 @@ int count_tokens(const char *s, int *chars, int quoted_strings,
       state = 0;
       separator_found = 0;
     }
-    else if(quoted_strings && state != 2 && (*s == '"')){
+    else if(q_strings && state != 2 && (*s == '"')){
 
       /* Check if we have a matching '"' */
       i = 1;
@@ -71,7 +71,7 @@ int count_tokens(const char *s, int *chars, int quoted_strings,
     else if((wspace_sep && state == 1 && isspace((int)*s)) ||
 	    *s == '\n')
       state = 0;
-    else if(quoted_strings && state == 2 && (*s == '"'))
+    else if(q_strings && state == 2 && (*s == '"'))
       state = 0;
 
     s++;
@@ -82,8 +82,8 @@ int count_tokens(const char *s, int *chars, int quoted_strings,
 }
 
 
-int *tokenise(const char s[], int n, int quoted_strings,
-	      char *separators, int numof_separators,
+int *tokenise(const char s[], int n, int q_strings,
+	      char *separators, int n_separators,
 	      int sep_tokens, int wspace_sep){
   int *indices;
   int i = 0, j = 0, state = 0, arraysize = 2*n, k;
@@ -113,7 +113,7 @@ int *tokenise(const char s[], int n, int quoted_strings,
   while ((ch = s[i]) != '\0'){
 
     if(separators)
-      for(k = 0; k < numof_separators; k++)
+      for(k = 0; k < n_separators; k++)
 	if(ch == separators[k]){
 	  separator_found = 1;
 	  break;
@@ -132,7 +132,7 @@ int *tokenise(const char s[], int n, int quoted_strings,
 
       separator_found = 0;
     }
-    else if(quoted_strings && state != 2 && (ch == '"')){
+    else if(q_strings && state != 2 && (ch == '"')){
 
       /* Check if we have a matching '"' */
       k = i + 1;
@@ -163,7 +163,7 @@ int *tokenise(const char s[], int n, int quoted_strings,
       indices[j++] = i;
       state = 0;
     }
-    else if(quoted_strings && state == 2 && (ch == '"')){
+    else if(q_strings && state == 2 && (ch == '"')){
       indices[j++] = i + 1;
       state = 0;
     }
