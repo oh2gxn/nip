@@ -1,6 +1,8 @@
 #include "Clique.h"
 #include "Variable.h"
 #include "potential.h"
+#include "errorhandler.h"
+#include <stdlib.h>
 
 /* Method for creating cliques (without pointers to sepsets) 
    - MVK: variables[] is an array of Variables (which are pointers) */
@@ -154,7 +156,7 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   int source_vars[c1->p->num_of_vars - s->new->num_of_vars];
   int extra_vars[c2->p->num_of_vars - s->new->num_of_vars];
   /* save the newer potential as old by switching the pointers */
-  Sepset temp;
+  potential temp;
   temp = s->old;
   s->old = s->new;
   s->new = temp;
@@ -163,7 +165,7 @@ int message_pass(Clique c1, Sepset s, Clique c2){
      first: select the variables */
   for(i=0; i < c1->p->num_of_vars; i++){
     if(j < s->new->num_of_vars &&
-       equal_variables(*((c1->variables)[i]), *((s->variables)[j])))
+       equal_variables((c1->variables)[i], (s->variables)[j]))
       j++;
     else {
       source_vars[k] = i;
@@ -177,7 +179,7 @@ int message_pass(Clique c1, Sepset s, Clique c2){
      first: select the variables */
   for(i=0; i < c2->p->num_of_vars; i++){
     if(j < s->new->num_of_vars &&
-       equal_variables(*((c2->variables)[i]), *((s->variables)[j])))
+       equal_variables((c2->variables)[i], (s->variables)[j]))
       j++;
     else {
       extra_vars[k] = i;
@@ -191,14 +193,21 @@ int message_pass(Clique c1, Sepset s, Clique c2){
 /* This one calculates the probability distribution for a variable v
    according to the clique c. To make sense, the join tree should be 
    made consistent before this. 
-- The result is placed in v->likelihood
+- The result is placed in the array r
 - The returned value is an error code. */
-int marginalise(Clique c, Variable v){
+int marginalise(Clique c, Variable v, double r[]){
 
+  int i = 0;
   /* JJT: Is this the correct idea? */
+  while(!equal_variables(v, c->variables[i])){
+    i++;
+    if(i == c->p->num_of_vars)
+      /* Variable not in this Clique => ERROR */
+      return ERROR_INVALID_ARGUMENT;
+  }
   
-  
-  return 0;
+  return(total_marginalise(c->p, r, i));
+
 }
 
 /* TODO  Returns an error code. */
@@ -206,4 +215,3 @@ int insert_evidence(Clique c, double *data){
   /* copy the pointer or the data? */
   return 0;
 }
-

@@ -1,8 +1,11 @@
 #ifndef __CLIQUE_H__
 #define __CLIQUE_H__
 
+#include "potential.h"
+#include "Variable.h"
+
 struct sepsetlist {
-  Sepset data;
+  void *data; /* void is needed because of the order of definitions */
   struct sepsetlist *fwd;
   struct sepsetlist *bwd;
 };
@@ -17,14 +20,13 @@ typedef struct {
   int num_of_sepsets;
   int mark; /* the way to prevent endless loops */
 } cliquetype;
-
 typedef cliquetype *Clique;
 
 typedef struct {
   potential old;   /* previous potential */
   potential new;   /* current potential */
   Variable *variables; /* p contains num_of_vars */
-  Clique cliques[2]; /* always between two cliques */
+  Clique *cliques; /* always between two cliques */
 } sepsettype;
 
 typedef sepsettype *Sepset;
@@ -54,15 +56,20 @@ int unmark_Clique(Clique c);
 /* Call Distribute-Evidence for c. Returns an error code. */
 int distribute_evidence(Clique c);
 
-/* Call Collect-Evidence for Clique c2 from Clique c1 (or nullpointer). 
-   Returns an error code. */
-int collect_evidence(Clique c1, Clique c2);
+/* Call Collect-Evidence from Clique c1 (or nullpointer) for Clique c2. 
+   Sepset s12 is the sepset between c1 and c2 or nullpointer to get
+   started. Returns an error code. */
+int collect_evidence(Clique c1, Sepset s12, Clique c2);
 
 /* Method for passing messages between cliques. Returns an error code. */
 int message_pass(Clique c1, Sepset s, Clique c2);
 
-/* TODO */
-int marginalise(Variable var);
+/* This one calculates the probability distribution for a variable v
+   according to the clique c. To make sense, the join tree should be 
+   made consistent before this. 
+- The result is placed in the array r
+- The returned value is an error code. */
+int marginalise(Clique c, Variable v, double r[]);
 
 /* This will change or be removed (Returns an error code.)*/
 int insert_evidence(Clique c, double *data);

@@ -5,6 +5,7 @@
 #define NO_ERROR 0
 #define ERROR_NULLPOINTER 1
 #define ERROR_DIVBYZERO 2
+#define ERROR_INVALID_ARGUMENT 3
 
 /* Method for reporting an error. 
 - errorcode is for example DIVBYZERO defined in errorhandler.h 

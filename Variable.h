@@ -1,7 +1,7 @@
 #ifndef __VARIABLE_H__
 #define __VARIABLE_H__
 
-#define VAR_NAME_LENGTH = 40;
+#define VAR_NAME_LENGTH 40
 
 typedef struct {
   char name[VAR_NAME_LENGTH + 1];

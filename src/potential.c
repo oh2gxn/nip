@@ -7,10 +7,11 @@
 potential make_potential(int[], int);
 int free_potential(potential);
 int copy_potential(potential, potential);
-double get_pvalue(potential, int[], int);
-int set_pvalue(potential, int[], int, double);
+double get_pvalue(potential, int[]);
+int set_pvalue(potential, int[], double);
 double *get_ppointer(potential, int[]);
 int general_marginalise(potential, potential, int[]);
+int total_marginalise(potential, double[], int);
 int update_potential(potential, potential, potential, int[]);
 int main();
 
@@ -90,7 +91,7 @@ double *get_ppointer(potential p, int indices[]){
   int i;
   int card_temp = 1;
 
-  for(i = 1; i < num_of_vars; i++){
+  for(i = 1; i < p->num_of_vars; i++){
     card_temp *= p->cardinality[i-1];
     index += indices[i] * card_temp;
   }
@@ -205,10 +206,9 @@ int general_marginalise(potential source, potential destination,
               SIZE OF THE ARRAY MUST BE CORRECT (check it from the variable)
 -variable: the index of the variable of interest 
 */
-int total_marginalise(potential source, double[] destination, int variable){
+int total_marginalise(potential source, double destination[], int variable){
   int i, j, x, index, flat_index;
   int *source_indices;
-  double *potvalue;
 
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) 
                          |  |  |

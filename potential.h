@@ -59,7 +59,7 @@ int general_marginalise(potential source, potential destination,
               SIZE OF THE ARRAY MUST BE CORRECT (check it from the variable)
 -variable: the index of the variable of interest 
 */
-int total_marginalise(potential source, double[] destination, int variable);
+int total_marginalise(potential source, double destination[], int variable);
 
 /* Method for updating target potential by multiplying with enumerator 
    potential and dividing with denominator potential. Useful in message 

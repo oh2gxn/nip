@@ -14,3 +14,12 @@ Sekalaisia huomioita:
   alkiolle eli monta kertaa. Saattaisi olla tehokkaampaa tehdä ensiksi
   jonkinlainen "maski" ja käyttää sitä _ehkä_ tehokkaampana keinona 
   valita indeksit. -> ehkä kakkosversioon
+
+16.1.2004 (Janne, Mikko)
+* Taulukoita ei voi esitellä ilmoittamatta kokoa, eli
+  tyyliin "int i[]" (pitää olla "int *i"). Taulukkoa ei myöskään voi
+  esitellä tyyliin "int[] i" (tämä on javaa).
+
+* Variable on nyt osoitintyyppi. Tarvittavat muutokset on
+  periaatteessa tehty.
+--

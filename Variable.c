@@ -1,5 +1,6 @@
 #include <string.h>
 #include "Variable.h"
+#include <stdlib.h>
 
 /* Method for creating new variables */
 Variable new_variable(char* name, int cardinality) {
@@ -14,7 +15,7 @@ Variable new_variable(char* name, int cardinality) {
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */
-  for(i = 0; i++; i < cardinality)
+  for(i = 0; i < cardinality; i++)
     v->likelihood[i] = 1;
 
   return v;

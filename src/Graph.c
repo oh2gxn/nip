@@ -1,5 +1,6 @@
 #include <string.h>
 #include "Graph.h"
+#include "Variable.h"
 
 Graph new_graph(unsigned n)
 {
@@ -21,7 +22,7 @@ int add_variable(Graph G, Variable v)
     return 0; /* Error codes need work */
 }
 
-int add_all_variables(Graph G, Variable* vars)
+int add_all_variables(Graph G, Variable vars[])
 {
     free(G->variables);
     G->variables = vars; /* Mostly (dangerous) syntactic syrup. */
@@ -61,7 +62,7 @@ Graph moralise(Graph G)
 {
     Graph Gm;
     int i,j,n,v;
-    Variable[] vars;
+    Variable* vars;
     int* parents;
     int n_parents;
         
