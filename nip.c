@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.55 2005-04-01 09:11:05 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.56 2005-04-04 23:48:56 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -28,7 +28,10 @@
  * - There's a bug in the memory allocation! (Segmentation fault...)
  *   - The segmentation faults do not occur on: 
  *      IRIX, Solaris, Mac OS X or FreeBSD !
- *   - But on itl-pc037, itl-cl1 and the linux box at home, it crashes
+ *   - But it crashes on Linux: 32- and 64-bit Suse, Debian, Fedora Core 2
+ *     - The fault occurs in the same spot on 32-bit systems
+ *       and some other spot on 64-bit systems
+ *   - Malloc gives null with non-timeslice models on OSF1 (kosh.hut.fi)
 
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
