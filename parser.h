@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser.
- * $Id: parser.h,v 1.27 2004-06-28 14:36:13 mvkorpel Exp $
+ * $Id: parser.h,v 1.28 2004-06-29 06:57:10 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -94,7 +94,7 @@ void close_datafile(datafile *file);
 
 /* Gets the next token from the input file.
  * Returns the token. token_length is the length of the token.
- * The token is a NULL terminated string.
+ * The token is a NUL terminated string.
  * *token_length doesn't include the NULL character.
  * After the token has been used, PLEASE free the memory allocated for it.
  * If token_length == 0, there are no more tokens.

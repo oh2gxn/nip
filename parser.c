@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.43 2004-06-28 14:36:13 mvkorpel Exp $
+ * $Id: parser.c,v 1.44 2004-06-29 06:57:10 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -51,6 +51,8 @@ static int nip_yyparse_infile_open = 0;
 static int add_to_stringlink(stringlink *s, char* string);
 
 static int search_stringlinks(stringlink s, char* string);
+
+static int nullobservation(char *token);
 
 int open_yyparse_infile(const char *filename){
   if(!nip_yyparse_infile_open){
@@ -231,7 +233,8 @@ datafile *open_datafile(char *filename, char separator,
 	}
       }
 
-      /* Read observations. */
+      /* Read observations (just in order to see all the different
+	 kinds of observations for each node). */
       if(linecounter != 0 || (linecounter == 0 && !nodenames)){
 
 	for(i = 0; i < num_of_tokens; i++){
@@ -257,7 +260,8 @@ datafile *open_datafile(char *filename, char separator,
 
 	  token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
 
-	  if(!search_stringlinks(statenames[i], token))
+	  if(!(search_stringlinks(statenames[i], token) ||
+	       nullobservation(token)))
 	    add_to_stringlink(&(statenames[i]), token);
 	  else
 	    free(token);
@@ -308,6 +312,25 @@ datafile *open_datafile(char *filename, char separator,
   }
 
   return f;
+}
+
+
+/*
+ * Tells if the given token indicates a missing value, a "null observation".
+ * The token must be nul terminated.
+ */
+static int nullobservation(char *token){
+
+  if(token == NULL)
+    return 0;
+
+  else if((strcmp("N/A", token) == 0) ||
+	  (strcmp("null", token) == 0) ||
+	  (strcmp("<null>", token) == 0))
+    return 1;
+
+  else
+    return 0;
 }
 
 

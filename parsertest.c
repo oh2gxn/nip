@@ -1,6 +1,5 @@
 #include "parser.h"
 #include <stdio.h>
-#include "errorhandler.h"
 
 int main(int argc, char *argv[]){
 
@@ -9,8 +8,8 @@ int main(int argc, char *argv[]){
   char *token;
 
   if(argc < 2){
-    if(open_yyparse_infile("infile") != 0)
-      return -1;
+    printf("Filename must be given!\n");
+    return -1;
   }
   else if(open_yyparse_infile(argv[1]) != 0)
     return -1;
