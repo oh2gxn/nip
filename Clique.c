@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.52 2004-06-15 13:07:10 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.53 2004-06-16 12:04:26 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -325,8 +325,40 @@ int free_Potential(potential p){
 
 
 int unmark_Clique(Clique c){
+  if(c == NULL)
+    return ERROR_INVALID_ARGUMENT;
   c->mark = 0;
   return 0;
+}
+
+
+int mark_Clique(Clique c){
+  if(c == NULL)
+    return ERROR_INVALID_ARGUMENT;
+  c->mark = 1;
+  return 0;
+}
+
+
+int clique_marked(Clique c){
+  return c->mark;
+}
+
+
+int clique_num_of_vars(Clique c){
+  return c->p->num_of_vars; /* macro? */
+}
+
+
+int sepset_num_of_vars(Sepset s){
+  return s->old->num_of_vars; /* macro? */
+}
+
+
+Variable clique_get_Variable(Clique c, int i){
+  if(c != NULL  &&  i < c->p->num_of_vars)
+    return c->variables[i];
+  return NULL;
 }
 
 
@@ -349,9 +381,9 @@ int distribute_evidence(Clique c){
   Sepset s;
   while (l != 0){
     s = l->data;
-    if(s->cliques[0]->mark == 0)
+    if(!clique_marked(s->cliques[0]))
       message_pass(c, s, s->cliques[0]); /* pass a message */
-    else if(s->cliques[1]->mark == 0)
+    else if(!clique_marked(s->cliques[1]))
       message_pass(c, s, s->cliques[1]); /* pass a message */
     l = l->fwd;
   }
@@ -360,9 +392,9 @@ int distribute_evidence(Clique c){
   l = c->sepsets;
   while (l != 0){
     s = l->data;
-    if(s->cliques[0]->mark == 0)
+    if(!clique_marked(s->cliques[0]))
       distribute_evidence(s->cliques[0]);
-    else if(s->cliques[1]->mark == 0)
+    else if(!clique_marked(s->cliques[1]))
       distribute_evidence(s->cliques[1]);
     l = l->fwd;
   }
@@ -384,9 +416,9 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
   Sepset s;
   while (l != NULL){
     s = l->data;
-    if(s->cliques[0]->mark == 0)
+    if(!clique_marked(s->cliques[0]))
       collect_evidence(c2, s, s->cliques[0]);
-    else if(s->cliques[1]->mark == 0)
+    else if(!clique_marked(s->cliques[1]))
       collect_evidence(c2, s, s->cliques[1]);
     l = l->fwd;
   }
@@ -732,16 +764,16 @@ int clique_search(Clique one, Clique two){
   /* call neighboring cliques */
   while (l != NULL){
     s = (Sepset)(l->data);
-    if(s->cliques[0]->mark == 0){
+    if(!clique_marked(s->cliques[0])){
 #ifdef DEBUG_CLIQUE
-      printf("In clique_search: s->cliques[0]->mark == 0\n");
+      printf("In clique_search: s->cliques[0] not marked.\n");
 #endif
       if(clique_search(s->cliques[0], two))
 	return 1;
     }
-    else if(s->cliques[1]->mark == 0){
+    else if(!(s->cliques[1])){
 #ifdef DEBUG_CLIQUE
-      printf("In clique_search: s->cliques[1]->mark == 0\n");
+      printf("In clique_search: s->cliques[1] not marked.\n");
 #endif
       if(clique_search(s->cliques[1], two))
 	return 1;

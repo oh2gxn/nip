@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "parser.h"
 #include "Clique.h"
+#include "Variable.h"
 #include "potential.h"
 
 /*#define PRINT_POTENTIALS*/
@@ -70,15 +71,18 @@ int main(int argc, char *argv[]){
   for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
   collect_evidence(NULL, NULL, nip_cliques[0]);
+
+  for(i = 0; i < nip_num_of_cliques; i++)
+    unmark_Clique(nip_cliques[i]);
   distribute_evidence(nip_cliques[0]);
   */
 
 #ifdef PRINT_POTENTIALS
   for(i = 0; i < nip_num_of_cliques; i++){
     printf("In bisontest.c : Clique of ");
-    for(j = 0; j < nip_cliques[i]->p->num_of_vars - 1; j++)
-      printf("%s ", nip_cliques[i]->variables[j]->symbol);
-    printf("and %s.\n", nip_cliques[i]->variables[j]->symbol);
+    for(j = 0; j < clique_num_of_vars(nip_cliques[i]) - 1; j++)
+      printf("%s ", get_symbol(clique_get_Variable(nip_cliques[i], j)));
+    printf("and %s.\n", get_symbol(clique_get_Variable(nip_cliques[i], j)));
     
     print_potential(nip_cliques[i]->p);
   }
@@ -95,9 +99,9 @@ int main(int argc, char *argv[]){
 
 #ifdef DEBUG_BISONTEST
   printf("\n\nEntered evidence into the clique of ");
-  for(i = 0; i < clique_of_interest->p->num_of_vars - 1; i++)
-    printf("%s ", clique_of_interest->variables[i]->symbol);
-  printf("and %s.\n", clique_of_interest->variables[i]->symbol);
+  for(i = 0; i < clique_num_of_vars(clique_of_interest) - 1; i++)
+    printf("%s ", get_symbol(clique_get_Variable(clique_of_interest, i)));
+  printf("and %s.\n", get_symbol(clique_get_Variable(clique_of_interest, i)));
 
   printf("enter_evidence returned %d.\n", evidence_retval);
 #endif
@@ -121,9 +125,9 @@ int main(int argc, char *argv[]){
 
 #ifdef DEBUG_BISONTEST
   printf("Entered evidence into the clique of ");
-  for(i = 0; i < clique_of_interest->p->num_of_vars - 1; i++)
-    printf("%s ", clique_of_interest->variables[i]->symbol);
-  printf("and %s.\n", clique_of_interest->variables[i]->symbol);
+  for(i = 0; i < clique_num_of_vars(clique_of_interest) - 1; i++)
+    printf("%s ", get_symbol(clique_get_Variable(clique_of_interest, i)));
+  printf("and %s.\n", get_symbol(clique_get_Variable(clique_of_interest, i)));
 
   printf("enter_evidence returned %d.\n", evidence_retval);
 #endif
@@ -159,7 +163,7 @@ int main(int argc, char *argv[]){
     return 1;
   }  
 
-  result = (double *) calloc(interesting->cardinality,
+  result = (double *) calloc(number_of_values(interesting),
 			     sizeof(double));
   if(!result){
     printf("In bisontest.c : Calloc failed.\n");
@@ -168,8 +172,8 @@ int main(int argc, char *argv[]){
 
 #ifdef DEBUG_BISONTEST
   printf("\n\nMarginalising in a Clique with ");
-  for(i = 0; i < clique_of_interest->p->num_of_vars; i++)
-    printf("%s", clique_of_interest->variables[i]->symbol);
+  for(i = 0; i < clique_num_of_vars(clique_of_interest); i++)
+    printf("%s", get_symbol(clique_get_Variable(clique_of_interest, i)));
   printf("\n");
 #endif
     
@@ -178,16 +182,17 @@ int main(int argc, char *argv[]){
 #ifdef DEBUG_BISONTEST
   printf("Marginalisation returned %d. (0 is OK)\n", temp);
 
-  printf("After marginalisation, probability of %s:\n", interesting->symbol);
-  for(i = 0; i < interesting->cardinality; i++)
+  printf("After marginalisation, probability of %s:\n", 
+	 get_symbol(interesting));
+  for(i = 0; i < number_of_values(interesting); i++)
     printf("result[%d] = %f\n", i, result[i]);
 #endif
 
   /* normalization */
-  normalise(result, interesting->cardinality);
+  normalise(result, number_of_values(interesting));
 
-  printf("Normalised probability of %s:\n", interesting->symbol);
-  for(i = 0; i < interesting->cardinality; i++)
+  printf("Normalised probability of %s:\n", get_symbol(interesting));
+  for(i = 0; i < number_of_values(interesting); i++)
     printf("result[%d] = %f\n", i, result[i]);
   /* To be continued... */
 

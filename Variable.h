@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.21 2004-05-26 14:46:31 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.22 2004-06-16 12:04:26 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -24,6 +24,7 @@ typedef struct {
 
 typedef vtype *Variable;
 
+
 /* Creates a new Variable:
  * - symbol is a short name e.g. A (= array [A, \0])
  * - name is a more verbose name e.g. "rain" or NULL 
@@ -32,12 +33,15 @@ typedef vtype *Variable;
 Variable new_variable(const char* symbol, const char* name, 
 		      char** states, int cardinality);
 
+
 /* Gives the Variable a verbose name */
 int variable_name(Variable v, const char *name);
+
 
 /* Gives the Variable the names of the states if needed. 
  * NOTE: "the ownership" of the states (array of strings) changes */
 int variable_statenames(Variable v, char **states);
+
 
 /* Function for copying a Variable (if needed). Handle with care.
  * v: the Variable to be copied
@@ -45,27 +49,38 @@ int variable_statenames(Variable v, char **states);
  */
 Variable copy_variable(Variable v);
 
+
 /* Frees the memory used by the Variable v. */
 void free_variable(Variable v);
+
 
 /* Method for testing variable equality. 
  * This may be needed to keep potentials in order. INEQUALITIES ???
  */
 int equal_variables(Variable v1, Variable v2);
 
+
 /* An alternative interface for keeping variables 
  * and thus the potentials in order.
  */
 unsigned long get_id(Variable v);
+
+
+/* Returns the symbol of the Variable. It is a string. 
+ * (or NULL if nullpointer given) */
+char *get_symbol(Variable v);
+
 
 /* Gives v a new likelihood array. The size of the array
  * must match v->cardinality
  */
 int update_likelihood(Variable v, double likelihood[]);
 
+
 /* Returns the number of possible values in the Variable v.
  */
 int number_of_values(Variable v);
+
 
 /* Sets the conditional probability of variable v.
  * If probability is already set, the previous values are freed from memory.

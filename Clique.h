@@ -36,19 +36,24 @@ typedef sepsettype *Sepset;
  */
 Clique make_Clique(Variable vars[], int num_of_vars);
 
+
 /* Method for removing cliques and freeing memory: returns an error code */
 int free_Clique(Clique c);
 
+
 /* Method for adding a sepset next to a clique: returns an error code */
 int add_Sepset(Clique c, Sepset s);
+
 
 /* Method for creating sepsets: 
    - cliques[] is an array which contains references to BOTH 
      neighbouring cliques */
 Sepset make_Sepset(Variable variables[], int num_of_vars, Clique cliques[]);
 
+
 /* Method for removing sepsets and freeing memory: returns an error code */
 int free_Sepset(Sepset s);
+
 
 /* Method for creating potentials with correct structure.
  * - variables[] is an array of the Variables in a suitable order
@@ -57,19 +62,43 @@ int free_Sepset(Sepset s);
 potential create_Potential(Variable variables[], int num_of_vars, 
 			   double data[]);
 
+
 /* Method for cleaning potentials and releasing the memory. 
  * Returns an error code. */
 int free_Potential(potential p);
 
+
 /* Method for unmarking a clique: call this to every clique before 
    collecting or distributing evidence. Returns an error code. */
 int unmark_Clique(Clique c);
+
+
+/* Method for marking a clique. Returns an error code. */
+int mark_Clique(Clique c);
+
+
+/* Returns 0 if clique is not marked, 1 if it is. (This could be a macro...) */
+int clique_marked(Clique c);
+
+
+/* Tells how many variables the clique contains. */
+int clique_num_of_vars(Clique c);
+
+
+/* Tells how many variables the sepset contains. */
+int sepset_num_of_vars(Sepset s);
+
+
+/* Returns the i:th Variable in a Clique. */
+Variable clique_get_Variable(Clique c, int i);
+
 
 /*
  * Call Distribute-Evidence for c. Returns an error code.
  * Remember to UNMARK Cliques before calling this.
  */
 int distribute_evidence(Clique c);
+
 
 /*
  * Call Collect-Evidence from Clique c1 (or nullpointer) for Clique c2. 
@@ -79,14 +108,17 @@ int distribute_evidence(Clique c);
  */
 int collect_evidence(Clique c1, Sepset s12, Clique c2);
 
+
 /* Method for passing messages between cliques. Returns an error code. */
 int message_pass(Clique c1, Sepset s, Clique c2);
+
 
 /* Make up a better name for this */
 /* !!! p->num_of_vars equals "length of parents + 1" !!! 
  * Sum of the elements in the potential is assumed to be 1. 
  * The "ownership" of the potential changes. */
 int initialise(Clique c, Variable child, Variable parents[], potential p);
+
 
 /* This one calculates the probability distribution for a variable v
    according to the clique c. To make sense, the join tree should be 
@@ -95,10 +127,12 @@ int initialise(Clique c, Variable child, Variable parents[], potential p);
 - The returned value is an error code. */
 int marginalise(Clique c, Variable v, double r[]);
 
+
 /* Normalises the array. Divides every member by their sum.
  * The function modifies the given array.
  */
 int normalise(double result[], int array_size);
+
 
 /* Method for entering evidence to a clique. 
    sizeof(evidence) must equal variable->cardinality.
@@ -107,9 +141,11 @@ int normalise(double result[], int array_size);
    again.*/
 int enter_evidence(Clique c, Variable v, double evidence[]);
 
+
 /* Method for checking if Variable v is part of Clique c.
    Returns -1 if not, else the index of v among the Variables in c. */
 int var_index(Clique c, Variable v);
+
 
 /* Finds a clique containing a family of variables. Returns the first
  * found Clique that contains all the given variables.

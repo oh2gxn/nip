@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.20 2004-06-03 08:19:27 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.21 2004-06-16 12:04:26 jatoivol Exp $
  */
 
 #include <string.h>
@@ -93,6 +93,11 @@ int equal_variables(Variable v1, Variable v2){
 
 unsigned long get_id(Variable v){
   return v->id;
+}
+
+
+char *get_symbol(Variable v){
+  return v->symbol;
 }
 
 
