@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.89 2004-08-20 09:53:48 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.90 2004-08-20 10:00:27 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -930,7 +930,7 @@ int enter_evidence(Variable_iterator vars, Clique* cliques,
    */
   if(!retraction){
     retval = update_evidence(evidence, v->likelihood, c->p, index);
-    if(retval != NULL){
+    if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }

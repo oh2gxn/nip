@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.42 2004-08-20 09:53:48 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.43 2004-08-20 10:00:27 mvkorpel Exp $
  * Functions for handling potentials. 
  */
 
@@ -398,7 +398,7 @@ int update_evidence(double numerator[], double denominator[],
 
   free(target_indices);   /* JJ NOTE: GET RID OF THESE */
 
-  return GLOBAL_UPDATE;
+  return NO_ERROR;
 
 }
 

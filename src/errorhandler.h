@@ -11,9 +11,6 @@
 #define ERROR_GENERAL 6
 #define ERROR_FILENOTFOUND 7
 
-#define GLOBAL_UPDATE 100
-#define GLOBAL_RETRACTION 101
-
 /* Method for reporting an error. 
  * - srcFile is the source file (__FILE__)
  * - line is the number of the line in the source code (__LINE__)
