@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.23 2004-10-26 15:51:16 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.24 2004-10-28 09:11:34 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -21,6 +21,11 @@
  *   - a data type that can be returned by the algorithm (how to index?)
  *     (how about the size?  T*N*M, 
  *      where T=time, N=number of hidden variables and M is mean cardinality)
+ *
+ *   - a global data structure for the timeslice sepsets if forward and 
+ *     backward phase are separate functions (kind of memoization)
+ *     OR separate forward-only and forward-backward algoritms..!
+ *
  *   + some abstraction for a time series (structure and access to data..?)
  *
  * - Viterbi algorithm for the ML-estimate of the latent variables
@@ -317,6 +322,17 @@ int insert_hard_evidence(Nip model, char* variable, char* observation){
   return ret;
 }
 
+/* forward-only inference consumes constant (1 time slice) amount of memory 
+ * + the results (which is linear) */
+SomeDataType forward_inference(Nip model, Timeseries ts){
+  
+}
+
+/* This consumes much more memory depending on the size of the 
+ * sepsets between time slices. */
+SomeDataType forward_backward_inference(Nip model, Timeseries ts){
+  
+}
 
 int insert_soft_evidence(Nip model, char* variable, double* distribution){
   int ret;

@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.10 2004-10-15 11:47:58 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.11 2004-10-28 09:11:34 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -85,6 +85,17 @@ char* get_observation(Timeseries ts, Variable v, int time);
 
 /* A method for setting an observation in the time series. */
 int set_observation(Timeseries ts, Variable v, int time, char* observation);
+
+
+/* This algorithm computes the probability distributions for every 
+ * hidden variable and for every time step according to the timeseries.
+ * It uses only forward propagation, so the result of time step t 
+ * is not affected by the rest of the timeseries. */
+SomeDataType forward_inference(Nip model, Timeseries ts);
+
+
+/*  */
+SomeDataType forward_backward_inference(Nip model, Timeseries ts);
 
 
 /* This is a function for telling the model about observations. 
