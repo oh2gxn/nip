@@ -173,74 +173,13 @@ int main(int argc, char *argv[]){
   /*****************/
   /* Forward phase */
   /*****************/
-  printf("## Forward phase ##\n");
+  printf("## Forward phase ##\n");  
 
-  t = 0;
-  /********************/
-  /* Do the inference */
-  /********************/
-  
-  /* 1. Unmark all Cliques */
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
-  
-  /* 2. Collect evidence */
-  collect_evidence(NULL, NULL, nip_cliques[0]);
-  
-  /* 3. Unmark all Cliques */
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
-  
-  /* 4. Distribute evidence */
-  distribute_evidence(nip_cliques[0]);
-  
-  
-  /* an experimental forward phase (a.k.a. filtering)... */
-  /* Calculates the filtered values */
-  for(i = 0; i < num_of_hidden; i++){
-    
-    /*********************************/
-    /* Check the result of inference */
-    /*********************************/
-    
-    /* 1. Decide which Variable you are interested in */
-    interesting = hidden[i];
-    if(!interesting){
-      printf("In hmmtest.c : Variable of interest not found.\n");
-      return 1;
-    }
-    
-    /* 2. Find the Clique that contains the family of 
-     *    the interesting Variable */
-    clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-				     &interesting, 1);
-    if(!clique_of_interest){
-      printf("In hmmtest.c : No clique found! Sorry.\n");
-      return 1;
-    }  
-    
-    /* 3. Marginalisation (memory for the result must have been allocated) */
-    marginalise(clique_of_interest, interesting, filtered[t][i]);
-    
-    /* 4. Normalisation */
-    normalise(filtered[t][i], number_of_values(interesting));    
-    
-    /* 5. Print the result */
-    for(j = 0; j < number_of_values(interesting); j++)
-      printf("P(%s=%s) = %f\n", get_symbol(interesting),
-	     (interesting->statenames)[j], filtered[t][i][j]);
-    printf("\n");
-  }
-  
-
-  for(t = 1; t <= timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
+  for(t = 0; t <= timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t);
     
-    /* 0. Put some data in */
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			  data[t - 1][i]);
+
     
     /********************/
     /* Do the inference */
@@ -271,10 +210,6 @@ int main(int argc, char *argv[]){
       
       /* 1. Decide which Variable you are interested in */
       interesting = hidden[i];
-      if(!interesting){
-	printf("In hmmtest.c : Variable of interest not found.\n");
-	return 1;
-      }
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
@@ -311,7 +246,11 @@ int main(int argc, char *argv[]){
     }
     
     global_retraction(nip_cliques[0]);
-    
+
+    /* 0. Put some data in */
+    for(i = 0; i < timeseries->num_of_nodes; i++)
+      enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+			  data[t][i]);
   }
   
   
@@ -327,26 +266,27 @@ int main(int argc, char *argv[]){
   it = get_Variable_list();
   while((temp = next_Variable(&it)) != NULL)
     reset_likelihood(temp);
-
   global_retraction(nip_cliques[0]);
 
-  
+
   for(t = timeseries->datarows; t > 0; t--){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t);
     
-    /* 0. Put some data in */
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			  data[t - 1][i]);    
-#ifdef KEIJO
-#endif
 
     for(i = 0; i < num_of_hidden; i++){
-      /* old posteriors become new priors */
       temp = hidden[i];
-      if(temp->next != NULL)
-	enter_evidence(temp->next, filtered[t - 1][i]);
+      if(temp->next == NULL)
+	enter_evidence(temp, filtered[t][i]);
+    }
+
+
+    if(t < timeseries->datarows){
+      for(i = 0; i < num_of_hidden; i++){
+	temp = hidden[i];
+	if(temp->previous != NULL)
+	  enter_evidence(temp->previous, smoothed[t + 1][i]);
+      }
     }
 
     /********************/
@@ -356,25 +296,23 @@ int main(int argc, char *argv[]){
     /* 1. Unmark all Cliques */
     for(i = 0; i < nip_num_of_cliques; i++)
       unmark_Clique(nip_cliques[i]);
-    
+
     /* 2. Collect evidence */
     collect_evidence(NULL, NULL, nip_cliques[0]);
-    
+
     /* 3. Unmark all Cliques */
     for(i = 0; i < nip_num_of_cliques; i++)
       unmark_Clique(nip_cliques[i]);
-    
+
     /* 4. Distribute evidence */
     distribute_evidence(nip_cliques[0]);
-    
-    
-    /* an experimental forward phase (a.k.a. filtering)... */
-    /* Calculates the filtered values */
+
+
+  
+    /*********************************/
+    /* Check the result of inference */
+    /*********************************/
     for(i = 0; i < num_of_hidden; i++){
-      
-      /*********************************/
-      /* Check the result of inference */
-      /*********************************/
       
       /* 1. Decide which Variable you are interested in */
       interesting = hidden[i];
@@ -383,6 +321,7 @@ int main(int argc, char *argv[]){
 	return 1;
       }
 
+      
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
@@ -412,16 +351,6 @@ int main(int argc, char *argv[]){
     while((temp = next_Variable(&it)) != NULL)
       reset_likelihood(temp);
     
-
-#ifdef KEIJO
-    for(i = 0; i < num_of_hidden; i++){
-      /* old posteriors become new priors */
-      temp = hidden[i];
-      if(temp->next != NULL)
-	update_likelihood(temp->next, smoothed[t - 1][i]);
-    }
-#endif
-
     global_retraction(nip_cliques[0]);
    
   }
