@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.69 2004-07-01 14:06:06 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.70 2004-07-02 14:37:53 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -730,14 +730,6 @@ int enter_evidence(Variable v, double evidence[]){
 
   if(retraction)
     return global_retraction(c);
-
-  /* GLOBAL UPDATE or GLOBAL RETRACTION probably needed !!! */
-  
-  /* JJ NOTE: update_evidence or enter_evidence should be 
-   *          'fail fast' and there could be global retraction 
-   *	      upon failure. 
-   *	      Zeros are a menace!
-   */
 
   return NO_ERROR;
 }
