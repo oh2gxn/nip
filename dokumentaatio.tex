@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.32 2004-10-04 09:54:38 arasinen Exp $
+% $Id: dokumentaatio.tex,v 1.33 2004-10-08 06:25:49 arasinen Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -67,7 +67,7 @@
 %--------------------
 
 \title{NIP}
-\author{Antti Rasinen}
+\author{Antti Rasinen 49569V}
 \author{Mikko Korpela 54919L}
 \author{Janne Toivola 55173U}
 \begin{document}
@@ -427,7 +427,7 @@ with the \cdatatype{Graph}. This has led to number of tradeoffs and
 possible pitfalls.
 
  
-XX
+% XX
 
 
 \subsubsection{cls2clq}
@@ -1458,8 +1458,6 @@ cluster/clique-building phase. These two stages use very different
 data structures and algorithms, which makes unified analysis
 difficult.
 
-\subsection{Operations on the Graph}
-
 The first graphical operation is the creation of the graph
 itself. This is a relatively simple operation and for all practical
 purposes constant time. Adding new variables is also constant time per
@@ -1473,7 +1471,7 @@ an order of magnitude. Since the operations are done on a copy of the
 original graph, we should also consider those costs. However, it turns
 out that creating a copy of the graph is at most $O(n^2)$ operation
 and thus also dominated by moralisation. Furthermore, most operations
-are implemented using \examplecode{memcpy} which should guarantee
+are implemented using \cfunction{memcpy} which should guarantee
 almost optimal performance on a given platform.
 
 The moralisation step itself is an $O(n^3)$ operation. For each of the
@@ -1481,17 +1479,33 @@ $n$ variables we have potentially $(n-1)(n-2)/2$ possible pairs of a
 child and a parent. Like all graphical operations, it is run only once
 per graph and should not be a bottleneck in most applications.
 
-\subsection{Operations on the Clusters}
-
 Technically the triangulation operation is also a graphical
-operation. Since it is more complex than the operations in the
-previous subsection and outputs cliques, it is analysed separately.
+operation. Since it is more complex than the previous operations and
+outputs cliques, it is analysed separately.
+
+Building the heap required in the triangulation step is $O(n \log
+n)$. This cost is neglible compared to the actual cluster building
+loop, in which we iterate through every $n$ variable. A short outline
+of the operations performed in the loop follows.
+
+The most timeconsuming operation is the extraction of the minimum
+algorithm. Superficially it is only a $O(k log n)$ operation as
+mentioned in the XXX. Because we have to dynamically update the 
+
+
 
 % Create a heap based on the moral graph.
 % Extract $n$ clusters from the heap.
 % Check if the cluster is a subset of a previously found clique.
 % Add to the 
 
+% Vois olla, että heapin buildaus olis n log n?
+% Näyttäisi siltä, että trianguloinnissa tehdään n kertaa looppi:
+% Tässä loopissa tehdään yksi kappale extract_miniä (joka on k log n?)
+% höpsis, clean_item vie täyden k rundia, eli nnk
+% no onpa vaikea.
+% sit yks k^2 -looppi (matriisin asettelu)
+% ja lopulta is_subset: n*n*k?
 
 %clique building
 
