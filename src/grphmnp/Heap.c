@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.20 2004-08-18 14:01:59 jatoivol Exp $
+ * Heap.c $Id: Heap.c,v 1.21 2004-08-18 16:01:21 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -82,7 +82,6 @@ Heap* build_heap(Graph* Gm)
         hi->primary_key = edges_added(Gm, hi->Vs, hi->n);
         hi->secondary_key = cluster_weight(hi->Vs, hi->n);
 	hi->s = NULL; /* not a sepset heap */
-	hi->useful_sepset = 1; /* no sepset => no useless sepset to free */
     }
 
     free(Vs_temp);
@@ -128,7 +127,6 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
 
 	hi->s = make_Sepset(isect, isect_size, neighbours);
 	free(isect);
-	hi->useful_sepset = 0;
 
 	/* We must use a negative value, because we have a min-heap. */
         hi->primary_key = -isect_size;
@@ -258,7 +256,6 @@ int extract_min_sepset(Heap* H, Sepset* sepset)
     heapify(H, 0);
     
     *sepset = min.s; 
-    min.useful_sepset = 1; /* The sepset was considered useful */
 
     return 0;
 
@@ -330,6 +327,7 @@ void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 void free_heap(Heap* H){
 
   int i;
+  Sepset s = NULL;
   Heap_item *hi;
 
   if(!H)
@@ -342,12 +340,12 @@ void free_heap(Heap* H){
     /* Free variable array in the heap item */
     free(hi->Vs);
     hi->Vs = NULL;
-    
-    /* Free the possible Sepset if it was useless */
-    if(!(hi->useful_sepset))
-      free_Sepset(hi->s);
   }
 
+  while(!extract_min_sepset(H, &s)){
+    free_Sepset(s);
+  }
+  
   free(H->heap_items);
 
   free(H);

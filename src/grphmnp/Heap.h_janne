@@ -1,5 +1,5 @@
 /*
- * Heap.h $Id: Heap.h,v 1.12 2004-08-18 16:01:21 mvkorpel Exp $
+ * Heap.h $Id: Heap.h_janne,v 1.1 2004-08-18 16:01:21 mvkorpel Exp $
  */
 
 #ifndef __HEAP_H__
@@ -16,8 +16,8 @@
 typedef struct {
     Variable* Vs; /* Vs[0] is the variable in the array, rest are neighbours*/
     Sepset s;
+    int useful_sepset; /* Helps to avoid freeing the useful sepsets */
     int n; /* size (always at least 1) */
-
     int primary_key;
     int secondary_key;
 } Heap_item;
