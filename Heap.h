@@ -12,7 +12,9 @@ typedef struct {
 } Heap_item;
 
 typedef struct {
-    Heap_item[] array;
+    Heap_item* array;
     int heap_size;
     int orig_size;
 } Heap;
+
+void heapify(Heap*, int);

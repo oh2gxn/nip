@@ -1,4 +1,5 @@
 #include "Variable.h"
+#include "Heap.h"
 
 /* Voi räkä */
 /* Koodi ei tässä muodossaan sovellu lapsille tai raskaana oleville tai 
@@ -16,7 +17,7 @@ int lessthan(Heap_item h1, Heap_item h2)
     return 0;
 }
 
-Heap* build_heap(Variable[] vars, int n)
+Heap* build_heap(Variable* vars, int n)
 {
     int i;
     Heap_item* hi;
@@ -26,7 +27,7 @@ Heap* build_heap(Variable[] vars, int n)
     H->heap_size = n;
     H->orig_size = n;
     
-    for (i = 0; i < n; i+++)
+    for (i = 0; i < n; i++)
     {
         hi = &(H->array[i]);
         hi->V = vars[i];
@@ -73,8 +74,8 @@ void heapify(Heap* H, int i)
 
 Variable extract_min(Heap* H)
 {
-    Variable min;
-    int i;
+    Heap_item min;
+    int i, n_neighbors;
 
     if (H->heap_size < 1)
         return NULL;
