@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.11 2004-10-28 09:11:34 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.12 2004-10-28 13:10:51 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -45,9 +45,19 @@ typedef struct{
   int length;
   int **data;         /* The time series */
   /* JJ NOTES: Should there be a cache for extremely large time series? */
-}timeseries_type;
+}time_series_type;
 
-typedef timeseries_type *Timeseries;
+typedef time_series_type *TimeSeries;
+
+
+typedef struct{
+  Variable *variables; /* variables of interest */
+  int num_of_vars;
+  int length;     /* length of the time series */
+  double ***data; /* probability distribution of every variable at every t */
+}uncertain_series_type;
+
+typedef uncertain_series_type *UncertainSeries;
 
 
 /* Makes the model forget all the given evidence. */
@@ -65,37 +75,46 @@ void free_model(Nip model);
 
 /* This reads data from the data file and constructs a time series according 
  * to the given model. */
-Timeseries read_timeseries(Nip model, char* datafile);
+TimeSeries read_timeseries(Nip model, char* datafile);
 
 
 /* A method for freeing the huge chunk of memory used by a time series. */
-void free_timeseries(Timeseries ts);
+void free_timeseries(TimeSeries ts);
 
 
 /* Tells the length of the timeseries. */
-int timeseries_length(Timeseries ts);
+int timeseries_length(TimeSeries ts);
 
 
 /* A method for reading an observation from the time series. 
- * You'll have to specify the variable. Do not alter the string returned 
+ * You'll have to specify the variable. DO NOT alter the string returned 
  * by the function! The returned value may be NULL if the variable was not 
  * observed at the specified moment in time. The time span is [0, T-1] */
-char* get_observation(Timeseries ts, Variable v, int time);
+char* get_observation(TimeSeries ts, Variable v, int time);
 
 
 /* A method for setting an observation in the time series. */
-int set_observation(Timeseries ts, Variable v, int time, char* observation);
+int set_observation(TimeSeries ts, Variable v, int time, char* observation);
 
 
 /* This algorithm computes the probability distributions for every 
  * hidden variable and for every time step according to the timeseries.
  * It uses only forward propagation, so the result of time step t 
- * is not affected by the rest of the timeseries. */
-SomeDataType forward_inference(Nip model, Timeseries ts);
+ * is not affected by the rest of the timeseries. 
+ *  You'll have to specify the variables of interest in the vars array 
+ * and the number of the variables. */
+UncertainSeries forward_inference(Nip model, TimeSeries ts, 
+				  Variable vars[], int nvars);
 
 
-/*  */
-SomeDataType forward_backward_inference(Nip model, Timeseries ts);
+/* This one computes the probability distributions for every 
+ * hidden variable and for every time step according to the timeseries.
+ * It uses both forward and backward propagation, so the result of time 
+ * step t is affected by the whole timeseries. 
+ *  You'll have to specify the variables of interest in the vars array 
+ * and the number of the variables. */
+UncertainSeries forward_backward_inference(Nip model, TimeSeries ts, 
+					   Variable vars[], int nvars);
 
 
 /* This is a function for telling the model about observations. 

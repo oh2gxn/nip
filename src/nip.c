@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.24 2004-10-28 09:11:34 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.25 2004-10-28 13:10:51 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -18,6 +18,9 @@
 /***** 
  * TODO: 
  * - some sort of a function for the forward-backward algorithm
+ *   - time slice message pass implementation in the Clique.c ?
+ *     Fix the message passing anyway!
+ *
  *   - a data type that can be returned by the algorithm (how to index?)
  *     (how about the size?  T*N*M, 
  *      where T=time, N=number of hidden variables and M is mean cardinality)
@@ -160,13 +163,13 @@ void free_model(Nip model){
 }
 
 
-Timeseries read_timeseries(Nip model, char* filename){
+TimeSeries read_timeseries(Nip model, char* filename){
   int i, j, k, m;
   char** tokens = NULL;
-  Timeseries ts = NULL;
+  TimeSeries ts = NULL;
   datafile* df = NULL;
   
-  ts = (Timeseries) malloc(sizeof(timeseries_type));
+  ts = (TimeSeries) malloc(sizeof(time_series_type));
   if(!ts){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -260,7 +263,7 @@ Timeseries read_timeseries(Nip model, char* filename){
 }
 
 
-void free_timeseries(Timeseries ts){
+void free_timeseries(TimeSeries ts){
   int t;
   if(ts){
     for(t = 0; t < ts->length; t++)
@@ -273,12 +276,12 @@ void free_timeseries(Timeseries ts){
 }
 
 
-int timeseries_length(Timeseries ts){
+int timeseries_length(TimeSeries ts){
   return ts->length;
 }
 
 
-char* get_observation(Timeseries ts, Variable v, int time){
+char* get_observation(TimeSeries ts, Variable v, int time){
   int i, j = -1;
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
     if(equal_variables(v, ts->observed[i]))
@@ -291,7 +294,7 @@ char* get_observation(Timeseries ts, Variable v, int time){
 }
 
 
-int set_observation(Timeseries ts, Variable v, int time, char* observation){
+int set_observation(TimeSeries ts, Variable v, int time, char* observation){
   int i, j = -1;
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
     if(equal_variables(v, ts->observed[i]))
@@ -324,14 +327,18 @@ int insert_hard_evidence(Nip model, char* variable, char* observation){
 
 /* forward-only inference consumes constant (1 time slice) amount of memory 
  * + the results (which is linear) */
-SomeDataType forward_inference(Nip model, Timeseries ts){
-  
+UncertainSeries forward_inference(Nip model, TimeSeries ts, 
+				  Variable vars[], int nvars){
+  /* XXX */
+  return NULL;
 }
 
 /* This consumes much more memory depending on the size of the 
  * sepsets between time slices. */
-SomeDataType forward_backward_inference(Nip model, Timeseries ts){
-  
+UncertainSeries forward_backward_inference(Nip model, TimeSeries ts,
+					   Variable vars[], int nvars){
+  /* XXX */
+  return NULL;
 }
 
 int insert_soft_evidence(Nip model, char* variable, double* distribution){

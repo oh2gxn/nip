@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
   Variable temp = NULL;
   Variable interesting = NULL;
 
-  Timeseries ts = NULL;
+  TimeSeries ts = NULL;
 
   /*************************************/
   /* Some experimental timeslice stuff */
