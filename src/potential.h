@@ -96,4 +96,8 @@ int update_potential(potential enumerator, potential denominator,
 int update_evidence(double enumerator[], double denominator[], 
 		    potential target, int var);
 
+/* COMMENTS PLEASE
+ */
+int init_potential(potential probs, potential target, int extra_vars[]);
+
 #endif

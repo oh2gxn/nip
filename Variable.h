@@ -1,6 +1,7 @@
 #ifndef __VARIABLE_H__
 #define __VARIABLE_H__
 
+#include "potential.h"
 #define VAR_NAME_LENGTH 40
 
 typedef struct {
@@ -8,6 +9,7 @@ typedef struct {
   int cardinality;
   unsigned long id; /* unique id for every variable */
   double *likelihood; /* likelihood of each value */
+  potential probability; /* probability of variable, given parents */
 } vtype;
 
 typedef vtype *Variable;
@@ -15,7 +17,7 @@ typedef vtype *Variable;
 /* Creates a new Variable */
 Variable new_variable(char* name, int cardinality);
 
-/* Function for copying a Variable (if needed).
+/* Function for copying a Variable (if needed). Handle with care.
  * v: the Variable to be copied
  * Returns the copy.
  */
@@ -42,5 +44,10 @@ int update_likelihood(Variable v, double likelihood[]);
 /* Returns the number of possible values in the Variable v.
  */
 int number_of_values(Variable v);
+
+/* Sets the conditional probability of variable v.
+ * If probability is already set, the previous values are freed from memory.
+ */
+int set_probability(Variable v, potential p);
 
 #endif /* __VARIABLE_H__ */

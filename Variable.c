@@ -1,22 +1,25 @@
 #include <string.h>
 #include <stdlib.h>
 #include "Variable.h"
+#include "potential.h"
 #include "errorhandler.h"
 
 Variable new_variable(char* name, int cardinality){
-  int i;
   static long id = 0;
+  int i;
+  double *dpointer;
   Variable v = (Variable) malloc(sizeof(vtype));
+
   v->cardinality = cardinality;
   v->id = ++id;
+  v->probability = NULL;
  
   strncpy(v->name, name, VAR_NAME_LENGTH);
   v->name[VAR_NAME_LENGTH] = '\0';
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */
-  for(i = 0; i < cardinality; i++)
-    v->likelihood[i] = 1;
+  for(dpointer=v->likelihood, i=0; i < cardinality; *dpointer++ = 1, i++);
 
   return v;
 }
@@ -72,4 +75,14 @@ int number_of_values(Variable v){
     return ERROR_NULLPOINTER;
   else
     return v->cardinality;
+}
+
+int set_probability(Variable v, potential p){
+  if(v == NULL)
+    return ERROR_NULLPOINTER;
+
+  if(v->probability != NULL)
+    free(v->probability);
+  v->probability = p;
+  return NO_ERROR;
 }

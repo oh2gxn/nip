@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "potential.h" 
 #include "errorhandler.h"
 
@@ -14,6 +15,7 @@ potential make_potential(int cardinality[], int num_of_vars){
   int i;
   int size_of_data = 1;
   int *cardinal;
+  double *dpointer;
   potential p;
   p = (potential) malloc(sizeof(ptype));
   cardinal = (int *) calloc(num_of_vars, sizeof(int));
@@ -27,7 +29,9 @@ potential make_potential(int cardinality[], int num_of_vars){
   p->size_of_data = size_of_data;
   p->num_of_vars = num_of_vars;
   p->data = (double *) calloc(size_of_data, sizeof(double));
-  /* The array has to be initialised. This is probably done somewhere else. */
+
+  /* The array has to be initialised. Let's do it right away. */
+  for(dpointer=p->data, i=0; i < size_of_data; *dpointer++ = 1, i++);
 
   return p;
 }
@@ -248,5 +252,33 @@ int update_evidence(double numerator[], double denominator[],
   free(target_indices);   /* JJ NOTE: GET RID OF THESE */
 
   return GLOBAL_UPDATE;
+
+}
+
+int init_potential(potential probs, potential target, int extra_vars[]){
+
+  /* MUOKKAA TÄTÄ, TÄMÄ ON MELKEIN COPY-PASTE */
+
+  int i;
+  int *probs_indices, *target_indices;
+  double *potvalue;
+
+  probs_indices = (int *) calloc(probs->num_of_vars, sizeof(int));
+  target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
+
+  /* The general idea is the same as in marginalise */
+  for(i = 0; i < target->size_of_data; i++){
+    inverse_mapping(target, i, target_indices);
+    choose_indices(target, target_indices, probs_indices, extra_vars);
+
+    potvalue =
+      get_ppointer(probs, probs_indices);
+    target->data[i] *= *potvalue;  /* THE multiplication */
+  }
+
+  free(probs_indices); /* JJ NOTE: GET RID OF THESE */
+  free(target_indices);
+
+  return 0;
 
 }

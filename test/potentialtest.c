@@ -30,7 +30,7 @@ int main(){
 	  for(m = 0; m < cardinality[4]; m++){
 	    indices[4] = m;
 	    x++;
-	    set_pvalue(p, indices, num_of_vars, x);
+	    set_pvalue(p, indices, x);
 	  }
 	}
       }
@@ -48,7 +48,7 @@ int main(){
 	  indices[3] = l;
 	  for(m = 0; m < cardinality[4]; m++){
 	    indices[4] = m;
-	    value = get_pvalue(p, indices, num_of_vars);
+	    value = get_pvalue(p, indices);
 	    printf("Potential (%d, %d, %d, %d, %d) is: %f\n", indices[0],
 		   indices[1], indices[2], indices[3], indices[4], value);
 	  }
@@ -65,7 +65,7 @@ int main(){
   }
 
   /* marginalise over variable 4 (fifth variable of p) */
-  marginalise(p, q, &margin_var);
+  general_marginalise(p, q, &margin_var);
 
   /* Print values of q */
   for(i = 0; i < card2[0]; i++){
@@ -76,7 +76,7 @@ int main(){
 	indices[2] = k;
 	for(l = 0; l < card2[3]; l++){
 	  indices[3] = l;
-	  value = get_pvalue(q, indices, num_of_vars - 1);
+	  value = get_pvalue(q, indices);
 	  printf("Potential (%d, %d, %d, %d) is: %f\n", indices[0],
 		 indices[1], indices[2], indices[3], value);
 	}
