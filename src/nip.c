@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.22 2004-10-18 11:02:39 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.23 2004-10-26 15:51:16 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -19,7 +19,9 @@
  * TODO: 
  * - some sort of a function for the forward-backward algorithm
  *   - a data type that can be returned by the algorithm (how to index?)
- *   - some abstraction for a time series (structure and access to data..?)
+ *     (how about the size?  T*N*M, 
+ *      where T=time, N=number of hidden variables and M is mean cardinality)
+ *   + some abstraction for a time series (structure and access to data..?)
  *
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *
@@ -111,12 +113,14 @@ Nip parse_model(char* file){
     }
 
   /* Check one little detail :) 
-   * NOTE: needed because of an implementation detail. (FIX IT?) */
+   * NOTE: needed because of an implementation detail. (FIX IT?) 
+   * NOTE2: Not anymore... this should be carefully removed. */
   j = 1;
   for(i = 1; i < new->num_of_nexts; i++)
     if(get_id(new->previous[i-1]) > get_id(new->previous[i]))
       j = 0;
   assert(j); 
+
 
   /* 3. Reset parser globals */
   it = get_last_variable(); /* free the list structure */
