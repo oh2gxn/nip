@@ -1,3 +1,7 @@
+/*
+ * potential.h $Id: potential.h,v 1.20 2004-06-21 06:12:12 mvkorpel Exp $
+ */
+
 #ifndef __POTENTIAL_H__
 #define __POTENTIAL_H__
 

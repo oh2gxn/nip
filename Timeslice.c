@@ -1,3 +1,7 @@
+/*
+ * Timeslice.c $Id: Timeslice.c,v 1.5 2004-06-21 06:12:12 mvkorpel Exp $
+ */
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

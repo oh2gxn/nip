@@ -1,3 +1,7 @@
+/*
+ * Clique.h $Id: Clique.h,v 1.34 2004-06-21 06:12:12 mvkorpel Exp $
+ */
+
 #ifndef __CLIQUE_H__
 #define __CLIQUE_H__
 

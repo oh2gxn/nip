@@ -1,5 +1,6 @@
-/* Functions for the bison parser.
- * $Id: parser.c,v 1.33 2004-06-17 15:28:50 jatoivol Exp $
+/*
+ * Functions for the bison parser.
+ * $Id: parser.c,v 1.34 2004-06-21 06:12:12 mvkorpel Exp $
  */
 
 #include <stdio.h>

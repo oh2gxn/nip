@@ -1,3 +1,7 @@
+/*
+ * Graph.c $Id: Graph.c,v 1.30 2004-06-21 06:12:12 mvkorpel Exp $
+ */
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

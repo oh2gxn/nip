@@ -1,3 +1,7 @@
+/*
+ * Timeslice.h $Id: Timeslice.h,v 1.4 2004-06-21 06:12:12 mvkorpel Exp $
+ */
+
 #ifndef __TIMESLICE_H__
 #define __TIMESLICE_H__
 

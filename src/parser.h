@@ -1,4 +1,6 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.19 2004-06-16 13:06:50 mvkorpel Exp $
+/*
+ * Definitions for the bison parser.
+ * $Id: parser.h,v 1.20 2004-06-21 06:12:12 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__

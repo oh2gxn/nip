@@ -1,3 +1,7 @@
+/*
+ * Graph.h $Id: Graph.h,v 1.18 2004-06-21 06:12:12 mvkorpel Exp $
+ */
+
 #ifndef __GRAPH_H__
 #define __GRAPH_H__
 
