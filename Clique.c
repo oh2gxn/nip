@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.86 2004-08-18 14:01:52 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.87 2004-08-19 10:57:54 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -929,6 +929,8 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
     /* Prevent loops by checking if the Cliques
      * are already in the same tree. */
     if(!clique_search(one, two)){
+
+      mark_useful_Sepset(H, s); /* MVK */
 
 #ifdef DEBUG_CLIQUE
       printf("In Clique.c: Trying to add ");

@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.21 2004-08-18 16:01:21 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.22 2004-08-19 10:57:59 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -14,6 +14,8 @@
 /* Voi räkä */
 /* Koodi ei tässä muodossaan sovellu lapsille tai raskaana oleville tai 
    imettäville naisille. */
+
+static void free_useless_Sepsets(Heap *H);
 
 /* MVK: Harmiton */
 int edges_added(Graph* G, Variable* vs, int n)
@@ -53,15 +55,29 @@ Heap* build_heap(Graph* Gm)
     int i,j, n;
 
     Heap_item* hi;
-    Heap* H = (Heap*) malloc(sizeof(Heap));
     Variable* Vs_temp;
 
+    Heap* H = (Heap*) malloc(sizeof(Heap));
+    if(!H)
+      return NULL;
+
     n = get_size(Gm);
+
     Vs_temp = (Variable*) calloc(n, sizeof(Variable));
+    if(!Vs_temp){
+      free(H);
+      return NULL;
+    }
 
     H->heap_items = (Heap_item*) calloc(n, sizeof(Heap_item));
+    if(!(H->heap_items)){
+      free(Vs_temp);
+      free(H);
+    }
+
     H->heap_size = n;
     H->orig_size = n;
+    H->useless_sepsets = NULL;
     
     for (i = 0; i < n; i++)
     {
@@ -73,6 +89,13 @@ Heap* build_heap(Graph* Gm)
         */
 
 	hi->Vs = (Variable *) calloc(hi->n, sizeof(Variable));
+	if(!(hi->Vs)){
+	  free(Vs_temp);
+	  for(j = 0; j < i; j++)
+	    free(H->heap_items[j].Vs);
+	  free(H->heap_items);
+	  free(H);
+	}
 
 	hi->Vs[0] = Gm->variables[i];
         
@@ -94,7 +117,7 @@ Heap* build_heap(Graph* Gm)
 
 Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
 {
-    int i,j;
+    int i,j, k = 0;
     int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
     int hi_index = 0;
     int isect_size;
@@ -103,11 +126,26 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
     Variable *isect;
 
     Heap_item* hi;
+
     Heap* H = (Heap*) malloc(sizeof(Heap));
+    if(!H)
+      return NULL;
 
     H->heap_items = (Heap_item*) calloc(n, sizeof(Heap_item));
+    if(!H->heap_items){
+      free(H);
+      return NULL;
+    }
+
     H->heap_size = n;
     H->orig_size = n;
+
+    H->useless_sepsets = (Sepset *) calloc(n, sizeof(Sepset));
+    if(!H->useless_sepsets){
+      free(H->heap_items);
+      free(H);
+      return NULL;
+    }
     
     /* Go through each pair of Cliques. Create candidate Sepsets. */
     for(i = 0; i < num_of_cliques - 1; i++)
@@ -126,6 +164,10 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
 	  return NULL;
 
 	hi->s = make_Sepset(isect, isect_size, neighbours);
+
+	/* Initially, all Sepsets are marked as useless (to be freed later) */
+	H->useless_sepsets[k++] = hi->s;
+
 	free(isect);
 
 	/* We must use a negative value, because we have a min-heap. */
@@ -134,7 +176,7 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
         hi->secondary_key =
 	  cluster_weight(cliques[i]->variables, cliques[i]->p->num_of_vars) +
 	  cluster_weight(cliques[j]->variables, cliques[j]->p->num_of_vars);
-	hi->Vs = NULL; /* this is a sepset heap */
+	hi->Vs = NULL; /* this is a sepset heap, no need for hi->Vs */
       }
 
     /* Check Cormen, Leiserson, Rivest */
@@ -255,10 +297,45 @@ int extract_min_sepset(Heap* H, Sepset* sepset)
     /* Rebuild the heap. Is this enough? */
     heapify(H, 0);
     
-    *sepset = min.s; 
+    *sepset = min.s;
 
     return 0;
+}
 
+/* Called by find_sepsets when a Sepset is accepted to the join tree. */
+void mark_useful_Sepset(Heap* H, Sepset s){
+
+  int i, n;
+
+  if(!H || !s)
+    return;
+
+  n = H->orig_size;
+
+  for(i = 0; i < n; i++)
+    if(H->useless_sepsets[i] == s){
+      H->useless_sepsets[i] = NULL;
+      break;
+    }
+
+  return;
+}
+
+static void free_useless_Sepsets(Heap *H){
+
+  int i, n;
+  Sepset s;
+
+  if(!H || !(H->useless_sepsets))
+    return;
+
+  n = H->orig_size;
+
+  for(i = 0; i < n; i++){
+    s = H->useless_sepsets[i];
+    if(s != NULL)
+      free_Sepset(s);
+  }
 }
 
 int get_heap_index(Heap* H, Variable v)
@@ -342,11 +419,16 @@ void free_heap(Heap* H){
     hi->Vs = NULL;
   }
 
+  /*
   while(!extract_min_sepset(H, &s)){
     free_Sepset(s);
   }
+  */
+
+  free_useless_Sepsets(H);
   
   free(H->heap_items);
+  free(H->useless_sepsets);
 
   free(H);
   return;

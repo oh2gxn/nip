@@ -1,5 +1,5 @@
 /*
- * Heap.h $Id: Heap.h,v 1.12 2004-08-18 16:01:21 mvkorpel Exp $
+ * Heap.h $Id: Heap.h,v 1.13 2004-08-19 10:57:59 mvkorpel Exp $
  */
 
 #ifndef __HEAP_H__
@@ -29,6 +29,7 @@ typedef struct {
     /* AR: S'on heapin käyttämän taulukon koko. Ei liene tarpeellinen,
      * ellei sitten heappia tuhottaessa. */
     int orig_size;
+    Sepset *useless_sepsets; /* MVK */
 } Heap;
 
 Heap* build_heap(Graph* Gm);
@@ -46,5 +47,7 @@ int get_heap_index(Heap* H, Variable v);
 void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G);
 
 void free_heap(Heap* H);
+
+void mark_useful_Sepset(Heap* H, Sepset s);
 
 #endif /* __HEAP_H__ */
