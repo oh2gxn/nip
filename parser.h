@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.16 2004-06-08 11:47:28 jatoivol Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.17 2004-06-08 13:00:37 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -167,5 +167,11 @@ int parsedPots2JTree();
 
 /* Some debug printing about what was parsed. */
 void print_parsed_stuff();
+
+void set_nip_statenames(char **states);
+char** get_nip_statenames();
+
+void set_nip_label(char *label);
+char* get_nip_label();
 
 #endif /* __PARSER_H__ */

@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.23 2004-06-08 11:47:28 jatoivol Exp $
+ * $Id: parser.c,v 1.24 2004-06-08 13:00:37 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -40,7 +40,10 @@ FILE *nip_parser_infile = NULL;
 /* Is there a file open? 0 if no, 1 if yes. */
 int nip_file_open = 0;
 
-//#define DEBUG_PARSER
+static char** nip_statenames;
+static char* nip_label;
+
+/*#define DEBUG_PARSER */
 
 int open_infile(const char *file){
   if(!nip_file_open){
@@ -519,4 +522,24 @@ void print_parsed_stuff(){
     free(indices);
     free(reorder);
   }
+}
+
+void set_nip_statenames(char **states){
+
+  nip_statenames = states;
+}
+
+char** get_nip_statenames(){
+
+  return nip_statenames;
+}
+
+void set_nip_label(char *label){
+
+  nip_label = label;
+}
+
+char* get_nip_label(){
+
+  return nip_label;
 }

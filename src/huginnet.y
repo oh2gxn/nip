@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.33 2004-06-08 11:47:28 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.34 2004-06-08 13:00:37 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -34,12 +34,13 @@
 /* (The "ownership" of strings changes.)                          */
 /******************************************************************/
 
+%token token_class "class"
+%token token_data "data"
+%token token_label "label"
 %token token_node "node"
+%token token_position "position"
 %token token_potential "potential"
 %token token_states "states"
-%token token_label "label"
-%token token_position "position"
-%token token_data "data"
 %token <name> QUOTED_STRING
 %token <name> UNQUOTED_STRING
 %token <numval> NUMBER
@@ -74,6 +75,20 @@ input:  nodes potentials {
 #endif
 
   reset_initData()}
+
+| token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
+
+  parsedVars2Graph();
+
+  Graph2JTree();
+
+  parsedPots2JTree();
+
+#ifdef DEBUG_BISON
+  print_parsed_stuff();
+#endif
+
+  reset_initData()}
 ;
 
 
@@ -87,18 +102,22 @@ potentials:    /* empty */ {/* list of initialisation data ready */}
 ;
 
 
-nodeDeclaration:    token_node UNQUOTED_STRING '{' statesDeclaration 
-                                             labelDeclaration
-                                             positionDeclaration
-                                             parameters '}' {
+nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   /* new_variable() */
-  Variable v = new_variable($2, $5, $4, nip_strings_parsed); 
+  Variable v = new_variable($2, get_nip_label(),
+			    get_nip_statenames(), nip_strings_parsed);
 
   reset_strings();
   add_pvar(v);
   $$ = v}
 ;
 
+node_params: /* end of definitions */
+|            unknownDeclaration node_params
+|            statesDeclaration node_params { set_nip_statenames($1) }
+|            labelDeclaration node_params { set_nip_label($1) }
+|            positionDeclaration node_params
+;
 
 parameters:    /* end of definitions */
              | unknownDeclaration parameters
@@ -142,7 +161,6 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   for(i = 0; i < nip_symbols_parsed; i++)
     vars[i + 1] = parents[i];
 
-  /* Yritelmiä metsästää bugia */
 #ifdef DEBUG_BISON
   fprintf(stdout, "Datatesti tiedostossa huginnet.y:\n");
   for(i = 0; i < nip_doubles_parsed; i++)
@@ -151,7 +169,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 
   add_initData(create_Potential(vars, nip_symbols_parsed + 1, doubles),
 	       vars[0], parents); 
-  free(doubles); // the data was copied at create_Potential
+  free(doubles); /* the data was copied at create_Potential */
   reset_doubles();
   reset_symbols();
   free(vars);
@@ -184,7 +202,14 @@ string:        QUOTED_STRING { add_string($1) }
 numbers:     /* end of list */
            | num numbers { /* add_double($1) */ }
            | '(' numbers ')' numbers {/* ignore brackets */}
-; 
+;
+
+
+/* This should ignore all brackets between numbers! */
+ignored_numbers:     /* end of list */
+           | NUMBER ignored_numbers { /* ignore the NUMBER */ }
+           | '(' ignored_numbers ')' ignored_numbers {/* ignore brackets */}
+;
 
 
 num:       NUMBER { add_double($1) }
@@ -192,6 +217,7 @@ num:       NUMBER { add_double($1) }
 
 
 value:         QUOTED_STRING { free($1) } /* ignore */
+|              ignored_numbers { /* ignore */ }
 ;
 
 
@@ -268,14 +294,19 @@ yylex (void)
   /* Multicharacter tokens */
   else{
     /* Literal string tokens */ 
-    /* label */
-    if(tokenlength == 5 &&
-       strncmp("label", token, 5) == 0){
-      free(token);
+    /* label or class */
+    if(tokenlength == 5){
+      if(strncmp("label", token, 5) == 0){
+	free(token);
 
-      return token_label;
+	return token_label;
+      }else if(strncmp("class", token, 5) == 0){
+	free(token);
+
+	return token_class;
+      }
     }
-    /* node */
+    /* node or data */
     if(tokenlength == 4){
       if(strncmp("node", token, 4) == 0){
 	free(token);
