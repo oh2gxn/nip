@@ -95,10 +95,11 @@ static void test_evidence(Variable observed, double data[]){
 
 int main(int argc, char *argv[]){
 
+  char *var_name;
   int i, retval;
   int nip_num_of_cliques;
   int size_of_result;
-
+  
   double* result;
 
   Clique *nip_cliques;
@@ -234,12 +235,14 @@ int main(int argc, char *argv[]){
 
   /* marginalisation */
   if(argc > 2)
-    interesting = get_variable(argv[2]); /* THE variable */
+    var_name = argv[2];
   else
-    interesting = get_variable("B"); /* THE variable */
+    var_name = "B";
+
+  interesting = get_variable(var_name);
 
   if(!interesting){
-    printf("In bisontest.c : Variable of interest not found.\n");
+    printf("In bisontest.c : Variable %s not found.\n", var_name);
     return 1;
   }
 
@@ -282,14 +285,15 @@ int main(int argc, char *argv[]){
     unmark_Clique(nip_cliques[i]);
   distribute_evidence(nip_cliques[0]);
 
-  /* marginalisation */
   if(argc > 2)
-    interesting = get_variable(argv[2]); /* THE variable */
+    var_name = argv[2];
   else
-    interesting = get_variable("B"); /* THE variable */
-
+    var_name = "B";
+  
+  interesting = get_variable(var_name);
+    
   if(!interesting){
-    printf("In bisontest.c : Variable of interest not found.\n");
+    printf("In bisontest.c : Variable %s not found.\n", var_name);
     return 1;
   }
 
