@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.31 2004-06-14 12:20:53 mvkorpel Exp $
+ * $Id: parser.c,v 1.32 2004-06-14 14:42:33 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -167,7 +167,7 @@ int add_symbol(Variable v){
     return ERROR_INVALID_ARGUMENT;
 
   new->data = v;
-  new->fwd = 0;
+  new->fwd = NULL;
   new->bwd = nip_last_temp_var;
 
   if(nip_first_temp_var == NULL)
@@ -211,7 +211,7 @@ int add_initData(potential p, Variable child, Variable* parents){
   new->data = p;
   new->child = child;
   new->parents = parents;
-  new->fwd = 0;
+  new->fwd = NULL;
   new->bwd = nip_last_initData;
   if(nip_first_initData == NULL)
     nip_first_initData = new;
@@ -229,7 +229,7 @@ int add_initData(potential p, Variable child, Variable* parents){
 int add_pvar(Variable var){
   varlink new = (varlink) malloc(sizeof(varelement));
   new->data = var;
-  new->fwd = 0;
+  new->fwd = NULL;
   new->bwd = nip_last_var;
   if(nip_first_var == NULL)
     nip_first_var = new;
@@ -247,7 +247,7 @@ int add_pvar(Variable var){
 int add_double(double d){
   doublelink new = (doublelink) malloc(sizeof(doubleelement));
   new->data = d;
-  new->fwd = 0;
+  new->fwd = NULL;
   new->bwd = nip_last_double;
   if(nip_first_double == NULL)
     nip_first_double = new;
@@ -264,7 +264,7 @@ int add_double(double d){
 int add_string(char* string){
   stringlink new = (stringlink) malloc(sizeof(stringelement));
   new->data = string;
-  new->fwd = 0;
+  new->fwd = NULL;
   new->bwd = nip_last_string;
   if(nip_first_string == NULL)
     nip_first_string = new;

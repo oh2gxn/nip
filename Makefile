@@ -1,11 +1,11 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.16 2004-06-14 14:11:17 mvkorpel Exp $
+# $Id: Makefile,v 1.17 2004-06-14 14:42:33 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
 POT_SRCS=potential.c
 CLI_SRCS=$(POT_SRCS) Variable.c Clique.c
-GRPH_SRCS=$(CLI_SRCS) Graph.c grphmnp/Heap.c grphmnp/cls2clq.c
+GRPH_SRCS=$(CLI_SRCS) grphmnp/cls2clq.c grphmnp/Heap.c Graph.c
 PAR_SRCS=$(GRPH_SRCS) errorhandler.c fileio.c parser.c
 HUG_DEFS=huginnet.y
 HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
@@ -41,7 +41,7 @@ LIBS=
 # This gives make the names of object files made by the compiler and
 # used by the linker.
 POT_OBJS=$(POT_SRCS:.c=.o) potentialtest.o
-CLI_OBJS=$(CLI_SRCS:.c=.o) cliquetest.o
+CLI_OBJS=$(GRPH_SRCS:.c=.o) cliquetest.o # had to put the Graph srcs
 PAR_OBJS=$(PAR_SRCS:.c=.o) parsertest.o
 GRPH_OBJS=$(GRPH_SRCS:.c=.o) graph_test.o
 HUG_OBJS=$(HUG_SRCS:.c=.o) 
