@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.92 2004-08-23 13:55:46 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.93 2004-08-24 08:29:53 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -604,16 +604,18 @@ int distribute_evidence(Clique c){
   l = c->sepsets;
   while (l != 0){
     s = l->data;
-    if(!clique_marked(s->cliques[0]))
+    if(!clique_marked(s->cliques[0])){
       if(distribute_evidence(s->cliques[0]) != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
       }
-    else if(!clique_marked(s->cliques[1]))
+    }
+    else if(!clique_marked(s->cliques[1])){
       if(distribute_evidence(s->cliques[1]) != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
       }
+    }
     l = l->fwd;
   }
   return NO_ERROR;

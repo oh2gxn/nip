@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.54 2004-08-23 13:18:18 mvkorpel Exp $
+ * huginnet.y $Id: huginnet.y,v 1.55 2004-08-24 08:29:54 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -152,7 +152,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   }
 
   if((nip_next = get_nip_next()) != NULL){
-    retval = add_time_init(v, get_nip_next());
+    retval = add_time_init(v, nip_next);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free($2);
