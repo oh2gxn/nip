@@ -7,13 +7,6 @@
 #include "grphmnp/Heap.h"
 #include "grphmnp/cls2clq.h"
 
-/* Tämä ja Heap.c pitänee järjestää hieman järkevämmin ja ehkä luoda kullekin
-   oma kotihakemisto. Nykyinen on epätyydyttävä ja jotenkin häiritsee.
-   Klusterien rakennus ainakin erilliseen palikkaan, ehkä jotain muutakin.
-   Ei ole kuitenkaan vielä aivan täysin selvää miten ja mitä Heap.c:lle tehdään.
-  */
-
-
 /*** GRAPH MANAGEMENT ***/
 
 Graph* new_graph(unsigned n)
@@ -162,10 +155,6 @@ void sort_variables(Graph* G)
 {
     int i, id;
 	
-    /*qsort(G->variables, G->size, sizeof(Variable), varcomp);
-    G->max_id = get_id(G->variables[G->size -1]);
-    G->min_id = get_id(G->variables[0]);*/
-
     G->min_id = get_id(G->variables[0]); G->max_id = get_id(G->variables[0]);
     for (i = 1; i < G->size; i++)
     {

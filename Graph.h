@@ -4,7 +4,7 @@
 #include "Variable.h"
 #include "Clique.h"
 
-#define ADJM(G, i, j) ((G)->adj_matrix[(i)*(G)->size + (j)])
+#define ADJM(G, i, j) ( (G)->adj_matrix[(i)*(G)->size + (j)] )
 
 typedef struct {
     int* adj_matrix; /* Two dimensional */
@@ -14,7 +14,7 @@ typedef struct {
     Variable* variables;
     unsigned size;
     int top;
-} Graph; /* Esimerkki. Toteutus voi vaihtua */
+} Graph; 
 
 Graph* new_graph(unsigned n);
 /* Creates new graph.
