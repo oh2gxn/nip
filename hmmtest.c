@@ -7,11 +7,6 @@
 #include "errorhandler.h"
 #include "nip.h"
 
-/*
-#define PRINT_CLIQUES
-*/
-
-
 int main(int argc, char *argv[]){
 
   char** tokens = NULL;
@@ -49,10 +44,6 @@ int main(int argc, char *argv[]){
   if(model == NULL)
     return -1;
   /* The input file has been parsed. -- */
-
-#ifdef PRINT_CLIQUES
-  print_Cliques();
-#endif
 
   /*****************************/
   /* read the data from a file */

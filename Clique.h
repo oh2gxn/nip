@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.48 2004-08-27 14:18:20 mvkorpel Exp $
+ * Clique.h $Id: Clique.h,v 1.49 2004-08-30 11:48:55 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -209,13 +209,5 @@ void print_Sepset(Sepset s);
  * Returns an error code.
  */
 int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n);
-
-int get_num_of_cliques();
-
-Clique **get_cliques_pointer();
-
-void set_num_of_cliques(int n);
-
-void reset_Clique_array();
 
 #endif /* __CLIQUE_H__ */

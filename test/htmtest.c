@@ -7,10 +7,6 @@
 #include "errorhandler.h"
 #include "nip.h"
 
-/*
-#define PRINT_CLIQUES
-*/
-
 /***********************************************************
  * The timeslice concept features some major difficulties 
  * because the actual calculations are done in the join tree
@@ -72,9 +68,6 @@ int main(int argc, char *argv[]){
     return -1;
   /* The input file has been parsed. -- */
 
-#ifdef PRINT_CLIQUES
-  print_Cliques();
-#endif
 
   /*****************************/
   /* read the data from a file */

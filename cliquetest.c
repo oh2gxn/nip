@@ -60,8 +60,6 @@ int main(){
 
   Variable set_of_variables[3];
 
-  Clique **cliques_pointer;
-
   statesA[0] = "a1";
   statesA[1] = "a2";
   statesA[2] = "a3";
@@ -87,10 +85,6 @@ int main(){
   clique_pile[0] = make_Clique(variables, 3);
   clique_pile[1] = make_Clique(&(variables[1]), 3);
   clique_pile[2] = make_Clique(&(variables[3]), 2);
-
-  /* Ugly hack */
-  cliques_pointer = get_cliques_pointer();
-  *cliques_pointer = clique_pile;
 
   sepset_pile[0] = make_Sepset(&(variables[1]), 2, &(clique_pile[0]));
   sepset_pile[1] = make_Sepset(&(variables[3]), 1, &(clique_pile[1]));

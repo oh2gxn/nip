@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.80 2004-08-25 11:14:41 mvkorpel Exp $
+ * $Id: parser.c,v 1.81 2004-08-30 11:48:55 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -58,6 +58,9 @@ static FILE *nip_yyparse_infile = NULL;
 
 /* Is there a hugin net file open? 0 if no, 1 if yes. */
 static int nip_yyparse_infile_open = 0;
+
+static Clique *nip_cliques = NULL;
+static int nip_num_of_cliques = 0;
 
 static int add_to_stringlink(stringlink *s, char* string);
 
@@ -1050,7 +1053,7 @@ int Graph2JTree(){
     return ERROR_GENERAL;
   }
 
-  set_num_of_cliques(num_of_cliques);
+  nip_num_of_cliques = num_of_cliques;
 
   free_graph(nip_graph); /* Get rid of the graph (?) */
   nip_graph = NULL;
@@ -1230,4 +1233,20 @@ int get_nip_symbols_parsed(){
 
 int get_nip_strings_parsed(){
   return nip_strings_parsed;
+}
+
+
+
+int get_num_of_cliques(){
+  return nip_num_of_cliques;
+}
+
+
+Clique **get_cliques_pointer(){
+  return &nip_cliques;
+}
+
+void reset_Clique_array(){
+  nip_cliques = NULL;
+  nip_num_of_cliques = 0;
 }

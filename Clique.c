@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.98 2004-08-30 11:06:59 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.99 2004-08-30 11:48:55 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -20,10 +20,6 @@
 /*
 #define DEBUG_RETRACTION
 */
-
-static Clique *nip_cliques = NULL;
-static int nip_num_of_cliques = 0;
-
 
 static int message_pass(Clique c1, Sepset s, Clique c2);
 
@@ -1276,29 +1272,6 @@ void print_Clique(Clique c){
 
 }
 
-void print_Cliques(){
-
-  int i;
-  Clique clique_of_interest;
-  Sepset_link sepsetlist;
-
-  /* Get references to the results of parsing */
-  Clique *nip_cliques = *get_cliques_pointer();
-  int nip_num_of_cliques = get_num_of_cliques();
-
-  printf("Found Cliques:\n");
-  for(i = 0; i < nip_num_of_cliques; i++){
-    clique_of_interest = nip_cliques[i];
-    print_Clique(clique_of_interest);
-    sepsetlist = clique_of_interest->sepsets;
-    while(sepsetlist){
-      print_Sepset((Sepset)sepsetlist->data);
-      sepsetlist = sepsetlist->fwd;
-    }
-    printf("\n");
-  }
-
-}
 
 void print_Sepset(Sepset s){
 
@@ -1427,23 +1400,3 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
 
 }
 
-
-int get_num_of_cliques(){
-
-  return nip_num_of_cliques;
-}
-
-Clique **get_cliques_pointer(){
-
-  return &nip_cliques;
-}
-
-void set_num_of_cliques(int n){
-
-  nip_num_of_cliques = n;
-}
-
-void reset_Clique_array(){
-  nip_cliques = NULL;
-  nip_num_of_cliques = 0;
-}
