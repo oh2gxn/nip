@@ -1,4 +1,6 @@
 /* Yhtenäinen virhetilanteiden hallintajärjestelmä! */
+/* Pitäisi löytää tälle jotain käyttöä... ja kehittää systeemiä. */
+
 
 #include <stdio.h>
 #include "errorhandler.h"
@@ -6,26 +8,26 @@
 /* A global variable for counting errors */
 int ERROR_COUNTER = 0;
 
-/* Errorcode of the last error. */
-enum errorcodes ERRORCODE = OK;
+/* Errorcode of the last error */
+int ERRORCODE = NO_ERROR; 
 
 /* Method for reporting an error. 
-- errorcode is for example DIVBYZERO defined in errorhandler.h 
+- errorcode is for example ERROR_DIVBYZERO defined in errorhandler.h 
 - if verbose is other than 0, a message will be displayed 
 */
-void report_error(enum errorcodes errorcode, int verbose){
+void report_error(int errorcode, int verbose){
   ERRORCODE = errorcode;
   ERROR_COUNTER++;
 }
 
 /* Method for resetting the errorcounter */
 void reset_errorhandler(){
-  ERRORCODE = OK;
+  ERRORCODE = NO_ERROR;
   ERROR_COUNTER = 0;
 }
 
 /* Method for checking what was the last error */
-enum errorcodes check_errortype(){
+int check_errortype(){
   return ERRORCODE;
 }
 

@@ -3,7 +3,7 @@
 
 Graph new_graph(unsigned n)
 {
-    newgraph = (Graph) malloc(sizeof(Graph));
+    Graph newgraph = (Graph) malloc(sizeof(Graph));
     newgraph->size = n; newgraph->top = 0;
     newgraph->adj_matrix = (int*) calloc(n*n, sizeof(int));
     newgraph->variables = (Variable*) calloc(n, sizeof(Variable));

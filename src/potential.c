@@ -153,15 +153,26 @@ int marginalise(potential source, potential destination, int source_vars[]){
   int *source_indices, *dest_indices;
   double *potvalue;
 
+  /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) */
   source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
   dest_indices = (int *) calloc(destination->num_of_vars, sizeof(int));
 
+  /* Remove old garbage */
   for(i = 0; i < destination->size_of_data; i++)
     destination->data[i] = 0;
 
+  /* Linear traverse through array for easy access */
   for(i = 0; i < source->size_of_data; i++){
+
+    /* flat index i  ->  index array  */
     inverse_mapping(source, i, source_indices);
+
+    /* remove extra indices, eg. if source_vars = { 1, 3 }, then
+     source_indices { 2, 6, 7, 5, 3 } becomes dest_indices { 2, 7, 3 }*/
     choose_indices(source, source_indices, dest_indices, source_vars);
+
+    /* get pointer to the destination potential element where the current
+     data should be added */
     potvalue =
       get_ppointer(destination, dest_indices, destination->num_of_vars);
     *potvalue += source->data[i];
