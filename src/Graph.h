@@ -4,7 +4,12 @@
 #include "Variable.h"
 #include "Clique.h"
 
-typedef int* Graph; /* Esimerkki. Toteutus voi vaihtua */
+typedef struct {
+    int[][] adj_matrix;
+    Variable* variables;
+    unsigned size;
+    int top;
+} Graph; /* Esimerkki. Toteutus voi vaihtua */
 
 Graph new_graph(unsigned n);
 /* Creates new graph.
