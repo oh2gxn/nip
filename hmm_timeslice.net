@@ -45,7 +45,6 @@ class hmm_timeslice
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-	NIP_previous = "C";
     }
 
     node B

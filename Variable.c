@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.29 2004-06-30 10:46:38 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.30 2004-06-30 12:43:31 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -172,6 +172,34 @@ Variable next_Variable(){
   }
   else
     v = NULL;
+  return v;
+}
+
+
+Variable get_variable(char *symbol){
+
+  Variable v; 
+
+  reset_Variable_list();
+  v = next_Variable();
+
+#ifdef DEBUG_PARSER
+  printf("In get_variable: looking for \"%s\"\n", symbol);
+#endif
+
+  if(v == NULL)
+    return NULL; /* didn't find the variable (possibly normal) */
+  
+  /* search for the variable reference */
+  while(strcmp(symbol, v->symbol) != 0){
+    v = next_Variable();
+    if(v == NULL){
+      return NULL; /* didn't find the variable (a normal situation) */
+    }
+  }
+#ifdef DEBUG_PARSER
+  printf("In get_variable: Found \"%s\"\n", v->symbol);
+#endif
   return v;
 }
 

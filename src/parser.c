@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.52 2004-06-30 10:46:38 mvkorpel Exp $
+ * $Id: parser.c,v 1.53 2004-06-30 12:43:32 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -44,8 +44,11 @@ static initDataLink nip_first_initData = NULL;
 static initDataLink nip_last_initData = NULL;
 static int nip_initData_parsed = 0;
 
+static time_init_link nip_first_timeinit = NULL;
+
 static char** nip_statenames;
 static char* nip_label;
+static char* nip_next;
 
 /* The current input file */
 static FILE *nip_yyparse_infile = NULL;
@@ -623,35 +626,6 @@ int add_symbol(Variable v){
 }
 
 
-/* Gets the parsed variable according to the symbol. */
-Variable get_variable(char *symbol){
-
-  Variable v; 
-
-  reset_Variable_list();
-  v = next_Variable();
-
-#ifdef DEBUG_PARSER
-  printf("In get_variable: looking for \"%s\"\n", symbol);
-#endif
-
-  if(v == NULL)
-    return NULL; /* didn't find the variable (possibly normal) */
-  
-  /* search for the variable reference */
-  while(strcmp(symbol, v->symbol) != 0){
-    v = next_Variable();
-    if(v == NULL){
-      return NULL; /* didn't find the variable (a normal situation) */
-    }
-  }
-#ifdef DEBUG_PARSER
-  printf("In get_variable: Found \"%s\"\n", v->symbol);
-#endif
-  return v;
-}
-
-
 /* correctness? */
 int add_initData(potential p, Variable child, Variable* parents){
   initDataLink new = (initDataLink) malloc(sizeof(initDataElement));
@@ -677,6 +651,23 @@ int add_initData(potential p, Variable child, Variable* parents){
   return NO_ERROR;
 }
 
+
+int add_time_init(Variable var, char* next){
+  time_init_link new = (time_init_link) malloc(sizeof(time_init_element));
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->var = var;
+  new->next = next;
+  new->fwd = nip_first_timeinit;
+
+  nip_first_timeinit = new;
+
+  return NO_ERROR;
+}
 
 /* correctness? */
 int add_double(double d){
@@ -749,20 +740,10 @@ static int add_to_stringlink(stringlink *s, char* string){
   new->fwd = *s;
   new->bwd = NULL;
 
-#ifdef DEBUG_DATAFILE
-  printf("add_to_stringlink (1)\n");
-#endif
   if(*s != NULL)
     (*s)->bwd = new;
-#ifdef DEBUG_DATAFILE
-  printf("add_to_stringlink (2)\n");
-#endif
 
   *s = new;
-
-#ifdef DEBUG_DATAFILE
-  printf("add_to_stringlink finished OK\n");
-#endif
 
   return NO_ERROR;
 }
@@ -922,6 +903,21 @@ int reset_initData(){
 }
 
 
+/* Frees some memory after parsing. 
+ * JJT: DO NOT TOUCH THE ACTUAL DATA, OR IT WILL BE LOST. */
+int reset_timeinit(){
+  time_init_link ln = nip_first_timeinit;
+  while(ln != NULL){
+    nip_first_timeinit = ln->fwd;
+    free(ln->next); /* calloc is somewhere in the lexer */
+    free(ln);
+    ln = nip_first_timeinit;    
+  }
+
+  return NO_ERROR;
+}
+
+
 void init_new_Graph(){
   nip_graph = new_graph(total_num_of_vars());
 }
@@ -947,6 +943,25 @@ int parsedVars2Graph(){
     
     for(i = 0; i < initlist->data->num_of_vars - 1; i++)
       add_child(nip_graph, initlist->parents[i], initlist->child);
+    
+    initlist = initlist->fwd;
+  }
+
+  return NO_ERROR;
+}
+
+
+int time2Vars(){
+  Variable v1, v2;
+  time_init_link initlist = nip_first_timeinit;
+
+  /* Add time relations to Variables. */
+  while(initlist != NULL){
+    
+    v1 = initlist->var;
+    v2 = get_variable(initlist->next);
+    v1->next = v2;
+    v2->previous = v1;
     
     initlist = initlist->fwd;
   }
@@ -1111,6 +1126,16 @@ void set_nip_label(char *label){
 char* get_nip_label(){
 
   return nip_label;
+}
+
+void set_nip_next(char *next){
+
+  nip_next = next;
+}
+
+char* get_nip_next(){
+
+  return nip_next;
 }
 
 int get_nip_symbols_parsed(){

@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.45 2004-06-22 11:10:34 mvkorpel Exp $
+ * huginnet.y $Id: huginnet.y,v 1.46 2004-06-30 12:43:32 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -50,18 +50,23 @@ yyerror (const char *s);  /* Called by yyparse on error */
 %token token_position "position"
 %token token_potential "potential"
 %token token_states "states"
+%token token_next "NIP_next"
 %token <name> QUOTED_STRING
 %token <name> UNQUOTED_STRING
 %token <numval> NUMBER
 %type <stringarray> statesDeclaration
 %type <doublearray> dataList
 %type <variable> nodeDeclaration child
-%type <name> labelDeclaration
+%type <name> labelDeclaration nextDeclaration
 
 /* Grammar follows */
 
 %%
 input:  nodes potentials {
+
+  time2Vars();
+
+  reset_timeinit();
 
   parsedVars2Graph();
 
@@ -76,6 +81,10 @@ input:  nodes potentials {
   reset_initData()}
 
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
+
+  time2Vars();
+
+  reset_timeinit();
 
   parsedVars2Graph();
 
@@ -105,8 +114,14 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   /* new_variable() */
   Variable v = new_variable($2, get_nip_label(), get_nip_statenames(), 
 			    get_nip_strings_parsed());
+  char *nip_next;
+
+  if((nip_next = get_nip_next()) != NULL)
+    add_time_init(v, get_nip_next());
+
   free($2);
   reset_strings();
+  set_nip_next(NULL);
   $$ = v}
 ;
 
@@ -114,6 +129,7 @@ node_params: /* end of definitions */
 |            unknownDeclaration node_params
 |            statesDeclaration node_params { set_nip_statenames($1) }
 |            labelDeclaration node_params { set_nip_label($1) }
+|            nextDeclaration node_params { set_nip_next($1) }
 |            positionDeclaration node_params
 ;
 
@@ -125,6 +141,8 @@ parameters:    /* end of definitions */
 labelDeclaration:     token_label '=' QUOTED_STRING ';' { $$ = $3 }
 ;
 
+nextDeclaration:      token_next '=' QUOTED_STRING ';' { $$ = $3 }
+;
 
 /* JJT: cardinality == nip_strings_parsed ? */
 statesDeclaration:    token_states '=' '(' strings ')' ';' { 
@@ -231,18 +249,10 @@ dataList: token_data '=' '(' numbers ')' ';' { $$ = make_double_array() }
 
 %%
 /* Lexical analyzer */
-/* JJT: I did some reading. Might get nasty, if there has to be a token 
- *      for a potential array and yylval becomes a double array... Only 
- *      other option: leave the creation of an array to the parser. But 
- *      how can you add elements dynamically? Cardinality & stuff?
- *      List -> Array and Array -> Potential at the end of each 
- *      potentialDeclaration? 
- *
- *      yylex will be able to parse strings i.e. strings are terminals: 
+/*
+ *      yylex is able to parse strings i.e. strings are terminals: 
  *      "this is a string": char* -> [t, h, i, s, ... , g, \0] as lvalue 
- *
- *      BTW: How does the graph framework fit into this? All the structure 
- *      is more or less implicitly defined :-( */
+ */
 
 #include <ctype.h>
 
@@ -338,11 +348,16 @@ yylex (void)
       return token_states;
     }
     /* position */
-    if(tokenlength == 8 &&
-       strncmp("position", token, 8) == 0){
-      free(token);
+    if(tokenlength == 8){
+      if(strncmp("position", token, 8) == 0){
+	free(token);
 
-      return token_position;
+	return token_position;
+      }else if(strncmp("NIP_next", token, 8) == 0){
+	free(token);
+
+	return token_next;
+      }
     }
     /* End of literal string tokens */
 

@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser and for other parsers.
- * $Id: parser.h,v 1.33 2004-06-30 10:46:38 mvkorpel Exp $
+ * $Id: parser.h,v 1.34 2004-06-30 12:43:32 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -47,6 +47,15 @@ struct initDataList {
 
 typedef struct initDataList initDataElement;
 typedef initDataElement *initDataLink;
+
+struct time_init_list {
+  Variable var;
+  char* next;
+  struct time_init_list *fwd;
+};
+
+typedef struct time_init_list time_init_element;
+typedef time_init_element *time_init_link;
 
 typedef struct {
   char *name;
@@ -127,13 +136,14 @@ char *next_token(int *token_length);
 int add_symbol(Variable v);
 
 
-/* Gets the parsed variable according to the symbol. */
-Variable get_variable(char *symbol);
-
-
 /* Adds a potential and the correspondent variable references into a list.
  * The "ownership" of the vars[] array changes! */
 int add_initData(potential p, Variable child, Variable* parents);
+
+
+/* Adds information about the time relations between "time slices".
+ */
+int add_time_init(Variable var, char* next);
 
 
 /* Adds a number into the list of parsed numbers. */
@@ -177,6 +187,10 @@ int reset_symbols();
 int reset_initData();
 
 
+/* Frees some memory after information is no longer needed. */
+int reset_timeinit();
+
+
 /* Initialises a new graph. */
 void init_new_Graph();
 
@@ -184,6 +198,11 @@ void init_new_Graph();
 /* Inserts the parsed variables and their relations into the graph.
  * Returns an error code. (0 is O.K.) */
 int parsedVars2Graph();
+
+
+/* Adds time relations to Variables.
+ */
+int time2Vars();
 
 
 /* Constructs the join tree from the graph (which is hopefully ready)
@@ -207,6 +226,9 @@ char** get_nip_statenames();
 void set_nip_label(char *label);
 char* get_nip_label();
 
+
+void set_nip_next(char *next);
+char* get_nip_next();
 
 int get_nip_symbols_parsed();
 
