@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.43 2004-06-11 13:53:29 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.44 2004-06-14 08:41:16 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -98,6 +98,9 @@ int add_Sepset(Clique c, Sepset s){
 }
 
 
+/*
+ * ATTENTION! Check what this does when num_of_vars == 0.
+ */
 Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   Sepset s = (Sepset) malloc(sizeof(sepsettype));
   s->cliques = (Clique *) calloc(2, sizeof(Clique));
@@ -528,5 +531,61 @@ Clique find_family(Clique *cliques, int num_of_cliques,
   }
 
   return NULL;
+
+}
+
+
+void find_sepsets(Clique *cliques, int num_of_cliques){
+
+  int i, j;
+
+  for(i = 0; i < num_of_cliques - 1; i++)
+
+    for(j = i + 1; j < num_of_cliques; j++){
+
+
+
+    }
+
+}
+
+
+int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
+
+  int i, j;
+  int max_vars = cl2->p->num_of_vars;
+  int realsize = 0;
+  Variable *isect;
+
+  if(cl1->p->num_of_vars < max_vars)
+    max_vars = cl1->p->num_of_vars;
+
+  isect = (Variable *) calloc(max_vars, sizeof(Variable));
+
+  if(!isect){
+    fprintf(stderr, "In Clique.c: calloc failed.\n");
+    return ERROR_OUTOFMEMORY;
+  }
+
+  for(i = 0; i < cl1->p->num_of_vars; i++)
+
+    for(j = 0; j < cl2->p->num_of_vars; j++){
+
+      if(equal_variables(cl1->variables[i], cl2->variables[j]))
+	isect[realsize++] = cl1->variables[i];
+    }
+
+  isect = (Variable *) realloc(isect, realsize * sizeof(Variable));
+
+  /* This should not happen. We are not making the array bigger. */
+  if(!isect){
+    fprintf(stderr, "In Clique.c: realloc failed.\n");
+    return ERROR_OUTOFMEMORY;
+  }
+
+  vars = &isect;
+  *n = realsize;
+
+  return 0;
 
 }

@@ -109,12 +109,32 @@ int var_index(Clique c, Variable v);
  * found Clique that contains all the given variables.
  * Returns NULL if no such Clique is found.
  * Parameters:
- *  - cliques : an array of cliques
+ *  - cliques : an array of Cliques
  *  - num_of_cliques : the size of the array 'cliques'
  *  - variables : an array containing the family of variables
  *  - num_of_vars : the size of the array 'variables'
  */
 Clique find_family(Clique *cliques, int num_of_cliques,
 		   Variable *variables, int num_of_vars);
+
+
+/*
+ * Constructs Sepsets and inserts them between the Cliques to form a
+ * join tree.
+ * Parameters:
+ *  - cliques : an array of Cliques
+ *  - num_of_cliques : the number of Cliques in the given array
+ */
+void find_sepsets(Clique *cliques, int num_of_cliques);
+
+
+/*
+ * Finds the intersection of two Cliques. Creates an array of those
+ * Variables that can be found in both Cliques. Remember to free the
+ * memory when the array is not needed anymore. n is the size of the
+ * intersection.
+ * Returns an error code.
+ */
+int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n);
 
 #endif /* __CLIQUE_H__ */

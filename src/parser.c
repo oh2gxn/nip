@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.29 2004-06-11 12:34:18 mvkorpel Exp $
+ * $Id: parser.c,v 1.30 2004-06-14 08:41:16 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -418,12 +418,15 @@ int parsedVars2Graph(){
 
 
 int Graph2JTree(){
-  /* Construct the join tree. */
+
+  /* Construct the Cliques. */
   nip_num_of_cliques = find_cliques(nip_graph, &nip_cliques);
 
 #ifdef DEBUG_PARSER
   printf("In parser.c: %d cliques found.\n", nip_num_of_cliques);
 #endif
+
+  /* We also need Sepsets. */
 
   return 0;
 }

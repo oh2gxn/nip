@@ -3,6 +3,7 @@
 
 #include "../Variable.h"
 #include "../Graph.h"
+#include "../Clique.h"
 
 #define PARENT(i) ((i-1)/2)
 #define LEFT(i) (2*i+1)
@@ -10,6 +11,7 @@
 
 typedef struct {
     Variable* Vs; /* Vs[0] is the variable in the array, rest are neighbours*/
+    Sepset s;
     int n; /* size (always at least 1) */
 
     int primary_key;
@@ -26,6 +28,8 @@ typedef struct {
 } Heap;
 
 Heap* build_heap(Graph* Gm);
+
+Heap* build_sepset_heap(Clique* cliques, int num_of_cliques);
 
 void heapify(Heap*, int);
 
