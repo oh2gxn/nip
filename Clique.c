@@ -176,13 +176,13 @@ int initialise(Clique c, Variable v, Variable parents[], potential p){
   int i, j = 0, k = 0;
   int extra_vars[c->p->num_of_vars - p->num_of_vars];
 
-  /* UNFINISHED! BUGS & STUFF... */
+  /* UNFINISHED! Who can make such a potential and how??? */
 
   /* initialisation with conditional distributions 
      first: select the variables */
   for(i=0; i < c->p->num_of_vars; i++){
-    if(j < p->num_of_vars &&
-       equal_variables((c->variables)[i], parents[j])) /* or v !!! */
+    if(j < (p->num_of_vars - 1) &&
+       equal_variables((c->variables)[i], parents[j])) /* or v? */
       j++;                                             /* MVK: Look down */
     else if(!equal_variables((c->variables)[i], v))
       extra_vars[k++] = i;
