@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.37 2004-11-22 16:16:07 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.38 2004-11-29 15:59:55 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -140,7 +140,14 @@ in the table equals one:
 \begin{equation}
 \sum_{v=0}^{c_V-1} \lambda_V[v] = 1.
 \end{equation}
-% some more? About relationships between variables perhaps? child-parent...
+
+The main idea of the whole system is to describe dependencies between
+variables. This is achieved by {\it graphs}, {\it potentials}, and 
+{\it cliques} presented in the following sections. Shortly, the variables
+are said to be {\it children} depending on their {\it parent} variables. A
+variable $V$ and its parents $\mathbf{\Pi}_V$ form a set of variables 
+$\mathbf{F}_V$ naturally called the {\it family of V}. There's more about
+the quantitative relationship in the following sections.
 
 \subsection{The functionality description}
 
@@ -518,7 +525,7 @@ $(i,j,k) \in [0,c_X-1]\times[0,c_{Z_2}-1]\times[0,c_{Z_3}-1]$.
 From the implementation point of view, one of the most important
 notions is that a multidimensional table can be referenced by a 
 ``flat index'' also. For example, if we assume that the first index of an
-array is the less significant one and $\mathbf{X} = \{X_1,X_2\}$, then 
+array is the least significant one and $\mathbf{X} = \{X_1,X_2\}$, then 
 \begin{itemize}
 \item $\phi_\mathbf{X}[0] = \phi_\mathbf{X}[0][0]$, 
 \item $\phi_\mathbf{X}[i] = \phi_\mathbf{X}[i][0]$, if $i<c_{X_1}$,
@@ -531,7 +538,7 @@ array is the less significant one and $\mathbf{X} = \{X_1,X_2\}$, then
 
 
 \subsection{The functionality description}
-%The interface + how the stuff works...
+
 \subsubsection{The data structure}
 The data type \cdatatype{potential} defined in \cfilename{potential.h} is a
 pointer to a struct which contains the following fields:
@@ -721,30 +728,73 @@ its calculations. A good introduction on inference in belief networks can
 be found in~\cite{huang1994} or~\cite{Cowell1999ch}. Shortly, the graph
 implementation, described previously in this document, transforms a graph
 into a set of {\it cliques}. The cliques are connected to each other by 
-{\it sepsets} to form a structure called {\it join tree} or 
-{\it junction tree}. The inference calculations are considerably simpler to
-make according to such a secondary structure instead of the plain belief
-network.
+{\it sepsets} to form a structure called {\it join tree}, 
+{\it junction tree}, {\it clique tree}, or {\it cluster tree}. The inference 
+calculations are considerably simpler to make according to such a secondary 
+structure instead of the plain belief network.
 
 Traditionally the word clique means a complete subgraph of some graph or
 just the set of nodes in such a subgraph. In this document the word clique
 refers to a structure which contains the variables of a maximal subgraph of
 a slightly modified version the belief network at hand. A clique has also a 
 {\it potential} $\phi_\mathbf{X}$ for describing the dependencies of its 
-variables $\mathbf{X}$.
+variables $\mathbf{X}$ as a probability distribution.
 
 There are also the separator sets, or just shortly sepsets, connecting the
 cliques together. A sepset contains the intersection of the two neigbouring
 cliques i.e. the variables common to both cliques. In the inference
 machine, a sepset between cliques $\mathbf{X}$ and $\mathbf{Y}$ contains
-also two potentials $\phi_\mathbf{R}$ and $\phi_\mathbf{R}^{old}$ in
-addition to the variables $\mathbf{R} = \mathbf{X} \cap \mathbf{Y}$.
+also two potentials $\phi_\mathbf{S}$ and $\phi_\mathbf{S}^{old}$ in
+addition to the variables $\mathbf{S} = \mathbf{X} \cap \mathbf{Y}$.
 
-% The join tree property: if two cliques have a common variable, every
-% clique and sepset on the path between the two cliques have the variable
-% also. 
+\subsubsection{Properties of a join tree}
+The key idea of the inference engine is to keep the join tree in a
+consistent state. As the clique and sepset potentials encode dependencies
+between variables, there has to be so-called \textbf{local consistency},
+i.e. for each clique $\mathbf{X}$ and adjacent sepset $\mathbf{S}$:
+\begin{equation}
+\sum_{\mathbf{X} \setminus \mathbf{S}} \phi_\mathbf{X} = \phi_\mathbf{S}, 
+\label{local_consistency}
+\end{equation}
+which simply means that a sepset potential must describe the same kind of
+dependency between its variables than the neigbouring clique potential. The
+clique just has some extra variables which the sepset does not care about.
 
-% The propagation of evidence
+The intention of the join tree potentials is to encode the joint
+distribution of all the variables in the original belief network, which is
+called the \textbf{global consistency}:
+\begin{equation}
+P(\mathbf{U}) = \frac{\prod_i \phi_{\mathbf{X}_i}} 
+                     {\prod_j \phi_{\mathbf{S}_j}},
+\label{global_consistency}
+\end{equation}
+meaning that the secondary structure expresses the quantitative information 
+about the belief network.
+
+As stated in~\cite{huang1994} (and~\cite{jensen1990} before that), these 
+consistency requirements guarantee following properties:
+\begin{equation}
+\phi_\mathbf{X} = P(\mathbf{X})
+\end{equation}
+and especially for a single variable V,
+\begin{equation}
+P(V) = \sum_{\mathbf{X} \setminus \{ V \}} \phi_\mathbf{X}.
+\end{equation}
+
+As a conclusion, one can compute the probability distribution of any
+variable or joint probability distribution of its family by marginalising a 
+suitable clique potential. The inference is only a matter of inserting
+evidence into the join tree and making the potentials consistent. 
+
+One of the most important features of a the secondary structure is the join
+tree property: \textbf{if two cliques have a common variable, every clique 
+and sepset on the path between the two cliques have the variable also}. 
+Another important property is that a family of a variable can be found in a
+single clique. (This is due to the moralisation of the original network.) 
+The importance becomes clear in the message passing scheme presented below.
+
+\subsubsection{Maintaining the consistency}
+The propagation of evidence...
 
 % XXXXX To be continued...
 
@@ -1022,9 +1072,9 @@ is allocated by the function and it should be freed by the user.
 \newpage
 \section{The Hugin net language parser}
 \subsection{General}
+The structure of Hugin net files...
 
-% The structure of net files
-
+% TODO...
 
 \subsection{The functionality description}
 The parser, for reading models from Hugin net language files, is
