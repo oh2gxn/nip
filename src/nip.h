@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.9 2004-10-14 15:11:21 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.10 2004-10-15 11:47:58 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -18,11 +18,16 @@ typedef struct{
 
   Variable *next;     /* An array of the variables that will substitute 
 		       * another one in the next timeslice. */
+
   Variable *previous; /* An array of the variables that are substituted 
 		       * by some variables from the previous timeslice. 
 		       * Waste of memory? */
+
   int num_of_nexts;   /* Number of variables in the 'next' and 'previous' 
 		       * arrays*/
+
+  /* NOTE: Should there be distinct references to the cliques containing 
+   * 'nexts' and 'previous' variables? */
 }nip_type;
 
 typedef nip_type *Nip;

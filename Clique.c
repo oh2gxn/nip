@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.103 2004-09-21 12:57:38 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.104 2004-10-15 11:47:57 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -944,10 +944,10 @@ void normalise(double result[], int array_size){
 }
 
 
-int global_retraction(Variable_iterator vars, Clique* cliques, 
+int global_retraction(Variable* vars, int num_of_vars, Clique* cliques, 
 		      int num_of_cliques){
 
-  int index;
+  int i, index;
   int retval;
   Variable v;
   Clique c;
@@ -959,10 +959,8 @@ int global_retraction(Variable_iterator vars, Clique* cliques,
   jtree_dfs(cliques[0], retract_Clique, retract_Sepset);
 
   /* Enter evidence back to the join tree. */
-  v = next_Variable(&vars);
-  
-  while(v != NULL){
-    
+  for(i = 0; i < num_of_vars; i++){
+    v = vars[i];
     c = find_family(cliques, num_of_cliques, &v, 1);
     index = var_index(c, v);
 
@@ -971,23 +969,22 @@ int global_retraction(Variable_iterator vars, Clique* cliques,
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }
-
-    v = next_Variable(&vars);
   }
 
   return NO_ERROR;
 }
 
 
-int enter_observation(Variable_iterator vars, Clique* cliques, 
+int enter_observation(Variable* vars, int num_of_vars, Clique* cliques, 
 		      int num_of_cliques, Variable v, char *state){
   int index = get_stateindex(v, state);
 
-  return enter_i_observation(vars, cliques, num_of_cliques, v, index);
+  return enter_i_observation(vars, num_of_vars, cliques, num_of_cliques, 
+			     v, index);
 }
 
 
-int enter_i_observation(Variable_iterator vars, Clique* cliques, 
+int enter_i_observation(Variable* vars, int num_of_vars, Clique* cliques, 
 			int num_of_cliques, Variable v, int index){
   int i, retval;
   double *evidence = (double *) calloc(v->cardinality, sizeof(double));
@@ -1003,14 +1000,15 @@ int enter_i_observation(Variable_iterator vars, Clique* cliques,
     else
       evidence[i] = 0;
 
-  retval = enter_evidence(vars, cliques, num_of_cliques, v, evidence);
+  retval = enter_evidence(vars, num_of_vars, cliques, num_of_cliques, 
+			  v, evidence);
   free(evidence);
 
   return retval;
 }
 
 
-int enter_evidence(Variable_iterator vars, Clique* cliques, 
+int enter_evidence(Variable* vars, int num_of_vars, Clique* cliques, 
 		   int num_of_cliques, Variable v, double evidence[]){
   int index, i;
   int retraction = 0;
@@ -1055,7 +1053,7 @@ int enter_evidence(Variable_iterator vars, Clique* cliques,
   }
 
   if(retraction){
-    retval = global_retraction(vars, cliques, num_of_cliques);
+    retval = global_retraction(vars, num_of_vars, cliques, num_of_cliques);
     if(retval != NO_ERROR)
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return(retval);

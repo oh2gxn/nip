@@ -81,11 +81,13 @@ static void test_evidence(Clique* cliques, int num_of_cliques,
 #endif
 
 #ifndef DEBUG_BISONTEST
+  /* FIXME (copy some code from parser.c line 1080-1090) */
   enter_evidence(get_first_variable(), cliques, num_of_cliques, 
 		 observed, data);
 #endif
 
 #ifdef DEBUG_BISONTEST
+  /* FIXME (copy some code from parser.c line 1080-1090) */
   evidence_retval = enter_evidence(get_first_variable(), cliques, 
 				   num_of_cliques, observed, data);
   printf("\n\nEntered evidence into ");

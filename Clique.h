@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.50 2004-09-21 12:57:38 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.51 2004-10-15 11:47:57 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -130,7 +130,7 @@ void normalise(double result[], int array_size);
 
 
 /* Method for backing away from impossibilities in observation. */
-int global_retraction(Variable_iterator vars, Clique* cliques, 
+int global_retraction(Variable* vars, int num_of_vars, Clique* cliques, 
 		      int num_of_cliques);
 
 
@@ -139,7 +139,7 @@ int global_retraction(Variable_iterator vars, Clique* cliques,
  * The observed state of the variable is given as a string.
  * Returns an error code.
  */
-int enter_observation(Variable_iterator vars, Clique* cliques, 
+int enter_observation(Variable* vars, int num_of_vars, Clique* cliques, 
 		      int num_of_cliques, Variable v, char *state);
 
 
@@ -149,7 +149,7 @@ int enter_observation(Variable_iterator vars, Clique* cliques,
  * (See get_stateindex() at Variable.h)
  * Returns an error code.
  */
-int enter_i_observation(Variable_iterator vars, Clique* cliques, 
+int enter_i_observation(Variable* vars, int num_of_vars, Clique* cliques, 
 			int num_of_cliques, Variable v, int index);
 
 
@@ -159,7 +159,7 @@ int enter_i_observation(Variable_iterator vars, Clique* cliques,
  * This function might do a global retraction.
  * Returns an error code.
  */
-int enter_evidence(Variable_iterator vars, Clique* cliques, 
+int enter_evidence(Variable* vars, int num_of_vars, Clique* cliques, 
 		   int num_of_cliques, Variable v, double evidence[]);
 
 

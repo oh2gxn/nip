@@ -29,12 +29,9 @@
 int main(int argc, char *argv[]){
 
   char** tokens = NULL;
-  int** data = NULL;
   int* cardinalities = NULL;
   int* temp_vars = NULL;
   int i, j, k, m, n, retval, t = 0;
-  int num_of_hidden = 0;
-  int num_of_nexts = 0;
   double** result; /* probs of the hidden variables */  
 
   Nip model = NULL;
@@ -45,14 +42,10 @@ int main(int argc, char *argv[]){
      potential temp_potential;
      potential reordered;
   */
-  Variable *hidden = NULL;
-  Variable *next = NULL;
-  Variable *previous = NULL;
   Variable temp = NULL;
   Variable interesting = NULL;
-  Variable_iterator it = NULL;
 
-  datafile* timeseries = NULL;
+  Timeseries ts = NULL;
 
   /*************************************/
   /* Some experimental timeslice stuff */
@@ -77,166 +70,59 @@ int main(int argc, char *argv[]){
   /*****************************/
   /* read the data from a file */
   /*****************************/
-  timeseries = open_datafile(argv[2], ',', 0, 1);
-  if(timeseries == NULL){
+  ts = read_timeseries(model, argv[2]);
+  if(ts == NULL){
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
     fprintf(stderr, "%s\n", argv[2]);
+    free_model(model);
     return -1;
   }
 
 
-  /* Figure out the number of hidden variables and variables 
-   * that substitute some other variable in the next timeslice. */
-  it = model->first_var;
-  temp = next_Variable(&it);
-  while(temp != NULL){
-    j = 1;
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(equal_variables(temp, get_Variable(model, 
-					    timeseries->node_symbols[i])))
-	j = 0;
-    if(j)
-      num_of_hidden++;
-
-    if(temp->next)
-      num_of_nexts++;
-
-    temp = next_Variable(&it);
-  }
-
-  assert(num_of_hidden == (model->num_of_vars - timeseries->num_of_nodes));
-
-  /* Allocate arrays for hidden variables. */
-  hidden = (Variable *) calloc(num_of_hidden, sizeof(Variable));
-  if(!hidden){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return 1;
-  }
-
-  if(num_of_nexts > 0){
-
-    next = (Variable *) calloc(num_of_nexts, sizeof(Variable));
-    if(!next){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      free(hidden);
-      return 1;
-    }
-
-    previous = (Variable *) calloc(num_of_nexts, sizeof(Variable));
-    if(!previous){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      free(hidden);
-      free(next);
-      return 1;
-    }
-
-    cardinalities = (int*) calloc(num_of_nexts, sizeof(int));
+  /* Allocate an array */
+  if(ts->num_of_nexts > 0){
+    cardinalities = (int*) calloc(ts->num_of_nexts, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      free(hidden);
-      free(next);
-      free(previous);
-      return 1;
+      free_model(model);
+      free_timeseries(ts);
+      return -1;
     }
   }
 
-  /* Fill the arrays */
-  it = model->first_var;
-  temp = next_Variable(&it);
+  /* Fill the array */
   k = 0;
-  m = 0;
-  n = 0;
-  while(temp != NULL){
-    j = 1;
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(equal_variables(temp, get_Variable(model,
-					    timeseries->node_symbols[i]))){
-	j = 0;
-	break;
-      }
-    if(j)
-      hidden[k++] = temp;
-
-    if(temp->next){
-      next[m] = temp;
-      previous[m] = temp->next;
-      cardinalities[m] = number_of_values(temp);
-      m++;
-    }
-
-    temp = next_Variable(&it);
+  for(i = 0; i < ts->num_of_hidden; i++){
+    temp = ts->hidden[i];
+    if(temp->next)
+      cardinalities[k++] = number_of_values(temp);
   }
   
 
-  /* Check one little detail :) */
-  j = 1;
-  for(i = 1; i < num_of_nexts; i++)
-    if(get_id(previous[i-1]) > get_id(previous[i]))
-      j = 0;
-  assert(j);
-
-
-  /* Allocate some space for data */
-  data = (int**) calloc(timeseries->datarows, sizeof(int*));
-  if(!data){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return 1;
-  }
-  for(t = 0; t < timeseries->datarows; t++){
-    data[t] = (int*) calloc(timeseries->num_of_nodes, sizeof(int));
-    if(!(data[t])){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      return 1;
-    }
-  }
-
-
   /* Allocate some space for filtering */
-  result = (double**) calloc(num_of_hidden, sizeof(double*));
+  result = (double**) calloc(ts->num_of_hidden, sizeof(double*));
   if(!result){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
   
-  for(i = 0; i < num_of_hidden; i++){
-    result[i] = (double*) calloc(number_of_values(hidden[i]), sizeof(double));
+  for(i = 0; i < ts->num_of_hidden; i++){
+    result[i] = (double*) calloc(number_of_values(ts->hidden[i]), 
+				 sizeof(double));
     if(!result[i]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
     }
   }
-  
-  
-  
-  /* Fill the data array */
-  for(t = 0; t < timeseries->datarows; t++){
-    retval = nextline_tokens(timeseries, ',', &tokens); /* 2. Read */
-    assert(retval == timeseries->num_of_nodes);
-
-    /* 3. Put into the data array */
-    for(i = 0; i < retval; i++){
-      data[t][i] = 
-	get_stateindex(get_Variable(model, 
-				    timeseries->node_symbols[i]), 
-		       tokens[i]);
-
-      /* Q: Should missing data be allowed?   A: Yes. */
-      /* assert(data[t][i] >= 0); */
-    }
-
-    for(i = 0; i < retval; i++) /* 4. Dump away */
-      free(tokens[i]);
-    free(tokens); /* added 14.10.2004 */
-  }
 
 
   /* Allocate some space for the intermediate potentials */
-  timeslice_sepsets = (potential *) calloc(timeseries->datarows + 1, 
-					   sizeof(potential));
+  timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
 
   /* Initialise intermediate potentials */
-  for(t = 0; t <= timeseries->datarows; t++){
-    timeslice_sepsets[t] = make_potential(cardinalities, num_of_nexts, NULL);
+  for(t = 0; t <= ts->length; t++){
+    timeslice_sepsets[t] = make_potential(cardinalities, ts->num_of_nexts, 
+					  NULL);
   }
   free(cardinalities);
 
@@ -259,37 +145,35 @@ int main(int argc, char *argv[]){
 
   printf("## Forward phase ##\n");  
 
-  for(t = 0; t < timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
+  for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t+1);
 
 
     /* Put some data in */
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(data[t][i] >= 0)
-	enter_i_observation(model->first_var, model->cliques, 
-			    model->num_of_cliques, 
-			    get_Variable(model, 
-					 timeseries->node_symbols[i]), 
-			    data[t][i]);
-
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			    ts->observed[i], ts->data[t][i]);
 
 
     if(t > 0){
       /* Finish the message pass between timeslices */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       previous, num_of_nexts);
+				       model->previous, model->num_of_nexts);
       assert(clique_of_interest != NULL);
       temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
-				num_of_nexts, sizeof(int));
+				model->num_of_nexts, sizeof(int));
       if(!temp_vars){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	return 1;
       }
       j = 0; k = 0;
       for(i=0; i < clique_of_interest->p->num_of_vars; i++){
-	if(j < num_of_nexts &&
-	   equal_variables((clique_of_interest->variables)[i], previous[j]))
+	if(j < model->num_of_nexts &&
+	   equal_variables((clique_of_interest->variables)[i], 
+			   model->previous[j]))
 	  j++;
 	else {
 	  temp_vars[k] = i;
@@ -311,13 +195,13 @@ int main(int argc, char *argv[]){
 
 
     /* Print some intermediate results */
-    for(i = 0; i < num_of_hidden; i++){
+    for(i = 0; i < ts->num_of_hidden; i++){
       
       /*********************************/
       /* Check the result of inference */
       /*********************************/
 
-      interesting = hidden[i];
+      interesting = ts->hidden[i];
       
       /* 1. Find the Clique that contains the family of 
        * the interesting Variables */
@@ -345,10 +229,10 @@ int main(int argc, char *argv[]){
     /* Start a message pass between timeslices */
     /* NOTE: Let's hope the "next" variables are in the same clique! */
     clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				     next, num_of_nexts);
+				     model->next, model->num_of_nexts);
     assert(clique_of_interest != NULL);
     temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
-			      num_of_nexts, sizeof(int));
+			      model->num_of_nexts, sizeof(int));
     if(!temp_vars){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
@@ -357,8 +241,9 @@ int main(int argc, char *argv[]){
     m = 0;
     n = 0;
     for(j=0; j < clique_of_interest->p->num_of_vars; j++){
-      if(m < num_of_nexts &&
-	 equal_variables((clique_of_interest->variables)[j], next[m])) /* ? */
+      if(m < model->num_of_nexts &&
+	 equal_variables((clique_of_interest->variables)[j], 
+			 model->next[m])) /* ? */
 	m++;
       else {
 	temp_vars[n] = j;
@@ -388,45 +273,44 @@ int main(int argc, char *argv[]){
   reset_model(model);
   
   
-  for(t = timeseries->datarows - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
+  for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t+1);
 
 
 #ifdef TEST2
-    if(t == timeseries->datarows - 1){ /* The last timeslice */
+    if(t == ts->length - 1){ /* The last timeslice */
 #endif
     /* Put some evidence in */
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(data[t][i] >= 0)
-	enter_i_observation(model->first_var, model->cliques, 
-			    model->num_of_cliques, 
-			    get_Variable(model, 
-					 timeseries->node_symbols[i]), 
-			    data[t][i]);
+    for(i = 0; i < ts->num_of_nodes; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			    ts->observed[i], ts->data[t][i]);
 #ifdef TEST2
     }
 #endif
     
 
 #ifdef TEST
-    if(t == timeseries->datarows - 1){ /* The last timeslice */
+    if(t == ts->length - 1){ /* The last timeslice */
 #endif
     /* Pass the message from the past */
     if(t > 0){
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       previous, num_of_nexts);
+				       model->previous, model->num_of_nexts);
       assert(clique_of_interest != NULL);
       temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
-				num_of_nexts, sizeof(int));
+				model->num_of_nexts, sizeof(int));
       if(!temp_vars){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	return 1;
       }
       j = 0; k = 0;
       for(i=0; i < clique_of_interest->p->num_of_vars; i++){
-	if(j < num_of_nexts &&
-	   equal_variables((clique_of_interest->variables)[i], previous[j]))
+	if(j < model->num_of_nexts &&
+	   equal_variables((clique_of_interest->variables)[i], 
+			   model->previous[j]))
 	  j++;
 	else {
 	  temp_vars[k] = i;
@@ -449,20 +333,20 @@ int main(int argc, char *argv[]){
   
 
     /* Pass the message from the future */
-    if(t < timeseries->datarows - 1){
+    if(t < ts->length - 1){
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       next, num_of_nexts);
+				       model->next, model->num_of_nexts);
       assert(clique_of_interest != NULL);
       temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
-				num_of_nexts, sizeof(int));
+				model->num_of_nexts, sizeof(int));
       if(!temp_vars){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	return 1;
       }
       j = 0; k = 0;
       for(i=0; i < clique_of_interest->p->num_of_vars; i++){
-	if(j < num_of_nexts && 
-	   equal_variables((clique_of_interest->variables)[i], next[j]))
+	if(j < model->num_of_nexts && 
+	   equal_variables((clique_of_interest->variables)[i], model->next[j]))
 	  j++;
 	else
 	  temp_vars[k++] = i;
@@ -485,10 +369,10 @@ int main(int argc, char *argv[]){
     
 
     /* Print some final results */
-    for(i = 0; i < num_of_hidden; i++){
+    for(i = 0; i < ts->num_of_hidden; i++){
       
       /* 1. Decide which Variable you are interested in */
-      interesting = hidden[i];
+      interesting = ts->hidden[i];
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
@@ -514,10 +398,10 @@ int main(int argc, char *argv[]){
     if(t > 0){
       /* Start a message pass between timeslices */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       previous, num_of_nexts);
+				       model->previous, model->num_of_nexts);
       assert(clique_of_interest != NULL);
       temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
-				num_of_nexts, sizeof(int));
+				model->num_of_nexts, sizeof(int));
       if(!temp_vars){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	return 1;
@@ -526,8 +410,9 @@ int main(int argc, char *argv[]){
       m = 0;
       n = 0;
       for(j=0; j < clique_of_interest->p->num_of_vars; j++){
-	if(m < num_of_nexts &&
-	   equal_variables((clique_of_interest->variables)[j], previous[m]))
+	if(m < model->num_of_nexts &&
+	   equal_variables((clique_of_interest->variables)[j], 
+			   model->previous[m]))
 	  m++;
 	else {
 	  temp_vars[n] = j;
@@ -546,26 +431,17 @@ int main(int argc, char *argv[]){
 
 
 
-
   free_model(model);
 
-  for(t = 0; t < timeseries->datarows; t++)
-    free(data[t]);
-  free(data);
-
-  for(i = 0; i < num_of_hidden; i++)
+  for(i = 0; i < ts->num_of_hidden; i++)
     free(result[i]);
   free(result);
 
-  for(t = 0; t <= timeseries->datarows; t++)
+  for(t = 0; t <= ts->length; t++)
     free_potential(timeslice_sepsets[t]);
   free(timeslice_sepsets);
 
-  close_datafile(timeseries);
+  free_timeseries(ts);
   
-  free(hidden);
-  free(next);
-  free(previous);  
-
   return 0;
 }

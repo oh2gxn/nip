@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.85 2004-09-21 12:57:38 jatoivol Exp $
+ * $Id: parser.c,v 1.86 2004-10-15 11:47:58 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1067,9 +1067,29 @@ int Graph2JTree(){
 
 
 int parsedPots2JTree(){
-  int i; 
+  int i, nvars; 
   int retval;
   initDataLink initlist = nip_first_initData;
+  Variable* vars;
+  Variable var;
+  Variable_iterator it;
+
+  /* <ugly patch> */
+  nvars = total_num_of_vars();
+  vars = (Variable*) calloc(nvars, sizeof(Variable));
+  if(!vars){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  i = 0;
+  it = get_first_variable();
+  var = next_Variable(&it);
+  while(var){
+    vars[i++] = var;
+    var = next_Variable(&it);
+  }
+  /* <\ugly patch> */
 
   while(initlist != NULL){
     
@@ -1100,7 +1120,7 @@ int parsedPots2JTree(){
 	}
       }
       else{
-	retval = enter_evidence(get_first_variable(), nip_cliques, 
+	retval = enter_evidence(vars, nvars, nip_cliques, 
 				nip_num_of_cliques, initlist->child, 
 				initlist->data->data);
 	if(retval != NO_ERROR){
@@ -1115,6 +1135,7 @@ int parsedPots2JTree(){
     initlist = initlist->fwd;
   }
 
+  free(vars);
   return NO_ERROR;
 }
 

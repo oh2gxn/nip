@@ -11,9 +11,7 @@
 int main(int argc, char *argv[]){
 
   char** tokens = NULL;
-  int** data = NULL;
   int i, j, k, l, retval, t = 0;
-  int num_of_hidden = 0;
   double** quotient = NULL;
   double*** result = NULL; /* probs of the hidden variables */
 
@@ -23,9 +21,8 @@ int main(int argc, char *argv[]){
   Variable *hidden = NULL;
   Variable temp = NULL;
   Variable interesting = NULL;
-  Variable_iterator it = NULL;
 
-  datafile* timeseries = NULL;
+  Timeseries ts = NULL;
 
   /*************************************/
   /* Some experimental timeslice stuff */
@@ -50,8 +47,8 @@ int main(int argc, char *argv[]){
   /*****************************/
   /* read the data from a file */
   /*****************************/
-  timeseries = open_datafile(argv[2], ',', 0, 1); /* 1. Open */
-  if(timeseries == NULL){
+  ts = read_timeseries(model, argv[2]); /* 1. Open */
+  if(ts == NULL){
     free_model(model);
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
     fprintf(stderr, "%s\n", argv[2]);
@@ -59,73 +56,15 @@ int main(int argc, char *argv[]){
   }
 
 
-  /* Figure out the number of hidden variables and variables that substitute
-   * some other variable in the next timeslice. */
-  it = model->first_var;
-  temp = next_Variable(&it);
-  while(temp != NULL){
-    j = 1;
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(equal_variables(temp, get_Variable(model, 
-					    timeseries->node_symbols[i])))
-	j = 0;
-    if(j)
-      num_of_hidden++;
-    temp = next_Variable(&it);
-  }
-
-  assert(num_of_hidden == (model->num_of_vars - timeseries->num_of_nodes));
-
-  /* Allocate arrays for hidden variables. */
-  hidden = (Variable *) calloc(num_of_hidden, sizeof(Variable));
-  if(!hidden){
-    free_model(model);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return 1;
-  }
-
-  /* Fill the arrays */
-  it = model->first_var;
-  temp = next_Variable(&it);
-  i = 0;
-  l = 0;
-  while(temp != NULL){
-    j = 1;
-    for(k = 0; k < timeseries->num_of_nodes; k++)
-      if(equal_variables(temp, get_Variable(model, 
-					    timeseries->node_symbols[k])))
-	j = 0;
-    if(j)
-      hidden[l++] = temp;
-    temp = next_Variable(&it);
-  }
-  
-
-  /* Allocate some space for data */
-  data = (int**) calloc(timeseries->datarows, sizeof(int*));
-  if(!data){
-    free_model(model);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return 1;
-  }
-  for(t = 0; t < timeseries->datarows; t++){
-    data[t] = (int*) calloc(timeseries->num_of_nodes, sizeof(int));
-    if(!(data[t])){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      return 1;
-    }
-  }
-
-
   /* Allocate some space for filtering */
-  result = (double***) calloc(timeseries->datarows + 1, sizeof(double**));
+  result = (double***) calloc(ts->datarows + 1, sizeof(double**));
   quotient = (double**) calloc(num_of_hidden, sizeof(double*));
   if(!(result && quotient)){
     free_model(model);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
-  for(t = 0; t < timeseries->datarows + 1; t++){
+  for(t = 0; t < ts->datarows + 1; t++){
     result[t] = (double**) calloc(num_of_hidden, sizeof(double*));
     if(!result[t]){
       free_model(model);
@@ -153,34 +92,13 @@ int main(int argc, char *argv[]){
     }
   }
 
-  /* Fill the data array */
-  for(t = 0; t < timeseries->datarows; t++){
-    retval = nextline_tokens(timeseries, ',', &tokens); /* 2. Read */
-    assert(retval == timeseries->num_of_nodes);
-
-    /* 3. Put into the data array */
-    for(i = 0; i < retval; i++){
-      data[t][i] = 
-	get_stateindex(get_Variable(model, timeseries->node_symbols[i]), 
-		       tokens[i]);
-
-      /* Q: Should missing data be allowed?   A: Yes. */
-      /* assert(data[t][i] >= 0); */
-    }
-
-    for(i = 0; i < retval; i++) /* 4. Dump away */
-      free(tokens[i]);
-    free(tokens);
-  }
-
-
 
   /*****************/
   /* Forward phase */
   /*****************/
   printf("## Forward phase ##\n");  
 
-  for(t = 0; t <= timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
+  for(t = 0; t <= ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t);
         
@@ -193,14 +111,14 @@ int main(int argc, char *argv[]){
     
     /* an experimental forward phase (a.k.a. filtering)... */
     /* Calculates the result values */
-    for(i = 0; i < num_of_hidden; i++){
+    for(i = 0; i < ts->num_of_hidden; i++){
       
       /*********************************/
       /* Check the result of inference */
       /*********************************/
       
       /* 1. Decide which Variable you are interested in */
-      interesting = hidden[i];
+      interesting = ts->hidden[i];
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
@@ -208,6 +126,7 @@ int main(int argc, char *argv[]){
 				       &interesting, 1);
       if(!clique_of_interest){
 	free_model(model);
+	free_timeseries(ts);
 	printf("In hmmtest.c : No clique found! Sorry.\n");
 	return 1;
       }  
@@ -225,28 +144,27 @@ int main(int argc, char *argv[]){
       printf("\n");
     }
 
-    if(t < timeseries->datarows){
+    if(t < ts->length){
       /* forget old evidence */
       reset_model(model);
 
-      for(i = 0; i < num_of_hidden; i++){
+      for(i = 0; i < ts->num_of_hidden; i++){
 	/* old posteriors become new priors */
-	temp = hidden[i];
+	temp = ts->hidden[i];
 	if(temp->next != NULL)
 	  update_likelihood(temp->next, result[t][i]);
       }
 
-      global_retraction(model->first_var, model->cliques,
-			model->num_of_cliques);
+      global_retraction(model->variables, model->num_of_vars, 
+			model->cliques, model->num_of_cliques);
 
       /* 0. Put some data in */
-      for(i = 0; i < timeseries->num_of_nodes; i++)
-	if(data[t][i] >= 0)
-	  enter_i_observation(model->first_var, model->cliques,
-			      model->num_of_cliques,
-			      get_Variable(model,
-					   timeseries->node_symbols[i]),
-			      data[t][i]);
+      for(i = 0; i < ts->num_of_nodes; i++)
+	if(ts->data[t][i] >= 0)
+	  enter_i_observation(model->variables, model->num_of_vars,
+			      model->cliques, model->num_of_cliques,
+			      ts->observed[i],
+			      ts->data[t][i]);
     }
   }
 
@@ -260,39 +178,38 @@ int main(int argc, char *argv[]){
   /* forget old evidence */
   reset_model(model);
 
-  for(t = timeseries->datarows; t >= 0; t--){ /* FOR EVERY TIMESLICE */
+  for(t = ts->length; t >= 0; t--){ /* FOR EVERY TIMESLICE */
 
     printf("-- t = %d --\n", t);
 
     if(t > 0){
-      for(i = 0; i < timeseries->num_of_nodes; i++){
-	temp = get_Variable(model, (timeseries->node_symbols)[i]);
-	if(!temp)
-	  printf("Turhaan haettiin: %s\n", timeseries->node_symbols[i]);
+      for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++){
+	temp = ts->observed[i];
 	assert(temp);
-	if(data[t - 1][i] >= 0)
-	  enter_i_observation(model->first_var, model->cliques, 
-			      model->num_of_cliques, 
+	if(ts->data[t - 1][i] >= 0)
+	  enter_i_observation(model->variables, model->num_of_vars, 
+			      model->cliques, model->num_of_cliques, 
 			      temp, 
-			      data[t - 1][i]);
+			      ts->data[t - 1][i]);
       }
 
       for(i = 0; i < num_of_hidden; i++){
-	temp = hidden[i];
+	temp = ts->hidden[i];
 	if(temp->next != NULL)
-	  enter_evidence(model->first_var, model->cliques, 
-			 model->num_of_cliques, temp->next, result[t-1][i]);
+	  enter_evidence(model->variables, model->num_of_vars, 
+			 model->cliques, model->num_of_cliques, 
+			 temp->next, result[t-1][i]);
       }
     }
     
-    if(t < timeseries->datarows){
+    if(t < ts->length){
       
-      for(i = 0; i < num_of_hidden; i++){
-	temp = hidden[i];
+      for(i = 0; i < ts->num_of_hidden; i++){
+	temp = ts->hidden[i];
 	if(temp->previous != NULL){
 	  /* search for the other index */
-	  for(k = 0; k < num_of_hidden; k++)
-	    if(equal_variables(temp->previous, hidden[k]))
+	  for(k = 0; k < ts->num_of_hidden; k++)
+	    if(equal_variables(temp->previous, ts->hidden[k]))
 	      break;
 	  
 	  /* FIXME: Get rid of the quotient array */
@@ -300,8 +217,8 @@ int main(int argc, char *argv[]){
 	  for(j = 0; j < number_of_values(temp); j++)
 	    quotient[i][j] = result[t + 1][i][j] / result[t][k][j]; 
 	  
-	  enter_evidence(model->first_var, model->cliques, 
-			 model->num_of_cliques, 
+	  enter_evidence(model->variables, model->num_of_vars, 
+			 model->cliques, model->num_of_cliques, 
 			 temp->previous, quotient[i]);
 	}
       }
@@ -316,10 +233,10 @@ int main(int argc, char *argv[]){
     /*********************************/
     /* Check the result of inference */
     /*********************************/
-    for(i = 0; i < num_of_hidden; i++){
+    for(i = 0; i < ts->num_of_hidden; i++){
       
       /* 1. Decide which Variable you are interested in */
-      interesting = hidden[i];
+      interesting = ts->hidden[i];
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
@@ -327,6 +244,7 @@ int main(int argc, char *argv[]){
 				       &interesting, 1);
       if(!clique_of_interest){
 	free_model(model);
+	free_timeseries(ts);
 	printf("In hmmtest.c : No clique found! Sorry.\n");
 	return 1;
       }  
@@ -349,24 +267,18 @@ int main(int argc, char *argv[]){
     
   }
   
-  for(t = 0; t < timeseries->datarows; t++)
-    free(data[t]);
-  free(data);
-
-  free(hidden);
-
-  for(t = 0; t < timeseries->datarows + 1; t++){
-    for(i = 0; i < num_of_hidden; i++)
+  for(t = 0; t < ts->length + 1; t++){
+    for(i = 0; i < ts->num_of_hidden; i++)
       free(result[t][i]);
     free(result[t]);
   }
-  for(i = 0; i < num_of_hidden; i++)
+  for(i = 0; i < ts->num_of_hidden; i++)
     free(quotient[i]);
 
   free(result);
   free(quotient);
 
-  close_datafile(timeseries);
+  free_timeseries(ts);
 
   free_model(model);
 

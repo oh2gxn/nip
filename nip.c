@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.20 2004-10-14 15:11:21 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.21 2004-10-15 11:47:57 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -285,9 +285,9 @@ char* get_observation(Timeseries ts, Variable v, int time){
       j = i;
 
   if(j < 0)
-    return ERROR_INVALID_ARGUMENT;
-  else
-    return v->statenames[ts->data[time][j]];
+    return NULL;
+
+  return v->statenames[ts->data[time][j]];
 }
 
 
@@ -297,15 +297,13 @@ int set_observation(Timeseries ts, Variable v, int time, char* observation){
     if(equal_variables(v, ts->observed[i]))
       j = i;
 
-  if(j < 0)
+  i = get_stateindex(v, observation);
+  /* a valid variable? a valid observation for that variable? */
+  if((j < 0) || (i < 0))
     return ERROR_INVALID_ARGUMENT;
-  else{
-    if(get_stateindex(v, observation) < 0)
-      return ERROR_INVALID_ARGUMENT;
-    else
-      ts->data[time][j] = get_stateindex(v, observation);
-    return 0; /* FIXME! */
-  }
+
+  ts->data[time][j] = i;
+  return 0;
 }
 
 
