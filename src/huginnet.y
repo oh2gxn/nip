@@ -1,9 +1,12 @@
-/* huginnet.y $Id: huginnet.y,v 1.3 2004-03-11 14:40:45 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.4 2004-03-16 10:34:22 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
 %{
 #include <stdio.h>
+#include "Graph.h"
+#include "Variable.h"
+#include "parser.h"
 %}
 
 /* BISON Declarations */
@@ -33,19 +36,23 @@ declaration:   nodedecl
              | potdecl
 ;
 
-nodedecl:      node NODEID '{' parameters  '}'
+nodedecl:      node NODEID '{' parameters  '}' {}
 ;
 
-parameters:    /* empty string */
+parameters:    /* end of definitions */
              | labeldecl parameters
              | statesdecl parameters
 	     | unknown_decl parameters
 ;
 
-labeldecl:
+labeldecl:     label '=' string ';'
 ;
 
-statesdecl:
+statesdecl:    states '=' '(' string strings ')' ';'
+;
+
+strings:       /* end of list */
+             | string strings
 ;
 
 unknown_decl:  UNKNOWN '=' value ';'
@@ -59,8 +66,15 @@ value:         string
 string:        '"' STRINGVALUE '"'
 ;
 
-list:          '(' list  ')' /* woot? */
+list:          '(' strlistitems ')'
+             | '(' numlistitems ')' 
 ;
+
+strlistitems:  /* empty */
+             | string strlistitems
+;
+
+numlistitems:  /*
 
 potdecl:       potential '{' '}' /* arbitrary array? */
 ;
