@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.26 2004-09-23 13:11:20 arasinen Exp $
+% $Id: dokumentaatio.tex,v 1.27 2004-09-23 14:02:07 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -16,6 +16,7 @@
 \usepackage{subfigure}
 \usepackage{tocbibind}
 \usepackage{fancyvrb}
+\usepackage{times}
 %\newcommand{\argmax}{\mathrm{argmax}}
 %\newcommand{\argmin}{\mathrm{argmin}}
 %\newcommand{\define}{\stackrel{\mathrm{def}}{=}}
@@ -23,8 +24,8 @@
 
 % Reminder about the style so far: 
 % - C data types     {\it unsigned long}
-% - code examples    \verb+this = is_an(example);+
-% - file names       \verb+filename.txt+
+% - code examples    \texttt{this = is_an(example);}
+% - file names       \texttt{filename.txt}
 % - defined stuff    \textbf{A_DEFINED_VALUE}
 % - parameter names  \textbf{parameter}
 % ...
@@ -35,6 +36,8 @@
 \newcommand{\cfilename}[1]{\texttt{#1}}
 \newcommand{\cdefine}[1]{\textbf{#1}}
 \newcommand{\cparameter}[1]{\textbf{#1}}
+\newcommand{\cstructfield}[1]{\textbf{#1}}
+\newcommand{\cfunction}[1]{\texttt{#1}}
 
 
 %--------------------
@@ -134,135 +137,164 @@ The idea and mathematical formulas...
 \subsection{The functionality description}
 
 \subsubsection{The data structure}
-The data type {\it Variable} defined in \verb+Variable.h+ is a pointer 
-to a struct which has the following fields: 
+The data type \cdatatype{Variable} defined in \cfilename{Variable.h} 
+is a pointer to a struct which has the following fields: 
 \begin{description}
 \item[symbol] is a short string used for identifying the variable. Maximum
 length is defined as \cdefine{VAR\_SYMBOL\_LENGTH} in
-\verb+Variable.h+. To ensure the correct operation of the system, the 
+\cfilename{Variable.h}. To ensure the correct operation of the system, the 
 symbol should be unique.
+
 \item[name] is a little longer name to describe the variable: it is
 called {\it label} in the Hugin net language files. This is NOT used for 
 identification of the variables and it doesn't need to be unique. 
-The maximum length is defined as \textbf{VAR\_NAME\_LENGTH} in 
-\verb+Variable.h+.
+The maximum length is defined as \cdefine{VAR\_NAME\_LENGTH} in 
+\cfilename{Variable.h}.
+
 \item[statenames] is an array of strings containing names for all
 possible states of the variable. The identification of data relies on
 these strings. The size of the statenames array i.e. number of
 strings should be the same as the number of states indicated by
 cardinality field described below.
+
 \item[cardinality] is a positive integer which tells how many states
 the variable can have. It plays an important role in all calculations
 so it better be correct: the value is not meant to be altered.
-\item[id] is an {\it unsigned long} used for identification inside the
-system. It is set automatically by the \verb+new_variable+ function
-and should not be tampered after that.
-\item[likelihood] is a {\it double} array describing the probability
+
+\item[id] is an \cdatatype{unsigned long} used for identification
+inside the system. It is set automatically by the \cfunction{new_variable} 
+function and should not be tampered after that.
+
+\item[likelihood] is a \cdatatype{double} array describing the probability
 distribution of the states of the variable. It is used only for
 entering evidence into the system and likelihood arrays of the latent
 variables remain filled with ones. Size of the array equals
 cardinality, of course.
+
 \item[previous] is used for describing the repetitive structure in
 timeslice models. It is a pointer to the variable which this variable
-will replace in previous timeslice. The pointer is {\it NULL} if the
-model has no repetitive structure.
-\item[next] is a same kind of pointer as \textbf{previous} above, but
-this one tells which variable will be replaced in the next timeslice.
-The \textbf{previous} and \textbf{next} pointers should be symmetrical
-i.e. if \verb+a->next == b+ then \verb+b->previous == a+.
+will replace in previous timeslice. The pointer is \cdatatype{NULL} if 
+the model has no repetitive structure.
+
+\item[next] is a same kind of pointer as \cstructfield{previous} above, 
+but this one tells which variable will be replaced in the next timeslice.
+The \cstructfield{previous} and \cstructfield{next} pointers should be 
+symmetrical i.e. if \examplecode{a->next == b} then 
+\examplecode{b->previous == a}.
 \end{description}
 
-\verb+Variable.h+ provides also data types for implementing lists of
-variables. Both \verb+varlink+ and \verb+Variable_iterator+ are
+\cfilename{Variable.h} provides also data types for implementing lists of
+variables. Both \cdatatype{varlink} and \cdatatype{Variable_iterator} are
 pointers to structs which contain following fields:
 \begin{description}
 \item[data] is the variable (i.e. pointer to a variable struct) 
 contained by the list element.
-\item[fwd] is a pointer to the next element in the list or {\it NULL}
+
+\item[fwd] is a pointer to the next element in the list or \cdatatype{NULL}
 at the end of the list.
+
 \item[bwd] is a pointer to the previous element in the list or 
-{\it NULL} at the beginning of the list.
+\cdatatype{NULL} at the beginning of the list.
 \end{description}
 Variable iterators are meant to be used the same way as list iterators
 in Java: you can get the next element contained by the list by just 
-calling \verb+next_Variable(iterator)+. On the other hand, iterators
+calling \examplecode{next_Variable(iterator)}. On the other hand, iterators
 are NOT meant to be the only reference to a list because it will
 advance in the list, pointing always to the next element and eventually
 be a null pointer.
 
 
 \subsubsection{The functions}
-The functions provided in \verb+Variable.c+ are
+The functions provided in \cfilename{Variable.c} are
 %The interface + how the stuff works...
 \begin{description}
 \item[new\_variable(symbol, name, states, cardinality)] creates a
-variable identified with the \textbf{symbol} string. The \textbf{name} 
-string will be copied as the name field of the new variable. Both the 
-\textbf{symbol} and \textbf{name} strings may be truncated to the 
-allowed length. The states of the new variable will be named according 
-to the given string array \textbf{states}. All the given strings are 
-copied, so remember to free them after they become useless.
+variable identified with the \cparameter{symbol} string. The 
+\cparameter{name} string will be copied as the name field of the new 
+variable. Both the \cparameter{symbol} and \cparameter{name} strings 
+may be truncated to the allowed length. The states of the new variable 
+will be named according to the given string array \cparameter{states}. 
+All the given strings are copied, so remember to free them after they 
+become useless.
+
 \item[copy\_variable(v)] returns an exact copy of the
-variable~\textbf{v}. Note that also the id~field is copied and 
+variable~\cparameter{v}. Note that also the id~field is copied and 
 consequently there may not be two copies of the same variable in the 
 same model.
+
 \item[free\_variable(v)] frees the memory allocated for the
-variable~\textbf{v}. 
+variable~\cparameter{v}. 
+
 \item[equal\_variables(v1, v2)] returns 0 if either of the variables
 are null. Otherwise it will tell if the variables have equal id fields
 or not.
+
 \item[get\_id(v)] will return the unsigned long id field of the 
-variable~\textbf{v}.
-\item[get\_symbol(v)] returns the symbol of the variable~\textbf{v}. It
+variable~\cparameter{v}.
+
+\item[get\_symbol(v)] returns the symbol of the variable~\cparameter{v}. It
 will not make a copy of the string so don't mess with it.
+
 \item[get\_stateindex(v, state)] tells the place of the string
-\textbf{state} in the state name array of the
-variable~\textbf{v}. This index can be used for interpreting various
+\cparameter{state} in the state name array of the
+variable~\cparameter{v}. This index can be used for interpreting various
 arrays describing probability distributions. 
+
 \item[total\_num\_of\_vars()] is used only for aiding the Hugin net 
 language file parser to return the total number of newly created 
-variables. All the variables created with \textbf{new\_variable} are 
-accumulated in a list and this function can tell the size of that list.
+variables. All the variables (created with the
+\cfunction{new\_variable} function) are accumulated in a list and
+this function can tell the size of that list.
+
 \item[get\_first\_variable()] gives the first element in the list
 of newly created variables mentioned above.
+
 \item[get\_last\_variable()] gives the last element in the list
 of newly created variables mentioned above.
+
 \item[reset\_Variable\_list()] will replace the list of recently created
-variables with {\it NULL} and set the size of the list to zero. This
+variables with \cdatatype{NULL} and set the size of the list to zero. This
 is used only for resetting the list after copying the list pointer
 to a new model. Otherwise all the models would share the same list of
 parsed variables.
+
 \item[next\_Variable(it)] will give the next variable pointed by the
-variable iterator~\textbf{it} and advance the pointer to the next
-variable in the list. The function returns {\it NULL} if the iterator
-runs out of variables.
+variable iterator~\cparameter{it} and advance the pointer to the next
+variable in the list. The function returns \cdatatype{NULL} if the 
+iterator runs out of variables.
+
 \item[get\_parser\_variable(symbol)] aids the net language parser 
-to find a variable, identified by the \textbf{symbol} string, in the 
+to find a variable, identified by the \cparameter{symbol} string, in the 
 list of newly created variables.
+
 \item[get\_variable(it, symbol)] searches the
-variable iterator~\textbf{it} for a variable identified by the string
-\textbf{symbol}. The iterator will be used by the function, so it will
+variable iterator~\cparameter{it} for a variable identified by the string
+\cparameter{symbol}. The iterator will be used by the function, so it will
 not be pointing to the beginning of any lists anymore.
+
 \item[update\_likelihood(v, likelihood)] will set the likelihood array
-of variable~\textbf{v} according to the given double array 
-\textbf{likelihood}. Size of the given array should be the same 
+of variable~\cparameter{v} according to the given double array 
+\cparameter{likelihood}. Size of the given array should be the same 
 (or more) than the cardinality of the variable.
+
 \item[reset\_likelihood(v)] fills the likelihood array of the
-variable~\textbf{v} with ones. This means that the likelihood of the
+variable~\cparameter{v} with ones. This means that the likelihood of the
 variable states will be uniform.
+
 \item[number\_of\_values(v)] returns the cardinality of the
-variable~\textbf{v}. It is the exact number of states the variable has
+variable~\cparameter{v}. It is the exact number of states the variable has
 and will always have.
 \end{description}
 
 
 \subsection{Other possibilities}
 The Hugin net language parser is made with Bison and consequently the 
-\verb+yyparse+ function is not able to return a list of variables etc. 
-This makes it awkward to pass the results of parsing to the rest of the
-program. Our solution is to create a list of parsed variables in
-\verb+Variable.c+ but it could also be at \verb+parser.c+ in order to
-avoid having weird functions like \verb+get_parser_variable+.
+\cfunction{yyparse} function is not able to return a list of
+variables etc. This makes it awkward to pass the results of parsing to
+the rest of the program. Our solution is to create a list of parsed
+variables in \cfilename{Variable.c} but it could also be at
+\cfilename{parser.c} in order to avoid having weird functions like
+\cfunction{get_parser_variable}.
 
 
 \newpage
@@ -270,7 +302,8 @@ avoid having weird functions like \verb+get_parser_variable+.
 \subsection{General}
 
 The purpose of the graphical analysis is to find an optimal set of
-clusters in the graphical model that has the join tree property. XX % miten m‰‰ritell‰‰n optimaalisuus
+clusters in the graphical model that has the join tree property. XX 
+% miten m‰‰ritell‰‰n optimaalisuus
 
 The main steps in this process are moralisation and triangulation. The
 triangulation process extracts the cliques used to build the join tree.
@@ -416,56 +449,60 @@ The idea and mathematical formulas...
 \subsection{The functionality description}
 %The interface + how the stuff works...
 \subsubsection{The data structure}
-The data type {\it potential} defined in \verb+potential.h+ is a
-pointer to a struct which contains the following fields:
+The data type \cdatatype{potential} defined in \cfilename{potential.h} 
+is a pointer to a struct which contains the following fields:
 \begin{description}
-\item[size\_of\_data] is an {\it integer} telling the total number of 
+\item[size\_of\_data] is an \cdatatype{integer} telling the total number of 
 elements in the potential. It must be the product of all the elements 
-in the \textbf{cardinality} array (or one if the number of variables 
+in the \cstructfield{cardinality} array (or one if the number of variables 
 equals zero).
-\item[cardinality] is an array of {\it integers}. The integers are the
-cardinalities of each variable the potential is related to. Thus the
-size of the array must be the same as the number of variables. Also
-the order of the cardinality array is significant because the
-variables are assumed to have a certain order.
-\item[num\_of\_vars] is an {\it integer} which tells the number of variables
-associated with the potential.
-\item[data] is the {\it double array} describing a probability
+\item[cardinality] is an array of \cdatatype{integers}. The integers
+are the cardinalities of each variable the potential is related
+to. Thus the size of the array must be the same as the number of
+variables. Also the order of the cardinality array is significant
+because the variables are assumed to have a certain order.
+\item[num\_of\_vars] is an \cdatatype{integer} which tells the number 
+of variables associated with the potential.
+\item[data] is the \cdatatype{double array} describing a probability
 distribution of the associated variables. The size of this array is in
-the \textbf{size\_of\_data} field. The data in the array is arranged
+the \cstructfield{size\_of\_data} field. The data in the array is arranged
 according to the order of the corresponding variables: the variable
-which has its cardinality first in the \textbf{cardinality} array is
-considered least significant in the sense of placing a value in the
-\textbf{data} array. 
-
+which has its cardinality first in the \cstructfield{cardinality}
+array is considered least significant in the sense of placing a value 
+in the \cstructfield{data} array. 
 \end{description}
 
 
 \subsubsection{The functions}
-The functions provided for manipulating {\it potentials} are placed in
-potential.c and are as follows:
+The functions provided for manipulating \cdatatype{potentials} are 
+placed in \cfilename{potential.c} and are as follows:
 \begin{description}
 \item[make\_potential(cardinality, num\_of\_vars, data)] creates a
 potential struct according to the parameters and returns a pointer
 to it. The resulting potential will have its cardinalities of
-variables set according to the given \textbf{cardinality} array by
+variables set according to the given \cparameter{cardinality} array by
 copying the elements in it. The number of associated variables is
-given as the integer \textbf{num\_of\_vars}. 
+given as the integer \cparameter{num\_of\_vars}. 
 
-The \textbf{data} parameter can be a null pointer or a {\it double 
-array} of the size equal to the product of the cardinalities of the 
-variables. In case of a null pointer, the potential will be
-initialised to uniform distribution. Otherwise the contents of 
-the \textbf{data} array in the potential struct will be copied from
-the given \textbf{data} array.
+The \cparameter{data} parameter can be a null pointer or a 
+\cdatatype{double array} of the size equal to the product of the 
+cardinalities of the variables. In case of a null pointer, the
+potential will be initialised to uniform distribution. Otherwise the 
+contents of the \cstructfield{data} array in the potential struct will
+be copied from the given \cparameter{data} array.
+
 \item[free\_potential(p)] frees the memory allocated for the
-potential~\textbf{p}. 
+potential~\cparameter{p}. 
+
 \item[copy\_potential(source, destination)] copies the distribution
-contained in the \textbf{source} potential to the given
-\textbf{destination} potential. Note that both of the potentials must
+contained in the \cparameter{source} potential to the given
+\cparameter{destination} potential. Note that both of the potentials must
 be already existent and otherwise equal. Use the 
-\textbf{make\_potential} function if you need an entire new copy of 
+\cfunction{make\_potential} function if you need an entire new copy of 
 a potential.
+
+% <JJT: n‰in pitk‰lle p‰‰sin s‰‰t‰misess‰>
+
 \item[get\_pvalue(p, indices)] retrieves the possibly non-normalised
 probability of the configuration of variables, described by the 
 {\it integer array} \textbf{indices}, from the potential~\textbf{p}. 
@@ -474,9 +511,11 @@ variables are assigned: $n-1$ in the array corresponds to the $n$:th
 value of the variable. The \textbf{indices} must be in the same order
 as the corresponding variables and their cardinalities in the
 potential~\textbf{p}. 
+
 \item[set\_pvalue(p, indices, value)] sets a {\it double}
 \textbf{value} in the potential~\textbf{p} the same way as 
 \verb+get_pvalue(p, indices)+ retrieves it. (See the description above.)
+
 \item[inverse\_mapping(p, flat\_index, indices)] transforms a
 so-called flat index into the {\it integer array} \textbf{indices} according 
 to the potential~\textbf{p}. A flat index is an index used for addressing
@@ -485,6 +524,7 @@ data in the potential and is therefore an integer between \verb+0+ and
 finding out which configuration of states of the variables corresponds
 to each element in the potential. Note that the \textbf{indices} array 
 is not allocated by the function.
+
 \item[general\_marginalise(source, destination, source\_vars)] is one
 of the most useful functions since it computes the marginalisation
 i.e. a sum over the variables indicated by the given {\it integer
@@ -504,6 +544,7 @@ must be arranged in ascending order and the size must equal the
 difference in the numbers of associated variables in the potentials. 
 Simply, a zero in the array tells the function to marginalise over the 
 first variable. Note that the result is not normalised.
+
 \item[total\_marginalise(source, destination, variable)] can be used
 for finding out the probability distribution of a single variable
 according to the \textbf{source} potential. The function is similar to
@@ -521,6 +562,7 @@ The place to put the resulting {\it double array}
 parameters. Size of the array must be equal (or greater) to the
 cardinality of the desired variable, so remember to allocate one
 before calling this function. Note that the result is not normalised.
+
 \item[update\_potential(numerator, denominator, target, extra\_vars)] 
 implements the multiplication of potentials. The function simply
 multiplies the elements of the \textbf{target} potential with the
@@ -541,6 +583,7 @@ fourth parameter \textbf{extra\_vars} which is an {\it integer array}.
 The array must be in ascending order. For example, a zero in the array 
 indicates that the first variable of the target potential is not
 amongst those associated with the multiplicand potentials.
+
 \item[update\_evidence(numerator, denominator, target, var)] is made
 for multiplying potentials with probability distributions of a single
 variable. The potential to be manipulated is given as the
@@ -555,6 +598,7 @@ potential and dividing with possible old evidence. The variable, whose
 distribution is to be passed into the potential, must be indicated 
 with the \textbf{var} {\it integer}. E.g. a zero tells the function 
 that the evidence is about the first variable associated with the potential.
+
 \item[init\_potential(probs, target, extra\_vars)] is essentially the
 same as the \\ \textbf{update\_potential} function. It is meant for
 multiplying the \textbf{target} potential with the given
@@ -563,6 +607,7 @@ have the same associated variables, the \textbf{extra\_vars} parameter
 should be {\it NULL}. Otherwise \textbf{extra\_vars} is an 
 {\it integer array} indicating which of the variables associated with
 the target potential are not associated with the multiplier potential.
+
 \item[print\_potential(p)] is mainly for debugging purposes. It prints 
 the contents of the potential~\textbf{p} to the standard output.
 \end{description}
