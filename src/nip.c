@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.56 2005-04-04 23:48:56 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.57 2005-04-05 12:17:27 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -36,6 +36,8 @@
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *   - another forward-like algorithm with elements of dynamic programming
+ *   - To save huge amounts of memory, could the process use some kind of 
+ *     "timeslice sepsets" for encoding the progress throughout time?
 
  
  * - EM algorithm for estimating parameters of the model
@@ -1277,7 +1279,15 @@ static int m_step(potential* parameters, Nip model){
   
   /********************************************************************
    * NOTE: What about independent variables? Should their probabilities 
-   * be uniform or do they have a prior? */
+   * be uniform or do they have a prior? If they have a prior, where it 
+   * should be stored? 
+
+   * Solutions:
+   * - initialise(x,y,..., 1)  (i.e. transient initialisation)
+   * - enter_evidence()
+   * - take "next" and "num_of_parents" fields into consideration
+   * - include the prior into the independent variables
+   */
 
   //return NO_ERROR;
 }
