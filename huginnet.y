@@ -1,15 +1,18 @@
-/* huginnet.y $Id: huginnet.y,v 1.23 2004-06-03 07:37:26 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.24 2004-06-03 09:57:01 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "Graph.h"
 #include "Variable.h"
 #include "parser.h"
 #include "errorhandler.h"
 #include "huginnet.h"
+
+#define YYERROR_VERBOSE
 %}
 
 /* BISON Declarations */
@@ -178,9 +181,7 @@ dataList: token_data '=' '(' numbers ')' ';' { $$ = $4 }
  *      is more or less implicitly defined :-( */
 
 #include <ctype.h>
-#include <stdlib.h>
 #include <errno.h>
-#include <strings.h>
 
 int
 yylex (void)
