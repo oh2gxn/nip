@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.16 2004-06-29 11:45:21 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.17 2004-06-30 13:19:00 mvkorpel Exp $
  */
 
 #include <ctype.h>
@@ -63,7 +63,7 @@ int count_tokens(const char *s, int *chars, int quoted_strings,
     }
     else if(state == 0){
       if((wspace_sep && !isspace((int)*s)) ||
-	 !wspace_sep){
+	 (!wspace_sep && *s != '\n')){
 	tokens++;	  
 	state = 1;
       }
@@ -153,7 +153,7 @@ int *tokenise(const char s[], int n, int quoted_strings,
     }
     else if(state == 0){
       if((wspace_sep && !isspace((int)ch)) ||
-	 !wspace_sep){
+	 (!wspace_sep && ch != '\n')){
 	indices[j++] = i;
 	state = 1;
       }
