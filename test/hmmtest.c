@@ -232,26 +232,28 @@ int main(int argc, char *argv[]){
 	       (interesting->statenames)[j], filtered[t][i][j]);
       printf("\n");
     }
-    
-    /* forget old evidence */
-    it = get_Variable_list();
-    while((temp = next_Variable(&it)) != NULL)
-      reset_likelihood(temp);
-    
-    for(i = 0; i < num_of_hidden; i++){
-      /* old posteriors become new priors */
-      temp = hidden[i];
-      if(temp->next != NULL)
-	update_likelihood(temp->next, filtered[t][i]);
-    }
-    
-    global_retraction(nip_cliques[0]);
 
-    /* 0. Put some data in */
-    if(t < timeseries->datarows)
+    if(t < timeseries->datarows){    
+      /* forget old evidence */
+      it = get_Variable_list();
+      while((temp = next_Variable(&it)) != NULL)
+	reset_likelihood(temp);
+      
+      for(i = 0; i < num_of_hidden; i++){
+	/* old posteriors become new priors */
+	temp = hidden[i];
+	if(temp->next != NULL)
+	  update_likelihood(temp->next, filtered[t][i]);
+      }
+      
+      global_retraction(nip_cliques[0]);
+      
+      /* 0. Put some data in */
+      
       for(i = 0; i < timeseries->num_of_nodes; i++)
 	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
 			    data[t][i]);
+    }
   }
   
   
@@ -260,113 +262,116 @@ int main(int argc, char *argv[]){
   /******************/
   /* Backward phase */
   /******************/
-  
-  printf("## Backward phase ##\n");  
 
-  /* forget old evidence */
-  it = get_Variable_list();
-  while((temp = next_Variable(&it)) != NULL)
-    reset_likelihood(temp);
-  global_retraction(nip_cliques[0]);
-
-
-  for(t = timeseries->datarows; t >= 0; t--){ /* FOR EVERY TIMESLICE */
-    
-    printf("-- t = %d --\n", t);
-    
-
-    for(i = 0; i < num_of_hidden; i++){
-      temp = hidden[i];
-      if(temp->next == NULL)
-	enter_evidence(temp, filtered[t][i]);
-    }
-
-
-    if(t < timeseries->datarows){
-      for(i = 0; i < num_of_hidden; i++){
-	temp = hidden[i];
-	if(temp->previous != NULL){
-	  /* search for the other index */
-	  for(k = 0; k < num_of_hidden; k++)
-	    if(equal_variables(temp->previous, hidden[k]))
-	      break;
-
-
-	  quotient = (double *) calloc(number_of_values(temp), sizeof(double));
-	  if(!data){
-	    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	    return 1;
-	  }
-	  
-	  for(j = 0; j < number_of_values(temp); j++){
-	    quotient[j] = smoothed[t + 1][i][j] / filtered[t][k][j]; 
-	  }
-	  enter_evidence(temp->previous, quotient);	  
-	  free(quotient);
-	}
-      }
-    }
-
-    /********************/
-    /* Do the inference */
-    /********************/
-    
-    /* 1. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-
-    /* 2. Collect evidence */
-    collect_evidence(NULL, NULL, nip_cliques[0]);
-
-    /* 3. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-
-    /* 4. Distribute evidence */
-    distribute_evidence(nip_cliques[0]);
-
-
-  
-    /*********************************/
-    /* Check the result of inference */
-    /*********************************/
-    for(i = 0; i < num_of_hidden; i++){
-      
-      /* 1. Decide which Variable you are interested in */
-      interesting = hidden[i];
-
-      /* 2. Find the Clique that contains the family of 
-       *    the interesting Variable */
-      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-				       &interesting, 1);
-      if(!clique_of_interest){
-	printf("In hmmtest.c : No clique found! Sorry.\n");
-	return 1;
-      }  
-      
-      /* 3. Marginalisation (the memory must have been allocated) */
-      marginalise(clique_of_interest, interesting, smoothed[t][i]);
-      
-      /* 4. Normalisation */
-      normalise(smoothed[t][i], number_of_values(interesting));
-	
-      /* 5. Print the result */
-      for(j = 0; j < number_of_values(interesting); j++)
-	printf("P(%s=%s) = %f\n", get_symbol(interesting),
-	       (interesting->statenames)[j], smoothed[t][i][j]);
-      printf("\n");
-    }
-    
+  if(timeseries->datarows > 1){
+    printf("## Backward phase ##\n");  
 
     /* forget old evidence */
     it = get_Variable_list();
     while((temp = next_Variable(&it)) != NULL)
       reset_likelihood(temp);
-    
     global_retraction(nip_cliques[0]);
-   
-  }
+
+
+    for(t = timeseries->datarows; t >= 0; t--){ /* FOR EVERY TIMESLICE */
+      
+      printf("-- t = %d --\n", t);
+    
+
+      for(i = 0; i < num_of_hidden; i++){
+	temp = hidden[i];
+	if(temp->next == NULL)
+	  enter_evidence(temp, filtered[t][i]);
+      }
+
+
+      if(t < timeseries->datarows){
+	for(i = 0; i < num_of_hidden; i++){
+	  temp = hidden[i];
+	  if(temp->previous != NULL){
+	    /* search for the other index */
+	    for(k = 0; k < num_of_hidden; k++)
+	      if(equal_variables(temp->previous, hidden[k]))
+		break;
+
+	    /* FIXME: Get rid of the quotient array */
+	    
+	    quotient = (double *) calloc(number_of_values(temp), 
+					 sizeof(double));
+	    if(!data){
+	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	      return 1;
+	    }
+	    
+	    for(j = 0; j < number_of_values(temp); j++){
+	      quotient[j] = smoothed[t + 1][i][j] / filtered[t][k][j]; 
+	    }
+	    enter_evidence(temp->previous, quotient);	  
+	    free(quotient);
+	  }
+	}
+      }
+      
+      /********************/
+      /* Do the inference */
+      /********************/
+      
+      /* 1. Unmark all Cliques */
+      for(i = 0; i < nip_num_of_cliques; i++)
+	unmark_Clique(nip_cliques[i]);
+      
+      /* 2. Collect evidence */
+      collect_evidence(NULL, NULL, nip_cliques[0]);
+      
+      /* 3. Unmark all Cliques */
+      for(i = 0; i < nip_num_of_cliques; i++)
+	unmark_Clique(nip_cliques[i]);
+      
+      /* 4. Distribute evidence */
+      distribute_evidence(nip_cliques[0]);
+      
+
   
+      /*********************************/
+      /* Check the result of inference */
+      /*********************************/
+      for(i = 0; i < num_of_hidden; i++){
+	
+	/* 1. Decide which Variable you are interested in */
+	interesting = hidden[i];
+	
+	/* 2. Find the Clique that contains the family of 
+	 *    the interesting Variable */
+	clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+					 &interesting, 1);
+	if(!clique_of_interest){
+	  printf("In hmmtest.c : No clique found! Sorry.\n");
+	  return 1;
+	}  
+	
+	/* 3. Marginalisation (the memory must have been allocated) */
+	marginalise(clique_of_interest, interesting, smoothed[t][i]);
+	
+	/* 4. Normalisation */
+	normalise(smoothed[t][i], number_of_values(interesting));
+	
+	/* 5. Print the result */
+	for(j = 0; j < number_of_values(interesting); j++)
+	  printf("P(%s=%s) = %f\n", get_symbol(interesting),
+		 (interesting->statenames)[j], smoothed[t][i][j]);
+	printf("\n");
+      }
+      
+      
+      /* forget old evidence */
+      it = get_Variable_list();
+      while((temp = next_Variable(&it)) != NULL)
+	reset_likelihood(temp);
+      
+      global_retraction(nip_cliques[0]);
+      
+    }
+  }
   
   return 0;
 }
