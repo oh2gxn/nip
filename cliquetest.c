@@ -32,11 +32,11 @@ int main(){
   double prob1[] = {0.25, 0.25, 0.25, 0.25};
   double prob3[] = {0.2, 0.3, 0.5};
 
-  variables[0] = new_variable(name1, 3);
-  variables[1] = new_variable(name2, 4);
-  variables[2] = new_variable(name3, 2); /* note1 */
-  variables[3] = new_variable(name4, 3);
-  variables[4] = new_variable(name5, 2);
+  variables[0] = new_variable("A", name1, 3);
+  variables[1] = new_variable("B", name2, 4);
+  variables[2] = new_variable("C", name3, 2); /* note1 */
+  variables[3] = new_variable("D", name4, 3);
+  variables[4] = new_variable("E", name5, 2);
 
   /* create some cliques and sepsets (with too many shortcuts...) 
    * This is normally the job of the graph implementation. */
