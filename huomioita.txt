@@ -102,3 +102,10 @@ Sekalaisia huomioita:
   virheellisi‰ tuloksia ensin mainitun kanssa. Toki Variablen likelihood
   pit‰‰ alustaa, mutta sen alustamattomuus ei liene syyllinen
   esimerkkitapauksen v‰‰riin tuloksiin.
+--
+
+9.7.2004 (Janne ja Mikko)
+* Jouduttiin menem‰‰n muutoksissa takaisinp‰in kolmisen tuntia. Yritettiin
+  pikaisesti integroida "Clique unmark" collect_evidenceen,
+  distribute_evidenceen yms. Kone meni rikki, mink‰ takia paluu vanhaan.
+  T‰ytyy tehd‰ loman j‰lkeen paremmin.
