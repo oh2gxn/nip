@@ -50,8 +50,13 @@ int main(int argc, char *argv[]){
     printf("Give the names of the net-file and data file, please!\n");
     return 0;
   }
-  else
+  else{
+
+    /* FIXME: this fails on 64-bit Linux */
+    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
     model = parse_model(argv[1]);
+    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
+  }
 
   if(model == NULL)
     return -1;

@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.89 2005-03-21 10:53:41 jatoivol Exp $
+ * $Id: parser.c,v 1.90 2005-03-21 12:22:58 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -109,22 +109,28 @@ datafile *open_datafile(char *filename, char separator,
   stringlink temp, temp2;
   datafile *f = NULL;
 
-  /* WTF? This causes a segmentation fault on linux machines, but only 
-   * with certain data files. Note that this piece of code does NOT 
-   * depend on the parameters... So how can this fail? */
+  /* WTF? This causes a segmentation fault on 32-bit linux machines, 
+   * but only with certain data files. Note that this piece of code 
+   * DOES NOT depend on the parameters... So how can this fail? */
   printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   f = (datafile *) malloc(sizeof(datafile));
   printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
 
-  if(!f){
+  if(f == NULL){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
+
+  /* WTF? This causes a segmentation fault on 64-bit Linux. 
+   * (not on 32-bit Linux, Irix or Mac OS X) */
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   if(write)
     f->file = fopen(filename,"w");
   else
     f->file = fopen(filename,"r");
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
+
 
   if (!f->file){
     report_error(__FILE__, __LINE__, ERROR_IO, 1);

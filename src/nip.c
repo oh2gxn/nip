@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.52 2005-03-21 10:53:40 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.53 2005-03-21 12:22:58 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -135,7 +135,7 @@ Nip parse_model(char* file){
     free(new);
     return NULL;
   }
-  
+
   j = 0;
   for(i = 0; i < new->num_of_vars; i++)  
     if(new->variables[i]->next){
@@ -155,7 +155,13 @@ Nip parse_model(char* file){
   it = get_last_variable(); /* free the list structure */
   while(it->bwd){
     it = it->bwd;
+
+    /* WTF? This causes a segmentation fault on 64-bit Linux. 
+     * I have tested that the parameter is correct and existent! */
+    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
     free(it->fwd);
+    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
+
   }
   free(it);
   reset_Variable_list();
@@ -653,7 +659,7 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
     reset_model(model);
   }
 
-  /* FIXME: this one crashes on PC:s (not on pyramid though) */
+  /* FIXME: this one crashes on 32-bit Linux */
   printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   free_potential(timeslice_sepset); 
   printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
