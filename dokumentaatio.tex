@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.10 2004-08-27 14:14:44 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.11 2004-08-30 11:20:36 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -685,22 +685,65 @@ number of the cliques has to be given to the function as the {\it
 integer} \textbf{num\_of\_cliques}.
 
 \item[enter\_observation(vars, cliques, num\_of\_cliques, v, state)] 
+is made for incorporating hard evidence into a join tree. The observed
+state of the {\it Variable}~\textbf{v} is given as a {\it string} named
+\textbf{state}. The function needs also the {\it Variable\_iterator}
+\textbf{vars}, {\it Clique array} \textbf{cliques} and the size of it
+as the {\it integer} \textbf{num\_of\_cliques}. The reference
+\textbf{vars} to the list of all variables is needed because of the
+possible global retraction. The function \textbf{global\_retraction}
+is called automatically if needed.
 
 \item[enter\_i\_observation(vars, cliques, num\_of\_cliques, v, index)]
+is made for entering an observation as an {\it integer} into a join
+tree. This is equal to the function \textbf{enter\_observation} but
+instead of telling the observation as a string, the user should encode
+the observation as the {\it integer} \textbf{index}. A zero
+corresponds to the first state of the variable defined in the Hugin
+net file. (See the \textbf{get_stateindex} function also.)
 
 \item[enter\_evidence(vars, cliques, num\_of\_cliques, v, evidence)]
+is made for entering soft evidence into a join tree. (Note that hard
+evidence is only a special case of soft evidence.) The function is
+similar to the \textbf{enter\_observation} and
+\textbf{enter\_i\_observation} functions above but instead of
+describing a single state, the user must specify a probability
+distribution as the {\it double array} \textbf{evidence}. The array is
+assumed to be normalised.
 
 \item[find\_family(cliques, num\_of\_cliques, variables, num\_of\_vars)]
+tries to find a {\it Clique} which contains all the variables (or
+more) specified in the {\it Variable array} \textbf{variables}. The 
+number of variables has to be given as the fourth parameter 
+\textbf{num\_of\_vars}. The function returns {\it NULL} if there are
+no suitable cliques in the specified {\it array of Cliques} 
+(\textbf{cliques}) within the given size \textbf{num\_of\_cliques}.
 
-\item[find\_sepsets(cliques, num\_of\_cliques)]
+\item[find\_sepsets(cliques, num\_of\_cliques)] creates and inserts 
+the sepsets between the {\it Cliques} specified in the array 
+\textbf{cliques}. The size of the array must be given as the 
+{\it integer} \textbf{num\_of\_cliques}. This function is meant to be
+used only once after all of the cliques have been created. 
+Consequently, it is not intended for repairing partially created 
+join trees.
 
-\item[print\_Clique(c)]
+\item[print\_Clique(c)] is meant for debugging purposes. It prints the
+symbols of the variables associated with the {\it Clique}~\textbf{c}
+to the standard output.
 
-\item[print\_Sepset(s)]
+\item[print\_Sepset(s)] is meant for debugging purposes. It prints the
+symbols of the variables associated with the {\it Sepset}~\textbf{s}
+to the standard output.
 
-\item[clique\_intersection(cl1, cl2, vars, n)]
+\item[clique\_intersection(cl1, cl2, vars, n)] finds out which
+variables are common to the specified {\it Cliques}~\textbf{cl1}
+and~\textbf{cl2}. The parameter \textbf{vars} is a {\it pointer to an
+array of Variables} and the array will contain the found variables 
+after the execution. The size of the array is written to the place 
+pointed by the {\it integer pointer}~\textbf{n}. The resulting array
+is allocated by the function and it should be freed by the user.
 
-\item[get\_num\_of\_cliques()]
+\item[get\_num\_of\_cliques()] 
 
 \item[get\_cliques\_pointer()]
 
