@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.30 2004-08-17 13:55:03 mvkorpel Exp $
+# $Id: Makefile,v 1.31 2004-08-23 06:44:08 mvkorpel Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -40,7 +40,7 @@ LD=gcc
 LDFLAGS=
 #LDFLAGS=-v
 YY=bison
-YYFLAGS=-v
+YYFLAGS=
 
 # Link the math library in with the program, in case you use the
 # functions in <math.h>
