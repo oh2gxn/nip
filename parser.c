@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.91 2005-04-05 12:17:27 jatoivol Exp $
+ * $Id: parser.c,v 1.92 2005-04-05 14:02:45 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1124,8 +1124,10 @@ int parsedPots2JTree(){
       }
       else{ /* Priors of the independent variables are entered as evidence. */
 
-	/** NOTE: I believe this is somehow wrong, because all parameters
-	 *  of the model (including priors) should be remembered. **/
+	/***************************************************************
+	 * NOTE: I believe this is somehow wrong, because all parameters
+	 * of the model (including priors) should be remembered. - JJT
+	 */
 
 	retval = enter_evidence(vars, nvars, nip_cliques, 
 				nip_num_of_cliques, initlist->child, 

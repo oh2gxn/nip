@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.57 2005-04-05 12:17:27 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.58 2005-04-05 14:02:45 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1265,6 +1265,8 @@ static int e_step(TimeSeries ts, potential* parameters){
 
 static int m_step(potential* parameters, Nip model){
   int i, j, k;
+  Clique fam_clique = NULL;
+  Variable child = NULL;
   
   /* 1. Normalise parameters by dividing with the sums over child variables */
   for(i = 0; i < model->num_of_children; i++){
@@ -1275,7 +1277,23 @@ static int m_step(potential* parameters, Nip model){
   }
 
   /* 2. Initialise the model with the new parameters */
-  return ERROR_GENERAL; /* Unfinished... */
+  for(i = 0; i < model->num_of_children; i++){
+    child = model->children[i];
+    fam_clique = find_family(model->cliques, model->num_of_cliques, child);
+
+    /* Q: Should the clique potential be initially uniform? */
+
+    /***************************************************************/
+    /* HEY! parents[] NOT assumed to be in any particular order!   */
+    /* But the variables of parameters[i] are assumed to be in the */
+    /* same order as in the clique!                                */
+    /***************************************************************/
+    k = initialise(fam_clique, child, child->parents, parameters[i], 0);
+    if(k != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
+  }
   
   /********************************************************************
    * NOTE: What about independent variables? Should their probabilities 
@@ -1289,7 +1307,7 @@ static int m_step(potential* parameters, Nip model){
    * - include the prior into the independent variables
    */
 
-  //return NO_ERROR;
+  return NO_ERROR;
 }
 
 
@@ -1318,6 +1336,14 @@ int em_learn(TimeSeries ts){
     card[0] = ts->model->children[v]->cardinality;
     for(i = 1; i < n; i++)
       card[i] = ts->model->children[v]->parents[i]->cardinality;
+
+    /************************************************************
+     * NOTE: The order of variables (i.e. their cardinalities) in 
+     * the parameter potentials should be investigated. I suspect that 
+     * the order should be the same as in the family cliques. 
+     * Remember, that there already exists a function called 
+     * find_family_mapping... 
+     */
 
     parameters[v] = make_potential(card, n, NULL);
     free(card);
