@@ -12,7 +12,8 @@ POT_TARGET=potentialtest
 CLI_TARGET=cliquetest
 PAR_TARGET=parsertest
 BIS_TARGET=bisontest
-TARGET=POT_TARGET CLI_TARGET PAR_TARGET BIS_TARGET
+TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(BIS_TARGET)
+
 
 # You should not need to modify anything below this line...
 # Sets the name and some flags for the C compiler and linker
@@ -35,7 +36,7 @@ CLI_OBJS=$(CLI_SRCS:.c=.o)
 PAR_OBJS=$(PAR_SRCS:.c=.o)
 HUG_OBJS=$(HUG_DEFS:.c=.o)
 BIS_OBJS=$(BIS_DEFS:.c=.o)
-OBJS=POT_OBJS CLI_OBJS PAR_OBJS HUG_OBJS BIS_OBJS
+OBJS=$(POT_OBJS) $(CLI_OBJS) $(PAR_OBJS) $(HUG_OBJS) $(BIS_OBJS)
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program

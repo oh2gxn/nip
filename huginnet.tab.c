@@ -105,8 +105,8 @@ static const short yyrhs[] = {    20,
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
     64,    77,    78,    82,    83,    87,    98,    99,   103,   108,
-   114,   118,   122,   140,   145,   146,   150,   151,   156,   157,
-   158,   162,   163,   164,   168
+   114,   118,   122,   142,   147,   148,   152,   153,   158,   159,
+   160,   164,   165,   166,   170
 };
 #endif
 
@@ -761,54 +761,56 @@ case 13:
   for(i = 0; i < nip_symbols_parsed; i++)
     vars[i + 1] = yyvsp[-4].variablearray[i];
   add_initData(create_Potential(vars, nip_symbols_parsed + 1, yyvsp[-1].doublearray), yyvsp[-6].variable, yyvsp[-4].variablearray); 
+  free(yyvsp[-1].doublearray); // the data was copied at create_Potential
+  reset_doubles();
   reset_symbols();
     break;}
 case 14:
-#line 140 "huginnet.y"
+#line 142 "huginnet.y"
 { yyval.variable = get_variable(yyvsp[0].name) ;
     break;}
 case 15:
-#line 145 "huginnet.y"
+#line 147 "huginnet.y"
 { yyval.variablearray = make_variable_array() ;
     break;}
 case 16:
-#line 146 "huginnet.y"
+#line 148 "huginnet.y"
 { add_symbol(yyvsp[-1].name) ;
     break;}
 case 17:
-#line 150 "huginnet.y"
+#line 152 "huginnet.y"
 { yyval.stringarray = make_string_array() ;
     break;}
 case 18:
-#line 151 "huginnet.y"
+#line 153 "huginnet.y"
 { add_string(yyvsp[-1].name) ;
     break;}
 case 19:
-#line 156 "huginnet.y"
+#line 158 "huginnet.y"
 { yyval.doublearray = make_double_array() ;
     break;}
 case 20:
-#line 157 "huginnet.y"
+#line 159 "huginnet.y"
 { add_number(yyvsp[-1].numval) ;
     break;}
 case 21:
-#line 158 "huginnet.y"
+#line 160 "huginnet.y"
 { add_number(yyvsp[-2].numval) ;
     break;}
 case 22:
-#line 162 "huginnet.y"
+#line 164 "huginnet.y"
 { free(yyvsp[0].name) /* ignore */;
     break;}
 case 23:
-#line 163 "huginnet.y"
+#line 165 "huginnet.y"
 { reset_doubles() /* ignore */;
     break;}
 case 24:
-#line 164 "huginnet.y"
+#line 166 "huginnet.y"
 {/* ignore */;
     break;}
 case 25:
-#line 168 "huginnet.y"
+#line 170 "huginnet.y"
 { yyval.doublearray = yyvsp[-2].doublearray ;
     break;}
 }
@@ -1009,7 +1011,7 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 171 "huginnet.y"
+#line 173 "huginnet.y"
 
 /* Lexical analyzer */
 /* JJT: I did some reading. Might get nasty, if there has to be a token 
