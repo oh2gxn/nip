@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.21 2004-06-03 07:24:47 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.22 2004-06-03 07:28:29 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -179,6 +179,7 @@ dataList: token_data '=' '(' numbers ')' ';' { $$ = $4 }
 #include <ctype.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <strings.h>
 
 int
 yylex (void)
@@ -206,14 +207,14 @@ yylex (void)
     nullterminated[1] = '\0';
 
     /* Single letter ('A' - 'Z' or 'a' - 'z') is UNQUOTED_STRING. */
-    if(isalpha(*token)){
+    if(isalpha((int)*token)){
       yylval.name = nullterminated;
       free(token);
       return UNQUOTED_STRING;
     }
 
     /* Single digit ('0' - '9') is NUMBER. */
-    else if(isdigit(*token)){
+    else if(isdigit((int)*token)){
       yylval.numval = strtod(nullterminated, 0);
       free(token);
       free(nullterminated);
