@@ -5,13 +5,13 @@
 
 /*#define PRINT_POTENTIALS*/
 
+/*
 #define DEBUG_BISONTEST
+*/
 
 #define EVIDENCE
 
-/*
 #define EVIDENCE1
-*/
 
 int yyparse();
 
@@ -90,29 +90,33 @@ int main(int argc, char *argv[]){
   observed[1] = get_variable("D");
 
   clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-				   observed, 2);
+				   observed, 1);
   evidence_retval = enter_evidence(clique_of_interest, observed[0], probB);
 
 #ifdef DEBUG_BISONTEST
-  printf("Entered evidence into the clique of ");
+  printf("\n\nEntered evidence into the clique of ");
   for(i = 0; i < clique_of_interest->p->num_of_vars - 1; i++)
     printf("%s ", clique_of_interest->variables[i]->symbol);
   printf("and %s.\n", clique_of_interest->variables[i]->symbol);
 
   printf("enter_evidence returned %d.\n", evidence_retval);
 #endif
-#endif
 
   /* propagation: some action */
+
+  /* Procedural guide: UNMARK all clusters. */
   for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
-  collect_evidence(NULL, NULL, nip_cliques[0]);
-  distribute_evidence(nip_cliques[0]);
+  collect_evidence(NULL, NULL, nip_cliques[1]);
+
+  /* Procedural guide: UNMARK all clusters. */
+  for(i = 0; i < nip_num_of_cliques; i++)
+    unmark_Clique(nip_cliques[i]);
+  distribute_evidence(nip_cliques[1]);
 
   clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-				   observed+1, 1);
+				   observed, 2);
 
-#ifdef EVIDENCE
   evidence_retval = enter_evidence(clique_of_interest, observed[1], probD);
 
 #ifdef DEBUG_BISONTEST
@@ -125,15 +129,23 @@ int main(int argc, char *argv[]){
 #endif
 #endif
 
+  printf("\n\n");
+
   /* another propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
   collect_evidence(NULL, NULL, nip_cliques[0]);
+
+  for(i = 0; i < nip_num_of_cliques; i++)
+    unmark_Clique(nip_cliques[i]);
   distribute_evidence(nip_cliques[0]);
 
 
   /* marginalisation */
-  interesting = get_variable("B"); /* THE variable */
+  if(argc > 2)
+    interesting = get_variable(argv[2]); /* THE variable */
+  else
+    interesting = get_variable("B"); /* THE variable */
 
   if(!interesting){
     printf("In bisontest.c : Variable of interest not found.\n");
@@ -155,7 +167,7 @@ int main(int argc, char *argv[]){
   }
 
 #ifdef DEBUG_BISONTEST
-  printf("Marginalising in a Clique with ");
+  printf("\n\nMarginalising in a Clique with ");
   for(i = 0; i < clique_of_interest->p->num_of_vars; i++)
     printf("%s", clique_of_interest->variables[i]->symbol);
   printf("\n");

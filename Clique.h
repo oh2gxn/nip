@@ -65,12 +65,18 @@ int free_Potential(potential p);
    collecting or distributing evidence. Returns an error code. */
 int unmark_Clique(Clique c);
 
-/* Call Distribute-Evidence for c. Returns an error code. */
+/*
+ * Call Distribute-Evidence for c. Returns an error code.
+ * Remember to UNMARK Cliques before calling this.
+ */
 int distribute_evidence(Clique c);
 
-/* Call Collect-Evidence from Clique c1 (or nullpointer) for Clique c2. 
-   Sepset s12 is the sepset between c1 and c2 or nullpointer to get
-   started. Returns an error code. */
+/*
+ * Call Collect-Evidence from Clique c1 (or nullpointer) for Clique c2. 
+ * Sepset s12 is the sepset between c1 and c2 or nullpointer to get
+ * started. Returns an error code.
+ * Remember to UNMARK Cliques before calling this.
+ */
 int collect_evidence(Clique c1, Sepset s12, Clique c2);
 
 /* Method for passing messages between cliques. Returns an error code. */

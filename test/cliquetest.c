@@ -123,6 +123,9 @@ int main(){
   for(i = 0; i < 3; i++)
     unmark_Clique(clique_pile[i]);
   collect_evidence(NULL, NULL, clique_pile[1]);
+
+  for(i = 0; i < 3; i++)
+    unmark_Clique(clique_pile[i]);
   distribute_evidence(clique_pile[1]);
 
   /* DEBUG */

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.51 2004-06-15 08:40:33 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.52 2004-06-15 13:07:10 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -13,8 +13,9 @@
 #include "errorhandler.h"
 #include "grphmnp/Heap.h"
 
+/*
 #define DEBUG_CLIQUE
-
+*/
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
@@ -118,8 +119,10 @@ int add_Sepset(Clique c, Sepset s){
 	   ((Sepset)(c->sepsets->data))->cliques[1]->variables[i]->symbol);
   printf("\n");
 
-  /* Check if clique_search works. */
-  printf("In Clique.C: add_Sepset called clique_search. ");
+  /* Check if clique_search works.
+   * YOU MUST UNMARK all Cliques before calling add_Sepset if you expect
+   * searching to work. */
+  printf("In Clique.C: add_Sepset called clique_search.\n");
   if(c == ((Sepset)(c->sepsets->data))->cliques[1])
     two = ((Sepset)(c->sepsets->data))->cliques[0];
   else
@@ -329,9 +332,9 @@ int unmark_Clique(Clique c){
 
 int distribute_evidence(Clique c){
 
+#ifdef DEBUG_CLIQUE
   int i;
 
-#ifdef DEBUG_CLIQUE
   printf("Distributing evidence in the clique of ");
   for(i = 0; i < c->p->num_of_vars; i++)
     printf("%s ", c->variables[i]->symbol);
@@ -361,10 +364,6 @@ int distribute_evidence(Clique c){
       distribute_evidence(s->cliques[0]);
     else if(s->cliques[1]->mark == 0)
       distribute_evidence(s->cliques[1]);
-#ifdef DEBUG_CLIQUE
-    else
-      printf("In Clique.c: No unmarked neighbouring Cliques.\n");
-#endif
     l = l->fwd;
   }
   return 0;
@@ -372,13 +371,18 @@ int distribute_evidence(Clique c){
 
 
 int collect_evidence(Clique c1, Sepset s12, Clique c2){
+
+#ifdef DEBUG_CLIQUE
+  int i;
+#endif
+
   /* mark */
   c2->mark = 1;
 
   /* call neighboring cliques */
   link l = c2->sepsets;
   Sepset s;
-  while (l != 0){
+  while (l != NULL){
     s = l->data;
     if(s->cliques[0]->mark == 0)
       collect_evidence(c2, s, s->cliques[0]);
@@ -388,8 +392,20 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
   }
 
   /* pass the message to c1 */
-  if((c1 != 0) && (s12 != 0))
+  if((c1 != NULL) && (s12 != NULL))
     message_pass(c2, s12, c1);
+
+#ifdef DEBUG_CLIQUE
+  if(c1 != NULL && c2 != NULL){
+    printf("Collecting evidence from ");
+    for(i = 0; i < c2->p->num_of_vars; i++)
+      printf("%s ", c2->variables[i]->symbol);
+    printf(" to ");
+    for(i = 0; i < c1->p->num_of_vars; i++)
+      printf("%s ", c1->variables[i]->symbol);
+    printf("\n");
+  }
+#endif
 
   return 0;
 }
@@ -581,6 +597,7 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 
 #ifdef DEBUG_CLIQUE
   int j, k;
+  int ok = 1;
 #endif
 
   Heap *H = build_sepset_heap(cliques, num_of_cliques);
@@ -627,9 +644,26 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 	printf("%s", two->variables[i]->symbol);
 
       printf("\n");
+
 #endif
 
+
+      /* unmark_Clique is only called for debug purposes, because
+       * add_Sepset calls clique_search. */
+#ifdef DEBUG_CLIQUE
+
+      /* Unmark MUST be done before searching (clique_search). */
+      for(i = 0; i < num_of_cliques; i++)
+	unmark_Clique(cliques[i]);
+#endif
       add_Sepset(one, s);
+
+#ifdef DEBUG_CLIQUE
+
+      /* Unmark MUST be done before searching (clique_search). */
+      for(i = 0; i < num_of_cliques; i++)
+	unmark_Clique(cliques[i]);
+#endif
       add_Sepset(two, s);
       inserted++;
     }
@@ -638,8 +672,14 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 
 #ifdef DEBUG_CLIQUE
   for(i = 0; i < num_of_cliques - 1; i++)
-    for(j = i + 1; j < num_of_cliques; j++)
+    for(j = i + 1; j < num_of_cliques; j++){
+
+      /* Unmark MUST be done before searching (clique_search). */
+      for(k = 0; k < num_of_cliques; k++)
+	unmark_Clique(cliques[k]);
+
       if(!clique_search(cliques[i], cliques[j])){
+	ok = 0;
 	printf("No connection between Clique ");
 	for(k = 0; k < cliques[i]->p->num_of_vars; k++)
 	  printf("%s", cliques[i]->variables[k]->symbol);
@@ -648,6 +688,9 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 	  printf("%s", cliques[j]->variables[k]->symbol);
 	printf("\n");
       }
+    }
+  if(ok)
+    printf("All connections between Cliques are OK!\n");
 #endif
 
   return 0;
@@ -661,13 +704,17 @@ int clique_search(Clique one, Clique two){
 
 #ifdef DEBUG_CLIQUE
   int i;
+  printf("clique_search in Clique ");
+  for(i = 0; i < one->p->num_of_vars; i++)
+    printf("%s", one->variables[i]->symbol);
+  printf("\n");
 #endif
-
-  /* mark */
-  one->mark = 1;
 
   if(one == NULL || two == NULL)
     return 0;
+
+  /* mark */
+  one->mark = 1;
 
   /* NOTE: this defines the equality of cliques. */
   if(one == two)
@@ -686,12 +733,19 @@ int clique_search(Clique one, Clique two){
   while (l != NULL){
     s = (Sepset)(l->data);
     if(s->cliques[0]->mark == 0){
+#ifdef DEBUG_CLIQUE
+      printf("In clique_search: s->cliques[0]->mark == 0\n");
+#endif
       if(clique_search(s->cliques[0], two))
 	return 1;
     }
-    else if(s->cliques[1]->mark == 0)
+    else if(s->cliques[1]->mark == 0){
+#ifdef DEBUG_CLIQUE
+      printf("In clique_search: s->cliques[1]->mark == 0\n");
+#endif
       if(clique_search(s->cliques[1], two))
 	return 1;
+    }
     l = l->fwd;
   }
 
