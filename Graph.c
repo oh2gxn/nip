@@ -1,4 +1,4 @@
-#include "<tring.h>
+#include <string.h>
 #include "Graph.h"
 
 Graph new_graph(unsigned n)
@@ -44,7 +44,7 @@ int add_child(Graph G, Variable parent, Variable child)
 	return -1;
 
     G->adj_matrix[parent_i][child_i] = 1;
-    /* EikÃ¤ paluuarvoa */
+    /* Eikä paluuarvoa */
 }
 
 int get_size(Graph G)
@@ -52,7 +52,7 @@ int get_size(Graph G)
     return G->size;
 }
 
-Variable[]Â get_variables(Graph G)
+Variable[] get_variables(Graph G)
 {
     return G->variables;
 }
