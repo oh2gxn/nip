@@ -109,3 +109,9 @@ Sekalaisia huomioita:
   pikaisesti integroida "Clique unmark" collect_evidenceen,
   distribute_evidenceen yms. Kone meni rikki, mink‰ takia paluu vanhaan.
   T‰ytyy tehd‰ loman j‰lkeen paremmin.
+--
+
+3.8.2004 (Mikko)
+* Ajateltiin eilen, ett‰ ei kannata viel‰ yhdist‰‰ "Clique unmark" -hommaa,
+  koska koko ohjelman rakenne on v‰h‰n hakusessa. Jonkinlainen "nip"-rakenne
+  olisi kai hyv‰ olla. Mutta mit‰ seuraavaksi?
