@@ -7,14 +7,61 @@
 int lessthan(Heap_item h1, Heap_item h2)
 {
     /* Ei kovin NULL-varma. */
-    if (h1.primary < h2.primary)
+    if (h1.edges_added < h2.edges_added)
         return 1;
-    if (h1.primary > h2.primary)
+    if (h1.edges_added > h2.edges_added)
         return 0;
-    /* If we reach this point, primary keys are the same */
-    if (h1.secondary < h2.secondary)
+    /* If we reach this point, edges_added keys are the same */
+    if (h1.new_weight < h2.new_weight)
         return 1;
     return 0;
+}
+
+adj_list build_adjacency_list(Variable* neighbours, int n)
+{
+    adj_list nb;
+    
+    nb.vars = neighbours;
+    nb.size = n;
+    return nb;
+}
+
+void destroy_node()
+{
+}
+
+void remove_node(Heap_item* node)
+{
+    int i;
+    
+
+    for (i = 0; i < node->adj_list.size; i++)
+    {
+        node->adj_list.vars[i]
+    }
+
+}
+
+int primary_weight(Graph G, Variable* vs, int n)
+{
+    int i,j,sum;
+
+    sum = 0;
+    for (i = 0; i < n; i++)
+	for (j = i+1; j < n; j++)
+	    sum += ~is_child(vs[i], vs[j]);
+   
+    return sum; /* Number of links to be added */
+}
+
+int secondary_weight(Variable* vs, int n)
+{
+    int i, int prod = 1;
+    
+    for (i = 0; i < n; i++)
+	prod *= number_of_values(vs[i]);
+
+    return prod;
 }
 
 Heap* build_heap(Variable* vars, int n)
@@ -31,8 +78,9 @@ Heap* build_heap(Variable* vars, int n)
     {
         hi = &(H->array[i]);
         hi->V = vars[i];
-        hi->primary = XX; /* Eli parametriksi Gm */
-        hi->secondary = XX;
+        hi->neighbours = build_adjacency_list(get_neighbours(Gm));
+        hi->edges_added = primary_weight(Gm, V u neighbours, n_neigh);
+        hi->new_weight = secondary_weight(Gm, V u neighbours, n_neigh);
     }
 
     H->array = H->array-1; /* Tästä ne murheet alkaa. */
@@ -81,6 +129,7 @@ Variable extract_min(Heap* H)
         return NULL;
     
     min = H->array[1];
+
     /* XX Etsi minin naapurit */
     /* ja ne johonki taulukkoon. neighbors */
     

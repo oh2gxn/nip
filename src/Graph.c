@@ -3,6 +3,11 @@
 #include "Graph.h"
 #include "Variable.h"
 
+/* XXXX SEURAAVAN REFAKTOROINTIPUUSKAN ISKIESSÄ:
+   XXXX Muunnosta Variable -> adj_matrix-indeksi tarvitaan usein
+   XXXX Closed taulukko -hash tätä varten.
+*/
+
 Graph* new_graph(unsigned n)
 {
     int i;
@@ -78,6 +83,18 @@ int get_size(Graph* G)
 Variable* get_variables(Graph* G)
 {
     return G->variables;
+}
+
+int is_child(Graph G, Variable parent, Variable child)
+{
+    int i,j;
+    i = G->get_index(parent); /* XX kts. refaktorointi ylhäältä */
+    j = G->get_index(child);
+    return G->adj_matrix[i][j];
+}
+
+void add_undirected_edge(Variable v1, Variable v2)
+{
 }
 
 Graph* make_undirected(Graph* G)
