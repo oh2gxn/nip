@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.42 2005-02-22 15:18:47 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.43 2005-02-22 15:21:36 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -1110,6 +1110,8 @@ describing a single state, the user must specify a probability
 distribution as the \cdatatype{double array} \cparameter{evidence}. 
 The array is assumed to be normalised.
 
+
+% BS... FIXME: this is changed! %
 \item[find\_family(cliques, num\_of\_cliques, variables, num\_of\_vars)]
 tries to find a \cdatatype{Clique} which contains all the variables (or
 more) specified in the \cdatatype{Variable array}
@@ -1118,6 +1120,8 @@ fourth parameter \cparameter{num\_of\_vars}. The function returns
 \cdatatype{NULL} if there are no suitable cliques in the specified 
 \cdatatype{array of Cliques} (\cparameter{cliques}) within the given 
 size \cparameter{num\_of\_cliques}.
+
+
 
 \item[find\_sepsets(cliques, num\_of\_cliques)] creates and inserts 
 the sepsets between the \cdatatype{Cliques} specified in the array 
