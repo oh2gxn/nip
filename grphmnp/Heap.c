@@ -120,7 +120,9 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
 	hi->s = make_Sepset(isect, isect_size, neighbours);
 	free(isect);
 
-        hi->primary_key = isect_size;
+	/* We must use a negative value, because we have a min-heap. */
+        hi->primary_key = -isect_size;
+
         hi->secondary_key =
 	  cluster_weight(cliques[i]->variables, cliques[i]->p->num_of_vars) +
 	  cluster_weight(cliques[j]->variables, cliques[j]->p->num_of_vars);
@@ -217,6 +219,12 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
     
     *cluster_vars = min.Vs; 
     return min.n; /* Cluster size*/
+}
+
+int extract_min_sepset(Heap* H, Sepset* sepset)
+{
+
+  return 0;
 }
 
 int get_heap_index(Heap* H, Variable v)

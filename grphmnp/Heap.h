@@ -35,6 +35,8 @@ void heapify(Heap*, int);
 
 int extract_min(Heap* H, Graph* G, Variable** cluster_vars);
 
+int extract_min_sepset(Heap* H, Sepset* sepset);
+
 int get_heap_index(Heap* H, Variable v);
 
 void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G);

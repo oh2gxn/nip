@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.44 2004-06-14 08:41:16 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.45 2004-06-14 10:56:47 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -11,7 +11,7 @@
 #include "Variable.h"
 #include "potential.h"
 #include "errorhandler.h"
-
+#include "grphmnp/Heap.h"
 
 #define DEBUG_CLIQUE
 
@@ -537,15 +537,22 @@ Clique find_family(Clique *cliques, int num_of_cliques,
 
 void find_sepsets(Clique *cliques, int num_of_cliques){
 
-  int i, j;
+  int i;
 
-  for(i = 0; i < num_of_cliques - 1; i++)
+  Heap *H = build_sepset_heap(cliques, num_of_cliques);
 
-    for(j = i + 1; j < num_of_cliques; j++){
+  if(!H){
+    fprintf(stderr, "In Clique.C: build_sepset_heap returned NULL.\n");
+    return;
+  }
+
+  for(i = 0; i < num_of_cliques - 1; i++){
 
 
 
-    }
+
+  }
+
 
 }
 
