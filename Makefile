@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.17 2004-06-14 14:42:33 jatoivol Exp $
+# $Id: Makefile,v 1.18 2004-06-15 11:46:32 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -25,7 +25,7 @@ TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET)
 # Sets the name and some flags for the C compiler and linker
 CC=gcc
 #CFLAGS=-O2 -g -Wall
-CFLAGS=-g -Wall --save-temps -MD
+CFLAGS=-g -Wall --save-temps
 #CFLAGS=-Wall
 LD=gcc
 LDFLAGS=
