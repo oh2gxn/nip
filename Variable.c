@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.24 2004-06-21 06:48:15 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.25 2004-06-22 11:10:34 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -7,6 +7,11 @@
 #include "Variable.h"
 #include "potential.h"
 #include "errorhandler.h"
+
+static varlink nip_first_var = NULL;
+static varlink nip_last_var = NULL;
+static varlink list_pointer = NULL;
+static int nip_vars_parsed = 0;
 
 static int variable_name(Variable v, const char *name);
 
@@ -40,8 +45,9 @@ Variable new_variable(const char* symbol, const char* name,
   int i;
   double *dpointer;
   Variable v = (Variable) malloc(sizeof(vtype));
+  varlink new = (varlink) malloc(sizeof(varelement));
 
-  if(!v){
+  if(!(v && new)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
@@ -63,6 +69,16 @@ Variable new_variable(const char* symbol, const char* name,
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */
   for(dpointer=v->likelihood, i=0; i < cardinality; *dpointer++ = 1, i++);
+
+  new->data = v;
+  new->fwd = NULL;
+  new->bwd = nip_last_var;
+  if(nip_first_var == NULL)
+    nip_first_var = new;
+  else
+    nip_last_var->fwd = new;
+  nip_last_var = new;
+  nip_vars_parsed++;
 
   return v;
 }
@@ -105,6 +121,7 @@ Variable copy_variable(Variable v){
 
 
 void free_variable(Variable v){
+  /* FIXME: remove the Variable from the list ? */
   if(v == NULL)
     return;
   free(v->likelihood);
@@ -131,6 +148,28 @@ char *get_symbol(Variable v){
   if(v)
     return v->symbol;
   return NULL;
+}
+
+
+int total_num_of_vars(){
+  return nip_vars_parsed;
+}
+
+
+void reset_Variable_list(){
+  list_pointer = nip_first_var;
+}
+
+
+Variable next_Variable(){
+  Variable v;
+  if(list_pointer){
+    v = list_pointer->data;
+    list_pointer = list_pointer->fwd;
+  }
+  else
+    v = NULL;
+  return v;
 }
 
 

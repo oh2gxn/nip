@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.63 2004-06-21 06:48:14 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.64 2004-06-22 11:10:34 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -27,6 +27,8 @@ static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 		      void (*sFuncPointer)(Sepset));
 
 static int clique_marked(Clique c);
+
+static int global_retraction(Clique c);
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
@@ -606,8 +608,15 @@ int normalise(double result[], int array_size){
 }
 
 
+static int global_retraction(Clique c){
+
+  return 0;
+}
+
+
 int enter_evidence(Clique c, Variable v, double evidence[]){
   int index, i;
+  int retraction = 0;
 
   if(c == NULL || v == NULL || evidence == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -624,13 +633,20 @@ int enter_evidence(Clique c, Variable v, double evidence[]){
 
   for(i = 0; i < v->cardinality; i++)
     if((v->likelihood)[i] == 0 && evidence[i] != 0)
-      return GLOBAL_RETRACTION;
+      retraction = 1; /* Must do global retraction! */
   
-  /* Here is the update of clique potential. */
-  update_evidence(evidence, v->likelihood, c->p, index);
+  /*
+   * Here is the update of clique potential.
+   * MUST be done before update_likelihood.
+   */
+  if(!retraction)
+    update_evidence(evidence, v->likelihood, c->p, index);
 
   /* update likelihood */
   update_likelihood(v, evidence);
+
+  if(retraction)
+    return global_retraction(c);
 
   /* GLOBAL UPDATE or GLOBAL RETRACTION probably needed !!! */
   

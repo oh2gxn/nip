@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.35 2004-06-21 08:24:09 mvkorpel Exp $
+ * $Id: parser.c,v 1.36 2004-06-22 11:10:35 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -8,6 +8,7 @@
 #include <string.h>
 #include "Graph.h"
 #include "Clique.h"
+#include "Variable.h"
 #include "parser.h"
 #include "fileio.h"
 #include "errorhandler.h"
@@ -16,9 +17,9 @@
 #define DEBUG_PARSER
 */
 
-static varlink nip_first_var = NULL;
-static varlink nip_last_var = NULL;
-static int nip_vars_parsed = 0;
+/*
+#define PRINT_TOKENS
+*/
 
 static varlink nip_first_temp_var = NULL;
 static varlink nip_last_temp_var = NULL;
@@ -152,7 +153,7 @@ char *next_token(int *token_length){
   else if(last_line[indexarray[0]] == COMMENT_CHAR)
     read_line = 1;
 
-#ifdef DEBUG_PARSER
+#ifdef PRINT_TOKENS
   printf("%s\n", token);
 #endif
 
@@ -174,7 +175,7 @@ int add_symbol(Variable v){
 
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
+    return ERROR_OUTOFMEMORY;
   }
 
   new->data = v;
@@ -196,23 +197,29 @@ int add_symbol(Variable v){
 /* Gets the parsed variable according to the symbol. */
 Variable get_variable(char *symbol){
 
-  varlink pointer = nip_first_var;
+  Variable v; 
+
+  reset_Variable_list();
+  v = next_Variable();
 
 #ifdef DEBUG_PARSER
   printf("In get_variable: looking for \"%s\"\n", symbol);
 #endif
 
-  if(pointer == NULL)
+  if(v == NULL)
     return NULL; /* didn't find the variable (possibly normal) */
   
   /* search for the variable reference */
-  while(strcmp(symbol, pointer->data->symbol) != 0){
-    pointer = pointer->fwd;
-    if(pointer == NULL){
+  while(strcmp(symbol, v->symbol) != 0){
+    v = next_Variable();
+    if(v == NULL){
       return NULL; /* didn't find the variable (a normal situation) */
     }
   }
-  return pointer->data;
+#ifdef DEBUG_PARSER
+  printf("In get_variable: Found \"%s\"\n", v->symbol);
+#endif
+  return v;
 }
 
 
@@ -238,30 +245,6 @@ int add_initData(potential p, Variable child, Variable* parents){
   nip_last_initData = new;
 
   nip_initData_parsed++;
-  return NO_ERROR;
-}
-
-
-/* correctness? */
-int add_pvar(Variable var){
-  varlink new = (varlink) malloc(sizeof(varelement));
-
-  if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-
-  new->data = var;
-  new->fwd = NULL;
-  new->bwd = nip_last_var;
-  if(nip_first_var == NULL)
-    nip_first_var = new;
-  else
-    nip_last_var->fwd = new;
-
-  nip_last_var = new;
-  nip_vars_parsed++;
-
   return NO_ERROR;
 }
 
@@ -313,8 +296,7 @@ int add_string(char* string){
 }
 
 
-/* Creates an array from the double values in the list. 
- * The size will be doubles_parsed. 
+/* Creates an array from the variable in the list. 
  * NOTE: because of misunderstanding, the list is backwards. 
  * (Can't understand Hugin fellows...) */
 Variable* make_variable_array(){
@@ -442,20 +424,23 @@ int reset_initData(){
 
 
 void init_new_Graph(){
-  nip_graph = new_graph(nip_vars_parsed);
+  nip_graph = new_graph(total_num_of_vars());
 }
 
 
 int parsedVars2Graph(){
   int i;
-  varlink list_of_vars = nip_first_var;
+  Variable v;
   initDataLink initlist = nip_first_initData;
+
+  reset_Variable_list();
+  v = next_Variable();
   
   /* Add parsed variables to the graph. */
-  while(list_of_vars != NULL){
+  while(v != NULL){
     
-    add_variable(nip_graph, list_of_vars->data);
-    list_of_vars = list_of_vars->fwd;
+    add_variable(nip_graph, v);
+    v = next_Variable();
   }
 
   /* Add child - parent relations to the graph. */

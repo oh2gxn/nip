@@ -74,7 +74,6 @@ static void test_probability(double **result, int *size_of_result,
 static void test_evidence(Variable observed, double data[], Clique cliques[],
 			  int num_of_cliques){
 
-  int i;
   Clique clique_of_interest =
     find_family(cliques, num_of_cliques, &observed, 1);
 

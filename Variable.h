@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.24 2004-06-21 06:48:15 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.25 2004-06-22 11:10:34 mvkorpel Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -23,6 +23,16 @@ typedef struct {
 } vtype;
 
 typedef vtype *Variable;
+
+
+struct varlist {
+  Variable data;
+  struct varlist *fwd;
+  struct varlist *bwd;
+};
+
+typedef struct varlist varelement;
+typedef varelement *varlink;
 
 
 /* Creates a new Variable:
@@ -60,6 +70,19 @@ unsigned long get_id(Variable v);
 /* Returns the symbol of the Variable. It is a string. 
  * (or NULL if nullpointer given) */
 char *get_symbol(Variable v);
+
+
+/* Tells the length of the list of Variables. */
+int total_num_of_vars();
+
+
+/* Call this before searching through the list of variables. */
+void reset_Variable_list();
+
+
+/* Gives the next Variable in the list of Variables. Returns NULL when 
+ * the end of list is reached. */
+Variable next_Variable();
 
 
 /* Gives v a new likelihood array. The size of the array

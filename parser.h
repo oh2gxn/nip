@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser.
- * $Id: parser.h,v 1.20 2004-06-21 06:12:12 mvkorpel Exp $
+ * $Id: parser.h,v 1.21 2004-06-22 11:10:35 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -18,15 +18,6 @@
 #include "potential.h"
 #include "Graph.h"
 #include <stdio.h>
-
-struct varlist {
-  Variable data;
-  struct varlist *fwd;
-  struct varlist *bwd;
-};
-
-typedef struct varlist varelement;
-typedef varelement *varlink;
 
 struct doublelist {
   double data;
@@ -86,9 +77,6 @@ Variable get_variable(char *symbol);
 /* Adds a potential and the correspondent variable references into a list.
  * The "ownership" of the vars[] array changes! */
 int add_initData(potential p, Variable child, Variable* parents);
-
-/* Adds a variable into THE list of variables. */
-int add_pvar(Variable var);
 
 /* Adds a number into the list of parsed numbers. */
 int add_double(double d);
