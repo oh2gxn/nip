@@ -28,14 +28,14 @@ Heap* build_heap(Graph* Gm)
     {
         hi = &(H->array[i]);
         hi->n = get_neighbours(Gm, &Vs_temp, Gm->variables[i]) +1;
-        /* get_neighbours could be modified the array Vs directly;
+        /* get_neighbours could be modified to use the array Vs directly;
            the cost associated with it would be having all Vs take
            get_size(G) units of memory.
         */
 
-	hi->Vs = (Variable *) calloc(hi->n, sizeof(Variable));
+		hi->Vs = (Variable *) calloc(hi->n, sizeof(Variable));
 
-	hi->Vs[0] = Gm->variables[i];
+		hi->Vs[0] = Gm->variables[i];
         
         for (j = 1; j < hi->n; j++)   /* Copy variable-pointers from Vs_temp */
             hi->Vs[j] = Vs_temp[j-1]; /* Note the index-shifting */
