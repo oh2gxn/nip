@@ -93,5 +93,6 @@ int find_cliques(Graph* Gm, Clique** cliques_p);
 
 void sort_variables(Graph* G); 
 /* Internal helper */
+Graph* make_undirected(Graph* G);
 
 #endif /* __GRAPH_H__ */
