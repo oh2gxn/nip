@@ -5,19 +5,58 @@
 #include "potential.h"
 #include "errorhandler.h"
 
-/* #define DEBUG_CLIQUE */
+#define DEBUG_CLIQUE
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
-  int i;
+  int *reorder = (int *) calloc(num_of_vars, sizeof(int));
+  int *indices = (int *) calloc(num_of_vars, sizeof(int));
+  int i, j;
+  unsigned long temp;
+
+  if(!c || !cardinality || !reorder || !indices){
+    fprintf(stderr, "In Clique.c: malloc failed.\n");
+    return NULL;
+  }    
+
+  /* reorder[i] is the place of i:th variable (in the sense of this program) 
+   * in the array variables[].
+   * Because of this, vars[] can be given in any order.
+   */
+
+  /* init (needed?) */
+  for(i = 0; i < num_of_vars; i++)
+    indices[i] = 0;
+
+  /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
+   * Note the temporary use of indices array. */
+  for(i = 0; i < num_of_vars; i++){
+    temp = get_id(vars[i]);
+    for(j = 0; j < num_of_vars; j++){
+      if(get_id(vars[j]) > temp)
+	indices[j]++; /* counts how many greater variables there are */
+    }
+  }
+
+  for(i = 0; i < num_of_vars; i++)
+    reorder[indices[i]] = i; /* fill the reordering */
+
   c->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = vars[i]->cardinality;
-    c->variables[i] = vars[i];
+    cardinality[i] = vars[reorder[i]]->cardinality;
+    c->variables[i] = vars[reorder[i]];
+#ifdef DEBUG_CLIQUE
+    printf("Id of c->variables[%d] is %lu.\n", i, get_id(c->variables[i]));
+#endif
   }
+#ifdef DEBUG_CLIQUE
+    printf("\n");
+#endif
   c->p = make_potential(cardinality, num_of_vars, NULL);
   free(cardinality);
+  free(indices);
+  free(reorder);
   c->sepsets = 0;
   c->mark = 0;
   return c;
@@ -89,19 +128,12 @@ potential create_Potential(Variable variables[], int num_of_vars,
   /* THIS IS TRICKY: we have to reorder the array and stuff... */
   int i, j, card_temp, index, size_of_data = 1;
 
-  /* Kommentoidaan tämä pois, ja väännetään samat malloc:in avulla
-
-  int cardinality[num_of_vars];
-  int indices[num_of_vars];
-  int reorder[num_of_vars]; */
-
   int *cardinality;
   int *indices;
   int *reorder;
 
   unsigned long temp;
   potential p;
-
 
   if((cardinality = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
     fprintf(stderr, "In Clique.c: malloc failed\n");
@@ -174,6 +206,10 @@ potential create_Potential(Variable variables[], int num_of_vars,
     /* data is being copied => free(data) somewhere */
     p->data[i] = data[index];
   }
+
+  free(cardinality);
+  free(indices);
+  free(reorder);
 
   return p;
 }
@@ -284,37 +320,40 @@ int message_pass(Clique c1, Sepset s, Clique c2){
 }
 
 
-int initialise(Clique c, Variable v, Variable parents[], potential p){
+int initialise(Clique c, Variable child, Variable parents[], potential p){
   int i, j = 0, k = 0;
   int diff = c->p->num_of_vars - p->num_of_vars;
   int *extra_vars = NULL;
+  int extra;
   Variable var = NULL;
 
   if(diff > 0){
     extra_vars = (int *) calloc(diff, sizeof(int));
     
-    /* JJ_NOTE: I'm convinced that there is a bug somewhere!
-     * What happens for example when diff==0 ?!?!? 
-     * - Fixed 18.5.2004 
-     * - Another heavy change 25.5.2004 */
-    
     /***************************************************************/
-    /* HEY! parents[] NOT assumed to be in any particular order! */
+    /* HEY! parents[] NOT assumed to be in any particular order!   */
     /***************************************************************/
     
     /* initialisation with conditional distributions 
        first: select the variables (in a stupid but working way) */
     for(i=0; i < c->p->num_of_vars; i++){
       var = (c->variables)[i];
-    for(j = 0; j < p->num_of_vars - 1; j++){
-      if(!equal_variables(var, parents[j]) ||
-	 !equal_variables(var, v))
-	  extra_vars[k++] = i;
+      extra = 1;
+      for(j = 0; j < p->num_of_vars - 1; j++){
+	if(equal_variables(var, parents[j]) ||
+	   equal_variables(var, child)){
+	  extra = 0;
+#ifdef DEBUG_CLIQUE
+	  printf("extra_vars[%d] = %d.\n", k-1, i);
+#endif
+	}
       }
+      if(extra)
+	extra_vars[k++] = i;
     }
   }
   /* rest the case */
-  set_probability(v, p); /* was this the intention?? */
+  set_probability(child, p); /* was this the intention?? */
   i = init_potential(p, c->p, extra_vars);
   free(extra_vars); /* free(NULL) is O.K. */
   return (i);

@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.34 2004-06-08 13:00:37 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.35 2004-06-09 08:00:34 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -161,18 +161,21 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   for(i = 0; i < nip_symbols_parsed; i++)
     vars[i + 1] = parents[i];
 
-#ifdef DEBUG_BISON
-  fprintf(stdout, "Datatesti tiedostossa huginnet.y:\n");
-  for(i = 0; i < nip_doubles_parsed; i++)
-    printf("data[%d] = %f\n", i, doubles[i]);
-#endif
-
   add_initData(create_Potential(vars, nip_symbols_parsed + 1, doubles),
 	       vars[0], parents); 
   free(doubles); /* the data was copied at create_Potential */
   reset_doubles();
   reset_symbols();
-  free(vars);
+  free(vars)
+}
+|                     token_potential '(' child ')' '{' dataList '}' {
+  Variable vars[1];
+  double *doubles = $6;
+  vars[0] = $3;
+  add_initData(create_Potential(vars, 1, doubles), vars[0], NULL); 
+  free(doubles); /* the data was copied at create_Potential */
+  reset_doubles();
+  reset_symbols()
 }
 ;
 

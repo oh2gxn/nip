@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
   observed[1] = get_variable("D");
 
   clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-				   observed, 1);
+				   observed, 2);
   enter_evidence(clique_of_interest, observed[0], probB);
   printf("Entered evidence into the clique of ");
   for(i = 0; i < clique_of_interest->p->num_of_vars - 1; i++)
@@ -49,8 +49,8 @@ int main(int argc, char *argv[]){
   printf("and %s.\n", clique_of_interest->variables[i]->symbol);
 
 
-  clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-                                   observed+1, 1);
+  /*  clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+      observed+1, 1);*/
   enter_evidence(clique_of_interest, observed[1], probD);
   printf("Entered evidence into the clique of ");
   for(i = 0; i < clique_of_interest->p->num_of_vars - 1; i++)

@@ -31,8 +31,9 @@ typedef struct {
 
 typedef sepsettype *Sepset;
 
-/* Method for creating cliques (without pointers to sepsets) 
-   - MVK: vars[] is an array of Variables (which are pointers) */
+/* Method for creating cliques (without pointers to sepsets).
+ * vars[] can be in any order.
+ */
 Clique make_Clique(Variable vars[], int num_of_vars);
 
 /* Method for removing cliques and freeing memory: returns an error code */
@@ -79,7 +80,7 @@ int message_pass(Clique c1, Sepset s, Clique c2);
 /* !!! p->num_of_vars equals "length of parents + 1" !!! 
  * Sum of the elements in the potential is assumed to be 1. 
  * The "ownership" of the potential changes. */
-int initialise(Clique c, Variable v, Variable parents[], potential p);
+int initialise(Clique c, Variable child, Variable parents[], potential p);
 
 /* This one calculates the probability distribution for a variable v
    according to the clique c. To make sense, the join tree should be 
