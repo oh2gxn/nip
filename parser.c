@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.18 2004-06-03 15:20:07 mvkorpel Exp $
+ * $Id: parser.c,v 1.19 2004-06-04 13:35:50 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -19,16 +19,16 @@ int nip_symbols_parsed = 0;
 
 Graph *nip_graph = NULL;
 
-doublelink nip_first_double = 0;
-doublelink nip_last_double = 0;
+doublelink nip_first_double = NULL;
+doublelink nip_last_double = NULL;
 int nip_doubles_parsed = 0;
 
-stringlink nip_first_string = 0;
-stringlink nip_last_string = 0;
+stringlink nip_first_string = NULL;
+stringlink nip_last_string = NULL;
 int nip_strings_parsed = 0;
 
-initDataLink nip_first_initData = 0;
-initDataLink nip_last_initData = 0;
+initDataLink nip_first_initData = NULL;
+initDataLink nip_last_initData = NULL;
 int nip_initData_parsed = 0;
 
 /* The current input file */
@@ -104,9 +104,7 @@ char *next_token(int *token_length){
       if(!indexarray){
 	report_error(ERROR_GENERAL, 0);
 	*token_length = 0;
-#ifdef DEBUG_PARSER
-	printf("tokenise kosahti...\n");
-#endif
+
 	return NULL;
       }
 
@@ -167,9 +165,7 @@ int add_symbol(Variable v){
     
   nip_last_temp_var = new;
   nip_symbols_parsed++;
-#ifdef DEBUG_PARSER
-  printf("In add_symbol: nip_symbols_parsed = %d\n", nip_symbols_parsed);
-#endif
+
   return 0;
 }
 
@@ -185,14 +181,8 @@ Variable get_variable(char *symbol){
   
   // search for the variable reference
   while(strcmp(symbol, pointer->data->symbol) != 0){
-#ifdef DEBUG_PARSER
-    printf("In get_variable: compare to \"%s\"\n", pointer->data->symbol);
-#endif
     pointer = pointer->fwd;
     if(pointer == NULL){
-#ifdef DEBUG_PARSER
-      printf("In get_variable: symbol not found.\n");
-#endif
       return NULL; // didn't find the variable
     }
   }
@@ -233,9 +223,7 @@ int add_pvar(Variable var){
 
   nip_last_var = new;
   nip_vars_parsed++;
-#ifdef DEBUG_PARSER
-  printf("In add_pvar: nip_vars_parsed = %d\n", nip_vars_parsed);
-#endif
+
   return 0;
 }
 
@@ -260,9 +248,6 @@ int add_double(double d){
 /* correctness? */
 int add_string(char* string){
   stringlink new = (stringlink) malloc(sizeof(stringelement));
-#ifdef DEBUG_PARSER
-  printf("In add_string: start\n");
-#endif
   new->data = string;
   new->fwd = 0;
   new->bwd = nip_last_string;
@@ -273,9 +258,7 @@ int add_string(char* string){
 
   nip_last_string = new;
   nip_strings_parsed++;
-#ifdef DEBUG_PARSER
-  printf("In add_string: nip_strings_parsed = %d\n", nip_strings_parsed);
-#endif
+
   return 0;
 }
 
@@ -315,10 +298,6 @@ char** make_string_array(){
   char** new = (char**) calloc(nip_strings_parsed, sizeof(char*));
   /* free() is probably at free_variable() */
   int i;
-#ifdef DEBUG_PARSER
-  printf("In make_string_array: nip_strings_parsed = %d\n",
-	 nip_strings_parsed);
-#endif
   stringlink ln = nip_first_string;
   for(i = 0; i < nip_strings_parsed; i++){
     new[i] = ln->data; /* char[] references copied */

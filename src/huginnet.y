@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.28 2004-06-04 07:09:04 jhollmen Exp $
+/* huginnet.y $Id: huginnet.y,v 1.29 2004-06-04 13:35:50 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -11,9 +11,10 @@
 #include "parser.h"
 #include "errorhandler.h"
 #include "huginnet.h"
+#include "potential.h" /* for DEBUG purposes */
 
 #define YYERROR_VERBOSE
-  //#define DEBUG_BISON
+#define DEBUG_BISON
 %}
 
 /* BISON Declarations */
@@ -24,7 +25,6 @@
   char *name;
   char **stringarray;
   Variable variable;
-  Variable *variablearray;
 }
 
 /******************************************************************/
@@ -43,10 +43,9 @@
 %token <name> QUOTED_STRING
 %token <name> UNQUOTED_STRING
 %token <numval> NUMBER
-%type <stringarray> strings statesDeclaration
+%type <stringarray> statesDeclaration
 %type <doublearray> dataList
-%type <variable> nodeDeclaration symbol
-/* %type <variablearray> symbols */
+%type <variable> nodeDeclaration child
 %type <name> labelDeclaration
 
 /* Grammar follows */
@@ -72,6 +71,90 @@ input:  nodes potentials {
    * Graph structure and clique initialisation data 
    * will be in initData after parsing potentials!
    */
+
+#ifdef DEBUG_BISON
+  int i, j, k;
+  int temp_index;
+  unsigned long biggest_found, biggest_ready;
+  initDataLink list = nip_first_initData;
+  /*    while(list != NULL){
+    printf("P(%s |", list->child->symbol);
+    for(i = 0; i < list->data->num_of_vars - 1; i++)
+      printf(" %s", (list->parents)[i]->symbol);
+    printf(") = {");
+    for(i = 0; i < list->data->size_of_data; i++)
+      printf(" %.2f", (list->data->data)[i]);
+    printf(" }\n\n");
+    list = list->fwd;
+    }
+  */
+
+  while(list != NULL){
+    int *indices; 
+    unsigned long *reorder;
+
+    if((indices = (int *) calloc(list->data->num_of_vars, sizeof(int))) == NULL)
+      printf("BANG! Calloc failed => crash.");
+
+    if((reorder = (unsigned long *) calloc(list->data->num_of_vars,
+					   sizeof(unsigned long))) == NULL)
+      printf("F#@?! Calloc failed => crash.");
+
+    for(i = 0; i < list->data->size_of_data; i++){
+      inverse_mapping(list->data, i, indices);
+
+      /*
+      for(j = 0; j < list->data->num_of_vars; j++)
+	printf("indices[%d] = %d\n", j, indices[j]);
+      */
+
+      reorder[0] = get_id(list->child);
+      for(j = 1; j < list->data->num_of_vars; j++)
+	reorder[j] = get_id((list->parents)[j - 1]);
+      
+      /* Make a reorder array.
+	 Smallest = 0, ..., Biggest = num_of_vars - 1 */
+      biggest_ready = 0; /* Initialisation doesn't matter. */
+      temp_index = 0; /* Initialisation doesn't matter. */
+      for(j = 0; j < list->data->num_of_vars; j++){
+	biggest_found = VAR_MIN_ID - 1;
+	for(k = 0; k < list->data->num_of_vars; k++){
+	  if(j == 0){
+	    if(reorder[k] > biggest_found){
+	      temp_index = k;
+	      biggest_found = reorder[k];
+	    }
+	  }
+	  else if(reorder[k] > biggest_found && reorder[k] < biggest_ready){
+	    temp_index = k;
+	    biggest_found = reorder[k];
+	  }
+	}
+	reorder[temp_index] = list->data->num_of_vars -1 - j; // WOOT ?!?!?!?
+	biggest_ready = biggest_found;
+      }
+
+
+      /*      for(j = 0; j < list->data->num_of_vars; j++)
+	      printf("reorder[%d] = %lu\n", j, reorder[j]); */
+
+
+      printf("P( %s = %s |", list->child->symbol, 
+	     (list->child->statenames)[indices[reorder[0]]]);
+      for(j = 0; j < list->data->num_of_vars - 1; j++)
+	printf(" %s = %s", (list->parents)[j]->symbol,
+	       ((list->parents[j])->statenames)[indices[reorder[j + 1]]]);
+      
+      printf(" ) = %.2f \n", (list->data->data)[i]);
+    }
+    list = list->fwd;
+    
+    free(indices);
+    free(reorder);
+  }
+
+
+#endif
 
   reset_initData()}
 ;
@@ -113,7 +196,7 @@ labelDeclaration:     token_label '=' QUOTED_STRING ';' { $$ = $3 }
 /* JJT: cardinality == strings_parsed ? */
 statesDeclaration:    token_states '=' '(' strings ')' ';' { 
   /* makes an array of strings out of the parsed list of strings */
-  $$ = $4 }
+  $$ = make_string_array() }
 ;
 
 
@@ -125,55 +208,54 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
 ;
 
 
-potentialDeclaration: token_potential '(' symbol '|' symbols ')' '{' dataList '}' { 
+potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}' { 
   int i;
   Variable *vars = (Variable*) calloc(nip_symbols_parsed + 1,
 				      sizeof(Variable));
   Variable *parents = make_variable_array();
-  potential p;
+  double *doubles = $8;
 
   if(!vars || !parents)
     YYABORT;
-  printf("nip_symbols_parsed = %d\n", nip_symbols_parsed); /* DEBUG */
+
+#ifdef DEBUG_BISON
+  printf("nip_symbols_parsed = %d\n", nip_symbols_parsed);
+#endif
+
   vars[0] = $3;
   for(i = 0; i < nip_symbols_parsed; i++)
     vars[i + 1] = parents[i];
 
-
-  /* Yritelmiä metsästää  bugia */
+  /* Yritelmiä metsästää bugia */
+#ifdef DEBUG_BISON
   fprintf(stdout, "Datatesti tiedostossa huginnet.y:\n");
-  fprintf(stdout, "\n%f %f %f% f% f% f% f% f% f% f% f %f %f %f %f %f %f %f %f %f %f %f %f %f\n", $8);
-  fflush(NULL);
+  for(i = 0; i < nip_doubles_parsed; i++)
+    printf("data[%d] = %f\n", i, doubles[i]);
+#endif
 
-
-  p = create_Potential(vars, nip_symbols_parsed + 1, $8);
-
-  printf("WTF happens here !?!?\n");
-
-  add_initData(p, $3, parents); 
-  free($8); // the data was copied at create_Potential
+  add_initData(create_Potential(vars, nip_symbols_parsed + 1, doubles),
+	       vars[0], parents); 
+  free(doubles); // the data was copied at create_Potential
   reset_doubles();
   reset_symbols();
   free(vars);
 }
 ;
 
-symbol:        UNQUOTED_STRING { $$ = get_variable($1) }
-
+child:        UNQUOTED_STRING { $$ = get_variable($1) }
 ;
 
 
-symbols:       /* end of list */ { /* $$ = make_variable_array() */ }
-             | symbol2 symbols { /* add_symbol($1) */ }
+symbols:       /* end of list */
+             | symbol symbols { /* add_symbol($1) */ }
 ;
 
 
-symbol2:       UNQUOTED_STRING { add_symbol(get_variable($1)) }
-
+symbol:       UNQUOTED_STRING { add_symbol(get_variable($1)) }
 ;
 
 
-strings:       /* end of list */ { $$ = make_string_array() }
+strings:       /* end of list */
              | string strings { /* add_string($1) */ }
 ;
 
@@ -183,30 +265,21 @@ string:        QUOTED_STRING { add_string($1) }
 
 
 /* This should ignore all brackets between numbers! */
-numbers:       /* end of list */ //{ $$ = make_double_array() }
-               | num numbers { /* add_double($1) */ };
+numbers:     /* end of list */
+           | num numbers { /* add_double($1) */ }
+           | '(' numbers ')' numbers {/* ignore brackets */}
+; 
 
 
-
-//           | '(' numbers ')' {/* ignore */} // nested lists?
-//           | '(' numbers ')' '(' numbers ')' {/* ignore */} // nested lists?
-// 
-
-
-num:           NUMBER { add_double($1) }
+num:       NUMBER { add_double($1) }
 ;
 
 
-value:         QUOTED_STRING { free($1) /* ignore */}
-             | '(' numbers ')' { reset_doubles() /* ignore */}
-             | NUMBER {/* ignore */}
+value:         QUOTED_STRING { free($1) } /* ignore */
 ;
 
 
-// dataList: token_data '=' '(' numbers ')' ';' { $$ = $4 }
 dataList: token_data '=' '(' numbers ')' ';' { $$ = make_double_array() }
-
-
 ;
 
 %%
@@ -256,9 +329,7 @@ yylex (void)
     if(isalpha((int)*token)){
       yylval.name = nullterminated;
       free(token);
-#ifdef DEBUG_BISON
-      printf("yylex returns UNQUOTED_STRING.\n");
-#endif
+
       return UNQUOTED_STRING;
     }
 
@@ -285,24 +356,18 @@ yylex (void)
     if(tokenlength == 5 &&
        strncmp("label", token, 5) == 0){
       free(token);
-#ifdef DEBUG_BISON
-      printf("yylex returns token_label.\n");
-#endif
+
       return token_label;
     }
     /* node */
     if(tokenlength == 4){
       if(strncmp("node", token, 4) == 0){
 	free(token);
-#ifdef DEBUG_BISON
-	printf("yylex returns token_node.\n");
-#endif
+
 	return token_node;
       }else if(strncmp("data", token, 4) == 0){
 	free(token);
-#ifdef DEBUG_BISON
-	printf("yylex returns token_data.\n");
-#endif
+
 	return token_data;
       }
     }
@@ -310,27 +375,21 @@ yylex (void)
     if(tokenlength == 9 &&
        strncmp("potential", token, 9) == 0){
       free(token);
-#ifdef DEBUG_BISON
-      printf("yylex returns token_potential.\n");
-#endif
+
       return token_potential;
     }
     /* states */
     if(tokenlength == 6 &&
        strncmp("states", token, 6) == 0){
       free(token);
-#ifdef DEBUG_BISON
-      printf("yylex returns token_states.\n");
-#endif
+
       return token_states;
     }
     /* position */
     if(tokenlength == 8 &&
        strncmp("position", token, 8) == 0){
       free(token);
-#ifdef DEBUG_BISON
-      printf("yylex returns token_position.\n");
-#endif
+
       return token_position;
     }
     /* End of literal string tokens */
@@ -352,9 +411,7 @@ yylex (void)
       yylval.name = nullterminated;
 
       free(token);
-#ifdef DEBUG_BISON
-      printf("yylex returns QUOTED_STRING.\n");
-#endif
+
       return QUOTED_STRING;
     }
 
@@ -373,25 +430,14 @@ yylex (void)
     if(!(nullterminated == endptr && numval == 0)){
       yylval.numval = numval;
       free(token);
-#ifdef DEBUG_BISON
-      printf("yylex returns NUMBER = %f.\n", numval);
-#endif
       free(nullterminated);
       return NUMBER;
     }
 
-#ifdef DEBUG_BISON
-    printf("Not a number: %s\n", nullterminated);
-#endif
-      
     /* Everything else is UNQUOTED_STRING */
     yylval.name = nullterminated;
 
     free(token);
-
-#ifdef DEBUG_BISON
-    printf("yylex returns UNQUOTED_STRING.\n");
-#endif
 
     return UNQUOTED_STRING;
 

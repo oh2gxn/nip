@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.13 2004-06-03 09:29:52 mvkorpel Exp $
+# $Id: Makefile,v 1.14 2004-06-04 13:35:50 mvkorpel Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -29,6 +29,7 @@ CFLAGS=-O2 -g -Wall
 LD=gcc
 LDFLAGS=-v
 YY=bison
+YYFLAGS=-v
 
 # Link the math library in with the program, in case you use the
 # functions in <math.h>
@@ -72,7 +73,7 @@ $(BIS_TARGET): $(BIS_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(BIS_OBJS) $(LIBS)
 
 $(HUG_SRCS): $(HUG_DEFS)
-	$(YY) $(HUG_DEFS)
+	$(YY) $(YYFLAGS) $(HUG_DEFS)
 
 # With these lines, executing "make clean" removes the .o files that
 # are not needed after the program is compiled.
