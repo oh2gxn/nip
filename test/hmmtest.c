@@ -17,8 +17,7 @@ int main(int argc, char *argv[]){
   int num_of_hidden = 0;
   int nip_num_of_cliques;
   double* quotient;
-  double*** filtered; /* probs of the hidden variables */
-  double*** smoothed; /* probs of the hidden variables (given all data) */
+  double*** result; /* probs of the hidden variables */
 
   Clique *nip_cliques;
   Clique clique_of_interest;
@@ -127,26 +126,22 @@ int main(int argc, char *argv[]){
 
 
   /* Allocate some space for filtering */
-  filtered = (double***) calloc(timeseries->datarows + 1, sizeof(double**));
-  smoothed = (double***) calloc(timeseries->datarows + 1, sizeof(double**));
-  if(!(filtered && smoothed)){
+  result = (double***) calloc(timeseries->datarows + 1, sizeof(double**));
+  if(!result){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
   for(t = 0; t < timeseries->datarows + 1; t++){
-    filtered[t] = (double**) calloc(num_of_hidden, sizeof(double*));
-    smoothed[t] = (double**) calloc(num_of_hidden, sizeof(double*));
-    if(!(filtered[t] && smoothed[t])){
+    result[t] = (double**) calloc(num_of_hidden, sizeof(double*));
+    if(!result[t]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
     }
 
     for(i = 0; i < num_of_hidden; i++){
-      filtered[t][i] = (double*) calloc( number_of_values(hidden[i]), 
+      result[t][i] = (double*) calloc( number_of_values(hidden[i]), 
 					 sizeof(double));
-      smoothed[t][i] = (double*) calloc( number_of_values(hidden[i]), 
-					 sizeof(double));
-      if(!(filtered[t][i] && smoothed[t][i])){
+      if(!result[t][i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	return 1;
       }
@@ -201,7 +196,7 @@ int main(int argc, char *argv[]){
     
     
     /* an experimental forward phase (a.k.a. filtering)... */
-    /* Calculates the filtered values */
+    /* Calculates the result values */
     for(i = 0; i < num_of_hidden; i++){
       
       /*********************************/
@@ -221,15 +216,15 @@ int main(int argc, char *argv[]){
       }  
       
       /* 3. Marginalisation (memory for the result must have been allocated) */
-      marginalise(clique_of_interest, interesting, filtered[t][i]);
+      marginalise(clique_of_interest, interesting, result[t][i]);
       
       /* 4. Normalisation */
-      normalise(filtered[t][i], number_of_values(interesting));    
+      normalise(result[t][i], number_of_values(interesting));    
       
       /* 5. Print the result */
       for(j = 0; j < number_of_values(interesting); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(interesting),
-	       (interesting->statenames)[j], filtered[t][i][j]);
+	       (interesting->statenames)[j], result[t][i][j]);
       printf("\n");
     }
 
@@ -243,7 +238,7 @@ int main(int argc, char *argv[]){
 	/* old posteriors become new priors */
 	temp = hidden[i];
 	if(temp->next != NULL)
-	  update_likelihood(temp->next, filtered[t][i]);
+	  update_likelihood(temp->next, result[t][i]);
       }
       
       global_retraction(nip_cliques[0]);
@@ -263,29 +258,31 @@ int main(int argc, char *argv[]){
   /* Backward phase */
   /******************/
 
+  /* Don't go backwards if there are no timeslices. */
   if(timeseries->datarows > 1){
     printf("## Backward phase ##\n");  
-
+    
     /* forget old evidence */
     it = get_Variable_list();
     while((temp = next_Variable(&it)) != NULL)
       reset_likelihood(temp);
     global_retraction(nip_cliques[0]);
-
-
+    
+    
     for(t = timeseries->datarows; t >= 0; t--){ /* FOR EVERY TIMESLICE */
       
       printf("-- t = %d --\n", t);
-    
-
+      
+      
       for(i = 0; i < num_of_hidden; i++){
 	temp = hidden[i];
 	if(temp->next == NULL)
-	  enter_evidence(temp, filtered[t][i]);
+	  enter_evidence(temp, result[t][i]);
       }
-
-
+      
+      
       if(t < timeseries->datarows){
+	
 	for(i = 0; i < num_of_hidden; i++){
 	  temp = hidden[i];
 	  if(temp->previous != NULL){
@@ -293,7 +290,7 @@ int main(int argc, char *argv[]){
 	    for(k = 0; k < num_of_hidden; k++)
 	      if(equal_variables(temp->previous, hidden[k]))
 		break;
-
+	    
 	    /* FIXME: Get rid of the quotient array */
 	    
 	    quotient = (double *) calloc(number_of_values(temp), 
@@ -304,7 +301,7 @@ int main(int argc, char *argv[]){
 	    }
 	    
 	    for(j = 0; j < number_of_values(temp); j++){
-	      quotient[j] = smoothed[t + 1][i][j] / filtered[t][k][j]; 
+	      quotient[j] = result[t + 1][i][j] / result[t][k][j]; 
 	    }
 	    enter_evidence(temp->previous, quotient);	  
 	    free(quotient);
@@ -350,18 +347,17 @@ int main(int argc, char *argv[]){
 	}  
 	
 	/* 3. Marginalisation (the memory must have been allocated) */
-	marginalise(clique_of_interest, interesting, smoothed[t][i]);
+	marginalise(clique_of_interest, interesting, result[t][i]);
 	
 	/* 4. Normalisation */
-	normalise(smoothed[t][i], number_of_values(interesting));
+	normalise(result[t][i], number_of_values(interesting));
 	
 	/* 5. Print the result */
 	for(j = 0; j < number_of_values(interesting); j++)
 	  printf("P(%s=%s) = %f\n", get_symbol(interesting),
-		 (interesting->statenames)[j], smoothed[t][i][j]);
+		 (interesting->statenames)[j], result[t][i][j]);
 	printf("\n");
       }
-      
       
       /* forget old evidence */
       it = get_Variable_list();
@@ -369,7 +365,7 @@ int main(int argc, char *argv[]){
 	reset_likelihood(temp);
       
       global_retraction(nip_cliques[0]);
-      
+
     }
   }
   
