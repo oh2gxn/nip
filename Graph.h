@@ -50,6 +50,11 @@ Variable* get_variables(Graph* G);
  * Parameter G: the graph
  */
 
+int is_child(Graph* G, Variable parent, Variable child);
+/* Returns 1 if "child" is a child of "parent" in Graph "G",
+ * 0 if not.
+ */
+
 void moralise(Graph* Gm, Graph* G);
 /* Moralises a DAG. (Brit. spelling)
  * Parameter G: An unmoral graph.

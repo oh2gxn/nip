@@ -8,6 +8,11 @@
    XXXX Closed taulukko -hash tätä varten.
 */
 
+/* DUMMY-funktio, ehkä nimi pitäisi vaihtaa */
+int get_index(Graph* G, Variable v){
+  return 0;
+}
+
 Graph* new_graph(unsigned n)
 {
     int i;
@@ -85,11 +90,13 @@ Variable* get_variables(Graph* G)
     return G->variables;
 }
 
-int is_child(Graph G, Variable parent, Variable child)
+int is_child(Graph* G, Variable parent, Variable child)
 {
     int i,j;
-    i = G->get_index(parent); /* XX kts. refaktorointi ylhäältä */
-    j = G->get_index(child);
+    /* MVK korjaus: ei G->get_index(...) vaan get_index(G, ...)
+     get_index taitaa olla vähän liian geneerinen nimi */
+    i = get_index(G, parent); /* XX kts. refaktorointi ylhäältä */
+    j = get_index(G, child);
     return G->adj_matrix[i][j];
 }
 
