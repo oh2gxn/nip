@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "Graph.h"
 #include "Variable.h"
 
@@ -6,7 +7,7 @@ Graph* new_graph(unsigned n)
 {
     Graph* newgraph = (Graph*) malloc(sizeof(Graph));
     newgraph->size = n; newgraph->top = 0;
-    newgraph->adj_matrix = (int*) calloc(n*n, sizeof(int));
+    newgraph->adj_matrix = (int**) calloc(n*n, sizeof(int));
     newgraph->variables = (Variable*) calloc(n, sizeof(Variable));
     return newgraph;
 }
@@ -27,6 +28,8 @@ int add_all_variables(Graph* G, Variable vars[])
     free(G->variables);
     G->variables = vars; /* Mostly (dangerous) syntactic syrup. */
     /* XX Ei paluuarvoa... */
+
+    return 0;
 }
 
 int add_child(Graph* G, Variable parent, Variable child)
@@ -46,6 +49,8 @@ int add_child(Graph* G, Variable parent, Variable child)
 
     G->adj_matrix[parent_i][child_i] = 1;
     /* Eikä paluuarvoa */
+
+    return 0;
 }
 
 int get_size(Graph* G)
@@ -62,12 +67,13 @@ Graph* make_undirected(Graph* G)
 {
     Graph* Gu;   
     int i,j,n;
-    int* Gam; /* Gam ie. G adjacency matrix */
+    int** Gam; /* Gam ie. G adjacency matrix */
     
     if (G == NULL || G->variables == NULL)
         return NULL;
 
-    n = G->size; Gam = G->adj_matrix
+    n = G->size;
+    Gam = G->adj_matrix;
     Gu = new_graph(n);
     add_all_variables(Gu, G->variables); /* XX Ongelmia tuhottaessa? */
     
@@ -79,12 +85,12 @@ Graph* make_undirected(Graph* G)
     return Gu;
 }
 
-void moralise(Graph* Gm, Graph G)
+void moralise(Graph* Gm, Graph* G)
 {
     int i,j,n,v;
         
     if (G == NULL || G->variables == NULL)
-        return NULL;
+        return;
     
     n = G->size;
         
@@ -102,7 +108,7 @@ void moralise(Graph* Gm, Graph G)
 /* Not specified Graph.h -- internal helper function */
 void triangulate(Graph* Gm)
 {
-    int i,j,n;
+    int i,n;
     Graph* Gm_copy;
     
     /* Step 1: Copy Gm */
@@ -116,11 +122,12 @@ void triangulate(Graph* Gm)
     /* Step 2: Triangulate Gm */
 }
 
-int find_cliques(Graph* Gm, Clique** cliques_p)
+int find_cliques(Graph* Gm, Clique* cliques_p)
 {
     /* XX NULL-tarkastukset uupuu */
 
     triangulate(Gm);
 
 
+    return 0;
 }
