@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.49 2005-03-17 10:10:57 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.50 2005-03-18 15:10:30 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -26,6 +26,9 @@
  * TODO: 
 
  * - There's a bug in the forward_inference! (Segmentation fault...)
+ *   - The segmentation fault does not occur on the Pyramid!
+ *   - But on itl-pc037 the program crashes
+
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *   - another forward-like algorithm with elements of dynamic programming
@@ -492,9 +495,6 @@ static int finish_timeslice_message_pass(Nip model, int direction,
 /* forward-only inference consumes constant (1 time slice) amount of memory 
  * + the results (which is linear) */
 UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
-
-  /* FIXME: a bug causing seg.faults */
-
   int i, k, t;
   int *cardinalities = NULL;
   Variable temp;
@@ -505,7 +505,7 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
   
   /* Allocate an array */
   if(model->num_of_nexts > 0){
-    cardinalities = (int*) calloc(ts->model->num_of_nexts, sizeof(int));
+    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return NULL;
@@ -606,10 +606,6 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
 			    model->cliques, model->num_of_cliques, 
 			    ts->observed[i], ts->data[t][i]);
     
-
-    printf("DEBUG: forward_inference \n");
-
-    
     if(t > 0)
       if(finish_timeslice_message_pass(model, FORWARD, 
 				       timeslice_sepset, NULL) != NO_ERROR){
@@ -654,7 +650,10 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
     reset_model(model);
   }
 
-  free_potential(timeslice_sepset);
+
+  /* FIXME: this one crashes on PC:s (not on pyramid though) */
+  free_potential(timeslice_sepset); 
+
 
   return results;
 }

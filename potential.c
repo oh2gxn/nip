@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.51 2004-11-01 14:48:17 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.52 2005-03-18 15:10:30 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -117,9 +117,10 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
 
 void free_potential(potential p){
   if(p){
-    free(p->cardinality);
+    /* FIXME: Why on earth does this cause a segmentation fault? */
+    free(p->cardinality); // This crashes in the backward phase
     free(p->data);
-    free(p);
+    free(p); // This crashes the forward phase
   }
   return;
 }

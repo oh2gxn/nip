@@ -70,10 +70,6 @@ int main(int argc, char *argv[]){
   }
 
 
-  /* FIX ME: there's a bug somewhere!!! */
-  /* Nope... It's a feature. */
-
-
   /*****************/
   /* Forward phase */
   /*****************/
@@ -84,7 +80,6 @@ int main(int argc, char *argv[]){
    * + print the result
    * + reset model
    */
-
 
   printf("## Forward phase ##\n");  
 
@@ -104,7 +99,7 @@ int main(int argc, char *argv[]){
       printf("\n"); 
     }
   }  
-  
+
   
   /******************/
   /* Backward phase */
