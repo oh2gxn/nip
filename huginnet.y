@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.4 2004-03-16 10:34:22 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.5 2004-03-16 13:40:02 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -21,7 +21,7 @@
 %token states "states"
 %token label "label"
 %token <name> NODEID
-%token <name> STRINGVALUE
+%token <name> STRING
 %token <numval> NUMBER
 %token UNKNOWN
 
@@ -45,25 +45,22 @@ parameters:    /* end of definitions */
 	     | unknown_decl parameters
 ;
 
-labeldecl:     label '=' string ';'
+labeldecl:     label '=' STRING ';'
 ;
 
-statesdecl:    states '=' '(' string strings ')' ';'
+statesdecl:    states '=' '(' STRING strings ')' ';'
 ;
 
 strings:       /* end of list */
-             | string strings
+             | STRING strings
 ;
 
 unknown_decl:  UNKNOWN '=' value ';'
 ;
 
-value:         string
+value:         STRING
              | list
              | NUMBER
-;
-
-string:        '"' STRINGVALUE '"'
 ;
 
 list:          '(' strlistitems ')'
@@ -71,7 +68,7 @@ list:          '(' strlistitems ')'
 ;
 
 strlistitems:  /* empty */
-             | string strlistitems
+             | STRING strlistitems
 ;
 
 numlistitems:  /*
@@ -86,7 +83,10 @@ potdecl:       potential '{' '}' /* arbitrary array? */
  *      for a potential array and yylval becomes a double array... Only 
  *      other option: leave the creation of an array to the parser. But 
  *      how can you add elements dynamically? 
- *      List -> Array and Array -> Potential at the end of each potdecl? */
+ *      List -> Array and Array -> Potential at the end of each potdecl? 
+ *
+ *      yylex will be able to parse strings i.e. strings are terminals: 
+ *      "this is a string" -> char* = [t, h, i, s, ... , g, \0] as lvalue */
 
 #include <ctype.h>
 
