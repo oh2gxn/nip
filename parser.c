@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.87 2005-02-22 15:18:48 jatoivol Exp $
+ * $Id: parser.c,v 1.88 2005-03-07 16:46:23 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -317,7 +317,7 @@ datafile *open_datafile(char *filename, char separator,
 
       if(!f->node_states[i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	/* JJT: Added 16.8. because of possible memory leaks. */
+	/* JJT: Added 16.8.2004 because of possible memory leaks. */
 	for(j = 0; j < f->num_of_nodes; j++){
 	  temp = statenames[j];
 	  while(temp != NULL){
@@ -342,7 +342,7 @@ datafile *open_datafile(char *filename, char separator,
 
   }
 
-  /* JJT: Added 13.8. because of possible memory leaks. */
+  /* JJT: Added 13.8.2004 because of possible memory leaks. */
   for(i = 0; i < f->num_of_nodes; i++){
     temp = statenames[i];
     while(temp != NULL){
@@ -363,7 +363,7 @@ datafile *open_datafile(char *filename, char separator,
 
 /*
  * Tells if the given token indicates a missing value, a "null observation".
- * The token must be nul terminated.
+ * The token must be null terminated.
  */
 static int nullobservation(char *token){
 

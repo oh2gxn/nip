@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.42 2005-03-07 15:21:56 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.43 2005-03-07 16:46:23 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -39,13 +39,6 @@
  *
  *   - Find a neat way to replace the original parameters of the model.
  *     - gather a potential for each family of variables
- *       - "HOUSTON, WE HAVE A PROBLEM!"... 
- *         Do we know which are the parents and which are the children?
- *         - An obvious solution is to save an array of pointers to the 
- *           family members (or just parents) in the child Variable
- *         - How about specialized pointers for this job, so that repeated
- *           computing of the same things is avoided..?
- *           
  *     - initialise with saved potentials? (see parser.c line 1115)
  *
  *   - Determine the parameters of the algorithm
@@ -1002,23 +995,61 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
 /* Teaches the given model according to the given time series with 
  * EM-algorithm. Returns an error code as an integer. */
 int em_learn(TimeSeries ts){
+  int i, j, n;
   int v;
   int t = 0;
+  int *card;
+  int *var_map;
   UncertainSeries ucs = NULL;
+  potential *parameters;
+
+  /* Reserve some memory for calculation */
+  parameters = (potential*) calloc(ts->model->num_of_children, 
+				   sizeof(potential));
+  if(!parameters){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+  for(v = 0; v < ts->model->num_of_children; v++){
+    n = ts->model->children[v]->num_of_parents + 1;
+    card = (int*) calloc(n, sizeof(int));
+    if(!card){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(parameters);
+      return ERROR_OUTOFMEMORY;
+    }
+    card[0] = ts->model->children[v]->cardinality;
+    for(i = 1; i < n; i++)
+      card[i] = ts->model->children[v]->parents[i]->cardinality;
+
+    parameters[v] = make_potential(card, n, NULL); /* the action is here */
+    free(card);
+  }
 
   while(0){ /* When should we stop? */
 
-    /* Now this is the heavy stuff..! */
+    /* E-Step: Now this is the heavy stuff..! */
     ucs = forward_backward_inference(ts,
 				     ts->model->variables,
 				     ts->model->num_of_vars);
 
     /* Pointers to the potentials..? */
     
-    /* The job */
+    /* M-Step: First the parameter estimation... */
     for(v = 0; v < ts->model->num_of_children; v++){
+      n = ts->model->children[v]->num_of_parents + 1;
 
       /* Reminder: Use mappings for referencing correct values */
+      var_map = (int*) calloc(n, sizeof(int));
+      if(!var_map){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);	
+	for(v = 0; v < ts->model->num_of_children; v++){
+	  free_potential(parameters[v]);
+	}
+	free(parameters);
+	free_uncertainseries(ucs);
+	return ERROR_OUTOFMEMORY;
+      }
 
       /* 1. Find out the structure of the potential */
 
@@ -1027,21 +1058,26 @@ int em_learn(TimeSeries ts){
       /* 3. Traverse through the potential with a flat index 
        *    (+ flat->multidimensional conversion + the mapping above) */
 
-      /* A specialised case can be found at HMModel.java lines 290-314 */
+      /* A special case can be found at HMModel.java lines 290-314 */
 
       for(t = 0; t < ts->length; t++){
 	; /* unfinished... */
       }
 
-      /* Normalisation, creation of potentials... */
+      /* Normalisation of potentials? */
       ;
       
     }
 
-    /* ...and updating the model */
+    /* ... then the model modification */
 
     free_uncertainseries(ucs);
   }
+
+  for(v = 0; v < ts->model->num_of_children; v++){
+    free_potential(parameters[v]);
+  }
+  free(parameters);
   
   /* NOT IMPLEMENTED YET! */
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
