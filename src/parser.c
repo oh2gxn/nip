@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.70 2004-08-16 14:06:49 jatoivol Exp $
+ * $Id: parser.c,v 1.71 2004-08-16 14:19:07 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -290,15 +290,25 @@ datafile *open_datafile(char *filename, char separator,
 
       if(!f->node_states[i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	free_datafile(f);
+	/* JJT: Added 16.8. because of possible memory leaks. */
+	for(j = 0; j < f->num_of_nodes; j++){
+	  temp = statenames[j];
+	  while(temp != NULL){
+	    temp2 = temp->fwd;
+	    free(temp->data);
+	    free(temp);
+	    temp = temp2;
+	  }
+	}
 	free(statenames);
+	free_datafile(f);
 	return NULL;
       }
 
       /* Copy statenames from the list */
       temp = statenames[i];
       for(j = 0; j < f->num_of_states[i]; j++){
-	strcpy(f->node_states[i][j], temp->data);
+	f->node_states[i][j] = temp->data;
 	temp = temp->fwd;
       }
     }
@@ -306,11 +316,10 @@ datafile *open_datafile(char *filename, char separator,
   }
 
   /* JJT: Added 13.8. because of possible memory leaks. */
-  for(i = 0; i < num_of_tokens; i++){
+  for(i = 0; i < f->num_of_nodes; i++){
     temp = statenames[i];
     while(temp != NULL){
       temp2 = temp->fwd;
-      free(temp->data);
       free(temp);
       temp = temp2;
     }
