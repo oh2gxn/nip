@@ -1,4 +1,4 @@
-class hmm
+class hmm_timeslice
 {
     inputs = ();
     outputs = ();
@@ -45,6 +45,7 @@ class hmm
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
+	NIP_previous = "C";
     }
 
     node B
@@ -65,36 +66,7 @@ class hmm
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-    }
-
-    node D
-    {
-	label = "Y2";
-	position = (200 100);
-	states = ("y1" "y2" "y3" "y4" "y5");
-	HR_Desc = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node E
-    {
-	label = "S3";
-	position = (300 200);
-	states = ("s1" "s2" "s3" "s4" "s5");
-	HR_Desc = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node F
-    {
-	label = "Y3";
-	position = (300 100);
-	states = ("y1" "y2" "y3" "y4" "y5");
-	HR_Desc = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
+	NIP_next = "A";
     }
 
     potential (A)
@@ -120,31 +92,4 @@ class hmm
 		( 0.2   0.05   0.25   0.3    0.2  ));	%  A=s5
     }
 
-    potential (D | C)
-    {          %  D=y1  D=y2   D=y3   D=y4   D=y5
-	data = (( 0.15  0.55   0.15   0.05   0.1  )	%  C=s1
-		( 0.8	0.05   0.05   0.05   0.05 )	%  C=s2
-		( 0.05	0.1    0.65   0.05   0.15 )	%  C=s3
-		( 0.1	0.05   0.1    0.4    0.35 )	%  C=s4
-		( 0.05	0.05   0.05   0.2    0.65 ));	%  C=s5
-    }
-
-    potential (E | C)
-    {          %  E=s1  E=s2   E=s3   E=s4   E=s5
-	data = (( 0.5   0.1    0.2    0.05   0.15 )	%  C=s1
-		( 0.2   0.6    0.05   0.1    0.05 )	%  C=s2
-		( 0.05  0.2    0.4    0.05   0.3  )	%  C=s3
-		( 0.05  0.05   0.1    0.5    0.3  )	%  C=s4
-		( 0.2   0.05   0.25   0.3    0.2  ));	%  C=s5
-    }
-
-    potential (F | E)
-    {          %  F=y1  F=y2   F=y3   F=y4   F=y5
-	data = (( 0.15  0.55   0.15   0.05   0.1  )	%  E=s1
-		( 0.8	0.05   0.05   0.05   0.05 )	%  E=s2
-		( 0.05	0.1    0.65   0.05   0.15 )	%  E=s3
-		( 0.1	0.05   0.1    0.4    0.35 )	%  E=s4
-		( 0.05	0.05   0.05   0.2    0.65 ));	%  E=s5
-    }
-
-} % class hmm
+} % class hmm_timeslice
