@@ -5,6 +5,7 @@
 #include "Variable.h"
 #include "potential.h"
 #include "errorhandler.h"
+#include "nip.h"
 
 /*
 #define PRINT_CLIQUES
@@ -27,26 +28,6 @@
 extern int yyparse();
 
 
-void make_consistent(Clique* cliques, int n_cliques){
-  int i;
-  for (i = 0; i < n_cliques; i++)
-    unmark_Clique(cliques[i]);
-  collect_evidence(NULL, NULL, cliques[0]);
-  for (i = 0; i < n_cliques; i++)
-    unmark_Clique(cliques[i]);
-  distribute_evidence(cliques[0]);
-}
-
-
-void forget_evidence(Clique c){
-  Variable temp;
-  Variable_iterator it = get_Variable_list();
-  while((temp = next_Variable(&it)) != NULL)
-    reset_likelihood(temp);
-  global_retraction(c);
-}
-
-
 int main(int argc, char *argv[]){
 
   char** tokens;
@@ -56,10 +37,10 @@ int main(int argc, char *argv[]){
   int i, j, k, m, n, retval, t = 0;
   int num_of_hidden = 0;
   int num_of_nexts = 0;
-  int nip_num_of_cliques;
   double** result; /* probs of the hidden variables */
   
-  Clique *nip_cliques;
+  nip model;
+  nip* a_temporary_pointer;
   Clique clique_of_interest;
   
   potential *timeslice_sepsets;
@@ -88,22 +69,14 @@ int main(int argc, char *argv[]){
     printf("Give the names of the net-file and data file, please!\n");
     return 0;
   }
-  else if(open_yyparse_infile(argv[1]) != NO_ERROR)
+  else
+    a_temporary_pointer = parse_model(argv[1]);
+
+  if(a_temporary_pointer == NULL)
     return -1;
-
-  retval = yyparse();
-
-  close_yyparse_infile();
-
-  if(retval != 0)
-    return retval;
+  else
+    model = *a_temporary_pointer;
   /* The input file has been parsed. -- */
-
-
-  /* Get references to the results of parsing */
-  nip_cliques = *get_cliques_pointer();
-  nip_num_of_cliques = get_num_of_cliques();
-
 
 #ifdef PRINT_CLIQUES
   print_Cliques();
@@ -122,12 +95,13 @@ int main(int argc, char *argv[]){
 
   /* Figure out the number of hidden variables and variables 
    * that substitute some other variable in the next timeslice. */
-  it = get_Variable_list();
+  it = model.first_var;
   temp = next_Variable(&it);
   while(temp != NULL){
     j = 1;
     for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(equal_variables(temp, get_variable(timeseries->node_symbols[i])))
+      if(equal_variables(temp, get_Variable(model, 
+					    timeseries->node_symbols[i])))
 	j = 0;
     if(j)
       num_of_hidden++;
@@ -138,7 +112,7 @@ int main(int argc, char *argv[]){
     temp = next_Variable(&it);
   }
 
-  assert(num_of_hidden == (total_num_of_vars() - timeseries->num_of_nodes));
+  assert(num_of_hidden == (model.num_of_vars - timeseries->num_of_nodes));
 
   /* Allocate arrays for hidden variables. */
   hidden = (Variable *) calloc(num_of_hidden, sizeof(Variable));
@@ -151,7 +125,7 @@ int main(int argc, char *argv[]){
   }
 
   /* Fill the arrays */
-  it = get_Variable_list();
+  it = model.first_var;
   temp = next_Variable(&it);
   k = 0;
   m = 0;
@@ -159,7 +133,8 @@ int main(int argc, char *argv[]){
   while(temp != NULL){
     j = 1;
     for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(equal_variables(temp, get_variable(timeseries->node_symbols[i]))){
+      if(equal_variables(temp, get_Variable(model,
+					    timeseries->node_symbols[i]))){
 	j = 0;
 	break;
       }
@@ -208,8 +183,7 @@ int main(int argc, char *argv[]){
   }
   
   for(i = 0; i < num_of_hidden; i++){
-    result[i] = (double*) calloc( number_of_values(hidden[i]), 
-				     sizeof(double));
+    result[i] = (double*) calloc(number_of_values(hidden[i]), sizeof(double));
     if(!result[i]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
@@ -226,7 +200,9 @@ int main(int argc, char *argv[]){
     /* 3. Put into the data array */
     for(i = 0; i < retval; i++){
       data[t][i] = 
-	get_stateindex(get_variable((timeseries->node_symbols)[i]), tokens[i]);
+	get_stateindex(get_Variable(model, 
+				    timeseries->node_symbols[i]), 
+		       tokens[i]);
 
       /* Q: Should missing data be allowed?   A: Yes. */
       /* assert(data[t][i] >= 0); */
@@ -259,14 +235,15 @@ int main(int argc, char *argv[]){
     /* Put some data in */
     for(i = 0; i < timeseries->num_of_nodes; i++)
       if(data[t][i] >= 0)
-	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+	enter_i_observation(get_Variable(model, 
+					 timeseries->node_symbols[i]), 
 			    data[t][i]);
     
     /********************/
     /* Do the inference */
     /********************/
     
-    make_consistent(nip_cliques, nip_num_of_cliques);
+    make_consistent(model);
     
     
     /* an experimental forward phase (a.k.a. filtering)... */
@@ -280,7 +257,7 @@ int main(int argc, char *argv[]){
       
       /* 1. Find the Clique that contains the family of 
        * the interesting Variables */
-      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
 				       &interesting, 1);
       assert(clique_of_interest != NULL);
       
@@ -300,7 +277,7 @@ int main(int argc, char *argv[]){
 
     /* Start a message pass between timeslices */
     /* NOTE: Let's hope the "next" variables are in the same clique! */
-    clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+    clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
 				     next, num_of_nexts);
     assert(clique_of_interest != NULL);
     temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
@@ -325,11 +302,11 @@ int main(int argc, char *argv[]){
 			temp_vars);
     
     /* Forget old evidence */
-    forget_evidence(nip_cliques[0]);
+    reset_model(model);
     
     if(t < timeseries->datarows - 1){
       /* Finish the message pass between timeslices */
-      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
 				       previous, num_of_nexts);
       assert(clique_of_interest != NULL);
       j = 0; k = 0;
@@ -358,7 +335,7 @@ int main(int argc, char *argv[]){
   printf("## Backward phase ##\n");  
   
   /* forget old evidence */
-  forget_evidence(nip_cliques[0]);
+  reset_model(model);
   
   
   for(t = timeseries->datarows - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
@@ -368,12 +345,13 @@ int main(int argc, char *argv[]){
 
     for(i = 0; i < timeseries->num_of_nodes; i++)
       if(data[t][i] >= 0)
-	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+	enter_i_observation(get_Variable(model, 
+					 timeseries->node_symbols[i]), 
 			    data[t][i]);
     
     
     /* Message pass??? */
-    clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+    clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
 				     previous, num_of_nexts);
     assert(clique_of_interest != NULL);
     temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
@@ -401,14 +379,14 @@ int main(int argc, char *argv[]){
 
 
     /* an inference */
-    make_consistent(nip_cliques, nip_num_of_cliques);    
+    make_consistent(model);
   
 
     if(t < timeseries->datarows - 1){
       /*******************************************/
       /* FIX ME: there's a bug here somewhere!!! */
       /*******************************************/
-      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
 				       next, num_of_nexts);
       assert(clique_of_interest != NULL);
       j = 0; k = 0;
@@ -428,7 +406,7 @@ int main(int argc, char *argv[]){
     /* Do the inference */
     /********************/
     
-    make_consistent(nip_cliques, nip_num_of_cliques);
+    make_consistent(model);
     
     
     /*********************************/
@@ -441,7 +419,7 @@ int main(int argc, char *argv[]){
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
-      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
 				       &interesting, 1);
       assert(clique_of_interest != NULL);
       
@@ -461,7 +439,7 @@ int main(int argc, char *argv[]){
 
     if(t > 0){
       /* Start a message pass between timeslices */
-      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
 				       previous, num_of_nexts);
       assert(clique_of_interest != NULL);
       /* NOTE: Let's hope the "previous" variables are in correct order */
@@ -480,11 +458,13 @@ int main(int argc, char *argv[]){
 			  temp_vars);
 
       /* forget old evidence */
-      forget_evidence(nip_cliques[0]);
+      reset_model(model);
     }
 
     free(temp_vars);
   }
+
+  free_model(model);
   
   return 0;
 }

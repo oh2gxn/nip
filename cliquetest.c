@@ -118,8 +118,8 @@ int main(){
 
   /* observation entry: This information is from the given data. */
   /* data please? anyone? */
-  enter_evidence(variables[1], probB);
-  enter_evidence(variables[3], probD);
+  enter_evidence(get_first_variable(), clique_pile, 3, variables[1], probB);
+  enter_evidence(get_first_variable(), clique_pile, 3, variables[3], probD);
 
   /* DEBUG */
   /* printf("BCD after evidence:\n"); */

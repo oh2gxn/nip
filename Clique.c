@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.73 2004-07-09 14:06:13 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.74 2004-08-09 15:02:23 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -103,10 +103,16 @@ int free_Clique(Clique c){
   
   /* clean the list of sepsets */
   l1 = c->sepsets;
-  l2 = c->sepsets;
   while(l1 != NULL){
     l2 = l1->fwd;
-    free(l1);
+
+    /* Removes Sepsets from Cliques. */
+    remove_Sepset(((Sepset)l1->data)->cliques[0], (Sepset)l1->data);
+    remove_Sepset(((Sepset)l1->data)->cliques[1], (Sepset)l1->data);
+
+    /* Destroy the Sepset. */
+    free_Sepset(l1->data);
+
     l1=l2;
   }
   /* clean the rest */
@@ -161,6 +167,28 @@ int add_Sepset(Clique c, Sepset s){
 #endif
 
   return 0;
+}
+
+
+void remove_Sepset(Clique c, Sepset s){
+
+  link l = c->sepsets;
+  while(l != NULL){
+    if(l->data == s){
+      if(l->bwd == NULL)
+	c->sepsets = l->fwd;
+      else
+	l->bwd->fwd = l->fwd;
+
+      if(l->fwd != NULL)
+	l->fwd->bwd = l->bwd;
+
+      free(l);
+      return;
+    }      
+    l = l->fwd;
+  }
+  return;
 }
 
 
@@ -632,48 +660,49 @@ int normalise(double result[], int array_size){
 }
 
 
-int global_retraction(Clique c){
+int global_retraction(Variable_iterator vars, Clique* cliques, 
+		      int num_of_cliques){
 
   int index;
   Variable v;
-  Variable_iterator it;
-    
+  Clique c;
+
 #ifdef DEBUG_RETRACTION
   printf("Now in global_retraction\n");
 #endif
 
-  for(index = 0; index < nip_num_of_cliques; index++)
-    unmark_Clique(nip_cliques[index]);
+  for(index = 0; index < num_of_cliques; index++)
+    unmark_Clique(cliques[index]);
 
   /* Reset all the potentials back to original. */
-  jtree_dfs(c, retract_Clique, retract_Sepset);
+  jtree_dfs(cliques[0], retract_Clique, retract_Sepset);
 
   /* Enter evidence back to the join tree. */
-  it = get_Variable_list();
-
-  v = next_Variable(&it);
+  v = next_Variable(&vars);
   
   while(v != NULL){
     
-    c = find_family(nip_cliques, nip_num_of_cliques, &v, 1);
+    c = find_family(cliques, num_of_cliques, &v, 1);
     index = var_index(c, v);
 
     update_evidence(v->likelihood, NULL, c->p, index);
-    v = next_Variable(&it);
+    v = next_Variable(&vars);
   }
 
   return 0;
 }
 
 
-int enter_observation(Variable v, char *state){
+int enter_observation(Variable_iterator vars, Clique* cliques, 
+		      int num_of_cliques, Variable v, char *state){
   int index = get_stateindex(v, state);
 
-  return enter_i_observation(v, index);
+  return enter_i_observation(vars, cliques, num_of_cliques, v, index);
 }
 
 
-int enter_i_observation(Variable v, int index){
+int enter_i_observation(Variable_iterator vars, Clique* cliques, 
+			int num_of_cliques, Variable v, int index){
   int i, retval;
   double *evidence = (double *) calloc(v->cardinality, sizeof(double));
 
@@ -688,14 +717,15 @@ int enter_i_observation(Variable v, int index){
     else
       evidence[i] = 0;
 
-  retval = enter_evidence(v, evidence);
+  retval = enter_evidence(vars, cliques, num_of_cliques, v, evidence);
   free(evidence);
 
   return retval;
 }
 
 
-int enter_evidence(Variable v, double evidence[]){
+int enter_evidence(Variable_iterator vars, Clique* cliques, 
+		   int num_of_cliques, Variable v, double evidence[]){
   int index, i;
   int retraction = 0;
   Clique c;
@@ -704,9 +734,9 @@ int enter_evidence(Variable v, double evidence[]){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
   }
-    
-  c = find_family(nip_cliques, nip_num_of_cliques, &v, 1);
 
+  c = find_family(cliques, num_of_cliques, &v, 1);
+    
   if(!c){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);
     return ERROR_INVALID_ARGUMENT;
@@ -729,7 +759,7 @@ int enter_evidence(Variable v, double evidence[]){
   update_likelihood(v, evidence);
 
   if(retraction)
-    return global_retraction(c);
+    return global_retraction(vars, cliques, num_of_cliques);
 
   return NO_ERROR;
 }
@@ -1111,4 +1141,9 @@ Clique **get_cliques_pointer(){
 void set_num_of_cliques(int n){
 
   nip_num_of_cliques = n;
+}
+
+void reset_Clique_array(){
+  nip_cliques = NULL;
+  nip_num_of_cliques = 0;
 }

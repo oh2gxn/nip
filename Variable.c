@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.33 2004-07-02 11:07:21 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.34 2004-08-09 15:02:23 jatoivol Exp $
  */
 
 #include <string.h>
@@ -158,8 +158,20 @@ int total_num_of_vars(){
 }
 
 
-Variable_iterator get_Variable_list(){
+varlink get_first_variable(){
   return nip_first_var;
+}
+
+
+varlink get_last_variable(){
+  return nip_last_var;
+}
+
+
+void reset_Variable_list(){
+  nip_first_var = NULL;
+  nip_last_var = NULL;
+  nip_vars_parsed = 0;
 }
 
 
@@ -178,7 +190,7 @@ Variable next_Variable(Variable_iterator* it){
 Variable get_variable(char *symbol){
 
   Variable v; 
-  Variable_iterator it = get_Variable_list();
+  Variable_iterator it = nip_first_var;
   v = next_Variable(&it);
 
 #ifdef DEBUG_PARSER

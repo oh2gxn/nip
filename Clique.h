@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.42 2004-07-09 14:06:13 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.43 2004-08-09 15:02:23 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -48,6 +48,10 @@ int free_Clique(Clique c);
 
 /* Method for adding a sepset next to a clique: returns an error code */
 int add_Sepset(Clique c, Sepset s);
+
+
+/* Method for removing a sepset from a clique: returns an error code */
+void remove_Sepset(Clique c, Sepset s);
 
 
 /* Method for creating sepsets: 
@@ -137,7 +141,8 @@ int normalise(double result[], int array_size);
 
 
 /* Method for backing away from impossibilities in observation. */
-int global_retraction(Clique c);
+int global_retraction(Variable_iterator vars, Clique* cliques, 
+		      int num_of_cliques);
 
 
 /*
@@ -145,7 +150,8 @@ int global_retraction(Clique c);
  * The observed state of the variable is given as a string.
  * Returns an error code.
  */
-int enter_observation(Variable v, char *state);
+int enter_observation(Variable_iterator vars, Clique* cliques, 
+		      int num_of_cliques, Variable v, char *state);
 
 
 /*
@@ -154,7 +160,8 @@ int enter_observation(Variable v, char *state);
  * (See get_stateindex() at Variable.h)
  * Returns an error code.
  */
-int enter_i_observation(Variable v, int index);
+int enter_i_observation(Variable_iterator vars, Clique* cliques, 
+			int num_of_cliques, Variable v, int index);
 
 
 /*
@@ -163,7 +170,8 @@ int enter_i_observation(Variable v, int index);
  * This function might do a global retraction.
  * Returns an error code.
  */
-int enter_evidence(Variable v, double evidence[]);
+int enter_evidence(Variable_iterator vars, Clique* cliques, 
+		   int num_of_cliques, Variable v, double evidence[]);
 
 
 /* Finds a clique containing a family of variables. Returns the first
@@ -222,5 +230,7 @@ int get_num_of_cliques();
 Clique **get_cliques_pointer();
 
 void set_num_of_cliques(int n);
+
+void reset_Clique_array();
 
 #endif /* __CLIQUE_H__ */

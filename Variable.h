@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.31 2004-07-02 11:07:21 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.32 2004-08-09 15:02:23 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -34,7 +34,7 @@ struct varlist {
 
 typedef struct varlist varelement;
 typedef varelement *varlink;
-typedef varlink Variable_iterator; /* FIXME if you will */
+typedef varlink Variable_iterator;
 
 /* Creates a new Variable:
  * - symbol is a short name e.g. A (= array [A, \0])
@@ -84,7 +84,14 @@ int total_num_of_vars();
 
 
 /* Call this before searching through the list of variables. */
-Variable_iterator get_Variable_list();
+varlink get_first_variable();
+
+
+varlink get_last_variable();
+
+
+/* Call this after a model is parsed from a file and is ready. */
+void reset_Variable_list();
 
 
 /* Gives the next Variable in the list of Variables. Returns NULL when 

@@ -5,6 +5,7 @@
 #include "Variable.h"
 #include "potential.h"
 #include "errorhandler.h"
+#include "nip.h"
 
 /*
 #define PRINT_CLIQUES
@@ -19,11 +20,11 @@ int main(int argc, char *argv[]){
   int** data;
   int i, j, k, l, retval, t = 0;
   int num_of_hidden = 0;
-  int nip_num_of_cliques;
   double** quotient;
   double*** result; /* probs of the hidden variables */
 
-  Clique *nip_cliques;
+  nip model;
+  nip* a_temporary_pointer;
   Clique clique_of_interest;
 
   Variable *hidden;
@@ -45,22 +46,14 @@ int main(int argc, char *argv[]){
     printf("Give the names of the net-file and data file, please!\n");
     return 0;
   }
-  else if(open_yyparse_infile(argv[1]) != NO_ERROR)
+  else
+    a_temporary_pointer = parse_model(argv[1]);
+
+  if(a_temporary_pointer == NULL)
     return -1;
-
-  retval = yyparse();
-
-  close_yyparse_infile();
-
-  if(retval != 0)
-    return retval;
+  else
+    model = *a_temporary_pointer;
   /* The input file has been parsed. -- */
-
-
-  /* Get references to the results of parsing */
-  nip_cliques = *get_cliques_pointer();
-  nip_num_of_cliques = get_num_of_cliques();
-
 
 #ifdef PRINT_CLIQUES
   print_Cliques();
@@ -80,19 +73,20 @@ int main(int argc, char *argv[]){
 
   /* Figure out the number of hidden variables and variables that substitute
    * some other variable in the next timeslice. */
-  it = get_Variable_list();
+  it = model.first_var;
   temp = next_Variable(&it);
   while(temp != NULL){
     j = 1;
     for(i = 0; i < timeseries->num_of_nodes; i++)
-      if(equal_variables(temp, get_variable(timeseries->node_symbols[i])))
+      if(equal_variables(temp, get_Variable(model, 
+					    timeseries->node_symbols[i])))
 	j = 0;
     if(j)
       num_of_hidden++;
     temp = next_Variable(&it);
   }
 
-  assert(num_of_hidden == (total_num_of_vars() - timeseries->num_of_nodes));
+  assert(num_of_hidden == (model.num_of_vars - timeseries->num_of_nodes));
 
   /* Allocate arrays for hidden variables. */
   hidden = (Variable *) calloc(num_of_hidden, sizeof(Variable));
@@ -102,14 +96,15 @@ int main(int argc, char *argv[]){
   }
 
   /* Fill the arrays */
-  it = get_Variable_list();
+  it = model.first_var;
   temp = next_Variable(&it);
   i = 0;
   l = 0;
   while(temp != NULL){
     j = 1;
     for(k = 0; k < timeseries->num_of_nodes; k++)
-      if(equal_variables(temp, get_variable(timeseries->node_symbols[k])))
+      if(equal_variables(temp, get_Variable(model, 
+					    timeseries->node_symbols[k])))
 	j = 0;
     if(j)
       hidden[l++] = temp;
@@ -172,7 +167,8 @@ int main(int argc, char *argv[]){
     /* 3. Put into the data array */
     for(i = 0; i < retval; i++){
       data[t][i] = 
-	get_stateindex(get_variable((timeseries->node_symbols)[i]), tokens[i]);
+	get_stateindex(get_Variable(model, timeseries->node_symbols[i]), 
+		       tokens[i]);
 
       /* Q: Should missing data be allowed?   A: Yes. */
       /* assert(data[t][i] >= 0); */
@@ -197,19 +193,7 @@ int main(int argc, char *argv[]){
     /* Do the inference */
     /********************/
     
-    /* 1. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 2. Collect evidence */
-    collect_evidence(NULL, NULL, nip_cliques[0]);
-    
-    /* 3. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 4. Distribute evidence */
-    distribute_evidence(nip_cliques[0]);
+    make_consistent(model);
     
     
     /* an experimental forward phase (a.k.a. filtering)... */
@@ -225,7 +209,7 @@ int main(int argc, char *argv[]){
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
-      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
 				       &interesting, 1);
       if(!clique_of_interest){
 	printf("In hmmtest.c : No clique found! Sorry.\n");
@@ -247,9 +231,7 @@ int main(int argc, char *argv[]){
 
     if(t < timeseries->datarows){    
       /* forget old evidence */
-      it = get_Variable_list();
-      while((temp = next_Variable(&it)) != NULL)
-	reset_likelihood(temp);
+      reset_model(model);
       
       for(i = 0; i < num_of_hidden; i++){
 	/* old posteriors become new priors */
@@ -258,12 +240,15 @@ int main(int argc, char *argv[]){
 	  update_likelihood(temp->next, result[t][i]);
       }
       
-      global_retraction(nip_cliques[0]);
+      global_retraction(model.first_var, model.cliques, model.num_of_cliques);
       
       /* 0. Put some data in */
       for(i = 0; i < timeseries->num_of_nodes; i++)
 	if(data[t][i] >= 0)
-	  enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+	  enter_i_observation(model.first_var, model.cliques, 
+			      model.num_of_cliques,
+			      get_Variable(model, 
+					   timeseries->node_symbols[i]), 
 			      data[t][i]);
     }
   }
@@ -278,10 +263,7 @@ int main(int argc, char *argv[]){
   printf("## Backward phase ##\n");  
   
   /* forget old evidence */
-  it = get_Variable_list();
-  while((temp = next_Variable(&it)) != NULL)
-    reset_likelihood(temp);
-  global_retraction(nip_cliques[0]);
+  reset_model(model);
   
   
   for(t = timeseries->datarows; t >= 0; t--){ /* FOR EVERY TIMESLICE */
@@ -292,13 +274,16 @@ int main(int argc, char *argv[]){
     if(t > 0){
       for(i = 0; i < timeseries->num_of_nodes; i++)
 	if(data[t - 1][i] >= 0)
-	  enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+	  enter_i_observation(model.first_var, model.cliques, 
+			      model.num_of_cliques, 
+			      get_variable((timeseries->node_symbols)[i]), 
 			      data[t - 1][i]);
       
       for(i = 0; i < num_of_hidden; i++){
 	temp = hidden[i];
 	if(temp->next != NULL)
-	  enter_evidence(temp->next, result[t-1][i]);
+	  enter_evidence(model.first_var, model.cliques, 
+			 model.num_of_cliques, temp->next, result[t-1][i]);
       }
     }      
     
@@ -317,7 +302,9 @@ int main(int argc, char *argv[]){
 	  for(j = 0; j < number_of_values(temp); j++)
 	    quotient[i][j] = result[t + 1][i][j] / result[t][k][j]; 
 	  
-	  enter_evidence(temp->previous, quotient[i]);
+	  enter_evidence(model.first_var, model.cliques, 
+			 model.num_of_cliques, 
+			 temp->previous, quotient[i]);
 	}
       }
     }
@@ -326,19 +313,7 @@ int main(int argc, char *argv[]){
     /* Do the inference */
     /********************/
     
-    /* 1. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 2. Collect evidence */
-    collect_evidence(NULL, NULL, nip_cliques[0]);
-    
-    /* 3. Unmark all Cliques */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    /* 4. Distribute evidence */
-    distribute_evidence(nip_cliques[0]);
+    make_consistent(model);
     
     
     
@@ -352,7 +327,7 @@ int main(int argc, char *argv[]){
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
-      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+      clique_of_interest = find_family(model.cliques, model.num_of_cliques, 
 				       &interesting, 1);
       if(!clique_of_interest){
 	printf("In hmmtest.c : No clique found! Sorry.\n");
@@ -373,11 +348,7 @@ int main(int argc, char *argv[]){
     }
     
     /* forget old evidence */
-    it = get_Variable_list();
-    while((temp = next_Variable(&it)) != NULL)
-      reset_likelihood(temp);
-    
-    global_retraction(nip_cliques[0]);
+    reset_model(model);
     
   }
   

@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.59 2004-07-07 13:31:19 jatoivol Exp $
+ * $Id: parser.c,v 1.60 2004-08-09 15:02:24 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -930,7 +930,7 @@ int parsedVars2Graph(){
   Variable_iterator it;
   initDataLink initlist = nip_first_initData;
 
-  it = get_Variable_list();
+  it = get_first_variable();
   v = next_Variable(&it);
   
   /* Add parsed variables to the graph. */
@@ -1022,7 +1022,9 @@ int parsedPots2JTree(){
 	initialise(fam_clique, initlist->child, initlist->parents, 
 		   initlist->data); /* THE job */
       else
-	enter_evidence(initlist->child, initlist->data->data);
+	enter_evidence(get_first_variable(), *get_cliques_pointer(), 
+		       get_num_of_cliques(), initlist->child, 
+		       initlist->data->data);
     }
     else
       fprintf(stderr, "In parser.c (%d): find_family failed!\n", __LINE__);
