@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "../Variable.h"
+#include "../Graph.h"
 #include "Heap.h"
-#include "Graph.h"
 
 /* Voi räkä */
 /* Koodi ei tässä muodossaan sovellu lapsille tai raskaana oleville tai 

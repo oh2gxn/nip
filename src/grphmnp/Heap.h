@@ -2,7 +2,7 @@
 #define __HEAP_H__
 
 #include "../Variable.h"
-#include "Graph.h"
+#include "../Graph.h"
 
 #define PARENT(i) (i/2)
 #define LEFT(i) (2*i)
