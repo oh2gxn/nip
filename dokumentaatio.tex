@@ -1,9 +1,9 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.14 2004-09-01 11:23:32 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.15 2004-09-02 12:15:00 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
-%\bibliographystyle{unsrt}
+\bibliographystyle{unsrt}
 \setlength{\topmargin}{0mm}
 \setlength{\oddsidemargin}{0mm}
 \setlength{\textheight}{22cm}
@@ -129,7 +129,7 @@ length is defined as \textbf{VAR\_SYMBOL\_LENGTH} in
 \verb+Variable.h+. To ensure the correct operation of the system, the 
 symbol should be unique.
 \item[name] is a little longer name to describe the variable: it is
-called {\it label} in the Hugin net files. This is NOT used for 
+called {\it label} in the Hugin net language files. This is NOT used for 
 identification of the variables and it doesn't need to be unique. 
 The maximum length is defined as \textbf{VAR\_NAME\_LENGTH} in 
 \verb+Variable.h+.
@@ -206,10 +206,10 @@ will not make a copy of the string so don't mess with it.
 \textbf{state} in the state name array of the
 variable~\textbf{v}. This index can be used for interpreting various
 arrays describing probability distributions. 
-\item[total\_num\_of\_vars()] is used only for aiding the Hugin net file
-parser to return the total number of newly created variables. All 
-the variables created with \textbf{new\_variable} are accumulated 
-in a list and this function can tell the size of that list.
+\item[total\_num\_of\_vars()] is used only for aiding the Hugin net 
+language file parser to return the total number of newly created 
+variables. All the variables created with \textbf{new\_variable} are 
+accumulated in a list and this function can tell the size of that list.
 \item[get\_first\_variable()] gives the first element in the list
 of newly created variables mentioned above.
 \item[get\_last\_variable()] gives the last element in the list
@@ -223,9 +223,9 @@ parsed variables.
 variable iterator~\textbf{it} and advance the pointer to the next
 variable in the list. The function returns {\it NULL} if the iterator
 runs out of variables.
-\item[get\_parser\_variable(symbol)] aids the net file parser to find a
-variable, identified by the \textbf{symbol} string, in the list of newly
-created variables.
+\item[get\_parser\_variable(symbol)] aids the net language parser 
+to find a variable, identified by the \textbf{symbol} string, in the 
+list of newly created variables.
 \item[get\_variable(it, symbol)] searches the
 variable iterator~\textbf{it} for a variable identified by the string
 \textbf{symbol}. The iterator will be used by the function, so it will
@@ -244,7 +244,7 @@ and will always have.
 
 
 \subsection{Other possibilities}
-The Hugin net file parser is made with Bison and consequently the 
+The Hugin net language parser is made with Bison and consequently the 
 \verb+yyparse+ function is not able to return a list of variables etc. 
 This makes it awkward to pass the results of parsing to the rest of the
 program. Our solution is to create a list of parsed variables in
@@ -550,11 +550,11 @@ of it as the {\it integer} \textbf{num\_of\_vars}.
 
 The most important thing is to have the {\it Variables} array in the 
 same order as the \textbf{data} array is thought to be arranged. 
-For example, the potentials specified in the Hugin net files have the 
-child variable as the least significant one: the value of the variable 
+For example, the potentials specified in the Hugin net language have 
+the child variable as the least significant one: the value of the variable 
 has the least effect on the placement of the data. Thus the child
 variable should be the first in the array. Note that for some reason 
-the first parent variable specified in the Hugin net files should be 
+the first parent variable specified in the Hugin net language should be 
 the last in the \textbf{variables} array, and the last parent should
 be the second right after the child variable.
 \item[unmark\_Clique(c)] resets the mark in the {\it
@@ -567,7 +567,7 @@ before calling \textbf{distribute\_evidence} or
 {\it Sepset}~\textbf{s} has.
 \item[distribute\_evidence(c)] implements the algorithm which spreads 
 the evidence entered in to the cliques away from the given 
-{\it Clique}~\textbf{c}. See \cite{procedural_guide} page 21 for
+{\it Clique}~\textbf{c}. See \cite{huang1994} page 21 for
 details. 
 \item[collect\_evidence(c1, s12, c2)] implements the algorithm which 
 collects evidence from the subtree rooted in the given {\it
@@ -634,7 +634,7 @@ tree. This is equal to the function \textbf{enter\_observation} but
 instead of telling the observation as a string, the user should encode
 the observation as the {\it integer} \textbf{index}. A zero
 corresponds to the first state of the variable defined in the Hugin
-net file. (See the \textbf{get\_stateindex} function also.)
+net language file. (See the \textbf{get\_stateindex} function also.)
 \item[enter\_evidence(vars, cliques, num\_of\_cliques, v, evidence)]
 is made for entering soft evidence into a join tree. (Note that hard
 evidence is only a special case of soft evidence.) The function is
@@ -680,19 +680,19 @@ How the stuff could work also...
 
 
 \newpage
-\section{The Hugin net file parser}
+\section{The Hugin net language parser}
 \subsection{General}
 
 % The structure of net files
 
 \subsection{The functionality description}
-The parser for reading models from Hugin net files is written in two
-files: \verb+huginnet.y+ contains the lexer and description of the
-files for the Bison parser generator and \verb+parser.c+ contains lots
-of helper functions for the parser. The data structures used for
-parsing are defined in the \verb+parser.h+ file. There's also a file
-named \verb+fileio.c+ which contains functions for tokenising the
-lines read from files.
+The parser, for reading models from Hugin net language files, is
+written in two files: \verb+huginnet.y+ contains the lexer and 
+description of the language for the Bison parser generator and 
+\verb+parser.c+ contains lots of helper functions for the parser. 
+The data structures used for parsing are defined in the
+\verb+parser.h+ file. There's also a file named \verb+fileio.c+ which 
+contains functions for tokenising the lines read from files.
 
 \subsubsection{The data structures}
 The \verb+parser.h+ file defines several data types used with the
@@ -721,7 +721,7 @@ the list or {\it NULL} at the beginning of the list.
 
 Since the conditional probability distributions and the structure of
 the model are both encoded into the \verb+potential+ declarations of
-the net files, the distributions have to be temporarily stored until
+the net language, the distributions have to be temporarily stored until
 the entire net file has been parsed and the join tree is made. In
 other words, you can't enter the quantitative parameters of the model
 until you know the qualitative structure of it. This is why the parser
@@ -732,7 +732,7 @@ holds the following fields
 \begin{description}
 \item[data] is the {\it potential} stored by the list element.
 \item[child] is the {\it Variable} which was defined to depend on
-other variables in the potential declaration of the net file.
+other variables in the potential declaration of the net language.
 \item[parents] is an {\it array of Variables} which contains the
 parent variables of the \textbf{child}. Instead of an array it may be
 {\it NULL} if the \textbf{child} was an independent variable and had
@@ -744,7 +744,7 @@ at the beginning of the list.
 \end{description}
 
 A same kind of problem arises with the \verb+node+ declarations of the
-Hugin net files when timeslices are defined. The parser can't assign
+Hugin net language when timeslices are defined. The parser can't assign
 the pointer from a {\it Variable} to the corresponding {\it Variable}
 in the next timeslice before both of the variables have been
 parsed. This is solved by collecting the information about timeslice 
@@ -752,8 +752,8 @@ dependencies into a list until all the variables have been read from
 the net file. The file \verb+parser.h+ defines a data type for this
 purpose: {\it time\_init\_link} is a pointer to a struct which can be
 used as an element in a linked list and holds the following fields
-\begin{description}\item[var] is the {\it Variable} which corresponds to another one in
-the next timeslice.
+\begin{description}\item[var] is the {\it Variable} which corresponds
+to another one in the next timeslice.
 \item[next] is the symbol {\it string} which identifies the corresponding 
 variable in the next timeslice.
 \item[fwd] is a {\it time\_init\_link} i.e. a pointer to the next
@@ -797,7 +797,7 @@ found on the first line of the data file.
 \item[node\_states] is a {\it two-dimensional array of strings}. It
 contains the names of the states of every observed variable. For
 example \verb+node_states[i][j]+ is a name of a state of the $i:th$
-observed variable, assuming that $j \in [0, c[$, where $c$ is the 
+observed variable, assuming that $j \in [0, c-1]$, where $c$ is the 
 cardinality of the variable. This array is particularly useful if the
 model is created automatically from data and not read from a net file.
 
@@ -809,13 +809,13 @@ data file.
 
 \subsubsection{The functions}
 The file created by Bison, \verb+huginnet.tab.c+, contains the
-function which starts the Hugin net file parser for reading a model
+function which starts the Hugin net language file parser for reading a model
 from a file.
 \begin{description}
 \item[yyparse()] must be included as an {\it external} function. 
 (like \verb+extern int yyparse();+) It is the function which causes 
 a model being parsed from a file. Use the helper functions at 
-\verb+parser.c+ to open the net file prior to parsing, to close it
+\verb+parser.c+ to open the net language file prior to parsing, to close it
 after the execution and to dig out the newly created
 model.
 \end{description}
@@ -889,48 +889,136 @@ array of character arrays)
 \end{description}
 
 
-Most of the actions executed by the net file parser is done by the
+Most of the actions executed by the net language file parser is done by the
 functions in \verb+parser.c+. The functions are as follows
 \begin{description}
-\item[open\_yyparse\_infile(filename)] 
+\item[open\_yyparse\_infile(filename)] is one of the most important
+functions in reading models from files. It opens a file for the parser
+for reading and returns zero if the file was opened successfully. The 
+name of the file is given as the {\it string} \textbf{filename}.
 
-\item[close\_yyparse\_infile()] 
+\item[close\_yyparse\_infile()] should be called after parsing a model
+from a file. It closes the net language file appropriately.
 
-\item[open\_datafile(filename, separator, write, nodenames)] 
+\item[open\_datafile(filename, separator, write, nodenames)] is used
+for opening data files for reading or writing. The function returns a 
+pointer to the created {\it datafile} struct. The name of the data
+file is given as the {\it string} \textbf{filename} and the used
+separator is given as the {\it character} \textbf{separator}. The 
+{\it integer} \textbf{write} is used for indicating whether the file
+should be opened for reading only (zero) or for writing only
+(non-zero). The {\it integer} flag \textbf{nodenames} tells the 
+function to treat the first line of the file as regular data (zero) or
+use the tokens on the line as the symbols of the variables. If 
+\verb+nodenames == 0+ the function invents its own symbols for the
+variables to be included with the {\it datafile} struct.
 
-\item[close\_datafile(file)] 
+\item[close\_datafile(file)] closes the data file included in the
+given {\it datafile pointer} \textbf{file} and frees the memory
+allocated for the {\it datafile} struct.
 
-\item[nextline\_tokens(f, separator, tokens)] 
+\item[nextline\_tokens(f, separator, tokens)] is the function made for
+reading data files. It reads the next line of the {\it datafile}
+referenced by the pointer~\textbf{f} and splits the line into
+tokens. The separator should be specified as the {\it character}
+\textbf{separator}. The function returns the number of tokens as an 
+{\it integer} and sets the pointer \textbf{tokens} to reference the
+resulting {array of strings}. I.e. \textbf{tokens} is a pointer to an
+array of character arrays, or in other words a \verb+char***+. Make
+sure that you don't lose any existing pointers by calling this
+function, because freeing the tokens read from the file is up to the 
+user.
 
-\item[next\_token(token\_length)] 
+\item[next\_token(token\_length)] is used by the net language
+parser. The function returns the next token from the opened net file
+and writes the length of the token to the {\it integer} referenced by
+the pointer \textbf{token\_length}. The token is a (null terminated)
+{\it string} i.e. an array of characters. The token length does not
+include the NULL character and equals zero if there are no more tokens
+in the file. After the token string has been used, please free the
+memory allocated for it.
 
-\item[add\_symbol(v)] 
+\item[add\_symbol(v)] is used only by the net language parser. The
+function adds the {\it Variable}~\textbf{v} into a temporary list of
+parent variables. The list is needed for parsing the parent variables
+according to the potential declarations of the net language. (See also
+the \textbf{make\_variable\_array} function)
 
-\item[add\_initData(p, child, parents)] 
+\item[add\_initData(p, child, parents)] is used only by the net
+language parser. This function adds the parsed 
+{\it potential}~\textbf{p}, the {\it Variable} \textbf{child} and its
+\textbf{parents} in an {\it array of Variables} to the list of parsed
+potentials. The potentials are collected into the list until the
+join tree has been created and it can be initialised with the potentials.
 
-\item[add\_time\_init(var, next)] 
+\item[add\_time\_init(var, next)] is used only by the net language
+parser. It adds information about the correspondence of nodes between
+timeslices into a temporary list. The {\it Variable} \textbf{var} will
+correspond to the {\it Variable} identified by the symbol {\it string}
+\textbf{next} in the next timeslice. The information has to be
+collected into a list, because the another variable may haven't been
+created yet at the moment. After the variables have been parsed, the
+list is cleaned.
 
-\item[add\_double(d)] 
+\item[add\_double(d)] is used only by the net language parser. The
+function adds the {\it double}~\textbf{d} into a temporary list of
+floating point numbers. Usually the list is used for storing the
+numbers of the data fields of the potential declarations in the net
+files. The list can be turned into an array by the
+\textbf{make\_double\_array} function.
 
-\item[add\_string(string)] 
+\item[add\_string(string)] is used only by the net language
+parser. Calling this function will add the null terminated {\it array
+of characters} \textbf{string} into a temporary list. The list is used
+for storing the names of the states declared in the node declarations
+of the net language. The list can be turned into an array by using the
+\textbf{make\_string\_array} function.
 
-\item[make\_variable\_array()] 
+\item[make\_variable\_array()] is used only by the net language
+parser. The function creates an array containing the {\it Variables}
+accumulated in the temporary list by \textbf{add\_symbol}
+function. The resulting array is usually used as the array of parent 
+variables.
 
-\item[make\_double\_array()] 
+\item[make\_double\_array()] is used only by the net language
+parser. It creates an {\it array of doubles} containing the numbers
+accumulated into the temporary list by the the \textbf{add\_double}
+function. The array is used as the data for the parsed potentials. 
 
-\item[make\_string\_array()] 
+\item[make\_string\_array()] is used only by the net language
+parser. The function creates an {\it array of strings} out of the list
+created by the \textbf{add\_string} function. The array is used as the
+statename array of the parsed variables.
 
-\item[reset\_doubles()] 
+\item[reset\_doubles()] cleans the temporary list of floating point
+numbers created with the \textbf{add\_double} function. The function
+should be used only by the net language parser.
 
-\item[reset\_strings()] 
+\item[reset\_strings()] cleans the list of {\it strings} gathered with
+the \textbf{add\_string} function. This function does NOT free the
+actual strings, only the list structure. The function is meant to be
+used only by the net language parser.
 
-\item[reset\_symbols()] 
+\item[reset\_symbols()] cleans the temporary list of variables made by
+the \textbf{add\_symbol} function. The function does NOT free the
+actual {\it Variables}, only the list structure itself. It is meant to
+be used only by the net language parser.
 
-\item[reset\_initData()] 
+\item[reset\_initData()] cleans the data used for initialising the
+join tree. The function also frees the {\it potentials} and the arrays of
+parent {\it Variables} gathered in the list. (The variables themselves
+are not freed, of course.) The function is meant to be used only by
+the net language parser.
 
-\item[reset\_timeinit()] 
+\item[reset\_timeinit()] cleans the temporary list about the timeslice
+correspondencies accumulated by the \textbf{add\_time\_init} function.
+Only the list structure and the stored symbol string are freed, not
+the referenced variables. The function is meant to be used only by the
+net language parser.
 
-\item[init\_new\_Graph()] 
+\item[init\_new\_Graph()] is mean to be used only by the net language
+parser. The function initialises a new {\it Graph} which can hold as
+many variables than is parsed from the file so far.
 
 \item[parsedVars2Graph()] 
 
@@ -962,7 +1050,7 @@ functions in \verb+parser.c+. The functions are as follows
 
 \item[get\_cliques\_pointer()] 
 
-\item[reset\_Clique\_array()] 
+\item[reset\_Clique\_array()]
 
 \end{description}
 
@@ -1006,6 +1094,6 @@ How the stuff could work also...
 \newpage
 %\appendix
 %\newpage
-%\bibliography{dokumentaatio}
+\bibliography{dokumentaatio}
 
 \end{document}
