@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.31 2004-09-30 13:06:59 arasinen Exp $
+% $Id: dokumentaatio.tex,v 1.32 2004-10-04 09:54:38 arasinen Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -1452,17 +1452,47 @@ The underlying assumptions with the \cdatatype{Graph} have been the following:
 \item The number of variables in a graph will be relatively small.
 \end{enumerate}
 
-The analysis is divided into two blocks. First we study operations that modify the Graph, and then follow with a discussion of the cluster/clique-building phase. These two stages use very different data structures and algorithms, which makes unified analysis difficult.
+The analysis is divided into two blocks. First we study operations
+that modify the Graph, and then follow with a discussion of the
+cluster/clique-building phase. These two stages use very different
+data structures and algorithms, which makes unified analysis
+difficult.
 
 \subsection{Operations on the Graph}
 
-% Build
-% Undirect
-% Moralise
+The first graphical operation is the creation of the graph
+itself. This is a relatively simple operation and for all practical
+purposes constant time. Adding new variables is also constant time per
+variable. After all variables have been added, the internal
+datastructures are sorted with standard C library quicksort. This
+incurs an $O(n \log n)$ penalty. However, it is run only once per
+graph and the implementation is quite efficient.
+
+Of the purely graphical operations, moralisation dominates others by
+an order of magnitude. Since the operations are done on a copy of the
+original graph, we should also consider those costs. However, it turns
+out that creating a copy of the graph is at most $O(n^2)$ operation
+and thus also dominated by moralisation. Furthermore, most operations
+are implemented using \examplecode{memcpy} which should guarantee
+almost optimal performance on a given platform.
+
+The moralisation step itself is an $O(n^3)$ operation. For each of the
+$n$ variables we have potentially $(n-1)(n-2)/2$ possible pairs of a
+child and a parent. Like all graphical operations, it is run only once
+per graph and should not be a bottleneck in most applications.
 
 \subsection{Operations on the Clusters}
 
-%triangulation
+Technically the triangulation operation is also a graphical
+operation. Since it is more complex than the operations in the
+previous subsection and outputs cliques, it is analysed separately.
+
+% Create a heap based on the moral graph.
+% Extract $n$ clusters from the heap.
+% Check if the cluster is a subset of a previously found clique.
+% Add to the 
+
+
 %clique building
 
 
