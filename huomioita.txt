@@ -81,3 +81,8 @@ Sekalaisia huomioita:
 * No voi hevon kettu. Ei sitten voinut Huginin net-tiedoston esittelyss‰ 
   kertoa kaikkia likaisia yksityiskohtia... Menee parseri pikkuisen 
   remonttiin, mutta onneksi tehtiin Bisonilla.
+--
+
+11.6.2004 (Janne ja Mikko)
+* Klikeill‰ ei taida olla sepsettej‰. Ei nimitt‰in etene distribute_evidence
+  mihink‰‰n. Nyt viikonloppua viett‰m‰‰n.

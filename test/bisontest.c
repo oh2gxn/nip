@@ -4,12 +4,14 @@
 #include "potential.h"
 
 /*#define PRINT_POTENTIALS*/
-/*
+
 #define DEBUG_BISONTEST
-*/
 
 #define EVIDENCE
 
+/*
+#define EVIDENCE1
+*/
 
 int yyparse();
 
@@ -27,8 +29,17 @@ int main(int argc, char *argv[]){
 
 #ifdef EVIDENCE
   int evidence_retval;
+
+#ifdef EVIDENCE1
   double probB[] = {0.25, 0.25, 0.40, 0.10};
   double probD[] = {0.2, 0.3, 0.5};
+#endif
+
+#ifndef EVIDENCE1
+  double probB[] = {0.75, 0.21, 0.03, 0.01};
+  double probD[] = {0.6, 0.1, 0.3};
+#endif
+
   Variable observed[2];
 #endif
 
@@ -98,8 +109,8 @@ int main(int argc, char *argv[]){
   collect_evidence(NULL, NULL, nip_cliques[0]);
   distribute_evidence(nip_cliques[0]);
 
-  /*  clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-      observed+1, 1);*/
+  clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				   observed+1, 1);
 
 #ifdef EVIDENCE
   evidence_retval = enter_evidence(clique_of_interest, observed[1], probD);
@@ -122,7 +133,7 @@ int main(int argc, char *argv[]){
 
 
   /* marginalisation */
-  interesting = get_variable("A"); /* THE variable */
+  interesting = get_variable("B"); /* THE variable */
 
   if(!interesting){
     printf("In bisontest.c : Variable of interest not found.\n");
@@ -135,7 +146,7 @@ int main(int argc, char *argv[]){
     printf("In bisontest.c : No clique found! Sorry.\n");
     return 1;
   }  
-    
+
   result = (double *) calloc(interesting->cardinality,
 			     sizeof(double));
   if(!result){
@@ -143,6 +154,13 @@ int main(int argc, char *argv[]){
     return 1;
   }
 
+#ifdef DEBUG_BISONTEST
+  printf("Marginalising in a Clique with ");
+  for(i = 0; i < clique_of_interest->p->num_of_vars; i++)
+    printf("%s", clique_of_interest->variables[i]->symbol);
+  printf("\n");
+#endif
+    
   temp = marginalise(clique_of_interest, interesting, result);
 
 #ifdef DEBUG_BISONTEST

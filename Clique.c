@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.42 2004-06-11 12:34:18 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.43 2004-06-11 13:53:29 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -12,9 +12,9 @@
 #include "potential.h"
 #include "errorhandler.h"
 
-/*
+
 #define DEBUG_CLIQUE
-*/
+
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
@@ -56,18 +56,6 @@ Clique make_Clique(Variable vars[], int num_of_vars){
     cardinality[i] = vars[reorder[i]]->cardinality;
     c->variables[i] = vars[reorder[i]];
   }
-
-#ifdef DEBUG_CLIQUE
-  printf("In Clique.c :\n");
-  for(i = 0; i < num_of_vars; i++)
-    printf("%d:th variable %s has cardinality %d\n", i, c->variables[i]->symbol, cardinality[i]);
-  j = 0;
-  for(i = 0; i < num_of_vars; i++)
-    if(c->variables[i]->cardinality != cardinality[i])
-      j++;
-  if(j)
-    printf("In Clique.c : %d cardinalities were inconsistent !!! \n", j);
-#endif  
 
   c->p = make_potential(cardinality, num_of_vars, NULL);
   free(cardinality);
@@ -222,13 +210,6 @@ potential create_Potential(Variable variables[], int num_of_vars,
     return NULL;
   }
 
-#ifdef DEBUG_CLIQUE
-  printf("In create_Potential: num_of_vars = %d\n", num_of_vars);
-  for(i = 0; i < num_of_vars; i++)
-    printf("In create_Potential: variables[%d] = %s\n", 
-	   i, variables[i]->symbol);
-#endif
-
   /* reorder[i] is the place of i:th variable (in the sense of this program) 
    * in the array variables[] */
 
@@ -249,24 +230,11 @@ potential create_Potential(Variable variables[], int num_of_vars,
   for(i = 0; i < num_of_vars; i++)
     reorder[temp_array[i]] = i; /* fill the reordering */
 
-
-#ifdef DEBUG_CLIQUE
-  for(i = 0; i < num_of_vars; i++)
-    printf("temp_array[%d]: %d, reorder[%d]: %d\n", 
-	   i, temp_array[i], i, reorder[i]);
-#endif
-  
   /* Figure out some stuff */
   for(i = 0; i < num_of_vars; i++){
     size_of_data *= variables[i]->cardinality; /* optimal? */
     cardinality[i] = variables[reorder[i]]->cardinality;
   }
-
-#ifdef DEBUG_CLIQUE
-  for(i = 0; i < num_of_vars; i++)
-    printf("In Clique.c : %d:th variable %s (id = %lu) has cardinality %d\n",
-	   i, variables[reorder[i]]->symbol, get_id(variables[reorder[i]]), cardinality[i]);
-#endif
 
   /* Create a potential */
   p = make_potential(cardinality, num_of_vars, NULL);
@@ -320,6 +288,16 @@ int unmark_Clique(Clique c){
 
 
 int distribute_evidence(Clique c){
+
+  int i;
+
+#ifdef DEBUG_CLIQUE
+  printf("Distributing evidence in the clique of ");
+  for(i = 0; i < c->p->num_of_vars; i++)
+    printf("%s ", c->variables[i]->symbol);
+  printf("\n");
+#endif
+
   /* mark */
   c->mark = 1;
 
@@ -343,6 +321,10 @@ int distribute_evidence(Clique c){
       distribute_evidence(s->cliques[0]);
     else if(s->cliques[1]->mark == 0)
       distribute_evidence(s->cliques[1]);
+#ifdef DEBUG_CLIQUE
+    else
+      printf("In Clique.c: No unmarked neighbouring Cliques.\n");
+#endif
     l = l->fwd;
   }
   return 0;

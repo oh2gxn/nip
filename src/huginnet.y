@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.39 2004-06-11 12:34:18 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.40 2004-06-11 13:53:29 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -137,7 +137,7 @@ positionDeclaration:  token_position '=' '(' NUMBER NUMBER ')' ';'
 ;
 
 
-unknownDeclaration:  UNQUOTED_STRING '=' value ';'
+unknownDeclaration:  UNQUOTED_STRING '=' value ';' {}
 ;
 
 
@@ -210,7 +210,7 @@ num:       NUMBER { add_double($1) }
 
 
 ignored_numbers:     /* end of list */
-           | NUMBER ignored_numbers
+           | NUMBER ignored_numbers {}
            | '(' ignored_numbers ')' ignored_numbers
 ;
 
