@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.40 2004-06-24 06:32:09 jatoivol Exp $
+ * $Id: parser.c,v 1.41 2004-06-24 10:55:14 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -71,7 +71,7 @@ void close_yyparse_infile(){
 }
 
 
-datafile *open_datafile(char *filename, int write){
+datafile *open_datafile(char *filename, char separator, int write){
 
   int length_of_name = 0;
 
@@ -106,6 +106,8 @@ datafile *open_datafile(char *filename, int write){
   }
 
   strcpy(f->name, filename);
+
+  f->separator = separator;
 
   return f;
 }
@@ -158,13 +160,13 @@ char *next_token(int *token_length){
       return NULL;
     }
     /* How many tokens in the line? */
-    tokens_left = count_tokens(last_line, NULL);
+    tokens_left = count_tokens(last_line, NULL, 1, "(){}=,;", 7, 1);
 
     /* Check whether the line has any tokens. If not, read a new line
      * (go to beginning of loop) */
     if(tokens_left > 0){
       /* Adjust pointer to the beginning of token boundary index array */
-      indexarray = tokenise(last_line, tokens_left, 1);
+      indexarray = tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1);
 
       /* Check if tokenise failed. If it failed, we have no other option
        * than to stop: return NULL, *token_length = 0.

@@ -225,8 +225,6 @@ int main(int argc, char *argv[]){
   /* some crappy evidence */
   test_evidence(observed[2], probs[2], nip_cliques, nip_num_of_cliques);
 
-  printf("\n\n");
-
   /* a propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
@@ -278,9 +276,6 @@ int main(int argc, char *argv[]){
   /* *********************************************************** */
 
 
-
-
-  printf("\n\n");
 
   /* a propagation */
   for(i = 0; i < nip_num_of_cliques; i++)

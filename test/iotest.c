@@ -1,5 +1,5 @@
 /*
- * iotest.c $Id: iotest.c,v 1.2 2004-03-22 14:16:07 mvkorpel Exp $
+ * iotest.c $Id: iotest.c,v 1.3 2004-06-24 10:55:14 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -8,69 +8,89 @@
 
 #define PRINTWORDS 20
 
+/*
+#define TOKENS
+*/
+
 /* A test for io functions. Reads from stdio.
  * Currently prints the number of characters, words and lines.
  * Also prints the word boundaries of each line, and prints a few
  * of the first words, showing the wonderful ability to split strings
  * at word boundaries.
  */
-int main(){
-/*    FILE *f; */
-  /* Hopefully we dont't have longer lines than this. */
+int main(int argc, char **argv){
+
   char s[10000];
   int chars = 0, words = 0, lines = 0;
   int chartemp, wordtemp, i;
-  int *wordbounds;
+  int only_count = 0;
+  int *wordbounds = NULL;
   char *splitwords[PRINTWORDS];
   char **wordarray;
 
-/*    f=fopen("infile","r"); */
-/*    if (!f) */
-/*    return 1; */
+  if(argc > 1)
+    only_count = 1;
 
-/*    while(fgets(s, 1000, f) != NULL){ */
   while(gets(s) != NULL){
-/*      printf("%s",s); */
-    printf("%s\n",s);
-    wordtemp = count_words(s, &chartemp);
-    wordbounds = tokenise(s, wordtemp, 0);
 
-    if(words < PRINTWORDS){
-      wordarray = split(s, wordbounds, wordtemp);
-      for(i = 0; i < wordtemp; i++){
-	if(words < PRINTWORDS)
-	  splitwords[words] = wordarray[i];
-	else
-	  free(wordarray[i]);
-	words++;
+    printf("%s\n", s);
+
+#if defined(TOKENS)
+    wordtemp = count_tokens(s, &chartemp, 1, "(){}=,;", 7, 1);
+#else
+    wordtemp = count_words(s, &chartemp);
+#endif
+
+    if(!only_count){
+#if defined(TOKENS)
+      wordbounds = tokenise(s, wordtemp, 1, "(){}=,;", 7, 1);
+#else
+      wordbounds = tokenise(s, wordtemp, 0, NULL, 0, 0);
+#endif
+
+      if(words < PRINTWORDS){
+	wordarray = split(s, wordbounds, wordtemp);
+	for(i = 0; i < wordtemp; i++){
+	  if(words < PRINTWORDS)
+	    splitwords[words] = wordarray[i];
+	  else
+	    free(wordarray[i]);
+	  words++;
+	}
       }
+      else
+	words += wordtemp;
     }
     else
       words += wordtemp;
 
-    /* Print the word bounds. */
-    if(wordbounds != NULL){
-      for(i = 0; i < 2 * wordtemp; i++)
-	printf("%d ", wordbounds[i]); 
-      printf("\n");
-      free(wordbounds);
+    if(!only_count){
+      /* Print the word bounds. */
+      if(wordbounds != NULL){
+	for(i = 0; i < 2 * wordtemp; i++)
+	  printf("%d ", wordbounds[i]); 
+	printf("\n");
+	free(wordbounds);
+      }
     }
 
     chars += chartemp + 1;
     lines++;
   }
-/*      fclose(f); */
 
   /* Print results */
-  printf("\n%d lines, %d words, %d chars\n", lines, words, chars);
-  if(words < PRINTWORDS)
-    wordtemp = words;
-  else
-    wordtemp = PRINTWORDS;
-  printf("%d first words:\n", wordtemp);
-  for(i = 0; i < wordtemp; i++)
-    printf("%s ", splitwords[i]);
-  printf("\n");
+  printf("%d lines, %d words, %d chars\n", lines, words, chars);
+
+  if(!only_count){
+    if(words < PRINTWORDS)
+      wordtemp = words;
+    else
+      wordtemp = PRINTWORDS;
+    printf("%d first words:\n", wordtemp);
+    for(i = 0; i < wordtemp; i++)
+      printf("%s ", splitwords[i]);
+    printf("\n");
+  }
 
   return 0;
 }

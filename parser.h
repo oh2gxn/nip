@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser.
- * $Id: parser.h,v 1.25 2004-06-24 06:32:09 jatoivol Exp $
+ * $Id: parser.h,v 1.26 2004-06-24 10:55:14 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -50,6 +50,7 @@ typedef initDataElement *initDataLink;
 
 typedef struct {
   char *name;
+  char separator;
   FILE *file;
   int is_open;
 } datafile;
@@ -72,7 +73,7 @@ void close_yyparse_infile();
  * - filename : the name of the file to be opened
  * - write : 0 if the file is opened for reading only, 
  *           e.g. 1 if the file is opened for writing only. */
-datafile *open_datafile(char *filename, int write);
+datafile *open_datafile(char *filename, char separator, int write);
 
 
 /* Closes a file described by the datafile struct. */

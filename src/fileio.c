@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.14 2004-06-17 15:28:49 jatoivol Exp $
+ * fileio.c $Id: fileio.c,v 1.15 2004-06-24 10:55:14 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -7,50 +7,45 @@
 #include <string.h>
 #include "fileio.h"
 #include "errorhandler.h"
-#include "Graph.h"
 
 /* #define DEBUG_IO */
 
 int count_words(const char *s, int *chars){
-  int words = 0, state = 0;
-  if(chars)
-    *chars = 0;
-  while (*s != '\0'){
-    if(state == 0){
-      if((*s != ' ') && (*s != '\t') && (*s != '\n')){
-	words++;	  
-	state = 1;
-      }
-    }
-    else if((*s == ' ') || (*s == '\t') || (*s == '\n'))
-      state = 0;
-    s++;
-    if(chars)
-      (*chars)++;
-  }
-  return words;
+
+  return count_tokens(s, chars, 0, NULL, 0, 0);
+
 }
 
-int count_tokens(const char *s, int *chars){
+int count_tokens(const char *s, int *chars, int quoted_strings,
+		 char *separators, int numof_separators, int sep_tokens){
   int tokens = 0, state = 0, i;
+  int separator_found = 0;
   char ch;
   if(chars)
     *chars = 0;
 
-  /* States:
-   *  0: waiting for start of token
-   *  1: processing token (not quoted string)
-   *  2: processing quoted string
+  /*
+   * States:
+   *   0: waiting for start of token
+   *   1: processing token (not quoted string)
+   *   2: processing quoted string
    */
   while (*s != '\0'){
 
-    if(state != 2 &&
-       ((*s == '(') || (*s == ')') || (*s == '{') || (*s == '}') ||
-	(*s == '=') || (*s == ';') || (*s == ','))){
-      tokens++;
+    if(separators)
+      for(i = 0; i < numof_separators; i++)
+	if(*s == separators[i]){
+	  separator_found = 1;
+	  break;
+	}
+
+    if(state != 2 && separator_found){
+      if(sep_tokens)
+	tokens++;
       state = 0;
+      separator_found = 0;
     }
-    else if(state != 2 && (*s == '"')){
+    else if(quoted_strings && state != 2 && (*s == '"')){
 
       /* Check if we have a matching '"' */
       i = 1;
@@ -72,7 +67,7 @@ int count_tokens(const char *s, int *chars){
     else if(state == 1 &&
 	    ((*s == ' ') || (*s == '\t') || (*s == '\n')))
       state = 0;
-    else if(state == 2 && (*s == '"'))
+    else if(quoted_strings && state == 2 && (*s == '"'))
       state = 0;
 
     s++;
@@ -83,25 +78,28 @@ int count_tokens(const char *s, int *chars){
 }
 
 
-int *tokenise(const char s[], int n, int mode){
+int *tokenise(const char s[], int n, int quoted_strings,
+	      char *separators, int numof_separators,
+	      int sep_tokens){
   int *indices;
   int i = 0, j = 0, state = 0, arraysize = 2*n, k;
+  int separator_found = 0;
   char ch, ch2;
 
   if(s == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 0);
     return NULL;
   }
-  if(n < 1){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return NULL;
-  }
-  if(!(mode == 0 || mode == 1)){
+  if(n < 0){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
+  if(n == 0)
+    return NULL;
+
   indices = (int *) calloc(arraysize, sizeof(int));
+
   /* Couldn't allocate memory */
   if(!indices){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -109,22 +107,28 @@ int *tokenise(const char s[], int n, int mode){
   }
 
   while ((ch = s[i]) != '\0'){
-    if(mode == 1 && state != 2 &&
-       ((ch == '(') || (ch == ')') || (ch == '{') || (ch == '}') ||
-	(ch == '=') || (ch == ';') || (ch == ','))){
 
-      /* If we were not done processing the previous token,
-       * mark it as done.
-       */
+    if(separators)
+      for(k = 0; k < numof_separators; k++)
+	if(ch == separators[k]){
+	  separator_found = 1;
+	  break;
+	}
+
+    if(state != 2 && separator_found){
       if(state == 1)
 	indices[j++] = i;
 
       state = 0;
 
-      indices[j++] = i;
-      indices[j++] = i + 1;
+      if(sep_tokens){
+	indices[j++] = i;
+	indices[j++] = i + 1;
+      }
+
+      separator_found = 0;
     }
-    else if(mode == 1 && state != 2 && (ch == '"')){
+    else if(quoted_strings && state != 2 && (ch == '"')){
 
       /* Check if we have a matching '"' */
       k = i + 1;
@@ -154,7 +158,7 @@ int *tokenise(const char s[], int n, int mode){
       indices[j++] = i;
       state = 0;
     }
-    else if(mode == 1 && state == 2 && (ch == '"')){
+    else if(quoted_strings && state == 2 && (ch == '"')){
       indices[j++] = i + 1;
       state = 0;
     }
@@ -175,7 +179,7 @@ int *tokenise(const char s[], int n, int mode){
   /* Not enough words */
   else if(j < arraysize - 1){
 #ifdef DEBUG_IO
-    printf("tokenise ei loytanyt tarpeeksi sanoja\n", i);
+    printf("tokenise failed to find the specified amount of tokens\n", i);
     printf("j = %d, arraysize = %d\n", j, arraysize);
     printf("indices =\n");
     for(i = 0; i < j; i++)
@@ -192,6 +196,7 @@ int *tokenise(const char s[], int n, int mode){
 char **split(const char s[], int indices[], int n){
   int i, wordlength, begin, end;
   char **words = (char **) calloc(n, sizeof(char *));
+
   /* Couldn't allocate memory */
   if(!words){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -203,6 +208,7 @@ char **split(const char s[], int indices[], int n){
     end = indices[2*i+1];
     wordlength = end - begin;
     words[i] = (char *) calloc(wordlength + 1, sizeof(char));
+
     /* Couldn't allocate memory */
     if(!words[i]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);

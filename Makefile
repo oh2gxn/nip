@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.21 2004-06-17 15:28:49 jatoivol Exp $
+# $Id: Makefile,v 1.22 2004-06-24 10:55:14 mvkorpel Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -10,16 +10,17 @@ PAR_SRCS=$(GRPH_SRCS) fileio.c parser.c
 HUG_DEFS=huginnet.y
 HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
 BIS_SRCS=$(HUG_SRCS) $(PAR_SRCS)
-
+IO_SRCS=fileio.c errorhandler.c
 
 # XXX Replace "cliquetest" below with the name you want for your program!
 POT_TARGET=potentialtest
 CLI_TARGET=cliquetest
 PAR_TARGET=parsertest
 GRPH_TARGET=graph_test
+IO_TARGET=iotest
 
 BIS_TARGET=bisontest
-TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET)
+TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET)
 
 # You should not need to modify anything below this line...
 # Sets the name and some flags for the C compiler and linker
@@ -46,7 +47,8 @@ PAR_OBJS=$(PAR_SRCS:.c=.o) parsertest.o
 GRPH_OBJS=$(GRPH_SRCS:.c=.o) graph_test.o
 HUG_OBJS=$(HUG_SRCS:.c=.o) 
 BIS_OBJS=$(BIS_SRCS:.c=.o) bisontest.o
-OBJS=$(BIS_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o
+IO_OBJS=$(IO_SRCS:.c=.o) iotest.o
+OBJS=$(BIS_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o iotest.o
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program
@@ -54,7 +56,7 @@ OBJS=$(BIS_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o
 # NOTE the tab character! Syntax of a rule:
 # <target>: <dependencies>
 # \t<command>
-all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET)
+all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) $(IO_TARGET)
 
 # The program depends on the object files in $(OBJS). Make knows how
 # to compile a .c file into an object (.o) file; this rule tells it
@@ -73,6 +75,9 @@ $(GRPH_TARGET): $(GRPH_OBJS)
 
 $(BIS_TARGET): $(BIS_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(BIS_OBJS) $(LIBS)
+
+$(IO_TARGET): $(IO_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(IO_OBJS) $(LIBS)
 
 $(HUG_SRCS): $(HUG_DEFS)
 	$(YY) $(YYFLAGS) $(HUG_DEFS)
