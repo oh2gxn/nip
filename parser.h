@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.5 2004-03-23 12:08:55 jatoivol Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.6 2004-03-23 13:30:25 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -48,7 +48,7 @@ typedef struct stringlist stringelement;
 typedef stringelement *stringlink;
 
 static stringlink first_string = 0;
-static varlink last_string = 0;
+static stringlink last_string = 0;
 static int strings_parsed = 0;
 
 /* The current input file */
@@ -81,5 +81,21 @@ int add_double(double d);
 
 /* Adds a string into the list of parsed strings. */
 int add_string(char* string);
+
+/* Creates an array from the double values in the list. 
+ * The size will be doubles_parsed. */
+double* make_double_array();
+
+/* Creates an array from the strings in the list. 
+ * The size will be strings_parsed. */
+char** make_string_array();
+
+/* Removes everything from the list of doubles. This is likely to be used 
+ * after the parser has parsed doubles to the list, created an array out 
+ * of it and wants to reset the list for future use. */
+int reset_doubles();
+
+/* Removes everything from the list of strings. */
+int reset_strings();
 
 #endif /* __PARSER_H__ */

@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.5 2004-03-23 12:08:55 jatoivol Exp $
+ * $Id: parser.c,v 1.6 2004-03-23 13:30:25 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -116,7 +116,7 @@ int add_double(double d){
   if(first_double = 0)
     first_double = new;
   last_double = new;
-  vars_parsed++;
+  doubles_parsed++;
   return 0;
 }
 
@@ -129,6 +129,59 @@ int add_string(char* string){
   if(first_string = 0)
     firststring = new;
   last_string = new;
-  vars_parsed++;
+  doubles_parsed++;
   return 0;
+}
+
+/* Creates an array from the double values in the list. 
+ * The size will be doubles_parsed. */
+double* make_double_array(){
+  double* new = (double*) calloc(doubles_parsed, sizeof(double));
+  int i;
+  doublelink ln = first_double;
+  for(i = 0; i < doubles_parsed; i++){
+    new[i] = ln->data;
+    ln = ln->fwd;
+  }
+  return new;
+}
+
+/* Creates an array from the strings in the list. 
+ * The size will be strings_parsed. */
+char** make_string_array(){
+  char** new = (char**) calloc(strings_parsed, sizeof(char*));
+  int i;
+  stringlink ln = first_string;
+  for(i = 0; i < strings_parsed; i++){
+    new[i] = ln->data;
+    ln = ln->fwd;
+  }
+  return new;
+}
+
+/* Removes everything from the list of doubles. This is likely to be used 
+ * after the parser has parsed doubles to the list, created an array out 
+ * of it and wants to reset the list for future use. 
+ * JJT: DO NOT TOUCH THE ACTUAL DATA, OR IT WILL BE LOST. */
+int reset_doubles(){
+  doublelink ln = last_double;
+  last_double = 0;
+  while(ln != 0){
+    ln = ln->bwd;
+    free(ln->fwd); /* correct? */
+  }
+  first_double = 0;
+  doubles_parsed = 0;
+}
+
+/* Removes everything from the list of strings. */
+int reset_strings(){
+  stringlink ln = last_string;
+  last_string = 0;
+  while(ln != 0){
+    ln = ln->bwd;
+    free(ln->fwd); /* correct? */
+  }
+  first_string = 0;
+  strings_parsed = 0;  
 }
