@@ -37,7 +37,17 @@ int add_child(Graph G, Variable parent, Variable child);
  * Parameter child: the child-variable
  */
 
-Graph moralise(G);
+int get_size(Graph G);
+/* Returns the number of variables in the graph G.
+ * Parameter G: the graph
+ */
+
+Variable[] get_variables(Graph G);
+/* Returns the variables used in Graph G;
+ * Parameter G: the graph
+ */
+
+Graph moralise(Graph G);
 /* Moralises a DAG. (Brit. spelling)
  * Parameter G: An unmoral graph.
  * Returns the moralised graph Gm.

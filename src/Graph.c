@@ -23,6 +23,7 @@ int add_variable(Graph G, Variable v)
 int add_all_variables(Graph G, Variable* vars)
 {
     G->variables = vars; /* Mostly (dangerous) syntactic syrup. */
+    /* XX Ei paluuarvoa... */
 }
 
 int add_child(Graph G, Variable parent, Variable child)
@@ -41,4 +42,70 @@ int add_child(Graph G, Variable parent, Variable child)
 	return -1;
 
     G->adj_matrix[parent_i][child_i] = 1;
+    /* Eikä paluuarvoa */
+}
+
+int get_size(Graph G)
+{
+    return G->size;
+}
+
+Variable[] get_variables(Graph G)
+{
+    return G->variables;
+}
+
+Graph moralise(Graph G)
+{
+    Graph Gm;
+    int i,j,n,v;
+    Variable[] vars;
+    int* parents;
+    int n_parents;
+        
+    if (G == NULL || G->vars == NULL)
+        return NULL;
+    
+    n = G->size;
+    vars = G->variables;
+    
+    Gm = new_graph(n);
+    add_all_variables(Gm, vars);
+    
+    /* Create the undirected graph */
+    for (i = 0; i < n; i++) {
+        for (j = i+1; j < n; j++) {
+            if (Gm->adj_matrix[i][j] || Gm->adj_matrix[j][i])
+            {
+                Gm->adj_matrix[i][j] = 1;
+                Gm->adj_matrix[j][i] = 1;
+            }
+        }
+    }
+
+    /* Moralisation */
+    parents = (int*) calloc(n, sizeof(int));
+    for (v = 0; v < n; v++)       /* Iterate variables */
+    { 
+        /* Step 1: Find parents (note use of G) */
+
+        n_parents = 0;
+        for (i = 0; i < n; i++) { /* Iterate possible parents */
+            if G->adj_matrix[i][v]
+            {
+                parents[n_parents] = i;
+                n_parents++;
+            }
+        }
+        
+        /* Step 2: Marry parents */
+        for (i = 0; i < n_parents; i++) {
+            for (j = i+1; j < n_parents; j++) {
+                Gm->adj_matrix[i][j] = 1;
+                Gm->adj_matrix[i][j] = 1;
+            }
+        }
+    }
+    
+    return Gm;
 }
