@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.40 2005-02-21 22:59:32 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.41 2005-02-22 10:11:51 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -11,6 +11,10 @@
 #define VAR_STATENAME_LENGTH 20
 #define VAR_MIN_ID 1
 
+/***
+ * TODO: a set of mutators etc. for handling parents... 
+ */
+
 struct nip_var {
   char symbol[VAR_SYMBOL_LENGTH + 1]; /* short symbol for the node */
   char name[VAR_NAME_LENGTH + 1]; /* label in the Net language*/
@@ -21,8 +25,10 @@ struct nip_var {
   struct nip_var *previous;
   struct nip_var *next;
 
-  /* TODO: parents and reference to the family clique */
+  struct nip_var **parents; /* array of pointers to the parents */
+  int num_of_parents;       /* number of parents */
 
+  void *family_clique;      /* possible reference to the family clique */
 };
 
 typedef struct nip_var vtype;

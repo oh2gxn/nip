@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.48 2004-10-18 11:02:39 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.49 2005-02-22 10:11:51 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -55,6 +55,10 @@ Variable new_variable(const char* symbol, const char* name,
   v->id = id++;
   v->previous = NULL;
   v->next = NULL;
+
+  v->parents = NULL;
+  v->num_of_parents = 0;
+  v->family_clique = NULL;
  
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
@@ -138,10 +142,24 @@ Variable copy_variable(Variable v){
   strncpy(copy->name, v->name, VAR_NAME_LENGTH);
   copy->name[VAR_NAME_LENGTH] = '\0';
 
+  copy->num_of_parents = v->num_of_parents;
+  if(v->parents){
+    copy->parents = (Variable*) calloc(v->num_of_parents, sizeof(Variable));
+    if(!(copy->parents)){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(copy);
+      return NULL;
+    }
+  }
+  else
+    copy->parents = NULL;
+  copy->family_clique = v->family_clique;
+
   copy->likelihood = (double *) calloc(copy->cardinality, sizeof(double));
 
   if(!(copy->likelihood)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(copy->parents);
     free(copy);
     return NULL;
   }  
@@ -162,6 +180,7 @@ void free_variable(Variable v){
     for(i = 0; i < v->cardinality; i++)
       free(v->statenames[i]);
   free(v->statenames);
+  free(v->parents);
   free(v->likelihood);
   free(v);
 }
