@@ -2,16 +2,16 @@
 #include "Graph.h"
 #include "Variable.h"
 
-Graph new_graph(unsigned n)
+Graph* new_graph(unsigned n)
 {
-    Graph newgraph = (Graph) malloc(sizeof(Graph));
+    Graph* newgraph = (Graph*) malloc(sizeof(Graph));
     newgraph->size = n; newgraph->top = 0;
     newgraph->adj_matrix = (int*) calloc(n*n, sizeof(int));
     newgraph->variables = (Variable*) calloc(n, sizeof(Variable));
     return newgraph;
 }
 
-int add_variable(Graph G, Variable v)
+int add_variable(Graph* G, Variable v)
 {
     if (G->top == G->size)
 	return -1; /* Cannot add more items. */
@@ -22,14 +22,14 @@ int add_variable(Graph G, Variable v)
     return 0; /* Error codes need work */
 }
 
-int add_all_variables(Graph G, Variable vars[])
+int add_all_variables(Graph* G, Variable vars[])
 {
     free(G->variables);
     G->variables = vars; /* Mostly (dangerous) syntactic syrup. */
     /* XX Ei paluuarvoa... */
 }
 
-int add_child(Graph G, Variable parent, Variable child)
+int add_child(Graph* G, Variable parent, Variable child)
 {
     int parent_i = -1, child_i = -1, i;
 
@@ -48,76 +48,60 @@ int add_child(Graph G, Variable parent, Variable child)
     /* Eikä paluuarvoa */
 }
 
-int get_size(Graph G)
+int get_size(Graph* G)
 {
     return G->size;
 }
 
-Variable[] get_variables(Graph G)
+Variable* get_variables(Graph* G)
 {
     return G->variables;
 }
 
-Graph moralise(Graph G)
+void make_undirected(Graph* Gu, Graph* G)
 {
-    Graph Gm;
+    int i,j,n;
+    int* Gam = G->adj_matrix; /* Gam ie. G adjacency matrix */
+    
+    /* Create the undirected graph */
+    n = G->size;
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            Gu->adj_matrix[i][j] = Gam[i][j] || Gam[j][i];
+}
+
+Graph* moralise(Graph* G)
+{
+    Graph* Gm;
     int i,j,n,v;
-    Variable* vars;
-    int* parents;
-    int n_parents;
         
-    if (G == NULL || G->vars == NULL)
+    if (G == NULL || G->variables == NULL)
         return NULL;
     
     n = G->size;
-    vars = G->variables; /* XX aiheuttaako ongelmia tuhottaessa */
     
     Gm = new_graph(n);
-    add_all_variables(Gm, vars);
+    add_all_variables(Gm, G->variables); /* XX Ongelmia tuhottaessa? */
+    make_undirected(Gm, G);
     
-    /* Create the undirected graph */
-    for (i = 0; i < n; i++) {
-        for (j = i+1; j < n; j++) {
-            if (Gm->adj_matrix[i][j] || Gm->adj_matrix[j][i])
-            {
-                Gm->adj_matrix[i][j] = 1;
-                Gm->adj_matrix[j][i] = 1;
-            }
-        }
-    }
-
     /* Moralisation */
-    parents = (int*) calloc(n, sizeof(int));
     for (v = 0; v < n; v++)       /* Iterate variables */
-    { 
-        /* Step 1: Find parents (note use of G) */
+        for (i = 0; i < n; i++) 
+            if (G->adj_matrix[i][v])      /* If i parent of v, find those */
+                for (j = i+1; j < n; j++) /* parents of v which are > i */
+                {
+                    Gm->adj_matrix[i][j] |= G->adj_matrix[j][v];
+                    Gm->adj_matrix[j][i] |= G->adj_matrix[j][v];                    
+                }
 
-        n_parents = 0;
-        for (i = 0; i < n; i++) { /* Iterate possible parents */
-            if G->adj_matrix[i][v]
-            {
-                parents[n_parents] = i;
-                n_parents++;
-            }
-        }
-        
-        /* Step 2: Marry parents */
-        for (i = 0; i < n_parents; i++) {
-            for (j = i+1; j < n_parents; j++) {
-                Gm->adj_matrix[i][j] = 1;
-                Gm->adj_matrix[i][j] = 1;
-            }
-        }
-    }
-    
     return Gm;
 }
 
 /* Not specified Graph.h -- internal helper function */
-void triangulate(Graph Gm)
+void triangulate(Graph* Gm)
 {
     int i,j,n;
-    Graph Gm_copy;
+    Graph* Gm_copy;
     
     /* Step 1: Copy Gm */
     n = Gm->size;
@@ -130,7 +114,7 @@ void triangulate(Graph Gm)
     /* Step 2: Triangulate Gm */
 }
 
-int find_cliques(Graph Gm, Clique** cliques_p)
+int find_cliques(Graph* Gm, Clique** cliques_p)
 {
     /* XX NULL-tarkastukset uupuu */
 
