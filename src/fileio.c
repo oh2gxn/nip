@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.1 2004-02-10 11:23:57 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.2 2004-02-10 11:25:52 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -21,7 +21,7 @@ int count_words(char *s){
   return words;
 }
 
-int *tokenise(char *s){
+int *tokenise(char *s, int n){
   
   return NULL;
 }
