@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.21 2004-10-15 11:47:57 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.22 2004-10-18 11:02:39 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -34,14 +34,12 @@ static double get_data(double data[], int indices[],
 
 
 void reset_model(Nip model){
-  int retval;
-  Variable temp;
-  Variable_iterator it = model->first_var;
+  int i, retval;
 
-  while((temp = next_Variable(&it)) != NULL)
-    reset_likelihood(temp);
-  retval = global_retraction(model->first_var, model->cliques,
-			     model->num_of_cliques);
+  for(i = 0; i < model->num_of_vars; i++)
+    reset_likelihood(model->variables[i]);
+  retval = global_retraction(model->variables, model->num_of_vars, 
+			     model->cliques, model->num_of_cliques);
   if(retval != NO_ERROR)
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 }
@@ -115,7 +113,7 @@ Nip parse_model(char* file){
   /* Check one little detail :) 
    * NOTE: needed because of an implementation detail. (FIX IT?) */
   j = 1;
-  for(i = 1; i < num_of_nexts; i++)
+  for(i = 1; i < new->num_of_nexts; i++)
     if(get_id(new->previous[i-1]) > get_id(new->previous[i]))
       j = 0;
   assert(j); 
@@ -175,19 +173,11 @@ Timeseries read_timeseries(Nip model, char* filename){
   ts->length = df->datarows;
 
   /* Find out how many (totally) latent variables there are. */
-  for(k = 0; k < model->num_of_vars; k++){
-    j = 1;
-    for(i = 0; i < df->num_of_nodes; i++)
-      if(equal_variables(model->variables[k], 
-			 get_Variable(model, df->node_symbols[i])))
-	j = 0;
-    if(j)
-      ts->num_of_hidden++;
-  }
+  ts->num_of_hidden = model->num_of_vars - df->num_of_nodes;
 
   /* Allocate the array for the hidden variables. */
   ts->hidden = (Variable *) calloc(ts->num_of_hidden, sizeof(Variable));
-  ts->obseved = (Variable *) calloc(df->num_of_nodes, sizeof(Variable));
+  ts->observed = (Variable *) calloc(df->num_of_nodes, sizeof(Variable));
   if(!(ts->hidden && ts->observed)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(ts->hidden);
@@ -222,8 +212,8 @@ Timeseries read_timeseries(Nip model, char* filename){
     return NULL;
   }
   for(i = 0; i < ts->length; i++){
-    data[i] = (int*) calloc(df->num_of_nodes, sizeof(int));
-    if(!(data[i])){
+    ts->data[i] = (int*) calloc(df->num_of_nodes, sizeof(int));
+    if(!(ts->data[i])){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       for(j = 0; j < i; j++)
 	free(ts->data[j]);
@@ -243,8 +233,9 @@ Timeseries read_timeseries(Nip model, char* filename){
 
     /* 3. Put into the data array */
     for(i = 0; i < m; i++){
-      data[j][i] = 
-	get_stateindex(get_Variable(model, df->node_symbols[i]), tokens[i]);
+      ts->data[j][i] = get_stateindex(get_Variable(model, 
+						   df->node_symbols[i]), 
+				      tokens[i]);
 
       /* Q: Should missing data be allowed?   A: Yes. */
       /* assert(data[j][i] >= 0); */
@@ -312,8 +303,9 @@ int insert_hard_evidence(Nip model, char* variable, char* observation){
   Variable v = get_Variable(model, variable);
   if(v == NULL)
     return ERROR_INVALID_ARGUMENT;
-  ret = enter_observation(model->first_var, model->cliques,
-			  model->num_of_vars, v, observation);
+  ret = enter_observation(model->variables, model->num_of_vars, 
+			  model->cliques, model->num_of_cliques, 
+			  v, observation);
   if(ret != NO_ERROR)
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 
@@ -327,8 +319,9 @@ int insert_soft_evidence(Nip model, char* variable, double* distribution){
   Variable v = get_Variable(model, variable);
   if(v == NULL)
     return ERROR_INVALID_ARGUMENT;
-  ret =  enter_evidence(model->first_var, model->cliques,
-			model->num_of_cliques, v, distribution);
+  ret =  enter_evidence(model->variables, model->num_of_vars, 
+			model->cliques, model->num_of_cliques, 
+			v, distribution);
   make_consistent(model);
   return ret;
 }
@@ -342,7 +335,7 @@ Variable get_Variable(Nip model, char* symbol){
     return NULL;
   }
 
-  for(i = 0; i < model->num_of_vars)
+  for(i = 0; i < model->num_of_vars; i++)
     if(strcmp(symbol, model->variables[i]->symbol) == 0)
       return model->variables[i];
 

@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.51 2004-10-15 11:47:57 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.52 2004-10-18 11:02:39 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -139,8 +139,8 @@ int global_retraction(Variable* vars, int num_of_vars, Clique* cliques,
  * The observed state of the variable is given as a string.
  * Returns an error code.
  */
-int enter_observation(Variable* vars, int num_of_vars, Clique* cliques, 
-		      int num_of_cliques, Variable v, char *state);
+int enter_observation(Variable* vars, int nvars, Clique* cliques, 
+		      int ncliques, Variable v, char *state);
 
 
 /*
@@ -149,8 +149,8 @@ int enter_observation(Variable* vars, int num_of_vars, Clique* cliques,
  * (See get_stateindex() at Variable.h)
  * Returns an error code.
  */
-int enter_i_observation(Variable* vars, int num_of_vars, Clique* cliques, 
-			int num_of_cliques, Variable v, int index);
+int enter_i_observation(Variable* vars, int nvars, Clique* cliques, 
+			int ncliques, Variable v, int index);
 
 
 /*
@@ -159,8 +159,8 @@ int enter_i_observation(Variable* vars, int num_of_vars, Clique* cliques,
  * This function might do a global retraction.
  * Returns an error code.
  */
-int enter_evidence(Variable* vars, int num_of_vars, Clique* cliques, 
-		   int num_of_cliques, Variable v, double evidence[]);
+int enter_evidence(Variable* vars, int nvars, Clique* cliques, 
+		   int ncliques, Variable v, double evidence[]);
 
 
 /* Finds a clique containing a family of variables. Returns the first

@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.38 2004-08-27 14:18:20 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.39 2004-10-18 11:02:39 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -101,7 +101,7 @@ Variable next_Variable(Variable_iterator *it);
 
 
 /* Gets the parsed variable according to the symbol. */
-Variable get_variable(Variable_iterator it, char *symbol);
+Variable get_variable(Variable* vars, int nvars, char *symbol);
 
 /* Gets the variable according to the symbol (when parsing). */
 Variable get_parser_variable(char *symbol);

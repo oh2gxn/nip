@@ -73,8 +73,9 @@ static void test_probability(double **result, int *size_of_result,
 /*
  * Enter some evidence of Variable "observed".
  */
-static void test_evidence(Clique* cliques, int num_of_cliques, 
-			  Variable observed, double data[]){
+static void test_evidence(Variable* vars, int nvars, Clique* cliques, 
+			  int num_of_cliques, Variable observed, 
+			  double data[]){
 
 #ifdef DEBUG_BISONTEST
   int evidence_retval;
@@ -82,14 +83,14 @@ static void test_evidence(Clique* cliques, int num_of_cliques,
 
 #ifndef DEBUG_BISONTEST
   /* FIXME (copy some code from parser.c line 1080-1090) */
-  enter_evidence(get_first_variable(), cliques, num_of_cliques, 
+  enter_evidence(vars, nvars, cliques, num_of_cliques, 
 		 observed, data);
 #endif
 
 #ifdef DEBUG_BISONTEST
   /* FIXME (copy some code from parser.c line 1080-1090) */
-  evidence_retval = enter_evidence(get_first_variable(), cliques, 
-				   num_of_cliques, observed, data);
+  evidence_retval = enter_evidence(vars, nvars, cliques, num_of_cliques, 
+				   observed, data);
   printf("\n\nEntered evidence into ");
   print_Clique(clique_of_interest);
   printf("enter_evidence returned %d.\n", evidence_retval);
@@ -103,6 +104,7 @@ int main(int argc, char *argv[]){
   char *var_name;
   int i, retval;
   int nip_num_of_cliques;
+  int nvars;
   int size_of_result;
   
   double* result;
@@ -110,6 +112,7 @@ int main(int argc, char *argv[]){
   Clique *nip_cliques;
 
   Variable interesting;
+  Variable* vars;
   Variable_iterator nip_first_var;
 
 #ifdef PRINT_POTENTIALS
@@ -181,6 +184,11 @@ int main(int argc, char *argv[]){
   nip_cliques = *get_cliques_pointer();
   nip_num_of_cliques = get_num_of_cliques();
   nip_first_var = get_first_variable();
+  nvars = total_num_of_vars();
+  vars = (Variable*) calloc(nvars, sizeof(Variable));
+  
+  for(i = 0; i < nvars; i++)
+    vars[i] = next_Variable(&nip_first_var);
 
 #ifdef PRINT_JOINTREE
   jtree_dfs(nip_cliques[0], print_Clique, print_Sepset);
@@ -207,27 +215,30 @@ int main(int argc, char *argv[]){
 #ifdef EVIDENCE
   /* add some evidence */
 #ifndef EVIDENCE_SOTKU
-  observed[0] = get_variable(nip_first_var, "B");
-  observed[1] = get_variable(nip_first_var, "D");
+  observed[0] = get_variable(vars, nvars, "B");
+  observed[1] = get_variable(vars, nvars, "D");
 #endif
 
 #ifdef EVIDENCE_SOTKU
-  observed[0] = get_variable(nip_first_var, "C1");
-  observed[1] = get_variable(nip_first_var, "C4");
-  observed[2] = get_variable(nip_first_var, "C19");
+  observed[0] = get_variable(vars, nvars, "C1");
+  observed[1] = get_variable(vars, nvars, "C4");
+  observed[2] = get_variable(vars, nvars, "C19");
 #endif
 
 
 
-  test_evidence(nip_cliques, nip_num_of_cliques, observed[0], probs[0]);
+  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+		observed[0], probs[0]);
 
-  test_evidence(nip_cliques, nip_num_of_cliques, observed[1], probs[1]);
+  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+		observed[1], probs[1]);
   
 #ifdef EVIDENCE_SOTKU
 
 #ifdef TEST_RETRACTION
   /* some VERY FINE evidence */
-  test_evidence(nip_cliques, nip_num_of_cliques, observed[2], probs[2]);
+  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+		observed[2], probs[2]);
 
   /* a propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
@@ -246,7 +257,7 @@ int main(int argc, char *argv[]){
   else
     var_name = "B";
 
-  interesting = get_variable(nip_first_var, var_name);
+  interesting = get_variable(vars, nvars, var_name);
 
   if(!interesting){
     printf("In bisontest.c : Variable %s not found.\n", var_name);
@@ -270,11 +281,14 @@ int main(int argc, char *argv[]){
   probs[1] = probC4;
   probs[2] = probC19;
 
-  test_evidence(nip_cliques, nip_num_of_cliques, observed[0], probs[0]);
+  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+		observed[0], probs[0]);
 
-  test_evidence(nip_cliques, nip_num_of_cliques, observed[1], probs[1]);
+  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+		observed[1], probs[1]);
 
-  test_evidence(nip_cliques, nip_num_of_cliques, observed[2], probs[2]);
+  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+		observed[2], probs[2]);
 
 #endif /* EVIDENCE_SOTKU */
 
@@ -297,7 +311,7 @@ int main(int argc, char *argv[]){
   else
     var_name = "B";
   
-  interesting = get_variable(nip_first_var, var_name);
+  interesting = get_variable(vars, nvars, var_name);
     
   if(!interesting){
     printf("In bisontest.c : Variable %s not found.\n", var_name);

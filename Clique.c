@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.104 2004-10-15 11:47:57 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.105 2004-10-18 11:02:39 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -944,24 +944,24 @@ void normalise(double result[], int array_size){
 }
 
 
-int global_retraction(Variable* vars, int num_of_vars, Clique* cliques, 
-		      int num_of_cliques){
+int global_retraction(Variable* vars, int nvars, Clique* cliques, 
+		      int ncliques){
 
   int i, index;
   int retval;
   Variable v;
   Clique c;
 
-  for(index = 0; index < num_of_cliques; index++)
+  for(index = 0; index < ncliques; index++)
     unmark_Clique(cliques[index]);
 
   /* Reset all the potentials back to original. */
   jtree_dfs(cliques[0], retract_Clique, retract_Sepset);
 
   /* Enter evidence back to the join tree. */
-  for(i = 0; i < num_of_vars; i++){
+  for(i = 0; i < nvars; i++){
     v = vars[i];
-    c = find_family(cliques, num_of_cliques, &v, 1);
+    c = find_family(cliques, ncliques, &v, 1);
     index = var_index(c, v);
 
     retval = update_evidence(v->likelihood, NULL, c->p, index);
@@ -975,17 +975,16 @@ int global_retraction(Variable* vars, int num_of_vars, Clique* cliques,
 }
 
 
-int enter_observation(Variable* vars, int num_of_vars, Clique* cliques, 
-		      int num_of_cliques, Variable v, char *state){
+int enter_observation(Variable* vars, int nvars, Clique* cliques, 
+		      int ncliques, Variable v, char *state){
   int index = get_stateindex(v, state);
 
-  return enter_i_observation(vars, num_of_vars, cliques, num_of_cliques, 
-			     v, index);
+  return enter_i_observation(vars, nvars, cliques, ncliques, v, index);
 }
 
 
-int enter_i_observation(Variable* vars, int num_of_vars, Clique* cliques, 
-			int num_of_cliques, Variable v, int index){
+int enter_i_observation(Variable* vars, int nvars, Clique* cliques, 
+			int ncliques, Variable v, int index){
   int i, retval;
   double *evidence = (double *) calloc(v->cardinality, sizeof(double));
 
@@ -1000,16 +999,15 @@ int enter_i_observation(Variable* vars, int num_of_vars, Clique* cliques,
     else
       evidence[i] = 0;
 
-  retval = enter_evidence(vars, num_of_vars, cliques, num_of_cliques, 
-			  v, evidence);
+  retval = enter_evidence(vars, nvars, cliques, ncliques, v, evidence);
   free(evidence);
 
   return retval;
 }
 
 
-int enter_evidence(Variable* vars, int num_of_vars, Clique* cliques, 
-		   int num_of_cliques, Variable v, double evidence[]){
+int enter_evidence(Variable* vars, int nvars, Clique* cliques, 
+		   int ncliques, Variable v, double evidence[]){
   int index, i;
   int retraction = 0;
   int retval;
@@ -1020,7 +1018,7 @@ int enter_evidence(Variable* vars, int num_of_vars, Clique* cliques,
     return ERROR_NULLPOINTER;
   }
 
-  c = find_family(cliques, num_of_cliques, &v, 1);
+  c = find_family(cliques, ncliques, &v, 1);
     
   if(!c){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);
@@ -1053,7 +1051,7 @@ int enter_evidence(Variable* vars, int num_of_vars, Clique* cliques,
   }
 
   if(retraction){
-    retval = global_retraction(vars, num_of_vars, cliques, num_of_cliques);
+    retval = global_retraction(vars, nvars, cliques, ncliques);
     if(retval != NO_ERROR)
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return(retval);

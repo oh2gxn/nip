@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.47 2004-10-14 15:11:21 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.48 2004-10-18 11:02:39 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -235,13 +235,8 @@ Variable next_Variable(Variable_iterator* it){
 
 Variable get_parser_variable(char *symbol){
 
-  return get_variable(nip_first_var, symbol);
-
-}
-
-Variable get_variable(Variable_iterator it, char *symbol){
-
   Variable v; 
+  Variable_iterator it = nip_first_var; /* a private copy */
   v = next_Variable(&it);
 
   if(v == NULL)
@@ -256,6 +251,22 @@ Variable get_variable(Variable_iterator it, char *symbol){
   }
 
   return v;
+
+}
+
+Variable get_variable(Variable* vars, int nvars, char *symbol){
+
+  int i;
+  Variable v; 
+  
+  /* search for the variable reference */
+  for(i = 0; i < nvars; i++){
+    v = vars[i];
+    if(strcmp(symbol, v->symbol) == 0)
+      return v;
+  }
+
+  return NULL;
 }
 
 

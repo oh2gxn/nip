@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.33 2004-10-08 06:25:49 arasinen Exp $
+% $Id: dokumentaatio.tex,v 1.34 2004-10-18 11:02:39 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -276,10 +276,10 @@ iterator runs out of variables.
 to find a variable, identified by the \cparameter{symbol} string, in the 
 list of newly created variables.
 
-\item[get\_variable(it, symbol)] searches the variable
-iterator~\cparameter{it} for a variable identified by the string
-\cparameter{symbol}. The iterator will be used by the function, so it
-will not be pointing to the beginning of any lists anymore.
+\item[get\_variable(vars, nvars, symbol)] searches the 
+\cdatatype{Variable array}~\cparameter{vars} for a variable identified 
+by the string \cparameter{symbol}. Also the size of the array has to be 
+specified as the \cdatatype{integer}~\cparameter{nvars}.
 
 \item[update\_likelihood(v, likelihood)] will set the likelihood array
 of variable~\cparameter{v} according to the given double array
@@ -896,7 +896,7 @@ filled with zeros. If the array is full of zeros, it is left
 unchanged. The size of the array must be specified as the 
 \cdatatype{integer} \cparameter{array\_size}.
 
-\item[global\_retraction(vars, cliques, num\_of\_cliques)] resets the 
+\item[global\_retraction(vars, nvars, cliques, ncliques)] resets the 
 clique potentials to the state they had after the initialisation and 
 enters the most recent evidence into the cliques. Thus the join tree
 consisting of the cliques is left at an inconsistent state and you may
@@ -906,23 +906,24 @@ want to execute the global propagation consisting of
 This function is needed for retracting evidence in some cases. To
 achieve this, the user must enter the wanted evidence into the
 variables and run \cfunction{global\_retraction}. The 
-\cdatatype{Variable\_iterator} \cparameter{vars} (list of all the 
+\cdatatype{Variable array} \cparameter{vars} (containing all the 
 variables) and a \cdatatype{Clique array} \cparameter{cliques} must be 
-specified. Also the number of the cliques has to be given to the 
-function as the \cdatatype{integer} \cparameter{num\_of\_cliques}.
+specified. Also the number of the variables and cliques has to be given 
+to the function as the \cdatatype{integers} \cparameter{nvars}
+and \cparameter{ncliques}.
 
-\item[enter\_observation(vars, cliques, num\_of\_cliques, v, state)] 
+\item[enter\_observation(vars, nvars, cliques, ncliques, v, state)] 
 is made for incorporating hard evidence into a join tree. The observed
 state of the \cdatatype{Variable}~\cparameter{v} is given as a 
 \cdatatype{string} named \cparameter{state}. The function needs also 
-the \cdatatype{Variable\_iterator} \cparameter{vars}, 
-\cdatatype{Clique array} \cparameter{cliques} and the size of it
-as the \cdatatype{integer} \cparameter{num\_of\_cliques}. The reference
-\cparameter{vars} to the list of all variables is needed because of the
-possible global retraction. The function \cfunction{global\_retraction}
-is called automatically if needed.
+the \cdatatype{Variable array} \cparameter{vars}, 
+\cdatatype{Clique array} \cparameter{cliques} and the size of them
+as the \cdatatype{integers} \cparameter{nvars} and \cparameter{ncliques}. 
+The reference \cparameter{vars} to the array of all variables is needed 
+because of the possible global retraction. The function 
+\cfunction{global\_retraction} is called automatically if needed.
 
-\item[enter\_i\_observation(vars, cliques, num\_of\_cliques, v, index)]
+\item[enter\_i\_observation(vars, nvars, cliques, ncliques, v, index)]
 is made for entering an observation as an \cdatatype{integer} into a join
 tree. This is equal to the function \cfunction{enter\_observation} but
 instead of telling the observation as a string, the user should encode
@@ -930,7 +931,7 @@ the observation as the \cdatatype{integer} \cparameter{index}. A zero
 corresponds to the first state of the variable defined in the Hugin
 net language file. (See the \cfunction{get\_stateindex} function also.)
 
-\item[enter\_evidence(vars, cliques, num\_of\_cliques, v, evidence)]
+\item[enter\_evidence(vars, nvars, cliques, ncliques, v, evidence)]
 is made for entering soft evidence into a join tree. (Note that hard
 evidence is only a special case of soft evidence.) The function is
 similar to the \cfunction{enter\_observation} and

@@ -10,15 +10,13 @@
 
 int main(int argc, char *argv[]){
 
-  char** tokens = NULL;
-  int i, j, k, l, retval, t = 0;
+  int i, j, k, t = 0;
   double** quotient = NULL;
   double*** result = NULL; /* probs of the hidden variables */
 
   Nip model = NULL;
   Clique clique_of_interest = NULL;
 
-  Variable *hidden = NULL;
   Variable temp = NULL;
   Variable interesting = NULL;
 
@@ -57,23 +55,23 @@ int main(int argc, char *argv[]){
 
 
   /* Allocate some space for filtering */
-  result = (double***) calloc(ts->datarows + 1, sizeof(double**));
-  quotient = (double**) calloc(num_of_hidden, sizeof(double*));
+  result = (double***) calloc(ts->length + 1, sizeof(double**));
+  quotient = (double**) calloc(ts->num_of_hidden, sizeof(double*));
   if(!(result && quotient)){
     free_model(model);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
-  for(t = 0; t < ts->datarows + 1; t++){
-    result[t] = (double**) calloc(num_of_hidden, sizeof(double*));
+  for(t = 0; t < ts->length + 1; t++){
+    result[t] = (double**) calloc(ts->num_of_hidden, sizeof(double*));
     if(!result[t]){
       free_model(model);
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
     }
 
-    for(i = 0; i < num_of_hidden; i++){
-      result[t][i] = (double*) calloc(number_of_values(hidden[i]), 
+    for(i = 0; i < ts->num_of_hidden; i++){
+      result[t][i] = (double*) calloc(number_of_values(ts->hidden[i]), 
 				      sizeof(double));
       if(!result[t][i]){
 	free_model(model);
@@ -82,8 +80,8 @@ int main(int argc, char *argv[]){
       }
     }
   }
-  for(i = 0; i < num_of_hidden; i++){
-    quotient[i] = (double*) calloc(number_of_values(hidden[i]), 
+  for(i = 0; i < ts->num_of_hidden; i++){
+    quotient[i] = (double*) calloc(number_of_values(ts->hidden[i]), 
 				   sizeof(double));
     if(!quotient[i]){
       free_model(model);
@@ -159,7 +157,7 @@ int main(int argc, char *argv[]){
 			model->cliques, model->num_of_cliques);
 
       /* 0. Put some data in */
-      for(i = 0; i < ts->num_of_nodes; i++)
+      for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
 	if(ts->data[t][i] >= 0)
 	  enter_i_observation(model->variables, model->num_of_vars,
 			      model->cliques, model->num_of_cliques,
@@ -193,7 +191,7 @@ int main(int argc, char *argv[]){
 			      ts->data[t - 1][i]);
       }
 
-      for(i = 0; i < num_of_hidden; i++){
+      for(i = 0; i < ts->num_of_hidden; i++){
 	temp = ts->hidden[i];
 	if(temp->next != NULL)
 	  enter_evidence(model->variables, model->num_of_vars, 

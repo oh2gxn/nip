@@ -28,10 +28,9 @@
 
 int main(int argc, char *argv[]){
 
-  char** tokens = NULL;
   int* cardinalities = NULL;
   int* temp_vars = NULL;
-  int i, j, k, m, n, retval, t = 0;
+  int i, j, k, m, n, t = 0;
   double** result; /* probs of the hidden variables */  
 
   Nip model = NULL;
@@ -80,8 +79,8 @@ int main(int argc, char *argv[]){
 
 
   /* Allocate an array */
-  if(ts->num_of_nexts > 0){
-    cardinalities = (int*) calloc(ts->num_of_nexts, sizeof(int));
+  if(model->num_of_nexts > 0){
+    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free_model(model);
@@ -121,7 +120,7 @@ int main(int argc, char *argv[]){
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++){
-    timeslice_sepsets[t] = make_potential(cardinalities, ts->num_of_nexts, 
+    timeslice_sepsets[t] = make_potential(cardinalities, model->num_of_nexts, 
 					  NULL);
   }
   free(cardinalities);
@@ -282,7 +281,7 @@ int main(int argc, char *argv[]){
     if(t == ts->length - 1){ /* The last timeslice */
 #endif
     /* Put some evidence in */
-    for(i = 0; i < ts->num_of_nodes; i++)
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
       if(ts->data[t][i] >= 0)
 	enter_i_observation(model->variables, model->num_of_vars, 
 			    model->cliques, model->num_of_cliques, 
