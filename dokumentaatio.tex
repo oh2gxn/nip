@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.9 2004-08-26 14:19:43 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.10 2004-08-27 14:14:44 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -509,9 +509,9 @@ cardinalities in the potentials \textbf{old} and \textbf{new}.
 The number of the variables can be found in either of the potentials 
 \textbf{old} and \textbf{new}.
 
-\item[cliques] is an {array of Cliques}. There are the references to
-the adjacent cliques. The size of the array is always two because of
-the nature of sepsets.
+\item[cliques] is an {array of Cliques}. The references to the
+adjacent cliques are there. The size of the array is always two
+because of the nature of sepsets.
 \end{description}
 
 The data type {\it Sepset\_link} provides an implementation for lists
@@ -552,7 +552,8 @@ list of sepsets. The list contains the references to the adjacent sepsets.
 
 \item[mark] is an {\it integer} used as a flag by various algorithms. For
 example a depth-first search and the propagation of evidence uses the 
-\textbf{mark} field to identify the cliques which have already handled.
+\textbf{mark} field to identify the cliques which have already been 
+handled.
 
 \end{description}
 
@@ -560,37 +561,130 @@ example a depth-first search and the propagation of evidence uses the
 \subsubsection{The functions}
 The file \verb+Clique.c+ provides the following functions
 \begin{description}
-\item[make\_Clique(vars, num\_of\_vars)]
+\item[make\_Clique(vars, num\_of\_vars)] creates a {\it Clique}. The
+associated variables are given as the {\it Variable array}
+\textbf{vars} and the number of the variables as the {\it integer} 
+\textbf{num\_of\_vars}. A shallow copy of the array is made, so
+remember to free it (but not the contents). The clique will not have 
+any adjacent sepsets initially. Sepsets must be added separately.
 
-\item[free\_Clique(c)]
+\item[free\_Clique(c)] frees the memory allocated by a the 
+{\it Clique}~\textbf{c}. It will not free the memory allocated for 
+the corresponding {\it Variables}, but all the adjacent {\it Sepsets} 
+are freed and removed automatically so that rest of the join tree 
+remains valid. Note that freeing an entire join tree can be done by 
+calling this function for every clique.
 
-\item[add\_Sepset(c, s)]
+\item[add\_Sepset(c, s)] adds the {\it Sepset} \textbf{s} to the 
+{\it Clique}~\textbf{c}. Remember to add the sepset to both adjacent
+cliques and never add a sepset to the same clique twice.
 
-\item[make\_Sepset(variables, num\_of\_vars, cliques)]
+\item[make\_Sepset(variables, num\_of\_vars, cliques)] creates a {\it
+Sepset}. The associated variables are given as the {\it Variable
+array} \textbf{variables} and the size of the array as the {\it
+integer} \textbf{num\_of\_vars}. Both adjacent cliques must be given
+as an {\it array of Cliques} (\textbf{cliques}). This usually means that
+the {\it Cliques} must be created before the {\it Sepsets}.
+Note that a shallow copy of the parameter arrays is made, so freeing 
+the arrays after calling the function is up to the user.
 
-\item[free\_Sepset(s)]
+\item[free\_Sepset(s)] just frees the memory allocated for the {\it
+Sepset} \textbf{s}. This is called automatically by
+\textbf{free\_Clique} so usually this function is needed only for
+freeing possible useless {\it Sepsets} which are not included in the 
+join tree.
 
-\item[create\_Potential(variables, num\_of\_vars, data)]
+\item[create\_Potential(variables, num\_of\_vars, data)] can help if
+you need to create potentials out of {\it double arrays} like 
+the \textbf{data} parameter. The function creates a {\it potential} 
+which has its data arranged correcty in order to work with the
+system. To rearrange the data correctly, the function needs to know 
+the order of the corresponding variables. This is achieved by 
+specifying the {\it Variable array} \textbf{variables} and the size 
+of it as the {\it integer} \textbf{num\_of\_vars}. 
 
-\item[unmark\_Clique(c)]
+The most important thing is to have the {\it Variables} array in the 
+same order as the \textbf{data} array is thought to be arranged. 
+For example, the potentials specified in the Hugin net files have the 
+child variable as the least significant one: the value of the variable 
+has the least effect on the placement of the data. Thus the child
+variable should be the first in the array. Note that for some reason 
+the first parent variable specified in the Hugin net files should be 
+the last in the \textbf{variables} array, and the last parent should
+be the second right after the child variable.
 
-\item[clique\_num\_of\_vars(c)]
+\item[unmark\_Clique(c)] resets the mark in the {\it
+Clique}~\textbf{c}. Note that this has to be done for every clique 
+before calling \textbf{distribute\_evidence} or 
+\textbf{collect\_evidence}.
 
-\item[sepset\_num\_of\_vars(s)]
+\item[clique\_num\_of\_vars(c)] tells how many associated variables the 
+{\it Clique}~\textbf{c} has.
 
-\item[distribute\_evidence(c)]
+\item[sepset\_num\_of\_vars(s)] tells how many associated variables the 
+{\it Sepset}~\textbf{s} has.
 
-\item[collect\_evidence(c1, s12, c2)]
+\item[distribute\_evidence(c)] implements the algorithm which spreads 
+the evidence entered in to the cliques away from the given 
+{\it Clique}~\textbf{c}. See \cite{procedural_guide} page 21 for
+details. 
 
-\item[initialise(c, child, parents, p)]
+\item[collect\_evidence(c1, s12, c2)] implements the algorithm which 
+collects evidence from the subtree rooted in the given {\it
+Clique}~\textbf{c2} and passes the evidence to the {\it
+Clique}~\textbf{c1}. The {\it Sepset}~\textbf{s12} is the sepset
+between the two cliques. The function is recursive and is usually
+used like this: \verb+collect_evidence(NULL, NULL, c);+ where \verb+c+
+is some {\it Clique}. This causes the evidence to be collected from
+the entire join tree.
 
-\item[marginalise(c, v, r)]
+\item[initialise(c, child, parents, p)] is used for entering the
+quantitative parameters of the model into the join tree. This function
+initialises the {\it Clique}~\textbf{c} with the given {\it
+potential}~\textbf{p}. The initialisation ensures that the parameters
+are not reset by the \textbf{global\_retraction} function. Note
+that~\textbf{p} should be a valid {\it potential} i.e. the data
+contained by it should be correctly arranged and the number of
+variables specified in it should equal to the number of parent
+variables plus one (the child).
 
-\item[normalise(result, array\_size)]
+Since the clique to be initialised can be associated with more
+variables than are associated with the potential, the user must
+specify the \textbf{child} {\it Variable} and the {\it array of 
+variables} which contain the \textbf{parents}. The order of the
+variables in the \textbf{parents} array is not relevant and the 
+array is not needed after the function has executed.
 
-\item[global\_retraction(vars, cliques, num\_of\_cliques)]
+\item[marginalise(c, v, r)] is one of the most useful functions
+because it finds out the probability distribution of the {\it
+Variable}~\textbf{v} according to the {\it Clique}~\textbf{c} and
+writes it into the {\it double array}~\textbf{r} (as in
+\textbf{r}esult). The array must be allocated before the function is
+called and the size must be at least \verb+v->cardinality+. 
+Note that the result is NOT normalised.
 
-\item[enter\_observation(vars, cliques, num\_of\_cliques, v, state)]
+\item[normalise(result, array\_size)] simply normalises the {\it
+double array} \textbf{result}. After the function has executed, sum of
+the elements in the array will be one, unless it's filled with zeros. 
+If the array is full of zeros, it is left unchanged. The size of the
+array must be specified as the {\it integer} \textbf{array\_size}.
+
+\item[global\_retraction(vars, cliques, num\_of\_cliques)] resets the 
+clique potentials to the state they had after the initialisation and 
+enters the most recent evidence into the cliques. Thus the join tree
+consisting of the cliques is left at an inconsistent state and you may
+want to execute the global propagation consisting of 
+\textbf{collect\_evidence} and \textbf{distribute\_evidence}. 
+
+This function is needed for retracting evidence in some cases. To
+achieve this, the user must enter the wanted evidence into the
+variables and run \textbf{global\_retraction}. The 
+{\it Variable\_iterator} \textbf{vars} (list of all the variables) and 
+a {\it Clique array} \textbf{cliques} must be specified. Also the
+number of the cliques has to be given to the function as the {\it
+integer} \textbf{num\_of\_cliques}.
+
+\item[enter\_observation(vars, cliques, num\_of\_cliques, v, state)] 
 
 \item[enter\_i\_observation(vars, cliques, num\_of\_cliques, v, index)]
 

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.95 2004-08-26 14:19:43 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.96 2004-08-27 14:14:44 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -179,11 +179,6 @@ void free_Clique(Clique c){
 
 int add_Sepset(Clique c, Sepset s){
 
-#ifdef DEBUG_CLIQUE
-  int i;
-  Clique two;
-#endif
-
   Sepset_link new = (Sepset_link) malloc(sizeof(element));
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -196,33 +191,6 @@ int add_Sepset(Clique c, Sepset s){
   if(c->sepsets != NULL)
     c->sepsets->bwd = new;
   c->sepsets = new;
-
-#ifdef DEBUG_CLIQUE
-  printf("In Clique.C: add_Sepset added Sepset ");
-  for(i = 0; i < ((Sepset)(c->sepsets->data))->old->num_of_vars; i++)
-    printf("%s", ((Sepset)(c->sepsets->data))->variables[i]->symbol);
-  printf(" to Clique ");
-  for(i = 0; i < c->p->num_of_vars; i++)
-    printf("%s", c->variables[i]->symbol);
-  printf("\nSepset has connections to ");
-  print_Clique(((Sepset)(c->sepsets->data))->cliques[0]);
-  printf(" and ");
-  print_Clique(((Sepset)(c->sepsets->data))->cliques[1]);
-
-  /* Check if clique_search works.
-   * YOU MUST UNMARK all Cliques before calling add_Sepset if you expect
-   * searching to work. */
-  printf("In Clique.C: add_Sepset called clique_search.\n");
-  if(c == ((Sepset)(c->sepsets->data))->cliques[1])
-    two = ((Sepset)(c->sepsets->data))->cliques[0];
-  else
-    two = ((Sepset)(c->sepsets->data))->cliques[1];
-  if(clique_search(c, two))
-    printf("It works!\n");
-  else
-    printf("It failed. clique_search is buggy.\n");
-
-#endif
 
   return 0;
 }
@@ -847,10 +815,6 @@ int global_retraction(Variable_iterator vars, Clique* cliques,
   int retval;
   Variable v;
   Clique c;
-
-#ifdef DEBUG_RETRACTION
-  printf("Now in global_retraction\n");
-#endif
 
   for(index = 0; index < num_of_cliques; index++)
     unmark_Clique(cliques[index]);
