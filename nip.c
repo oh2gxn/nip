@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.30 2004-11-10 15:54:40 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.31 2004-11-22 12:56:04 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -904,10 +904,13 @@ TimeSeries mlss(Nip model, Variable vars[], int nvars, TimeSeries ts){
 
   /* TODO: write the algorithm here 
    * - allocate a (massive?) chunk of memory for intermediate results 
+   *   - find out the "geometry" of the intermediate data
+   *
    * - do a sort of forward inference on the best states 
-   *   - for each variable of interest separately?
+   *   - for each variable of interest separately? NO !?!?
    *   - by inserting the last state of a hidden variable as hard evidence?
    *     (or is the goal to maximize the probability of observations)
+   *
    * - find out the result by iterating backwards the best choices
    */
 
