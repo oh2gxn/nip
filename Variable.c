@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.50 2005-02-22 15:18:47 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.51 2005-03-16 12:14:17 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -59,6 +59,7 @@ Variable new_variable(const char* symbol, const char* name,
   v->parents = NULL;
   v->num_of_parents = 0;
   v->family_clique = NULL;
+  v->family_mapping = NULL;
  
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
@@ -181,6 +182,7 @@ void free_variable(Variable v){
       free(v->statenames[i]);
   free(v->statenames);
   free(v->parents);
+  free(v->family_mapping);
   free(v->likelihood);
   free(v);
 }

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.46 2005-03-15 13:57:30 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.47 2005-03-16 12:14:17 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -900,7 +900,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
 
 /* My apologies: this function is probably the worst copy-paste case ever. */
 FamilySeries family_inference(TimeSeries ts){
-  int i, k, t;
+  int i, j, k, t, size;
   int *cardinalities = NULL;
   Variable temp;
   potential *timeslice_sepsets = NULL;
@@ -1104,14 +1104,11 @@ FamilySeries family_inference(TimeSeries ts){
     make_consistent(model);
     
 
-
-
-
-    /* TO BE IMPLEMENTED... */
-
-
-    /* Write the results */
+    /* Write the results of inference */
     for(i = 0; i < results->model->num_of_children; i++){
+
+      /* NOTE: this would be a proper place for the rest of the EM-algorithm
+       * in case we need to limit the memory consumption... */
       
       /* 1. Decide which Variable you are interested in */
       temp = results->model->children[i];
@@ -1123,19 +1120,19 @@ FamilySeries family_inference(TimeSeries ts){
 				       temp);
       assert(clique_of_interest != NULL);
       
-      /* Starting from here, do something else... */
-
       /* 3. General Marginalisation */
-      //marginalise(clique_of_interest, temp, results->data[t][i]);
+      general_marginalise(clique_of_interest->p, 
+			  results->families[t][i],
+			  find_family_mapping(clique_of_interest, temp));
       
-      /* 4. Normalisation??? */
-      //normalise(results->data[t][i], number_of_values(temp));
+      /* 4. Normalisation ??? */
+      size = results->families[t][i]->size_of_data;
+      k = temp->cardinality;
+      for(j = 0; j < size; j = j + k)
+	normalise(results->families[t][i]->data + j, number_of_values(temp));
+      /* Not so sure that this works correctly... */
     }
-    
-
-
-
-
+    /* Finished writing results for this t */
 
 
     if(t > 0)
@@ -1295,12 +1292,11 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
 /* Teaches the given model (ts->model) according to the given time series 
  * (ts) with EM-algorithm. Returns an error code as an integer. */
 int em_learn(TimeSeries ts){
-  int i, j, n;
+  int i, n;
   int v;
   int t = 0;
   int *card;
-  int *var_map;
-  UncertainSeries ucs = NULL;
+  FamilySeries fs = NULL;
   potential *parameters;
   Variable c;
 
@@ -1323,54 +1319,24 @@ int em_learn(TimeSeries ts){
     for(i = 1; i < n; i++)
       card[i] = ts->model->children[v]->parents[i]->cardinality;
 
-    parameters[v] = make_potential(card, n, NULL); /* the true action */
+    parameters[v] = make_potential(card, n, NULL);
     free(card);
   }
 
   while(0){ /* When should we stop? */
 
     /* E-Step: Now this is the heavy stuff..! */
-    ucs = forward_backward_inference(ts,
-				     ts->model->variables,
-				     ts->model->num_of_vars);
-    /* FIXME: this is not enough. Instead of individual prob. distributions,
-     * we need joint distributions of children and their parents. */
+    fs = family_inference(ts);
 
-
-
-
+    /* FIXME: we need joint distributions of children and their parents. */
 
     /* M-Step: First the parameter estimation... */
     for(v = 0; v < ts->model->num_of_children; v++){
       c = ts->model->children[v];
       n = c->num_of_parents + 1;
 
-      /* Reminder: Use mappings for referencing correct values */
-      var_map = (int*) calloc(n, sizeof(int));
-      if(!var_map){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);	
-	for(i = 0; i < ts->model->num_of_children; i++){
-	  free_potential(parameters[i]);
-	}
-	free(parameters);
-	free_uncertainseries(ucs);
-	return ERROR_OUTOFMEMORY;
-      }
-
-      /* Plain ol' cubic search for finding the "potential->ucs" mapping */
-      for(j = 0; j < ucs->num_of_vars; j++){
-	if(equal_variables(c, ucs->variables[j]))
-	  var_map[0] = j;
-      }
-      for(i = 1; i < n; i++){
-	for(j = 0; j < ucs->num_of_vars; j++){
-	  if(equal_variables(c->parents[i], ucs->variables[j]))
-	    var_map[i] = j;
-	}
-      }
-      
-      /* 3. Traverse through the potential with a flat index 
-       *    (+ flat->multidimensional conversion + the mapping above) */
+      /* Traverse through the potentials with a flat index 
+       * (+ flat->multidimensional conversion) */
       
       /* A special case can be found at HMModel.java lines 290-314 */
       
@@ -1380,13 +1346,11 @@ int em_learn(TimeSeries ts){
       
       /* Normalisation of potentials? */
       ;
-      
-      free(var_map);
     }
 
     /* ... then the model modification */
 
-    free_uncertainseries(ucs);
+    free_familyseries(fs);
   }
 
   for(v = 0; v < ts->model->num_of_children; v++){

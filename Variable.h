@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.42 2005-02-22 15:18:47 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.43 2005-03-16 12:14:17 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -27,6 +27,8 @@ struct nip_var {
   struct nip_var **parents; /* array of pointers to the parents */
   int num_of_parents;       /* number of parents */
   void *family_clique;      /* possible reference to the family clique */
+  int *family_mapping;      /* maps the variables in the family to the
+			     * variables in the family clique */
 };
 
 typedef struct nip_var vtype;

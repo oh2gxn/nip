@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.108 2005-02-23 13:59:40 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.109 2005-03-16 12:14:17 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1093,6 +1093,42 @@ Clique find_family(Clique *cliques, int num_of_cliques, Variable var){
   found = find_clique(cliques, num_of_cliques, family, n+1);
   var->family_clique = found; /* MEMOIZE! */
   return found;
+}
+
+
+int* find_family_mapping(Clique family, Variable child){
+  int i, j, n, p;
+  int *result = NULL;
+
+  if(child->family_mapping == NULL){
+    n = child->num_of_parents + 1;
+    result = (int *) calloc(n, sizeof(int));
+    if(!result){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return NULL;
+    }
+
+
+
+    /* FIXME: this is unfinished! */
+    p = 0;
+    for(i=0; i < family->p->num_of_vars; i++){
+      if(p == child->num_of_parents)
+	break; /* all pointers found */
+      for(j=0; j < child->num_of_parents; j++)
+	if(equal_variables((family->variables)[i], child->parents[j])){
+	  result[j] = i;
+	  p++;
+	}
+    }    
+
+
+
+
+    
+    child->family_mapping = result; /* MEMOIZE */
+  }
+  return child->family_mapping;
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.55 2005-03-15 13:57:30 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.56 2005-03-16 12:14:17 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -171,6 +171,12 @@ int enter_evidence(Variable* vars, int nvars, Clique* cliques,
  *  - var : the variable whose family is to be found
  */
 Clique find_family(Clique *cliques, int num_of_cliques, Variable var);
+
+
+/* Computes or finds a mapping from the family members to the clique 
+ * variables, so that you can use general_marginalise to compute 
+ * P(child | pa(child)) from the family clique. */
+int* find_family_mapping(Clique family, Variable child);
 
 
 /* Finds a clique containing the specified set of variables. 
