@@ -28,10 +28,10 @@ void free_graph(Graph* G){
     return;
   size = G->size;
   for(i = 0; i < size; i++)
-    free(G->adj_matrix[i]);
-  free(G->adj_matrix);
+    free(&(G->adj_matrix[i]));
+  free(&(G->adj_matrix));
   free(&(G->variables));
-  free(G);
+  free(&G);
 }
 
 int add_variable(Graph* G, Variable v)

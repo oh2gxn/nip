@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "Variable.h"
 
-/* Function for creating new variables */
 Variable new_variable(char* name, int cardinality){
   int i;
   static long id = 0;
@@ -21,10 +20,6 @@ Variable new_variable(char* name, int cardinality){
   return v;
 }
 
-/* Function for copying a Variable (if needed).
- * v: the Variable to be copied
- * Returns the copy.
- */
 Variable copy_variable(Variable v){
   int i;
   if(v == NULL)
@@ -44,7 +39,6 @@ Variable copy_variable(Variable v){
   return v;
 }
 
-/* Frees the memory used by the Variable v. */
 void free_variable(Variable v){
   if(v == NULL)
     return;
@@ -52,20 +46,14 @@ void free_variable(Variable v){
   free(v);
 }
 
-/* Method for testing variable equality. 
-   This may be needed to keep potentials in order. INEQUALITIES ??? */
 int equal_variables(Variable v1, Variable v2){
   return (v1->id == v2->id);
 }
 
-/* An alternative interface for keeping variables 
-   and thus the potentials in order. */
 unsigned long get_id(Variable v){
   return v->id;
 }
 
-/* Gives v a new likelihood (array of doubles). The size of the array
-   must match v->cardinality */
 int update_likelihood(Variable v, double* likelihood){
   v->likelihood = likelihood;
   return 0;

@@ -10,8 +10,6 @@ typedef struct {
   double *likelihood; /* likelihood of each value */
 } vtype;
 
-/* MVK NOTE: Variable changed to pointer type */
-
 typedef vtype *Variable;
 
 /* Creates a new Variable */
@@ -26,14 +24,19 @@ Variable copy_variable(Variable v);
 /* Frees the memory used by the Variable v. */
 void free_variable(Variable v);
 
-/* Checks if two variables are the same */
+/* Method for testing variable equality. 
+ * This may be needed to keep potentials in order. INEQUALITIES ???
+ */
 int equal_variables(Variable v1, Variable v2);
 
-/* The order of variables is essential for working with potentials. */
+/* An alternative interface for keeping variables 
+ * and thus the potentials in order.
+ */
 unsigned long get_id(Variable v);
 
 /* Gives v a new likelihood array. The size of the array
-   must match v->cardinality */
+ * must match v->cardinality
+ */
 int update_likelihood(Variable v, double* likelihood);
 
 #endif /* __VARIABLE_H__ */

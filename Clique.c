@@ -4,20 +4,6 @@
 #include "potential.h"
 #include "errorhandler.h"
 
-Clique make_Clique(Variable[], int);
-int add_Sepset(Clique, Sepset);
-int free_Clique(Clique);
-Sepset make_Sepset(Variable[], int, Clique[]);
-int free_Sepset(Sepset);
-int unmark_Clique(Clique);
-int distribute_evidence(Clique);
-int collect_evidence(Clique, Sepset, Clique);
-int message_pass(Clique, Sepset, Clique);
-int marginalise(Clique, Variable, double[]);
-int insert_evidence(Clique, double *);
-
-/* Method for creating cliques (without pointers to sepsets) 
-   - MVK: vars[] is an array of Variables (which are pointers) */
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
@@ -34,8 +20,6 @@ Clique make_Clique(Variable vars[], int num_of_vars){
   return c;
 }
 
-
-/* Method for removing cliques and freeing memory: returns an error code */
 int free_Clique(Clique c){
   /* clean the list of sepsets */
   link l1 = c->sepsets;
@@ -52,8 +36,6 @@ int free_Clique(Clique c){
   return 0;
 }
 
-
-/* Method for adding a sepset next to a clique: returns an error code */
 int add_Sepset(Clique c, Sepset s){
   link new = (link) malloc(sizeof(element));
   new->data = s;
@@ -65,10 +47,6 @@ int add_Sepset(Clique c, Sepset s){
   return 0;
 }
 
-
-/* Method for creating sepsets: 
-   - cliques[] is an array which contains references to BOTH 
-     neighbouring cliques */
 Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   Sepset s = (Sepset) malloc(sizeof(sepsettype));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
@@ -86,8 +64,6 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   return s;
 }
 
-
-/* Method for removing sepsets and freeing memory: returns an error code */
 int free_Sepset(Sepset s){
   free_potential(s->old);
   free_potential(s->new);
@@ -97,16 +73,11 @@ int free_Sepset(Sepset s){
   return 0;
 }
 
-
-/* Method for unmarking a clique: call this to every clique before 
-   collecting or distributing evidence. Returns an error code */
 int unmark_Clique(Clique c){
   c->mark = 0;
   return 0;
 }
 
-
-/* Call Distribute-Evidence for c. Returns an error code. */
 int distribute_evidence(Clique c){
   /* mark */
   c->mark = 1;
@@ -136,10 +107,6 @@ int distribute_evidence(Clique c){
   return 0;
 }
 
-
-/* Call Collect-Evidence from Clique c1 (or nullpointer) for Clique c2. 
-   Sepset s12 is the sepset between c1 and c2 or nullpointer to get
-   started. Returns an error code. */
 int collect_evidence(Clique c1, Sepset s12, Clique c2){
   /* mark */
   c2->mark = 1;
@@ -163,8 +130,6 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
   return 0;
 }
 
-
-/* Method for passing messages between cliques. Returns an error code. */
 int message_pass(Clique c1, Sepset s, Clique c2){
   int i, j = 0, k = 0;
   int source_vars[c1->p->num_of_vars - s->new->num_of_vars];
@@ -204,11 +169,6 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   return 0;
 }
 
-/* This one calculates the probability distribution for a variable v
-   according to the clique c. To make sense, the join tree should be 
-   made consistent before this. 
-- The result is placed in the array r
-- The returned value is an error code. */
 int marginalise(Clique c, Variable v, double r[]){
 
   int i = 0;
@@ -223,7 +183,6 @@ int marginalise(Clique c, Variable v, double r[]){
   return(total_marginalise(c->p, r, i));
 }
 
-/* TODO  Returns an error code. */
 int insert_evidence(Clique c, double *data){
   /* copy the pointer or the data? */
   return 0;

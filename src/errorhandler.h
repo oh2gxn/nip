@@ -8,9 +8,9 @@
 #define ERROR_INVALID_ARGUMENT 3
 
 /* Method for reporting an error. 
-- errorcode is for example DIVBYZERO defined in errorhandler.h 
-- if verbose is other than 0, a message will be displayed 
-*/
+ * - errorcode is for example ERROR_DIVBYZERO
+ * - if verbose is other than 0, a message will be displayed 
+ */
 void report_error(int errorcode, int verbose);
 
 /* Method for resetting the errorcounter. */
