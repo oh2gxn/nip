@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.51 2004-08-16 12:45:45 mvkorpel Exp $
+ * huginnet.y $Id: huginnet.y,v 1.52 2004-08-18 11:52:45 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -85,6 +85,8 @@ input:  nodes potentials {
 
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
 
+  free($2); /* the classname is useless */
+
   if(time2Vars() != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
@@ -163,7 +165,7 @@ positionDeclaration:  token_position '=' '(' NUMBER NUMBER ')' ';'
 ;
 
 
-unknownDeclaration:  UNQUOTED_STRING '=' value ';' {}
+unknownDeclaration:  UNQUOTED_STRING '=' value ';' { free($1); }
 ;
 
 
@@ -270,6 +272,7 @@ static int
 yylex (void)
 {
   int tokenlength;
+  int retval = 0;
   char *token = next_token(&tokenlength);
   char *nullterminated;
   char *endptr;
@@ -281,7 +284,7 @@ yylex (void)
 
   /* Single character */
   else if(tokenlength == 1){
-    int retval = *token;
+    retval = *token;
 
     nullterminated = (char *) calloc(2, sizeof(char));
     if(!nullterminated){
@@ -323,49 +326,48 @@ yylex (void)
     if(tokenlength == 5){
       if(strncmp("label", token, 5) == 0){
 	free(token);
-
 	return token_label;
+
       }else if(strncmp("class", token, 5) == 0){
 	free(token);
-
 	return token_class;
       }
     }
+
     /* node or data */
     if(tokenlength == 4){
       if(strncmp("node", token, 4) == 0){
 	free(token);
-
 	return token_node;
+
       }else if(strncmp("data", token, 4) == 0){
 	free(token);
-
 	return token_data;
       }
     }
+
     /* potential */
     if(tokenlength == 9 &&
        strncmp("potential", token, 9) == 0){
       free(token);
-
       return token_potential;
     }
+
     /* states */
     if(tokenlength == 6 &&
        strncmp("states", token, 6) == 0){
       free(token);
-
       return token_states;
     }
+
     /* position */
     if(tokenlength == 8){
       if(strncmp("position", token, 8) == 0){
 	free(token);
-
 	return token_position;
+
       }else if(strncmp("NIP_next", token, 8) == 0){
 	free(token);
-
 	return token_next;
       }
     }
