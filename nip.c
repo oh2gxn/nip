@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.44 2005-03-14 14:04:49 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.45 2005-03-15 10:14:29 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -901,28 +901,11 @@ FamilySeries family_inference(TimeSeries ts){
   FamilySeries results = NULL;
   Nip model = ts->model;
 
-  /* Allocate an array for describing the dimensions of timeslice sepsets */
-  if(model->num_of_nexts > 0){
-    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
-    if(!cardinalities){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      return NULL;
-    }
-  }
-
-  /* Fill the array */
-  k = 0;
-  for(i = 0; i < ts->num_of_hidden; i++){
-    temp = ts->hidden[i];
-    if(temp->next)
-      cardinalities[k++] = number_of_values(temp);
-  }
-
   /* Allocate some space for the results */
   results = (FamilySeries) malloc(sizeof(family_series_type));
   if(!results){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(cardinalities);
+    //free(cardinalities);
     return NULL;
   }
   
@@ -933,7 +916,7 @@ FamilySeries family_inference(TimeSeries ts){
   if(!results->families){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(results);
-    free(cardinalities);
+    //free(cardinalities);
     return NULL;
   }
   
@@ -949,21 +932,32 @@ FamilySeries family_inference(TimeSeries ts){
 	free(results->families[t--]);
       }
       free(results); /* t == -1 */
-      free(cardinalities);
+      //free(cardinalities);
       return NULL;
     }
+  }
+
+  for(i = 0; i < results->model->num_of_children; i++){
+    temp = results->model->children[i];
+    k = temp->num_of_parents + 1;
+    cardinalities = (int *) calloc(k, sizeof(int));
+    if(!cardinalities){
+      /* TODO: cleanup */
+    }
+
+    cardinalities[0] = temp->cardinality;
+    for(t = 1; t < k; t++){
+      cardinalities[t] = temp->parents[t]->cardinality;
+    }
+
+    for(t = 0; t < results->length; t++){
+
+      /* XXX: Unfinished!!! Let's make potentials instead of double arrays. */
+      results->families[t][i] = make_potential(cardinality, k, NULL);
 
 
-    for(i = 0; i < results->model->num_of_children; i++){
-
-
-    /* XXX: Unfinished!!! Let's make potentials instead of double arrays. */
-
-
-      results->data[t][i] = (double*) calloc(number_of_values(vars[i]),
-					     sizeof(double));
-      if(!results->data[t][i]){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      if(!results->families[t][i]){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	i--;
 	while(i > 0)
 	  free(results->data[t][i--]);
@@ -975,7 +969,7 @@ FamilySeries family_inference(TimeSeries ts){
 	}
 	free(results->variables); /* t == -1 */
 	free(results);
-	free(cardinalities);
+	//free(cardinalities);
 	return NULL;
       }
     }
@@ -984,6 +978,25 @@ FamilySeries family_inference(TimeSeries ts){
 
   /* Allocate some space for the intermediate potentials */
   timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
+
+
+  /* Allocate an array for describing the dimensions of timeslice sepsets */
+  if(model->num_of_nexts > 0){
+    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+    if(!cardinalities){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      /* FIXME: free some memory... */
+      return NULL;
+    }
+  }
+
+  /* Fill the array */
+  k = 0;
+  for(i = 0; i < ts->num_of_hidden; i++){
+    temp = ts->hidden[i];
+    if(temp->next)
+      cardinalities[k++] = number_of_values(temp);
+  }
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++){
