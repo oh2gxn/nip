@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.77 2004-08-20 14:36:25 mvkorpel Exp $
+ * $Id: parser.c,v 1.78 2004-08-23 13:18:18 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -150,6 +150,12 @@ datafile *open_datafile(char *filename, char separator,
       num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
       token_bounds =
 	tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 0);
+
+      if(!token_bounds){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	close_datafile(f);
+	return NULL;
+      }
 
       /* Read node names or make them up. */
       if(linecounter == 0){
@@ -446,11 +452,15 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
     f->line_now++;
 
   num_of_tokens = count_tokens(line, NULL, 0, &separator, 1, 0, 0);
+
+  if(num_of_tokens == 0)
+    return 0;
+
   token_bounds = tokenise(line, num_of_tokens, 0, &separator, 1, 0, 0);
   
-  if(num_of_tokens == 0){
-    free(token_bounds);
-    return 0;
+  if(!token_bounds){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return -1;
   }
 
   *tokens = (char **)
@@ -1042,6 +1052,7 @@ int Graph2JTree(){
 int parsedPots2JTree(){
   int i; 
   int nip_num_of_cliques = get_num_of_cliques();
+  int retval;
   initDataLink initlist = nip_first_initData;
   Clique *nip_cliques = *(get_cliques_pointer());
 
@@ -1065,13 +1076,23 @@ int parsedPots2JTree(){
     free(family);
 
     if(fam_clique != NULL){
-      if(initlist->data->num_of_vars > 1)
-	initialise(fam_clique, initlist->child, initlist->parents, 
-		   initlist->data); /* THE job */
-      else
-	enter_evidence(get_first_variable(), *get_cliques_pointer(), 
-		       get_num_of_cliques(), initlist->child, 
-		       initlist->data->data);
+      if(initlist->data->num_of_vars > 1){
+	retval = initialise(fam_clique, initlist->child, initlist->parents, 
+			    initlist->data); /* THE job */
+	if(retval != NO_ERROR){
+	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	  return ERROR_GENERAL;
+	}
+      }
+      else{
+	retval = enter_evidence(get_first_variable(), *get_cliques_pointer(), 
+				get_num_of_cliques(), initlist->child, 
+				initlist->data->data);
+	if(retval != NO_ERROR){
+	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	  return ERROR_GENERAL;
+	}
+      }
     }
     else
       fprintf(stderr, "In parser.c (%d): find_family failed!\n", __LINE__);

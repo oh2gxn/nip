@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.41 2004-08-19 13:37:34 mvkorpel Exp $
+ * Graph.c $Id: Graph.c,v 1.42 2004-08-23 13:18:18 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -10,6 +10,7 @@
 #include "Clique.h"
 #include "grphmnp/Heap.h"
 #include "grphmnp/cls2clq.h"
+#include "errorhandler.h"
 
 static void sort_variables(Graph* G);
 
@@ -326,7 +327,8 @@ int find_cliques(Graph* G, Clique** cliques_p)
       return -1;
     }
 
-    find_sepsets(*cliques_p, n_cliques);
+    if(find_sepsets(*cliques_p, n_cliques) != NO_ERROR)
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 
     /* JJT: I added some free_graph stuff here, because I suspected
      * memory leaks... */

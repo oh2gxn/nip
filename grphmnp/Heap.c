@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.25 2004-08-20 14:36:31 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.26 2004-08-23 13:18:33 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -158,6 +158,21 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
 	  return NULL;
 
 	hi->s = make_Sepset(isect, isect_size, neighbours);
+
+	/* In case of failure, free all Sepsets and the Heap. */
+	if(!(hi->s)){
+	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	  for(k = 0; k < hi_index - 1; k++){
+	    hi = &(H->heap_items[k]);
+	    free_Sepset(hi->s);
+	    hi->s = NULL;
+	  }
+	  for(k = 0; k < n; k++)
+	    H->useless_sepsets[k] = NULL;
+
+	  free_heap(H);
+	  return NULL;
+	}
 
 	/* Initially, all Sepsets are marked as useless (to be freed later) */
 	H->useless_sepsets[k++] = hi->s;

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.7 2004-08-20 09:53:48 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.8 2004-08-23 13:18:18 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -13,11 +13,16 @@
 extern int yyparse();
 
 void reset_model(Nip model){
+  int retval;
   Variable temp;
   Variable_iterator it = model->first_var;
+
   while((temp = next_Variable(&it)) != NULL)
     reset_likelihood(temp);
-  global_retraction(model->first_var, model->cliques, model->num_of_cliques);
+  retval = global_retraction(model->first_var, model->cliques,
+			     model->num_of_cliques);
+  if(retval != NO_ERROR)
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 }
 
 
@@ -89,6 +94,9 @@ int insert_hard_evidence(Nip model, char* variable, char* observation){
     return ERROR_INVALID_ARGUMENT;
   ret = enter_observation(model->first_var, model->cliques,
 			  model->num_of_vars, v, observation);
+  if(ret != NO_ERROR)
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+
   make_consistent(model);
   return ret;
 }

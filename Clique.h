@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.43 2004-08-09 15:02:23 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.44 2004-08-23 13:18:18 mvkorpel Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -72,11 +72,6 @@ potential create_Potential(Variable variables[], int num_of_vars,
 			   double data[]);
 
 
-/* Method for cleaning potentials and releasing the memory. 
- * Returns an error code. */
-int free_Potential(potential p);
-
-
 /* Method for unmarking a clique: call this to every clique before 
    collecting or distributing evidence. Returns an error code. */
 int unmark_Clique(Clique c);
@@ -92,10 +87,6 @@ int clique_num_of_vars(Clique c);
 
 /* Tells how many variables the sepset contains. */
 int sepset_num_of_vars(Sepset s);
-
-
-/* Returns the i:th Variable in a Clique. */
-Variable clique_get_Variable(Clique c, int i);
 
 
 /*

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.90 2004-08-20 10:00:27 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.91 2004-08-23 13:18:18 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -35,8 +35,6 @@ static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 		      void (*sFuncPointer)(Sepset));
 
 static int clique_marked(Clique c);
-
-/*static int global_retraction(Clique c);*/
 
 static void retract_Clique(Clique c);
 
@@ -173,7 +171,7 @@ int free_Clique(Clique c){
   free_potential(c->original_p);
   free(c->variables);
   free(c);
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -540,11 +538,6 @@ potential create_Potential(Variable variables[], int num_of_vars,
 }
 
 
-int free_Potential(potential p){
-  return free_potential(p);
-}
-
-
 int unmark_Clique(Clique c){
   if(c == NULL)
     return ERROR_INVALID_ARGUMENT;
@@ -579,15 +572,9 @@ int sepset_num_of_vars(Sepset s){
 }
 
 
-Variable clique_get_Variable(Clique c, int i){
-  if(c != NULL  &&  i < c->p->num_of_vars)
-    return c->variables[i];
-  return NULL;
-}
-
-
 int distribute_evidence(Clique c){
 
+  int retval;
   link l;
   Sepset s;
 
@@ -603,10 +590,20 @@ int distribute_evidence(Clique c){
   l = c->sepsets;
   while (l != 0){
     s = l->data;
-    if(!clique_marked(s->cliques[0]))
-      message_pass(c, s, s->cliques[0]); /* pass a message */
-    else if(!clique_marked(s->cliques[1]))
-      message_pass(c, s, s->cliques[1]); /* pass a message */
+    if(!clique_marked(s->cliques[0])){
+      retval = message_pass(c, s, s->cliques[0]); /* pass a message */
+      if(retval != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
+    }
+    else if(!clique_marked(s->cliques[1])){
+      retval = message_pass(c, s, s->cliques[1]); /* pass a message */
+      if(retval != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
+    }
     l = l->fwd;
   }
 
@@ -620,12 +617,13 @@ int distribute_evidence(Clique c){
       distribute_evidence(s->cliques[1]);
     l = l->fwd;
   }
-  return 0;
+  return NO_ERROR;
 }
 
 
 int collect_evidence(Clique c1, Sepset s12, Clique c2){
 
+  int retval;
   link l;
   Sepset s;
 
@@ -644,8 +642,13 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
   }
 
   /* pass the message to c1 */
-  if((c1 != NULL) && (s12 != NULL))
-    message_pass(c2, s12, c1);
+  if((c1 != NULL) && (s12 != NULL)){
+    retval = message_pass(c2, s12, c1);
+    if(retval != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
+  }
 
 #ifdef DEBUG_CLIQUE
   if(c1 != NULL && c2 != NULL){
@@ -656,7 +659,7 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
   }
 #endif
 
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -825,7 +828,7 @@ int normalise(double result[], int array_size){
     return 0;
   for(i = 0; i < array_size; i++)
     result[i] /= sum;
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -936,7 +939,7 @@ int enter_evidence(Variable_iterator vars, Clique* cliques,
     }
   }
 
-  /* update likelihood */
+  /* Update likelihood. No need to check return value. */
   update_likelihood(v, evidence);
 
   if(retraction){
@@ -1060,24 +1063,18 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
       print_Clique(two);
 #endif
 
+      if(add_Sepset(one, s) != NO_ERROR){
+	free_heap(H);
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
+	
+      if(add_Sepset(two, s) != NO_ERROR){
+	free_heap(H);
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
 
-      /* unmark_Clique is only called for debug purposes, because
-       * add_Sepset calls clique_search. */
-#ifdef DEBUG_CLIQUE
-
-      /* Unmark MUST be done before searching (clique_search). */
-      for(i = 0; i < num_of_cliques; i++)
-	unmark_Clique(cliques[i]);
-#endif
-      add_Sepset(one, s);
-
-#ifdef DEBUG_CLIQUE
-
-      /* Unmark MUST be done before searching (clique_search). */
-      for(i = 0; i < num_of_cliques; i++)
-	unmark_Clique(cliques[i]);
-#endif
-      add_Sepset(two, s);
       inserted++;
     }
 

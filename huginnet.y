@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.53 2004-08-20 14:36:25 mvkorpel Exp $
+ * huginnet.y $Id: huginnet.y,v 1.54 2004-08-23 13:18:18 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -71,11 +71,20 @@ input:  nodes potentials {
 
   reset_timeinit();
 
-  parsedVars2Graph();
+  if(parsedVars2Graph() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
 
-  Graph2JTree();
+  if(Graph2JTree() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
 
-  parsedPots2JTree();
+  if(parsedPots2JTree() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
 
 #ifdef DEBUG_BISON
   print_parsed_stuff();
@@ -94,11 +103,20 @@ input:  nodes potentials {
 
   reset_timeinit();
 
-  parsedVars2Graph();
+  if(parsedVars2Graph() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
 
-  Graph2JTree();
+  if(Graph2JTree() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
 
-  parsedPots2JTree();
+  if(parsedPots2JTree() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
 
 #ifdef DEBUG_BISON
   print_parsed_stuff();
@@ -125,6 +143,14 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   char **states = get_nip_statenames();
   Variable v = new_variable($2, label, states, get_nip_strings_parsed());
 
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free($2);
+    free(label);
+    reset_strings(); /* frees the original parsed statenames */
+    YYABORT;
+  }
+
   if((nip_next = get_nip_next()) != NULL){
     retval = add_time_init(v, get_nip_next());
     if(retval != NO_ERROR){
@@ -132,6 +158,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
       free($2);
       free(label);
       reset_strings(); /* frees the original parsed statenames */
+      free_variable(v);
       YYABORT;
     }
   }
@@ -235,7 +262,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   int retval;
   Variable vars[1];
   vars[0] = $3;
-  add_initData(create_Potential(vars, 1, NULL), vars[0], NULL); 
+  retval = add_initData(create_Potential(vars, 1, NULL), vars[0], NULL); 
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;

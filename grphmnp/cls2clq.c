@@ -1,5 +1,5 @@
 /*
- * cls2clq.c $Id: cls2clq.c,v 1.6 2004-08-19 15:11:38 mvkorpel Exp $
+ * cls2clq.c $Id: cls2clq.c,v 1.7 2004-08-23 13:18:33 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -65,7 +65,8 @@ int is_subset(Cluster_list* cl_head, int* var_set, int size)
 
 Clique* cl2cliques(Variable* vars, Cluster_list* cl_head, int n_cliques, int n)
 {
-    int n_vars, i;
+    int n_vars, i, j;
+    int orig_n_cliques = n_cliques;
     Cluster_list* cl_i;
     Clique* cliques;
     Variable* clique_vars;
@@ -89,6 +90,14 @@ Clique* cl2cliques(Variable* vars, Cluster_list* cl_head, int n_cliques, int n)
 
 	   cliques[--n_cliques] = make_Clique(clique_vars, n_vars);
 	   /* This ^^^^^^^^^^^ is sort of dangerous. */
+
+	   if(cliques[n_cliques] == NULL){
+	     for(j = n_cliques + 1; j < orig_n_cliques; j++)
+	       free_Clique(cliques[j]);
+	     free(clique_vars);
+	     free(cliques);
+	     return NULL;
+	   }
     }
     
     free(clique_vars);
