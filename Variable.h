@@ -12,7 +12,7 @@ typedef struct {
 /* Creates a new Variable */
 Variable new_variable(char* name, int cardinality);
 
-/* Checks if two variables are the same (by address)*/
+/* Checks if two variables are the same */
 int equal(Variable v1, Variable v2);
 
 /* The order of variables is essential for working with potentials. */

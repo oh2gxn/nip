@@ -1,4 +1,4 @@
-/* Tässä on vielä jotain säätöä. */
+/* Tähän saattaa tulla vielä lisää hienouksia. */
 
 #include <stdio.h>
 #include <stdlib.h>

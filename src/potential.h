@@ -34,7 +34,17 @@ double *get_ppointer(potential p, int indices[], int num_of_vars);
    variables in potential p. USUALLY NOT NEEDED outside of potential.c */
 void inverse_mapping(potential p, int big_index, int indices[]);
 
-/* method for marginalising over certain variables */
+/* Method for marginalising over certain variables. Useful in message passing
+   from clique to sepset. It is best that sepsets have two static potentials 
+   which take turns as the old and the new potential.
+   TAKE CARE OF THE ORDER OF VARIABLES! 
+-source: potential to be marginalised
+-destination: potential to put the answer, variables will be in the same order
+-source_vars: indices of the marginalised variables in source potential
+             (ascending order and between 0...num_of_vars-1 inclusive!) 
+EXAMPLE: If sepset variables are the second (i.e. 1) and third (i.e. 2) 
+variable in a five variable clique, the call is 
+marginalise(cliquePotential, newSepsetPotential, {0, 3, 4}) */
 void marginalise(potential source, potential destination, int source_vars[]);
 
 /* Method for updating target potential by multiplying with enumerator 
@@ -50,10 +60,3 @@ void update(potential enumerator, potential denominator, potential target,
 	    int extra_vars[]);
 
 #endif
-
-
-
-
-
-
-
