@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.37 2004-07-08 04:40:14 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.38 2004-07-08 12:51:55 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -256,6 +256,11 @@ int update_potential(potential numerator, potential denominator,
   int *source_indices, *target_indices;
   double *potvalue;
 
+  if(!numerator){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+  
   source_indices = (int *) calloc(numerator->num_of_vars, sizeof(int));
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 

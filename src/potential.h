@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.22 2004-07-08 04:40:14 mvkorpel Exp $
+ * potential.h $Id: potential.h,v 1.23 2004-07-08 12:51:55 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -83,6 +83,9 @@ int total_marginalise(potential source, double destination[], int variable);
  *  a five variable clique, the call is 
  *  update(newSepsetPotential, oldSepsetPotential, cliquePotential, {0, 1, 3}) 
  * -Returns an error code.
+ * 
+ * JJT: If denominator is NULL, only the multiplication is done.
+ *      If numerator is NULL, and error is reported.
  */
 int update_potential(potential numerator, potential denominator, 
 		      potential target, int extra_vars[]);

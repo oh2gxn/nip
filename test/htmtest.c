@@ -29,7 +29,10 @@ int main(int argc, char *argv[]){
   Clique clique_of_interest;
 
   potential *timeslice_sepsets;
-
+  /* for reordering sepsets between timeslices
+    potential temp_potential;
+    potential reordered;
+  */
   Variable *hidden;
   Variable *next;
   Variable *previous;
@@ -139,6 +142,14 @@ int main(int argc, char *argv[]){
     temp = next_Variable(&it);
   }
   
+
+  /* Check one little detail :) */
+  j = 1;
+  for(i = 1; i < num_of_nexts; i++)
+    if(get_id(previous[i-1]) > get_id(previous[i]))
+      j = 0;
+  assert(j);
+
 
   /* Allocate some space for data */
   data = (int**) calloc(timeseries->datarows, sizeof(int*));
@@ -271,10 +282,7 @@ int main(int argc, char *argv[]){
     /* 5. Start a message pass between timeslices */
     clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				     next, num_of_nexts);
-    if(!clique_of_interest){
-      printf("In htmtest.c : No clique found! Sorry.\n");
-      return 1;
-    }
+    assert(clique_of_interest != NULL);
     temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
 			      num_of_nexts, sizeof(int));
     if(!temp_vars){
@@ -306,10 +314,7 @@ int main(int argc, char *argv[]){
     /* 1. Finish the message pass between timeslices */
     clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				     previous, num_of_nexts);
-    if(!clique_of_interest){
-      printf("In htmtest.c : No clique found! Sorry.\n");
-      return 1;
-    }      
+    assert(clique_of_interest != NULL);
     j = 0; k = 0;
     for(i=0; i < clique_of_interest->p->num_of_vars; i++){
       if(j < num_of_nexts &&
@@ -351,15 +356,13 @@ int main(int argc, char *argv[]){
 	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
 			    data[t][i]);
     
+    
+    /* Message pass??? */
+    /* 1. Finish the message pass between timeslices */
     if(t > 0){
-      /* Message pass??? */
-      /* 1. Finish the message pass between timeslices */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-				       next, num_of_nexts);
-      if(!clique_of_interest){
-	printf("In htmtest.c : No clique found! Sorry.\n");
-	return 1;
-      }
+				       previous, num_of_nexts);
+      assert(clique_of_interest != NULL);
       temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
 				num_of_nexts, sizeof(int));
       if(!temp_vars){
@@ -376,9 +379,37 @@ int main(int argc, char *argv[]){
 	  k++;
 	}
       }
-      update_potential(timeslice_sepsets[t-1], NULL, 
+      
+      update_potential(timeslice_sepsets[t-1], NULL,
 		       clique_of_interest->p, temp_vars);
     }
+
+    if(t < timeseries->datarows - 1){
+      /* FIX ME: there's a bug here somewhere. */
+      clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				       next, num_of_nexts);
+      assert(clique_of_interest != NULL);
+      temp_vars = (int*) calloc(clique_of_interest->p->num_of_vars - 
+				num_of_nexts, sizeof(int));
+      if(!temp_vars){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	return 1;
+      }
+      j = 0; k = 0;
+      for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+	if(j < num_of_nexts &&
+	   equal_variables((clique_of_interest->variables)[i], next[j]))
+	  j++;
+	else {
+	  temp_vars[k] = i;
+	  k++;
+	}
+      }
+      
+      update_potential(timeslice_sepsets[t+1], timeslice_sepsets[t],
+		       clique_of_interest->p, temp_vars);
+    }
+
     /********************/
     /* Do the inference */
     /********************/
@@ -443,19 +474,19 @@ int main(int argc, char *argv[]){
 	printf("In htmtest.c : No clique found! Sorry.\n");
 	return 1;
       }
-      /* NOTE: Let's hope the "next" variables are in correct order */
+      /* NOTE: Let's hope the "previous" variables are in correct order */
       m = 0;
       n = 0;
       for(j=0; j < clique_of_interest->p->num_of_vars; j++){
 	if(m < num_of_nexts &&
-	   equal_variables((clique_of_interest->variables)[j], next[m]))
+	   equal_variables((clique_of_interest->variables)[j], previous[m]))
 	  m++;
 	else {
 	  temp_vars[n] = j;
 	  n++;
 	}
       }
-      general_marginalise(clique_of_interest->p, timeslice_sepsets[t-1],
+      general_marginalise(clique_of_interest->p, timeslice_sepsets[t],
 			  temp_vars);
     }
     free(temp_vars);
