@@ -85,8 +85,8 @@ potential create_Potential(Variable variables[], int num_of_vars,
 			   double data[]){
   // THIS IS TRICKY: we have to reorder the array and stuff...
   int i, j, card_temp, index, size_of_data = 1;
-  int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
-  int *indices = (int *) calloc(num_of_vars, sizeof(int));
+  int cardinality[num_of_vars];
+  int indices[num_of_vars];
   int reorder[num_of_vars];
   unsigned long temp;
   potential p;
@@ -136,10 +136,7 @@ potential create_Potential(Variable variables[], int num_of_vars,
     // set the value (in a little ugly way)
     p->data[i] = data[index];
   }
-  
-  free(cardinality);
-  free(indices);
-  //free(reorder);
+
   return p;
 }
 
