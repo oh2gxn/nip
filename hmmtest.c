@@ -15,7 +15,8 @@ int main(int argc, char *argv[]){
   int i, j, k, l, retval, t = 0;
   int num_of_hidden = 0;
   int nip_num_of_cliques;
-  double*** smoothed; /* probs of the hidden variables */
+  double*** filtered; /* probs of the hidden variables */
+  double*** smoothed; /* probs of the hidden variables (given all data) */
 
   Clique *nip_cliques;
   Clique clique_of_interest;
@@ -124,22 +125,26 @@ int main(int argc, char *argv[]){
 
 
   /* Allocate some space for filtering */
-  smoothed = (double***) calloc(timeseries->datarows, sizeof(double**));
-  if(!smoothed){
+  filtered = (double***) calloc(timeseries->datarows + 1, sizeof(double**));
+  smoothed = (double***) calloc(timeseries->datarows + 1, sizeof(double**));
+  if(!(filtered && smoothed)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
-  for(t = 0; t < timeseries->datarows; t++){
+  for(t = 0; t < timeseries->datarows + 1; t++){
+    filtered[t] = (double**) calloc(num_of_hidden, sizeof(double*));
     smoothed[t] = (double**) calloc(num_of_hidden, sizeof(double*));
-    if(!smoothed[t]){
+    if(!(filtered[t] && smoothed[t])){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
     }
 
     for(i = 0; i < num_of_hidden; i++){
+      filtered[t][i] = (double*) calloc( number_of_values(hidden[i]), 
+					 sizeof(double));
       smoothed[t][i] = (double*) calloc( number_of_values(hidden[i]), 
 					 sizeof(double));
-      if(!smoothed[t][i]){
+      if(!(filtered[t][i] && smoothed[t][i])){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	return 1;
       }
@@ -170,14 +175,72 @@ int main(int argc, char *argv[]){
   /*****************/
   printf("## Forward phase ##\n");
 
-  for(t = 0; t < timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
+  t = 0;
+  /********************/
+  /* Do the inference */
+  /********************/
+  
+  /* 1. Unmark all Cliques */
+  for(i = 0; i < nip_num_of_cliques; i++)
+    unmark_Clique(nip_cliques[i]);
+  
+  /* 2. Collect evidence */
+  collect_evidence(NULL, NULL, nip_cliques[0]);
+  
+  /* 3. Unmark all Cliques */
+  for(i = 0; i < nip_num_of_cliques; i++)
+    unmark_Clique(nip_cliques[i]);
+  
+  /* 4. Distribute evidence */
+  distribute_evidence(nip_cliques[0]);
+  
+  
+  /* an experimental forward phase (a.k.a. filtering)... */
+  /* Calculates the filtered values */
+  for(i = 0; i < num_of_hidden; i++){
+    
+    /*********************************/
+    /* Check the result of inference */
+    /*********************************/
+    
+    /* 1. Decide which Variable you are interested in */
+    interesting = hidden[i];
+    if(!interesting){
+      printf("In hmmtest.c : Variable of interest not found.\n");
+      return 1;
+    }
+    
+    /* 2. Find the Clique that contains the family of 
+     *    the interesting Variable */
+    clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				     &interesting, 1);
+    if(!clique_of_interest){
+      printf("In hmmtest.c : No clique found! Sorry.\n");
+      return 1;
+    }  
+    
+    /* 3. Marginalisation (memory for the result must have been allocated) */
+    marginalise(clique_of_interest, interesting, filtered[t][i]);
+    
+    /* 4. Normalisation */
+    normalise(filtered[t][i], number_of_values(interesting));    
+    
+    /* 5. Print the result */
+    for(j = 0; j < number_of_values(interesting); j++)
+      printf("P(%s=%s) = %f\n", get_symbol(interesting),
+	     (interesting->statenames)[j], filtered[t][i][j]);
+    printf("\n");
+  }
+  
+
+  for(t = 1; t <= timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t);
     
     /* 0. Put some data in */
     for(i = 0; i < timeseries->num_of_nodes; i++)
       enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			  data[t][i]);
+			  data[t - 1][i]);
     
     /********************/
     /* Do the inference */
@@ -223,15 +286,15 @@ int main(int argc, char *argv[]){
       }  
       
       /* 3. Marginalisation (memory for the result must have been allocated) */
-      marginalise(clique_of_interest, interesting, smoothed[t][i]);
+      marginalise(clique_of_interest, interesting, filtered[t][i]);
       
       /* 4. Normalisation */
-      normalise(smoothed[t][i], number_of_values(interesting));    
+      normalise(filtered[t][i], number_of_values(interesting));    
       
       /* 5. Print the result */
       for(j = 0; j < number_of_values(interesting); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(interesting),
-	       (interesting->statenames)[j], smoothed[t][i][j]);
+	       (interesting->statenames)[j], filtered[t][i][j]);
       printf("\n");
     }
     
@@ -243,8 +306,8 @@ int main(int argc, char *argv[]){
     for(i = 0; i < num_of_hidden; i++){
       /* old posteriors become new priors */
       temp = hidden[i];
-      if(temp->next)
-	update_likelihood(temp->next, smoothed[t][i]);
+      if(temp->next != NULL)
+	update_likelihood(temp->next, filtered[t][i]);
     }
     
     global_retraction(nip_cliques[0]);
@@ -259,43 +322,32 @@ int main(int argc, char *argv[]){
   /******************/
   
   printf("## Backward phase ##\n");  
-  t = timeseries->datarows - 1;
 
   /* forget old evidence */
   it = get_Variable_list();
   while((temp = next_Variable(&it)) != NULL)
     reset_likelihood(temp);
 
-#ifdef KEIJO
-  for(i = 0; i < num_of_hidden; i++){
-    /* old posteriors become new priors */
-    temp = hidden[i];
-    if(temp->next != NULL)
-      update_likelihood(temp, smoothed[t][i]);
-  }
-#endif
-  
   global_retraction(nip_cliques[0]);
-  
-  
-  for(t = timeseries->datarows - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
 
+  
+  for(t = timeseries->datarows; t > 0; t--){ /* FOR EVERY TIMESLICE */
+    
     printf("-- t = %d --\n", t);
-
-
-    /* JJ NOTE: Don't take the data into account. It is already included 
-     * in the forward phase stuff. */
-#ifdef KEIJO
+    
+    /* 0. Put some data in */
     for(i = 0; i < timeseries->num_of_nodes; i++)
       enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			  data[t][i]);
+			  data[t - 1][i]);    
+#ifdef KEIJO
 #endif
 
-    /* 0. Put some priors in */
-    for(i = 0; i < num_of_hidden; i++)
-      if(hidden[i]->next == NULL)
-	enter_evidence(hidden[i], smoothed[t][i]);
-
+    for(i = 0; i < num_of_hidden; i++){
+      /* old posteriors become new priors */
+      temp = hidden[i];
+      if(temp->next != NULL)
+	enter_evidence(temp->next, filtered[t - 1][i]);
+    }
 
     /********************/
     /* Do the inference */
@@ -315,7 +367,9 @@ int main(int argc, char *argv[]){
     /* 4. Distribute evidence */
     distribute_evidence(nip_cliques[0]);
     
-    /* Calculates the smoothed values */
+    
+    /* an experimental forward phase (a.k.a. filtering)... */
+    /* Calculates the filtered values */
     for(i = 0; i < num_of_hidden; i++){
       
       /*********************************/
@@ -338,11 +392,12 @@ int main(int argc, char *argv[]){
 	return 1;
       }  
       
-      /* 3. Marginalisation (memory must have been allocated for it) */
+      /* 3. Marginalisation (the memory must have been allocated) */
       marginalise(clique_of_interest, interesting, smoothed[t][i]);
       
       /* 4. Normalisation */
       normalise(smoothed[t][i], number_of_values(interesting));    
+      
       
       /* 5. Print the result */
       for(j = 0; j < number_of_values(interesting); j++)
@@ -351,35 +406,29 @@ int main(int argc, char *argv[]){
       printf("\n");
     }
     
+
     /* forget old evidence */
     it = get_Variable_list();
     while((temp = next_Variable(&it)) != NULL)
       reset_likelihood(temp);
     
+
+#ifdef KEIJO
     for(i = 0; i < num_of_hidden; i++){
       /* old posteriors become new priors */
       temp = hidden[i];
-      if(temp->previous != NULL)
-	update_likelihood(temp->previous, smoothed[t][i]);
+      if(temp->next != NULL)
+	update_likelihood(temp->next, smoothed[t - 1][i]);
     }
-    
-    global_retraction(nip_cliques[0]);
+#endif
 
-    /* Useful inference? */
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    collect_evidence(NULL, NULL, nip_cliques[0]);
-    
-    for(i = 0; i < nip_num_of_cliques; i++)
-      unmark_Clique(nip_cliques[i]);
-    
-    distribute_evidence(nip_cliques[0]);    
-    
+    global_retraction(nip_cliques[0]);
+   
   }
+
   
 
-  /* A NEW IDEA: 
+  /* AN IDEA: 
    * - start with a blank join tree
    * - add the evidence just like in forward phase
    * - collect & distribute evidence
