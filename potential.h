@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.28 2004-10-18 14:25:30 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.29 2005-03-18 15:40:49 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -21,11 +21,6 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]);
 
 /* Free the memory used by potential p. */
 void free_potential(potential p);
-
-/* Make a copy of a potential. 
- * Source and destination must be potentials of same cardinality! 
- */
-void copy_potential(potential source, potential destination);
 
 /* Gets a value from the potential p. Syntactic sugar. */
 double get_pvalue(potential p, int indices[]);

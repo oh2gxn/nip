@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.50 2005-03-18 15:10:30 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.51 2005-03-18 15:40:49 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -651,8 +651,10 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
   }
 
 
+  printf("DEBUG 1: nip.c line 654\n");
   /* FIXME: this one crashes on PC:s (not on pyramid though) */
   free_potential(timeslice_sepset); 
+  printf("DEBUG 2: nip.c line 657\n");
 
 
   return results;

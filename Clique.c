@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.110 2005-03-16 13:47:55 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.111 2005-03-18 15:40:49 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1323,7 +1323,6 @@ void print_Clique(Clique c){
 
 
 void print_Sepset(Sepset s){
-
   int i;
 
   printf("Sepset ");
@@ -1335,21 +1334,20 @@ void print_Sepset(Sepset s){
 
 
 static void retract_Clique(Clique c){
+  int i;
 
-  copy_potential(c->original_p, c->p);
-
+  for(i = 0; i < c->p->size_of_data; i++)
+    c->p->data[i] = c->original_p->data[i];
 }
 
 
 static void retract_Sepset(Sepset s){
-
   int i;
 
   for(i = 0; i < s->old->size_of_data; i++){
     s->old->data[i] = 1;
     s->new->data[i] = 1;
   }
-
 }
 
 

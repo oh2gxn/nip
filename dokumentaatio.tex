@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.44 2005-02-23 13:59:40 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.45 2005-03-18 15:40:49 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -614,13 +614,6 @@ given \cparameter{data} array.
 
 \item[free\_potential(p)] frees the memory allocated for the
 potential~\cparameter{p}.
-
-\item[copy\_potential(source, destination)] copies the distribution
-contained in the \cparameter{source} potential to the given
-\cparameter{destination} potential. Note that both of the potentials must
-be already existent and otherwise equal. Use the
-\cfunction{make\_potential} function if you need an entire new copy of a
-potential.
 
 \item[get\_pvalue(p, indices)] retrieves the possibly non-normalised
 probability of the configuration of variables, described by the
