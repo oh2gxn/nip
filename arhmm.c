@@ -7,7 +7,7 @@
 
 #define STATE_SHIFT (0.66)
 #define EMIT_P (0.8)
-#define WAYNEGRETZKY 99
+#define OBSEQLEN (100)
 
 /* Random number between 0 and 1 */
 double urnd()
@@ -28,10 +28,7 @@ char** gen_obs(int n)
         if (urnd() > STATE_SHIFT)
             curr_state ^= 1;
         /* Emit symbol */
-        if (urnd() < EMIT_P)
-            observations[i] = curr_state? "A":"B";
-        else
-            observations[i] = curr_state? "B":"A";
+        observations[i] = (urnd() < EMIT_P) ^ curr_state? "B": "A";
     }
     return observations;
 }
@@ -61,57 +58,81 @@ int get_distribution_1(Variable v, Clique* cliques, int n, double** data)
     return n_states;
 }
 
+void setup_vars(Variable* H0, Variable* H1, Variable* O1)
+{
+	char*[2] Hstates = {"False", "True"};
+	char*[2] Ostates = {"A", "B"};
+
+	/* T->T, ja F->F = 0.66; T yleensä (.8) emittoi A:n, F B:n */
+
+	*H0 = new_variable("H0", "Hidden", Hstates, 2);
+	*H1 = new_variable("H1", "Hidden", Hstates, 2);
+	*O1 = new_variable("O1", "Observed", Ostates, 2);
+}
+
+void setup_graph(Graph** G, Variable H0, Variable H1, Variable O1)
+{
+    	*G = new_graph(3);
+	add_variable(*G, H0); add_variable(*G, H1); add_variable(*G, O1);
+	add_child(*G, H0, H1); add_child(*G, H1, O1);
+}
+
+void estep()
+{
+    /* Initialize potentials XX */
+
+    make_consistent(cliques, n_cliques);
+    for (i = 0; i < OBSEQLEN; i++) /* Filter */
+    {
+        n_states = get_distribution_1(H1, cliques, n_cliques, &prob);
+        /* update evidence with *=a_ij */
+        enter_evidence(H0, prob);
+        assert(n_states == 2);
+               /*XX Poista H1:n evidenssi? Aseta yhtä suureksi? */
+        enter_observation(O1, observations[i]);
+        make_consistent(cliques, n_cliques);
+        /* Laske uuden näytteen likelihood, ja tästä filtteröidyt*/
+        filtered[i] = make_potential(&n_states, 1, dataXX);
+    } /* [H0H1] -(H1)- [H1O1] */
+
+    for (i = OBSEQLEN-1; i >= 0; i--) /* Smooth */
+    {
+        /* smoothaus */
+    }
+
+    return 0;
+}
+
+void mstep()
+{
+}
+
 int main() {
 
 	Clique* cliques;
-    int i;
-	int n_cliques, n_states;
+    int i, n_cliques, n_states;
 	Variable H0, H1, O1;
 	Graph *G;
 	char** observations;
 	double* prob;
-
-	char** Hstates = (char **) calloc(2, sizeof(char *));
-	char** Ostates = (char **) calloc(2, sizeof(char *));
-
-	Hstates[0] = "False";
-	Hstates[1] = "True";
-	Ostates[0] = "A";
-	Ostates[1] = "B";
-
-	/* T->T, ja F->F = 0.66; T yleensä (.8) emittoi A:n, F B:n */
-
-	H0 = new_variable("H0", "Hidden", Hstates, 2);
-	H1 = new_variable("H1", "Hidden", Hstates, 2);
-	O1 = new_variable("O1", "Observed", Ostates, 2);
-
-	G = new_graph(3);
-	add_variable(G, H0); add_variable(G, H1); add_variable(G, O1);
-	add_child(G, H0, H1); add_child(G, H1, O1);
+	double aij[4];
+	
+	potential filtered[OBSEQLEN], smoothed[OBSEQLEN];
+	
+    setup_vars(&H0, &H1, &O1);
+    setup_graph(&G, H0, H1, O1);
 	
 	n_cliques = find_cliques(G, &cliques);
     find_sepsets(cliques, n_cliques);
 	assert(n_cliques == 2);
 
-    observations = gen_obs(100);
+    observations = gen_obs(OBSEQLEN);
     
-    /* Initialize potentials XX */
-    make_consistent(cliques, n_cliques);
-    for (i = 0; i < 100; i++)
-    {
-        n_states = get_distribution_1(H1, cliques, n_cliques, &prob);
-        enter_evidence(H0, prob);
-        assert(n_states == 2);
-               /*XX Poista H1:n evidenssi? Aseta yhtä suureksi?
-                * Pitäisikö näitä tallentaa paluumatkalle? */
-               /* Vai jotain muuta? A_ij ihan irralleen?*/
-        enter_observation(O1, observations[i]);
-        make_consistent(cliques, n_cliques);
-    } /* [H0H1] -(H1)- [H1O1] */
-    for (i = WAYNEGRETZKY; i >= 0; i--)
-    {
-        /* crab canon */
+    /* EM-loop */
+    while(!convergence) {
+        estep();
+        mstep();
     }
+    
 
-    return 0;
 }
