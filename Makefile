@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.37 2005-03-21 12:45:59 jatoivol Exp $
+# $Id: Makefile,v 1.38 2005-03-21 12:50:09 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -117,7 +117,7 @@ $(HUG_SRCS): $(HUG_DEFS)
 # With these lines, executing "make clean" removes the .o files that
 # are not needed after the program is compiled.
 clean:
-	rm -f $(OBJS) $(HUG_SRCS) *.i *.s
+	rm -f $(HUG_SRCS) *.o *.i *.s
 
 # "make realclean" does the same as "make clean", and also removes the
 # compiled program and a possible "core" file.
