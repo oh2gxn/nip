@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.30 2004-09-27 13:58:48 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.31 2004-09-30 13:06:59 arasinen Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -1452,6 +1452,18 @@ The underlying assumptions with the \cdatatype{Graph} have been the following:
 \item The number of variables in a graph will be relatively small.
 \end{enumerate}
 
+The analysis is divided into two blocks. First we study operations that modify the Graph, and then follow with a discussion of the cluster/clique-building phase. These two stages use very different data structures and algorithms, which makes unified analysis difficult.
+
+\subsection{Operations on the Graph}
+
+% Build
+% Undirect
+% Moralise
+
+\subsection{Operations on the Clusters}
+
+%triangulation
+%clique building
 
 
 \section{The join tree}
