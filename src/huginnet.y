@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.50 2004-08-11 12:19:42 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.51 2004-08-16 12:45:45 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -209,7 +209,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 }
 ;
 
-child:        UNQUOTED_STRING { $$ = get_variable($1); free($1); }
+child:        UNQUOTED_STRING { $$ = get_parser_variable($1); free($1); }
 ;
 
 
@@ -218,7 +218,9 @@ symbols:       /* end of list */
 ;
 
 
-symbol:       UNQUOTED_STRING { add_symbol(get_variable($1)); free($1); }
+symbol:       UNQUOTED_STRING { 
+	       add_symbol(get_parser_variable($1)); 
+	       free($1); }
 ;
 
 

@@ -108,6 +108,7 @@ int main(int argc, char *argv[]){
   Clique *nip_cliques;
 
   Variable interesting;
+  Variable_iterator nip_first_var;
 
 #ifdef PRINT_POTENTIALS
   int j;
@@ -177,6 +178,7 @@ int main(int argc, char *argv[]){
 
   nip_cliques = *get_cliques_pointer();
   nip_num_of_cliques = get_num_of_cliques();
+  nip_first_var = get_first_variable();
 
 #ifdef PRINT_JOINTREE
   jtree_dfs(nip_cliques[0], print_Clique, print_Sepset);
@@ -203,14 +205,14 @@ int main(int argc, char *argv[]){
 #ifdef EVIDENCE
   /* add some evidence */
 #ifndef EVIDENCE_SOTKU
-  observed[0] = get_variable("B");
-  observed[1] = get_variable("D");
+  observed[0] = get_variable(nip_first_var, "B");
+  observed[1] = get_variable(nip_first_var, "D");
 #endif
 
 #ifdef EVIDENCE_SOTKU
-  observed[0] = get_variable("C1");
-  observed[1] = get_variable("C4");
-  observed[2] = get_variable("C19");
+  observed[0] = get_variable(nip_first_var, "C1");
+  observed[1] = get_variable(nip_first_var, "C4");
+  observed[2] = get_variable(nip_first_var, "C19");
 #endif
 
 
@@ -242,7 +244,7 @@ int main(int argc, char *argv[]){
   else
     var_name = "B";
 
-  interesting = get_variable(var_name);
+  interesting = get_variable(nip_first_var, var_name);
 
   if(!interesting){
     printf("In bisontest.c : Variable %s not found.\n", var_name);
@@ -293,7 +295,7 @@ int main(int argc, char *argv[]){
   else
     var_name = "B";
   
-  interesting = get_variable(var_name);
+  interesting = get_variable(nip_first_var, var_name);
     
   if(!interesting){
     printf("In bisontest.c : Variable %s not found.\n", var_name);

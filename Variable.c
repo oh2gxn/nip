@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.40 2004-08-13 14:38:11 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.41 2004-08-16 12:45:45 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -205,10 +205,15 @@ Variable next_Variable(Variable_iterator* it){
 }
 
 
-Variable get_variable(char *symbol){
+Variable get_parser_variable(char *symbol){
+
+  return get_variable(nip_first_var, symbol);
+
+}
+
+Variable get_variable(Variable_iterator it, char *symbol){
 
   Variable v; 
-  Variable_iterator it = nip_first_var;
   v = next_Variable(&it);
 
 #ifdef DEBUG_PARSER

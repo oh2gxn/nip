@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.66 2004-08-16 11:23:43 mvkorpel Exp $
+ * $Id: parser.c,v 1.67 2004-08-16 12:45:45 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -513,7 +513,8 @@ char *next_token(int *token_length){
      * (go to beginning of loop) */
     if(tokens_left > 0){
       /* Adjust pointer to the beginning of token boundary index array */
-      free(indexarray);
+      if(indexarray)
+	free(indexarray);
       indexarray = tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1, 1);
 
       /* Check if tokenise failed. If it failed, we have no other option
@@ -932,7 +933,7 @@ int time2Vars(){
   while(initlist != NULL){
     
     v1 = initlist->var;
-    v2 = get_variable(initlist->next);
+    v2 = get_parser_variable(initlist->next);
     if(v1->cardinality == v2->cardinality){
       v1->next = v2;
       v2->previous = v1;

@@ -269,7 +269,9 @@ int main(int argc, char *argv[]){
     
     if(t > 0){
       for(i = 0; i < timeseries->num_of_nodes; i++){
-	temp = get_variable((timeseries->node_symbols)[i]);
+	temp = get_Variable(model, (timeseries->node_symbols)[i]);
+	if(!temp)
+	  printf("Turhaan haettiin: %s\n", timeseries->node_symbols[i]);
 	assert(temp);
 	if(data[t - 1][i] >= 0)
 	  enter_i_observation(model->first_var, model->cliques, 
@@ -351,5 +353,24 @@ int main(int argc, char *argv[]){
     
   }
   
+  for(t = 0; t < timeseries->datarows; t++)
+    free(data[t]);
+  free(data);
+
+  free(hidden);
+
+  for(t = 0; t < timeseries->datarows + 1; t++){
+    for(i = 0; i < num_of_hidden; i++)
+      free(result[t][i]);
+    free(result[t]);
+  }
+  for(i = 0; i < num_of_hidden; i++)
+    free(quotient[i]);
+
+  free(result);
+  free(quotient);
+
+  close_datafile(timeseries);
+
   return 0;
 }

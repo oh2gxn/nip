@@ -115,6 +115,10 @@ int main(int argc, char *argv[]){
   cardinalities = (int*) calloc(num_of_nexts, sizeof(int));
   if(!(hidden && next && previous && cardinalities)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(hidden);
+    free(next);
+    free(previous);
+    free(cardinalities);
     return 1;
   }
 
@@ -462,8 +466,26 @@ int main(int argc, char *argv[]){
     free(temp_vars);
   }
 
+
   free_model(model);
+
+  for(t = 0; t < timeseries->datarows; t++)
+    free(data[i]);
+  free(data);
+
+  for(i = 0; i < num_of_hidden; i++)
+    free(result[i]);
+  free(result);
+
+  for(t = 0; t <= timeseries->datarows; t++)
+    free_potential(timeslice_sepsets[t]);
+  free(timeslice_sepsets);
+
+  close_datafile(timeseries);
   
+  free(hidden);
+  free(next);
+  free(previous);  
+
   return 0;
 }
-

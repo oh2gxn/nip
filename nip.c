@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.5 2004-08-12 09:47:21 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.6 2004-08-16 12:45:45 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -105,22 +105,9 @@ int insert_soft_evidence(Nip model, char* variable, double* distribution){
 
 
 Variable get_Variable(Nip model, char* symbol){
-  Variable v;
-  Variable_iterator it = model->first_var;
-  v = next_Variable(&it);
 
-  if(v == NULL)
-    return NULL; /* didn't find the variable (possibly normal) */
-  
-  /* search for the variable reference */
-  while(strcmp(symbol, v->symbol) != 0){
-    v = next_Variable(&it);
-    if(v == NULL){
-      return NULL; /* didn't find the variable (a normal situation) */
-    }
-  }
+  return get_variable(model->first_var, symbol);
 
-  return v;
 }
 
 

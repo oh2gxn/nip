@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.33 2004-08-12 14:13:29 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.34 2004-08-16 12:45:45 mvkorpel Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -101,8 +101,10 @@ Variable next_Variable(Variable_iterator *it);
 
 
 /* Gets the parsed variable according to the symbol. */
-Variable get_variable(char *symbol);
+Variable get_variable(Variable_iterator it, char *symbol);
 
+/* Gets the variable according to the symbol (when parsing). */
+Variable get_parser_variable(char *symbol);
 
 /* Gives v a new likelihood array. The size of the array
  * must match v->cardinality
