@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.24 2004-09-20 21:13:00 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.25 2004-09-21 14:11:35 arasinen Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -270,14 +270,14 @@ avoid having weird functions like \verb+get_parser_variable+.
 \subsection{General}
 
 The purpose of the graphical analysis is to find an optimal set of
-clusters in the graphical model that has the join tree property. XX
+clusters in the graphical model that has the join tree property. XX % miten m‰‰ritell‰‰n optimaalisuus
 
 The main steps in this process are moralisation and triangulation. The
 triangulation process extracts the cliques used to build the join tree.
  
 Put simply, moralisation means that any nodes that have a common child
 are connected. Furthermore, all directed links are replaced with
-undirected links. The resulting graph is called a {\textit moral
+undirected links. The resulting graph is called a {\it moral
 graph}.
 
 This graph is then triangulated. There exist several triangulations
@@ -300,7 +300,7 @@ datatype and could possibly be refactored.
 \subsection{The functionality description}
 %The interface + how the stuff works...
 \subsubsection{The data structures}
-The data type \cdatatype{Graph} defined in \verb+Graph.h+ is a
+The data type \cdatatype{Graph} defined in \cfilename{Graph.h} is a
 struct which has the following fields:
 \begin{description}
 \item[adj\_matrix] is an $n\times n$ adjacency matrix for the
@@ -322,7 +322,7 @@ graph. Used internally for better performance.
 
 \subsubsection{The functions}
 
-The functions provided in \verb+Graph.c+ are:
+The functions provided in \cfilename{Graph.c} are:
 
 \begin{description}
 \item[new\_graph(n)] creates a new graph with memory reserved for n
@@ -363,13 +363,15 @@ planning to modify the module.
 
 The \cdatatype{Heap} is used to keep the potential cliques in a sorted
 data structure. Any search structure would suffice here; the heap is
-probably the most officient.
+probably the most efficient.
 
 This step requires a dynamically updatable Heap. The weights in
 neighbouring nodes change when the minimum weight node is
 removed. This also means that the heap implementation must be tied in
 with the \cdatatype{Graph}. This has led to number of tradeoffs and
 possible pitfalls.
+
+XX
 
 \subsubsection{cls2clq}
 
@@ -384,7 +386,6 @@ conversion.
 
 The list used in this implementation could be replaced with a generic
 list data type.
-
 
 \subsection{Other possibilities}
 
@@ -1263,6 +1264,13 @@ How the stuff could work also...
 \section{The parser}
 
 \section{The graph}
+The underlying assumptions with the \cdatatype{Graph} have been the following:
+\begin{enumerate}
+\item The graphical analysis step will only be run once per graph.
+\item The number of variables in a graph will be relatively small.
+\end{enumerate}
+
+
 
 \section{The join tree}
 
