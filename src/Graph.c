@@ -3,6 +3,7 @@
 #include "Graph.h"
 #include "Variable.h"
 #include "Clique.h"
+#include "Heap.h"
 
 /* XXXX SEURAAVAN REFAKTOROINTIPUUSKAN ISKIESSÄ:
    XXXX Muunnosta Variable -> adj_matrix-indeksi tarvitaan usein
@@ -94,12 +95,14 @@ int get_size(Graph* G)
 
 int get_neighbours(Graph* G, Variable** neighbours)
 {
+  int i, j = 0;
+
     /* XX ihan vaiheessa. Mietipä joskus miten käy, jos refleksiivinen */
     for (i = 0; i < n; i++)
         if (G->adj_matrix)
             *neighbours[j++] = 1;
 
-    return j/* # of neighbours */
+    return j;/* # of neighbours */
 }
 
 Variable* get_variables(Graph* G)
@@ -166,8 +169,8 @@ void moralise(Graph* Gm, Graph* G)
 /* Not specified Graph.h -- internal helper function */
 void triangulate(Graph* Gm)
 {
-    int i,n;
-    Graph* Gm_copy;
+    int i, j, j_index, k, k_index, n;
+    /*    Graph* Gm_copy; */
     Variable* min_cluster;
     Heap* H;
 
@@ -190,15 +193,17 @@ void triangulate(Graph* Gm)
 	
 	for (j = 0; j < cluster_size; j++)
 	{
+	  /* MVK: Mikä on get_graph_index ? */
 	    j_index = get_graph_index(Gm, min_cluster[j]);
-	    XXX lisää min_cluster[j_index] settiin.
+	    /* XXX lisää min_cluster[j_index] settiin. */
 
 	    for (k = j+1; k < cluster_size; k++)
 	    {
 		k_index = get_graph_index(Gm, min_cluster[k]);
 
-		adj_matrix[j_index][k_index] = 1;
-		adj_matrix[j_index][k_index] = 1;
+		/* MVK: Lisäsin Gm-> */
+		Gm->adj_matrix[j_index][k_index] = 1;
+		Gm->adj_matrix[j_index][k_index] = 1;
 	    }
 	}
 	

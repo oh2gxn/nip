@@ -39,4 +39,8 @@ unsigned long get_id(Variable v);
  */
 int update_likelihood(Variable v, double likelihood[]);
 
+/* Returns the number of possible values in the Variable v.
+ */
+int number_of_values(Variable v);
+
 #endif /* __VARIABLE_H__ */

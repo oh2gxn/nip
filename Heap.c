@@ -1,5 +1,7 @@
+#include <stdlib.h>
 #include "Variable.h"
 #include "Heap.h"
+#include "Graph.h"
 
 /* Voi r‰k‰ */
 /* Koodi ei t‰ss‰ muodossaan sovellu lapsille tai raskaana oleville tai 
@@ -22,6 +24,7 @@ void destroy_node()
 {
 }
 
+/* MVK: Kusee. Ei k‰‰nny. */
 void remove_node(Heap_item* node)
 {
     int i;
@@ -34,7 +37,7 @@ void remove_node(Heap_item* node)
 
 }
 
-int edges_added(Graph G, Variable* vs, int n)
+int edges_added(Graph* G, Variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
 
@@ -42,7 +45,9 @@ int edges_added(Graph G, Variable* vs, int n)
 
     for (i = 0; i < n; i++)
         for (j = i+1; j < n; j++)
-            sum += ~is_child(vs[i], vs[j]);
+	  /* MVK: poistin "~"-merkin is_childin edest‰.
+	   Ei kai se kuulu siihen? Bitwise not. */
+            sum += is_child(G, vs[i], vs[j]);
    
     return sum; /* Number of links to add */
 }
@@ -50,7 +55,7 @@ int edges_added(Graph G, Variable* vs, int n)
 int cluster_weight(Variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
-    int i, int prod = 1;
+    int i, prod = 1;
     
     for (i = 0; i < n; i++)
 	prod *= number_of_values(vs[i]);
@@ -77,22 +82,35 @@ Heap* build_heap(Graph* Gm)
     {
         hi = &(H->array[i]);
         hi->n = get_neighbours(Gm, &Vs_temp) +1;
-        hi->Vs = calloc(hi->n, sizeof(int));
-        hi->Vs[0] = vars[i];
+
+	/* MVK: T‰ss‰ oli n‰in:
+	 *  hi->Vs = calloc(hi->n, sizeof(int));
+	 * Muutin seuraavaksi lauseeksi: */
+	hi->Vs = (Variable *) calloc(hi->n, sizeof(Variable));
+
+	/* MVK: T‰ss‰ oli n‰in:
+	 *  hi->Vs[0] = vars[i];
+	 * Muutin seuraavaksi lauseeksi (mahtaako olla oikea ajatus?) : */
+	hi->Vs[0] = Gm->variables[i];
         
         for (j = 1; j < hi->n; j++)   /* Copy variable-pointers from Vs_temp */
             hi->Vs[j] = Vs_temp[j-1]; /* Note the index-shifting */
 
         hi->primary_key = edges_added(Gm, hi->Vs, hi->n);
-        hi->secondary_key = cluster_weight(Gm, hi->Vs, hi->n);
+	/* MVK: Poistin kutsusta ensimm‰isen parametrin "Gm". */
+        hi->secondary_key = cluster_weight(hi->Vs, hi->n);
     }
 
-    delete Vs_temp;
+    /* MVK: Poistin "delete Vs_temp;" ja korvasin toisella lauseella */
+    free(Vs_temp);
 
     H->array = H->array-1; /* T‰st‰ ne murheet alkaa. */
 
     for (i = n/2; i > 0; i--)
         heapify(H, i);
+
+    /* MVK: Lis‰sin palautuksen */
+    return H;
 }
 
 void heapify(Heap* H, int i)
@@ -144,16 +162,18 @@ Variable* extract_min(Heap* H, Graph* G)
     
     /* Iterate over neighbours of minimum element *
      * and update keys. The loop could be heavy.  */
-    for (i = 1; i < min->n; i++)         /* This loop could be heavy. */
+    for (i = 1; i < min.n; i++)         /* This loop could be heavy. */
     {
-	heap_i = get_heap_index(H, min->Vs[i]);
+	heap_i = get_heap_index(H, min.Vs[i]);
 	clean_heap_item(&H->array[heap_i], min.Vs[0], G);
     }
 
     /* Rebuild the heap. */
-    for (i = 1; i < min->n; i++)
-        heapify(A, get_heap_index(H, min->Vs[i]));
-    heapify(A, 1);
+    /* MVK: Muutin A -> H. T‰t‰kˆ t‰ss‰ tarkoitettiin? */
+    /* Muutin myˆs -> tilalle . */
+    for (i = 1; i < min.n; i++)
+        heapify(H, get_heap_index(H, min.Vs[i]));
+    heapify(H, 1);
     
     return min.Vs;
 }
@@ -175,15 +195,13 @@ int get_heap_index(Heap* H, Variable v)
 
 void clean_heap_item(Heap_item* hi, Variable V_removed, Graph* G)
 {
-    int i;
-    for (i = 1; i < hi->n; i++)
-        if (hi->Vs[i]†== V_removed)
-        {
-            hi->Vs[i] = hi->Vs[hi->n];
-            --hi->n;
-            break;
-        }
-        
+  int i;
+  for (i = 1; i < hi->n; i++)
+    if (hi->Vs[i]†== V_removed){
+	hi->Vs[i] = hi->Vs[hi->n];
+	--hi->n;
+	break;
+    }
     hi->primary_key = edges_added(G, hi->Vs, hi->n);
-    hi->secondary_key = cluster_weight(G, hi->Vs, hi->n);
+    hi->secondary_key = cluster_weight(hi->Vs, hi->n);
 }

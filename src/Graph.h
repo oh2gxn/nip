@@ -45,6 +45,9 @@ int get_size(Graph* G);
  * Parameter G: the graph
  */
 
+/* MVK: Mitä tämä tekee? Onko prototyyppi puutteellinen? */
+int get_neighbours(Graph* G, Variable** neighbours);
+
 Variable* get_variables(Graph* G);
 /* Returns the variables used in Graph G;
  * Parameter G: the graph

@@ -66,3 +66,10 @@ int update_likelihood(Variable v, double likelihood[]){
 
   return NO_ERROR;
 }
+
+int number_of_values(Variable v){
+  if(v == NULL)
+    return ERROR_NULLPOINTER;
+  else
+    return v->cardinality;
+}
