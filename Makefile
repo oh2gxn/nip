@@ -3,7 +3,7 @@
 POT_SRCS=potential.c potentialtest.c
 CLI_SRCS=potential.c Variable.c Clique.c cliquetest.c
 PAR_SRCS=potential.c Variable.c Clique.c errorhandler.c fileio.c parser.c parsertest.c
-GRPH_SRCS=Graph.c grphmnp/Heap.c grphmnp/cls2clq.c graphtest.c
+GRPH_SRCS=Graph.c grphmnp/Heap.c grphmnp/cls2clq.c graph_test.c
 BIS_SRCS=huginnet.tab.c parser.c huginnet.tab.c Clique.c Variable.c potential.c Graph.c errorhandler.c bisontest.c
 HUG_DEFS=huginnet.y
 HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
@@ -12,7 +12,7 @@ HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
 POT_TARGET=potentialtest
 CLI_TARGET=cliquetest
 PAR_TARGET=parsertest
-GRPH_TARGET=graphtest
+GRPH_TARGET=graph_test
 
 BIS_TARGET=bisontest
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET)
@@ -23,7 +23,7 @@ CC=gcc
 CFLAGS=-O2 -g -Wall
 #CFLAGS=-Wall
 LD=gcc
-LDFLAGS=
+LDFLAGS=-v
 YY=bison
 
 # Link the math library in with the program, in case you use the
@@ -62,7 +62,7 @@ $(PAR_TARGET): $(PAR_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(PAR_OBJS) $(LIBS)
 
 $(GRPH_TARGET): $(GRPH_OBJS) $(CLI_OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(GRPH_OBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ $(GRPH_OBJS) $(CLI_OBJS) $(LIBS)
 
 $(BIS_TARGET): $(BIS_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(BIS_OBJS) $(LIBS)
