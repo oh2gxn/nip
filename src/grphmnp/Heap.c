@@ -89,8 +89,8 @@ Heap* build_heap(Graph* Gm)
        Muistinhallinnalliset asiat vielä hiomatta. */
 void remove_node(Heap_item* node)
 {
-    int i;
    /* 
+    int i;
 
     for (i = 0; i < node->n; i++)
     {

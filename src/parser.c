@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.19 2004-06-04 13:35:50 mvkorpel Exp $
+ * $Id: parser.c,v 1.20 2004-06-07 07:50:12 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -152,12 +152,15 @@ char *next_token(int *token_length){
  * The variable is chosen from THE list of variables 
  * according to the given symbol. */
 int add_symbol(Variable v){
+  varlink new = (varlink) malloc(sizeof(varelement));
+
   if(v == NULL)
     return ERROR_INVALID_ARGUMENT;
-  varlink new = (varlink) malloc(sizeof(varelement));
+
   new->data = v;
   new->fwd = 0;
   new->bwd = nip_last_temp_var;
+
   if(nip_first_temp_var == NULL)
     nip_first_temp_var = new;
   else
@@ -172,18 +175,21 @@ int add_symbol(Variable v){
 
 /* Gets the parsed variable according to the symbol. */
 Variable get_variable(char *symbol){
+
+  varlink pointer = nip_first_var;
+
 #ifdef DEBUG_PARSER
   printf("In get_variable: looking for \"%s\"\n", symbol);
 #endif
-  varlink pointer = nip_first_var;
+
   if(pointer == NULL)
-    return NULL; // didn't find the variable
+    return NULL; /* didn't find the variable */
   
-  // search for the variable reference
+  /* search for the variable reference */
   while(strcmp(symbol, pointer->data->symbol) != 0){
     pointer = pointer->fwd;
     if(pointer == NULL){
-      return NULL; // didn't find the variable
+      return NULL; /* didn't find the variable */
     }
   }
   return pointer->data;
@@ -281,11 +287,11 @@ Variable* make_variable_array(){
  * The size will be doubles_parsed. */
 double* make_double_array(){
   double* new = (double*) calloc(nip_doubles_parsed, sizeof(double));
-  // free() is at ?
+  /* free() is at ? */
   int i;
   doublelink ln = nip_first_double;
   for(i = 0; i < nip_doubles_parsed; i++){
-    new[i] = ln->data; // the data is copied here (=> not lost in reset)
+    new[i] = ln->data; /* the data is copied here (=> not lost in reset) */
     ln = ln->fwd;
   }
   return new;
@@ -360,9 +366,9 @@ int reset_initData(){
   nip_last_initData = NULL;
   while(ln != NULL){
     free(ln->fwd); /* free(NULL) is O.K. at the beginning */
-    // NOTE: the potential is probably a part of a variable somewhere
-    /*free_potential(ln->data);*/
-    free(ln->parents); // calloc is in make_variable_array();
+    /* NOTE: the potential is probably a part of a variable somewhere */
+    /* free_potential(ln->data); */
+    free(ln->parents); /* calloc is in make_variable_array(); */
     ln = ln->bwd;
   }
   nip_first_initData = NULL;

@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.29 2004-06-04 13:35:50 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.30 2004-06-07 07:50:12 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -89,31 +89,30 @@ input:  nodes potentials {
     }
   */
 
+  /* Traverse through the list of parsed potentials. */
   while(list != NULL){
     int *indices; 
     unsigned long *reorder;
 
-    if((indices = (int *) calloc(list->data->num_of_vars, sizeof(int))) == NULL)
-      printf("BANG! Calloc failed => crash.");
+    if((indices = (int *) calloc(list->data->num_of_vars,
+				 sizeof(int))) == NULL)
+      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
 
     if((reorder = (unsigned long *) calloc(list->data->num_of_vars,
 					   sizeof(unsigned long))) == NULL)
-      printf("F#@?! Calloc failed => crash.");
+      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
 
+    /* Go through every number in the potential array. */
     for(i = 0; i < list->data->size_of_data; i++){
       inverse_mapping(list->data, i, indices);
-
-      /*
-      for(j = 0; j < list->data->num_of_vars; j++)
-	printf("indices[%d] = %d\n", j, indices[j]);
-      */
 
       reorder[0] = get_id(list->child);
       for(j = 1; j < list->data->num_of_vars; j++)
 	reorder[j] = get_id((list->parents)[j - 1]);
       
       /* Make a reorder array.
-	 Smallest = 0, ..., Biggest = num_of_vars - 1 */
+       * Smallest = 0, ..., Biggest = num_of_vars - 1
+       */
       biggest_ready = 0; /* Initialisation doesn't matter. */
       temp_index = 0; /* Initialisation doesn't matter. */
       for(j = 0; j < list->data->num_of_vars; j++){
@@ -130,17 +129,13 @@ input:  nodes potentials {
 	    biggest_found = reorder[k];
 	  }
 	}
-	reorder[temp_index] = list->data->num_of_vars -1 - j; // WOOT ?!?!?!?
+	reorder[temp_index] = list->data->num_of_vars -1 - j;
 	biggest_ready = biggest_found;
       }
 
-
-      /*      for(j = 0; j < list->data->num_of_vars; j++)
-	      printf("reorder[%d] = %lu\n", j, reorder[j]); */
-
-
       printf("P( %s = %s |", list->child->symbol, 
 	     (list->child->statenames)[indices[reorder[0]]]);
+
       for(j = 0; j < list->data->num_of_vars - 1; j++)
 	printf(" %s = %s", (list->parents)[j]->symbol,
 	       ((list->parents[j])->statenames)[indices[reorder[j + 1]]]);
