@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.36 2004-08-26 10:58:56 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.37 2004-08-26 14:22:21 mvkorpel Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -119,5 +119,8 @@ void reset_likelihood(Variable v);
 /* Returns the number of possible values in the Variable v. (-1 if v == NULL)
  */
 int number_of_values(Variable v);
+
+
+Variable *sort_variables(Variable *vars, int num_of_vars);
 
 #endif /* __VARIABLE_H__ */

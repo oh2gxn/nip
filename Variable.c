@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.43 2004-08-19 15:11:27 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.44 2004-08-26 14:22:21 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -299,4 +299,11 @@ int number_of_values(Variable v){
   }
   else
     return v->cardinality;
+}
+
+
+/* TO BE CONTINUED*/
+Variable *sort_variables(Variable *vars, int num_of_vars){
+
+  return NULL;
 }

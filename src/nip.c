@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.11 2004-08-26 12:59:25 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.12 2004-08-26 14:22:21 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -176,7 +176,7 @@ double *get_probability(Nip model, Variable v, int print){
   clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				   &v, 1);
   if(!clique_of_interest){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free(result);
     return NULL;
   }
@@ -200,3 +200,57 @@ double *get_probability(Nip model, Variable v, int print){
 
 }
 
+void *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
+			    int print){
+
+  /* SORT THE VARIABLES? sort_variables in Variable.c */
+
+  Clique clique_of_interest;
+  potential source;
+  /* potential destination; */
+  /* Variable *vars_ordered; */
+  void *result = NULL;
+  int i;
+  /* int datasize; */
+
+  if(!model){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return NULL;
+  }
+
+  if(!vars){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return NULL;
+  }
+
+  if(num_of_vars < 1){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return NULL;
+  }
+
+  for(i = 0; i < num_of_vars; i++){
+    if(vars[i] == NULL){
+      report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+      return NULL;
+    }
+  }
+
+  /* 1. Find the Clique that contains the interesting Variables */
+  clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				   vars, num_of_vars);
+
+  /* Fails if the Variables are not in the same Clique */
+  if(!clique_of_interest){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    free(result);
+    return NULL;
+  }
+
+  source = clique_of_interest->p;
+
+
+  /* TO BE CONTINUED */
+
+  return NULL;
+
+}
