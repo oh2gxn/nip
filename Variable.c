@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.15 2004-03-19 15:25:57 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.16 2004-03-22 14:16:07 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -22,7 +22,8 @@ Variable new_variable(const char* symbol, const char* name, int cardinality){
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
 
   if(variable_name(v, name) == ERROR_NULLPOINTER)
-    v->name = 0; /* DANGER! The name can be omitted and consequently be NULL */
+    /* v->name = 0; */ /* DANGER! The name can be omitted and consequently be NULL */
+    v->name[0] = '\0'; /* MVK: Olisiko parempi? */
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */

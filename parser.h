@@ -1,8 +1,10 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.3 2004-03-19 15:09:28 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.4 2004-03-22 14:16:07 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
 #define __PARSER_H__
+
+#define MAX_LINELENGTH 1000
 
 #include "Variable.h"
 #include "potential.h"
@@ -22,7 +24,8 @@ static varlink last = 0;
 static int vars_parsed = 0;
 
 /* The current input file */
-static FILE *parser_infile = null;
+static FILE *parser_infile = NULL;
+
 
 /* Is there a file open? 0 if no, 1 if yes. */
 static int file_open = 0;
@@ -38,6 +41,7 @@ void close_infile();
 
 /* Gets the next token from the input file.
  * Returns the token. token_length is the length of the token.
+ * After the token has been used, PLEASE free the memory allocated for it.
  * If token_length == 0, there are no more tokens.
  */
 char *next_token(int *token_length);

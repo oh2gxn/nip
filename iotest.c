@@ -1,5 +1,5 @@
 /*
- * iotest.c $Id: iotest.c,v 1.1 2004-02-12 14:49:19 mvkorpel Exp $
+ * iotest.c $Id: iotest.c,v 1.2 2004-03-22 14:16:07 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -33,7 +33,7 @@ int main(){
 /*      printf("%s",s); */
     printf("%s\n",s);
     wordtemp = count_words(s, &chartemp);
-    wordbounds = tokenise(s, wordtemp);
+    wordbounds = tokenise(s, wordtemp, 0);
 
     if(words < PRINTWORDS){
       wordarray = split(s, wordbounds, wordtemp);

@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.5 2004-03-19 15:09:28 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.6 2004-03-22 14:16:07 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -15,7 +15,7 @@
 #define STRING_STATES "states"
 #define STRING_LABEL "label"
 
-int count_words(char *s, int *chars){
+int count_words(const char *s, int *chars){
   int words = 0, state = 0;
   if(chars)
     *chars = 0;
@@ -35,7 +35,7 @@ int count_words(char *s, int *chars){
   return words;
 }
 
-int count_tokens(char *s, int *chars){
+int count_tokens(const char *s, int *chars){
   int tokens = 0, state = 0;
   if(chars)
     *chars = 0;
@@ -61,7 +61,7 @@ int count_tokens(char *s, int *chars){
 }
 
 
-int *tokenise(char s[], int n, int mode){
+int *tokenise(const char s[], int n, int mode){
   int *indices;
   int i = 0, j = 0, state = 0, arraysize = 2*n;
 
@@ -121,7 +121,7 @@ int *tokenise(char s[], int n, int mode){
   return indices;
 }
 
-char **split(char s[], int indices[], int n){
+char **split(const char s[], int indices[], int n){
   int i, wordlength, begin, end;
   char **words = (char **) calloc(n, sizeof(char *));
   /* Couldn't allocate memory */
@@ -147,7 +147,7 @@ char **split(char s[], int indices[], int n){
   return words;
 }
 
-/* Not used. Parser is done with bison instead.*/
+/* NOT USED. Parser is done with bison instead.*/
 Graph *read_model(const char *filename){
 
   FILE *f;
@@ -164,7 +164,7 @@ Graph *read_model(const char *filename){
   /* Read a line at a time from the file. */
   while(fgets(s, LINELENGTH, f) != NULL){
     words = count_words(s, NULL);
-    wordbounds = tokenise(s, words);
+    wordbounds = tokenise(s, words, 1);
 
     /* TO DO */
 

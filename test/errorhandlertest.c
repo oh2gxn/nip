@@ -7,7 +7,7 @@
 /* Main function for testing */
 int main(){
 
-  enum errorcodes e = DIVBYZERO;
+  int e = ERROR_DIVBYZERO;
   int i;
   printf("Raportoidaan virheita.\n");
   for(i = 0; i < 10; i++){
