@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.4 2004-08-26 10:58:56 mvkorpel Exp $
+ * nip.h $Id: nip.h,v 1.5 2004-08-26 12:59:26 mvkorpel Exp $
  */
 
 #ifndef __NIP_H__
@@ -52,6 +52,17 @@ void make_consistent(Nip model);
  *       the model 
  */
 
+/*
+ * Calculates the probability distribution of a Variable.
+ * The join tree MUST be consistent before calling this.
+ * Parameters:
+ * - model: the model that contains the Variable
+ * - v: the Variable whose distribution we want
+ * - print: zero if we don't want the result printed. Non-zero is the opposite.
+ * Returns an array of doubles (remember to free the result when not needed).
+ * The returned array is of size v->cardinality.
+ * In case of problems, NULL is returned.
+ */
 double *get_probability(Nip model, Variable v, int print);
 
 #endif /* __NIP_H__ */

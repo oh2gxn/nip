@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.26 2004-08-25 11:14:41 mvkorpel Exp $
+ * potential.h $Id: potential.h,v 1.27 2004-08-26 12:59:26 mvkorpel Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -41,8 +41,7 @@ void set_pvalue(potential p, int indices[], double value);
 void inverse_mapping(potential p, int flat_index, int indices[]);
 
 /* Method for marginalising over certain variables. Useful in message passing
- * from clique to sepset. It is best that sepsets have two static potentials 
- * which take turns as the old and the new potential.
+ * from clique to sepset.
  * TAKE CARE OF THE ORDER OF VARIABLES! 
  * -source: the potential to be marginalised
  * -destination: the potential to put the answer into, variables will be 

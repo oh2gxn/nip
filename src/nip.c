@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.10 2004-08-26 10:58:56 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.11 2004-08-26 12:59:25 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -177,6 +177,7 @@ double *get_probability(Nip model, Variable v, int print){
 				   &v, 1);
   if(!clique_of_interest){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(result);
     return NULL;
   }
 
