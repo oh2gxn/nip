@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.8 2004-05-05 13:40:16 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.9 2004-05-14 14:13:55 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -48,7 +48,7 @@ int count_tokens(const char *s, int *chars){
   while (*s != '\0'){
 
     if(state != 2 &&
-       ((*s == '(') || (*s == ')') || (*s == '{') ||
+       ((*s == '(') || (*s == ')') || (*s == '{') || (*s == '}') ||
 	(*s == '=') || (*s == ';'))){
       tokens++;
       state = 0;
@@ -101,35 +101,19 @@ int *tokenise(const char s[], int n, int mode){
     return NULL;
   }
 
-  /*
-    if(state != 2 &&
-       ((*s == '(') || (*s == ')') || (*s == '{') ||
-	(*s == '=') || (*s == ';'))){
-      tokens++;
-      state = 0;
-    }
-    else if(state != 2 && (*s == '"')){
-      state = 2;
-      tokens++;
-    }
-    else if(state == 0){
-      if((*s != ' ') && (*s != '\t') && (*s != '\n')){
-	tokens++;	  
-	state = 1;
-      }
-    }
-    else if(state == 1 &&
-	    ((*s == ' ') || (*s == '\t') || (*s == '\n')))
-      state = 0;
-    else if(state == 2 && (*s == '"'))
-      state = 0;
-  */
-
   while (s[i] != '\0'){
     if(mode == 1 && state != 2 &&
-       ((*s == '(') || (*s == ')') || (*s == '{') ||
+       ((*s == '(') || (*s == ')') || (*s == '{') || (*s == '}') ||
 	(*s == '=') || (*s == ';'))){
+
+      /* If we were not done processing the previous token,
+       * mark it as done.
+       */
+      if(state == 1)
+	indices[j++] = i;
+
       state = 0;
+
       indices[j++] = i;
       indices[j++] = i + 1;
     }
@@ -162,6 +146,7 @@ int *tokenise(const char s[], int n, int mode){
   /* Mark the end of a word that extends to the end of the string */
   if(j == arraysize - 1)
     indices[j] = i;
+
   /* Not enough words */
   else if(j < arraysize - 1){
     free(indices);

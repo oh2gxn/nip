@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.7 2004-04-22 14:23:03 mvkorpel Exp $
+ * $Id: parser.c,v 1.8 2004-05-14 14:13:55 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -69,6 +69,15 @@ char *next_token(int *token_length){
     if(tokens_left > 0){
       /* Adjust pointer to the beginning of token boundary index array */
       indexarray = tokenise(last_line, tokens_left, 1);
+
+      /* Check if tokenise failed. If it failed, we have no other option
+       * than to stop: return NULL, *token_length = 0.
+       */
+      if(!indexarray){
+	report_error(ERROR_GENERAL, 0);
+	*token_length = 0;
+	return NULL;
+      }
 
       /* Ignore lines that have COMMENT_CHAR as first non-whitespace char */
       if(last_line[indexarray[0]] == COMMENT_CHAR)
