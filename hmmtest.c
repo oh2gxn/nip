@@ -59,6 +59,7 @@ int main(int argc, char *argv[]){
   /*****************************/
   timeseries = open_datafile(argv[2], ',', 0, 1); /* 1. Open */
   if(timeseries == NULL){
+    free_model(model);
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
     fprintf(stderr, "%s\n", argv[2]);
     return -1;
@@ -86,6 +87,7 @@ int main(int argc, char *argv[]){
   /* Allocate arrays for hidden variables. */
   hidden = (Variable *) calloc(num_of_hidden, sizeof(Variable));
   if(!hidden){
+    free_model(model);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
@@ -110,6 +112,7 @@ int main(int argc, char *argv[]){
   /* Allocate some space for data */
   data = (int**) calloc(timeseries->datarows, sizeof(int*));
   if(!data){
+    free_model(model);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
@@ -126,12 +129,14 @@ int main(int argc, char *argv[]){
   result = (double***) calloc(timeseries->datarows + 1, sizeof(double**));
   quotient = (double**) calloc(num_of_hidden, sizeof(double*));
   if(!(result && quotient)){
+    free_model(model);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
   for(t = 0; t < timeseries->datarows + 1; t++){
     result[t] = (double**) calloc(num_of_hidden, sizeof(double*));
     if(!result[t]){
+      free_model(model);
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
     }
@@ -140,6 +145,7 @@ int main(int argc, char *argv[]){
       result[t][i] = (double*) calloc(number_of_values(hidden[i]), 
 				      sizeof(double));
       if(!result[t][i]){
+	free_model(model);
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	return 1;
       }
@@ -149,6 +155,7 @@ int main(int argc, char *argv[]){
     quotient[i] = (double*) calloc(number_of_values(hidden[i]), 
 				   sizeof(double));
     if(!quotient[i]){
+      free_model(model);
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
     }
@@ -171,6 +178,7 @@ int main(int argc, char *argv[]){
 
     for(i = 0; i < retval; i++) /* 4. Dump away */
       free(tokens[i]);
+    free(tokens);
   }
 
 
@@ -207,6 +215,7 @@ int main(int argc, char *argv[]){
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       &interesting, 1);
       if(!clique_of_interest){
+	free_model(model);
 	printf("In hmmtest.c : No clique found! Sorry.\n");
 	return 1;
       }  
@@ -331,6 +340,7 @@ int main(int argc, char *argv[]){
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       &interesting, 1);
       if(!clique_of_interest){
+	free_model(model);
 	printf("In hmmtest.c : No clique found! Sorry.\n");
 	return 1;
       }  
@@ -371,6 +381,8 @@ int main(int argc, char *argv[]){
   free(quotient);
 
   close_datafile(timeseries);
+
+  free_model(model);
 
   return 0;
 }
