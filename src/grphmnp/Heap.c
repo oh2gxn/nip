@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.24 2004-08-19 15:11:38 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.25 2004-08-20 14:36:31 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -11,13 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Voi r‰k‰ */
-/* Koodi ei t‰ss‰ muodossaan sovellu lapsille tai raskaana oleville tai 
-   imett‰ville naisille. */
-
 static void free_useless_Sepsets(Heap *H);
 
-/* MVK: Harmiton */
 int edges_added(Graph* G, Variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
@@ -36,7 +31,6 @@ int edges_added(Graph* G, Variable* vs, int n)
     return sum; /* Number of links to add */
 }
 
-/* MVK: Harmiton */
 int cluster_weight(Variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
@@ -186,22 +180,6 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
     return H;
 }
 
-/* MVK: Kusee. Ei k‰‰nny. */
-/* AR: Eip‰ joo. Ei sit‰ mist‰‰n kyll‰ kutsutakaan :)
-       Muistinhallinnalliset asiat viel‰ hiomatta. */
-void remove_node(Heap_item* node)
-{
-   /* 
-    int i;
-
-    for (i = 0; i < node->n; i++)
-    {
-        node->adj_list.vars[i] = 0;
-    }
-    */
-}
-
-/* MVK: Harmiton */
 int lessthan(Heap_item h1, Heap_item h2)
 {
     return (h1.primary_key < h2.primary_key) || 

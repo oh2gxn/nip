@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.76 2004-08-19 15:11:27 mvkorpel Exp $
+ * $Id: parser.c,v 1.77 2004-08-20 14:36:25 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -266,9 +266,17 @@ datafile *open_datafile(char *filename, char separator,
 
 	  token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
 
+	  /* If the string has not yet been observed, add it to a list */
 	  if(!(search_stringlinks(statenames[i], token) ||
 	       nullobservation(token))){
-	    add_to_stringlink(&(statenames[i]), token);
+	    if(add_to_stringlink(&(statenames[i]), token) != NO_ERROR){
+	      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	      close_datafile(f);
+	      free(statenames);
+	      free(token_bounds);
+	      free(token);
+	      return NULL;
+	    }
 	  }
 	  free(token);
 	}
@@ -563,7 +571,7 @@ char *next_token(int *token_length){
        * than to stop: return NULL, *token_length = 0.
        */
       if(!indexarray){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 0);
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	*token_length = 0;
 
 	return NULL;

@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.52 2004-08-18 11:52:45 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.53 2004-08-20 14:36:25 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -119,14 +119,22 @@ potentials:    /* empty */ {/* list of initialisation data ready */}
 
 
 nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
-  /* new_variable() */
+  int retval;
   char *nip_next;
   char *label = get_nip_label();
   char **states = get_nip_statenames();
   Variable v = new_variable($2, label, states, get_nip_strings_parsed());
 
-  if((nip_next = get_nip_next()) != NULL)
-    add_time_init(v, get_nip_next());
+  if((nip_next = get_nip_next()) != NULL){
+    retval = add_time_init(v, get_nip_next());
+    if(retval != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      free($2);
+      free(label);
+      reset_strings(); /* frees the original parsed statenames */
+      YYABORT;
+    }
+  }
 
   free($2);
   free(label);
@@ -156,8 +164,16 @@ nextDeclaration:      token_next '=' QUOTED_STRING ';' { $$ = $3; }
 
 /* JJT: cardinality == nip_strings_parsed ? */
 statesDeclaration:    token_states '=' '(' strings ')' ';' { 
+
   /* makes an array of strings out of the parsed list of strings */
-  $$ = make_string_array(); }
+  char **strings = make_string_array();
+  if(!strings){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
+
+  $$ = strings;
+}
 ;
 
 
@@ -171,6 +187,7 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' { free($1); }
 
 potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}' { 
   int i;
+  int retval;
   Variable *vars = (Variable*) calloc(get_nip_symbols_parsed() + 1,
 				      sizeof(Variable));
   Variable *parents = make_variable_array();
@@ -189,25 +206,40 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   for(i = 0; i < get_nip_symbols_parsed(); i++)
     vars[i + 1] = parents[i];
 
-  add_initData(create_Potential(vars, get_nip_symbols_parsed() + 1, doubles),
-	       vars[0], parents); 
+  retval = add_initData(create_Potential(vars, get_nip_symbols_parsed() + 1,
+					 doubles),
+			vars[0], parents);
   free(doubles); /* the data was copied at create_Potential */
   reset_doubles();
   reset_symbols();
   free(vars);
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
 }
 |                     token_potential '(' child ')' '{' dataList '}' {
+  int retval;
   Variable vars[1];
   double *doubles = $6;
   vars[0] = $3;
-  add_initData(create_Potential(vars, 1, doubles), vars[0], NULL); 
+  retval = add_initData(create_Potential(vars, 1, doubles), vars[0], NULL); 
   free(doubles); /* the data was copied at create_Potential */
   reset_doubles();
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
 }
 |                     token_potential '(' child ')' '{' '}' {
+  int retval;
   Variable vars[1];
   vars[0] = $3;
   add_initData(create_Potential(vars, 1, NULL), vars[0], NULL); 
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
 }
 ;
 
@@ -221,7 +253,11 @@ symbols:       /* end of list */
 
 
 symbol:       UNQUOTED_STRING { 
-	       add_symbol(get_parser_variable($1)); 
+	       int retval = add_symbol(get_parser_variable($1));
+	       if(retval != NO_ERROR){
+		 report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+		 YYABORT;
+	       }
 	       free($1); }
 ;
 
@@ -231,7 +267,14 @@ strings:       /* end of list */
 ;
 
 
-string:        QUOTED_STRING { add_string($1); }
+string:        QUOTED_STRING {
+	       int retval;
+	       retval = add_string($1);
+	       if(retval != NO_ERROR){
+		 report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+		 YYABORT;
+	       }
+}
 ;
 
 
@@ -241,7 +284,14 @@ numbers:     /* end of list */
 ;
 
 
-num:       NUMBER { add_double($1); }
+num:       NUMBER {
+	     int retval;
+	     retval = add_double($1);
+	     if(retval != NO_ERROR){
+	       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	       YYABORT;
+	     }
+}
 ;
 
 
@@ -256,7 +306,14 @@ value:         QUOTED_STRING { free($1); }
 ;
 
 
-dataList: token_data '=' '(' numbers ')' ';' { $$ = make_double_array(); }
+dataList: token_data '=' '(' numbers ')' ';' {
+  double *doubles = make_double_array();
+  if(!doubles){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
+  $$ = doubles;
+}
 ;
 
 %%
