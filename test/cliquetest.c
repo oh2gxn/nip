@@ -45,17 +45,28 @@ int main(){
   double probB[] = {0.25, 0.25, 0.40, 0.10};
   double probD[] = {0.2, 0.3, 0.5};
 
-  // Create the variables (without statenames)
+  /* create some cliques and sepsets (with too many shortcuts...) 
+   * This is normally the job of the graph implementation. */
+  Clique clique_pile[3];
+  Sepset sepset_pile[2];
+
+  /* initialization: This information is usually parsed from a file. */
+  potential model[4]; /* the fourth potential is extra */
+
+  Variable set_of_variables[3];
+
+  /* parents not needed after 25.5.2004 */
+  /* Variable parentsA[2]; */
+  /* Variable parentsC[2]; */
+  /* Variable parentsE[1]; */
+
+  /* Create the variables (without statenames) */
   variables[0] = new_variable("A", nameA, NULL, 3);
   variables[1] = new_variable("B", nameB, NULL, 4);
   variables[2] = new_variable("C", nameC, NULL, 2); /* note1 */
   variables[3] = new_variable("D", nameD, NULL, 3);
   variables[4] = new_variable("E", nameE, NULL, 2);
 
-  /* create some cliques and sepsets (with too many shortcuts...) 
-   * This is normally the job of the graph implementation. */
-  Clique clique_pile[3];
-  Sepset sepset_pile[2];
   clique_pile[0] = make_Clique(variables, 3);
   clique_pile[1] = make_Clique(&(variables[1]), 3);
   clique_pile[2] = make_Clique(&(variables[3]), 2);
@@ -66,11 +77,6 @@ int main(){
   add_Sepset(clique_pile[1], sepset_pile[1]);
   add_Sepset(clique_pile[2], sepset_pile[1]);
 
-  /* initialization: This information is usually parsed from a file. */
-  potential model[4]; // the fourth potential is extra
-  //Variable parentsA[2];
-  //Variable parentsC[2]; //parents not needed after 25.5.2004
-  //Variable parentsE[1];
   cardinality[0] = 3;
   cardinality[1] = 4;
   cardinality[2] = 2; /* note1 */
@@ -86,8 +92,10 @@ int main(){
   model[2] = make_potential(cardinality, 2, potentialE);
 
   /* The extra potential for testing (should be equal to model[1]) */
-  // variables C, B, D, and the data which is ordered accordingly
-  Variable set_of_variables[3] = {variables[2], variables[1], variables[3]}; 
+  /* variables C, B, D, and the data which is ordered accordingly */
+  set_of_variables[0] = variables[2];
+  set_of_variables[1] = variables[1];
+  set_of_variables[2] = variables[3];
   model[3] = create_Potential(set_of_variables, 3, potentialC2);
 
   /* A test */
@@ -102,9 +110,9 @@ int main(){
   initialise(clique_pile[2], variables[4], parentsE, model[2]);
 
   /* DEBUG */
-  //printf("BCD before evidence:\n");
-  //for(i = 0; i < 24; i++) /* note1 */
-  //  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);
+  /* printf("BCD before evidence:\n"); */
+  /* for(i = 0; i < 24; i++) */ /* note1 */
+  /*  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]); */
 
   /* observation entry: This information is from the given data. */
   /* data please? anyone? */
@@ -112,9 +120,9 @@ int main(){
   enter_evidence(clique_pile[1], variables[3], probD);
 
   /* DEBUG */
-  //printf("BCD after evidence:\n");
-  //for(i = 0; i < 24; i++) /* note1 */
-  //  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);
+  /* printf("BCD after evidence:\n"); */
+  /* for(i = 0; i < 24; i++) */ /* note1 */
+  /*  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);*/
 
   /* propagation: some action */
   for(i = 0; i < 3; i++)
@@ -123,26 +131,26 @@ int main(){
   distribute_evidence(clique_pile[1]);
 
   /* DEBUG */
-  //printf("BCD after propagation:\n");
-  //for(i = 0; i < 24; i++) /* note1 */
-  //  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);
+  /* printf("BCD after propagation:\n"); */
+  /* for(i = 0; i < 24; i++) */ /* note1 */
+  /*  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]); */
 
   /* marginalisation */
   printf("Marginalisation returned %d. (0 is OK)\n", 
 	 marginalise(clique_pile[0], variables[0], result));
 
   /* DEBUG */
-  //printf("Not normalised:\n");
-  //for(i = 0; i < 3; i++) /* note1 */
-  //  printf("result[%d] = %f\n", i, result[i]);
+  /* printf("Not normalised:\n"); */
+  /* for(i = 0; i < 3; i++) */ /* note1 */
+  /*  printf("result[%d] = %f\n", i, result[i]); */
 
   /* normalization */
   normalise(result, 3); /* note1 */
 
   /* DEBUG */
-  //printf("ABC after propagation:\n");
-  //for(i = 0; i < 24; i++) /* note1 */
-  //  printf("potential[%d] = %f\n", i, clique_pile[0]->p->data[i]);
+  /* printf("ABC after propagation:\n"); */
+  /* for(i = 0; i < 24; i++) */ /* note1 */
+  /*  printf("potential[%d] = %f\n", i, clique_pile[0]->p->data[i]); */
   
   printf("Normalised probability of A:\n");
   for(i = 0; i < 3; i++) /* note1 */

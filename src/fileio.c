@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.10 2004-05-17 12:59:38 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.11 2004-06-07 08:04:31 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -15,7 +15,7 @@
 #define STRING_STATES "states"
 #define STRING_LABEL "label"
 
-//#define DEBUG_IO
+/* #define DEBUG_IO */
 
 int count_words(const char *s, int *chars){
   int words = 0, state = 0;
