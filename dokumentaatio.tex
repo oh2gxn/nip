@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.21 2004-09-17 12:42:32 arasinen Exp $
+% $Id: dokumentaatio.tex,v 1.22 2004-09-20 06:44:37 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -19,6 +19,23 @@
 %\newcommand{\argmax}{\mathrm{argmax}}
 %\newcommand{\argmin}{\mathrm{argmin}}
 %\newcommand{\define}{\stackrel{\mathrm{def}}{=}}
+
+
+% Reminder about the style so far: 
+% - C data types     {\it unsigned long}
+% - code examples    \verb+this = is_an(example);+
+% - file names       \verb+filename.txt+
+% - defined stuff    \textbf{A_DEFINED_VALUE}
+% - parameter names  \textbf{parameter}
+% ...
+% Try to keep it consistent...
+
+\newcommand{\cdatatype}[1]{{\it #1}}
+\newcommand{\examplecode}[1]{\verb+#1+}
+\newcommand{\cfilename}[1]{\verb+#1+}
+\newcommand{\cdefine}[1]{\textbf{#1}}
+\newcommand{\cparameter}[1]{\textbf{#1}}
+
 
 %--------------------
 % Place this in the preamble of your LaTeX file:
@@ -90,22 +107,6 @@ Date: \today
 %\newpage
 %
 %\listoffigures
-
-
-% Reminder about the style so far: 
-% - C data types     {\it unsigned long}
-% - code examples    \verb+this = is_an(example);+
-% - file names       \verb+filename.txt+
-% - defined stuff    \textbf{A_DEFINED_VALUE}
-% - parameter names  \textbf{parameter}
-% ...
-% Try to keep it consistent...
-
-\newcommand{\cdatatype}[1]{{\it #1}
-\newcommand{\examplecode}[1]{\verb+#1+}
-\newcommand{\cfilename}[1]{\verb+#1+}
-\newcommand{\cdefine}[1]{\textbf{#1}}
-\newcommand{\cparameter}[1]{\textbf{#1}}
 
 
 \newpage
@@ -299,15 +300,22 @@ datatype and could possibly be refactored.
 \subsection{The functionality description}
 %The interface + how the stuff works...
 \subsubsection{The data structures}
-The data type {\it Graph} defined in \verb+Graph.h+ is a struct which has the following fields:
+The data type {\it Graph} defined in \verb+Graph.h+ is a struct which
+has the following fields:
 \begin{description}
-\item[adj\_matrix] is an $n\times n$ adjacency matrix for the graph. The size $n$ is specified when the graph is first constructed and it is stored in the variable {\textbf size}. The matrix is implemented as a simple array. For this reason it is manipulated via the macro {\textbf ADJM}.
+\item[adj\_matrix] is an $n\times n$ adjacency matrix for the
+graph. The size $n$ is specified when the graph is first constructed
+and it is stored in the variable \textbf{size}. The matrix is
+implemented as a simple array. For this reason it is manipulated via
+the macro \textbf{ADJM}.
 \item[variables] is an array of variables associated with this graph.
 \item[size] is the number of variables in the Graph.
 \item[var\_ind] is an internal array of variables. Used for
 performance reasons.
-\item[min\_id] The smallest id of a variable associated with the graph. Used internally for better performance.
-\item[max\_id] The largest id of a variable associated with the graph. Used internally for better performance.
+\item[min\_id] The smallest id of a variable associated with the
+graph. Used internally for better performance.
+\item[max\_id] The largest id of a variable associated with the
+graph. Used internally for better performance.
 \item[top] is an internal counter used when adding variables. 
 \end{description}
 
@@ -317,7 +325,8 @@ performance reasons.
 The functions provided in \verb+Variable.c+ are:
 
 \begin{description}
-\item[new\_graph(n)] creates a new graph with memory reserved for n variables. Returns a pointer.
+\item[new\_graph(n)] creates a new graph with memory reserved for n
+variables. Returns a pointer.
 \item[copy\_graph(G)] creates a copy of the graph G.
 \item[free\_graph(G)] frees the memory reserved for the graph G.
 \item[get\_size(G)] returns the number of variables in the graph G.
@@ -328,9 +337,12 @@ variable V in the internal array of the graph G.
 of variable v in graph G. The neighbours will be stored in the array
 v\_array, which {\it must be large enough}. No variable can have more
 neighbours than $n-1$, where $n$ is the number of variables in G.
-\item[is\_child(G, v1, v2)] will return True when variable v2 is a child of variable v1 in the graph G. 
-\item[add\_variable(G, v)] adds a new variable v to the graph G. You must add as many variables as you specified when creating G.
-\item[add\_child(G, v1, v2)] adds an edge to graph G from variable v1 to variable v2, ie. makes v2 a child of v1.
+\item[is\_child(G, v1, v2)] will return True when variable v2 is a
+child of variable v1 in the graph G.
+\item[add\_variable(G, v)] adds a new variable v to the graph G. You
+must add as many variables as you specified when creating G.
+\item[add\_child(G, v1, v2)] adds an edge to graph G from variable v1
+to variable v2, ie. makes v2 a child of v1.
 \item[find\_cliques(G, cp)] finds cliques in G and stores them
 in the clique-array *cp\footnote{Type of cp is Clique**, ie. it is a
 pointer to such an array. It need not be initialized.}. Returns the
@@ -342,7 +354,8 @@ number of elements in the array.
 
 \subsection{Other possibilities}
 
-From efficiency standpoint, the approach presented in ... is ... and suitable for production use.
+From efficiency standpoint, the approach presented in ... is ... and
+suitable for production use.
 
 If efficiency is not the main concern, eg. in prototyping situations,
 some simplifications can be made. For example, the heap data structure
