@@ -8,6 +8,7 @@
 
 extern int yyparse();
 
+
 int main(int argc, char *argv[]){
 
   char** tokens;
@@ -15,6 +16,7 @@ int main(int argc, char *argv[]){
   int i, j, k, l, retval, t = 0;
   int num_of_hidden = 0;
   int nip_num_of_cliques;
+  double* quotient;
   double*** filtered; /* probs of the hidden variables */
   double*** smoothed; /* probs of the hidden variables (given all data) */
 
@@ -178,9 +180,7 @@ int main(int argc, char *argv[]){
   for(t = 0; t <= timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t);
-    
-
-    
+        
     /********************/
     /* Do the inference */
     /********************/
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]){
   global_retraction(nip_cliques[0]);
 
 
-  for(t = timeseries->datarows; t > 0; t--){ /* FOR EVERY TIMESLICE */
+  for(t = timeseries->datarows; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t);
     
@@ -284,8 +284,25 @@ int main(int argc, char *argv[]){
     if(t < timeseries->datarows){
       for(i = 0; i < num_of_hidden; i++){
 	temp = hidden[i];
-	if(temp->previous != NULL)
-	  enter_evidence(temp->previous, smoothed[t + 1][i]);
+	if(temp->previous != NULL){
+	  /* search for the other index */
+	  for(k = 0; k < num_of_hidden; k++)
+	    if(equal_variables(temp->previous, hidden[k]))
+	      break;
+
+
+	  quotient = (double *) calloc(number_of_values(temp), sizeof(double));
+	  if(!data){
+	    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	    return 1;
+	  }
+	  
+	  for(j = 0; j < number_of_values(temp); j++){
+	    quotient[j] = smoothed[t + 1][i][j] / filtered[t][k][j]; 
+	  }
+	  enter_evidence(temp->previous, quotient);	  
+	  free(quotient);
+	}
       }
     }
 
@@ -316,7 +333,7 @@ int main(int argc, char *argv[]){
       
       /* 1. Decide which Variable you are interested in */
       interesting = hidden[i];
-      
+
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
@@ -330,9 +347,8 @@ int main(int argc, char *argv[]){
       marginalise(clique_of_interest, interesting, smoothed[t][i]);
       
       /* 4. Normalisation */
-      normalise(smoothed[t][i], number_of_values(interesting));    
-      
-      
+      normalise(smoothed[t][i], number_of_values(interesting));
+	
       /* 5. Print the result */
       for(j = 0; j < number_of_values(interesting); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(interesting),
