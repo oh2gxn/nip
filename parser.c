@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.73 2004-08-17 11:35:49 jatoivol Exp $
+ * $Id: parser.c,v 1.74 2004-08-18 13:39:10 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -325,6 +325,7 @@ datafile *open_datafile(char *filename, char separator,
     temp = statenames[i];
     while(temp != NULL){
       temp2 = temp->fwd;
+      free(temp->data);
       free(temp);
       temp = temp2;
     }

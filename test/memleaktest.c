@@ -9,18 +9,12 @@
 #include "parser.h"
 #include "nip.h"
 
-
-#define FOO
-
+#define LOPUT
 
 int main(int argc, char *argv[]){
   
   int i;
   int n;
-
-  Nip model;
-
-#ifdef FOO
   int j;
   int cardinality[] = {3, 2, 3};
   int num_of_vars = 3;
@@ -39,7 +33,11 @@ int main(int argc, char *argv[]){
   Clique *cl2 = NULL;
   Sepset s;
   Graph *g;
+
+#ifdef LOPUT
+  Nip model;
   datafile* dataf;
+#endif
 
   if(argc > 3)
     n = atoi(argv[3]);
@@ -150,25 +148,16 @@ int main(int argc, char *argv[]){
     add_variable(g, vars[2]);
     add_child(g, vars[1], vars[0]);
     add_child(g, vars[1], vars[2]);
-    num_of_cliques = find_cliques(g, &cl2); /* THIS LEAKS! */
+    num_of_cliques = 0;
+    num_of_cliques = find_cliques(g, &cl2); /* THIS LEAKS! (otherwise OK) */
     printf("\rIteration %d of %d                               ", i + 1, n);
     free_graph(g);
     for(j = 0; j < num_of_cliques; j++)
       free_Clique(cl2[j]);
+    free(cl2); /* MVK: Leak fixed */
   }
   printf("\rDone.                                             \n");
 
-
-  /* TODO: Test open_datafile() */
-  if(argc > 3){
-    printf("\nOpening and closing the datafile:\n");
-    for(i = 0; i < n; i++){
-      dataf = open_datafile(argv[2], ',', 0, 1);
-      printf("\rIteration %d of %d                               ", i + 1, n); 
-      close_datafile(dataf);
-    }
-    printf("\rDone.                                             \n");
-  }
 
 
   /* Free some memory */
@@ -197,7 +186,17 @@ int main(int argc, char *argv[]){
   free(symbols);
   free(names);
 
-#endif
+
+#ifdef LOPUT
+  if(argc > 3){
+    printf("\nOpening and closing the datafile:\n");
+    for(i = 0; i < n; i++){
+      dataf = open_datafile(argv[2], ',', 0, 1);
+      printf("\rIteration %d of %d                               ", i + 1, n); 
+      close_datafile(dataf);
+    }
+    printf("\rDone.                                             \n");
+  }
 
   if(argc > 2){
     printf("\nParsing and freeing models:\n");
@@ -208,6 +207,8 @@ int main(int argc, char *argv[]){
     }
     printf("\rDone.                                             \n");
   }
+
+#endif
 
   return 0;
 }

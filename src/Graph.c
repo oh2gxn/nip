@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.39 2004-08-18 09:38:52 mvkorpel Exp $
+ * Graph.c $Id: Graph.c,v 1.40 2004-08-18 13:39:10 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -299,4 +299,3 @@ int find_cliques(Graph* G, Clique** cliques_p)
 
     return n_cliques;
 }
-
