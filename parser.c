@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.53 2004-06-30 12:43:32 mvkorpel Exp $
+ * $Id: parser.c,v 1.54 2004-06-30 14:07:57 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -249,7 +249,8 @@ datafile *open_datafile(char *filename, char separator,
 	 kinds of observations for each node). */
       if(linecounter != 0 || (linecounter == 0 && !nodenames)){
 
-	f->datarows++;
+	if(num_of_tokens > 0)
+	  f->datarows++;
 #ifdef DEBUG_DATAFILE
 	printf("Now in open_datafile (4), linecounter == %d\n", linecounter);
 #endif
