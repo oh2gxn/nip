@@ -29,3 +29,9 @@ Sekalaisia huomioita:
   tosiaan antaa kopio alkuperäisestä verkosta. Eikö se voisi itse tehdä
   verkosta kopion ja palauttaa sen? Ehkä oli joku syy, miksi ei tehdä
   näin. Oliko?
+--
+
+23.2.2004 (Janne, Mikko)
+* Alettiin ihmettelemään Bison-systeemeitä. Teemme seuraavaksi
+  parserin, jolla saadaan malleja ja niiden parametreja luettua
+  tiedostosta. Tällöin pääsemme ehkä jopa testaamaan tuotoksia...
