@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.47 2005-03-16 12:14:17 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.48 2005-03-16 13:47:55 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1104,7 +1104,7 @@ FamilySeries family_inference(TimeSeries ts){
     make_consistent(model);
     
 
-    /* Write the results of inference */
+    /* THE CORE: Write the results of inference */
     for(i = 0; i < results->model->num_of_children; i++){
 
       /* NOTE: this would be a proper place for the rest of the EM-algorithm
@@ -1130,7 +1130,10 @@ FamilySeries family_inference(TimeSeries ts){
       k = temp->cardinality;
       for(j = 0; j < size; j = j + k)
 	normalise(results->families[t][i]->data + j, number_of_values(temp));
-      /* Not so sure that this works correctly... */
+      /* Not so sure whether this works correctly or not... 
+       * I assume that the child variable is the least significant 
+       * w.r.t. the address in the potential data. (as is the case in Hugin) 
+       */
     }
     /* Finished writing results for this t */
 
@@ -1325,10 +1328,15 @@ int em_learn(TimeSeries ts){
 
   while(0){ /* When should we stop? */
 
-    /* E-Step: Now this is the heavy stuff..! */
+    /* E-Step: Now this is the heavy stuff..! 
+     * (May God have mercy on the memory chips :O) */
     fs = family_inference(ts);
-
-    /* FIXME: we need joint distributions of children and their parents. */
+    /* Reminder: We might actually want to include this algorithm into the 
+     * family_inference-function in order to save the X GB of memory 
+     * taken by fs. 
+     * X in O(T * C^N), where T is the length of the time series, 
+     * C is the biggest cardinality and N is size of the largest family. 
+     * The factor T could perhaps be avoidable... */
 
     /* M-Step: First the parameter estimation... */
     for(v = 0; v < ts->model->num_of_children; v++){

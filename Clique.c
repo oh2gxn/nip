@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.109 2005-03-16 12:14:17 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.110 2005-03-16 13:47:55 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1100,7 +1100,7 @@ int* find_family_mapping(Clique family, Variable child){
   int i, j, n, p;
   int *result = NULL;
 
-  if(child->family_mapping == NULL){
+  if(child->family_mapping == NULL){ /* if not found yet */
     n = child->num_of_parents + 1;
     result = (int *) calloc(n, sizeof(int));
     if(!result){
@@ -1108,24 +1108,24 @@ int* find_family_mapping(Clique family, Variable child){
       return NULL;
     }
 
+    /* NOTE: Child must always be the first in the target potential! */
+    for(i=0; i < family->p->num_of_vars; i++)
+      if(equal_variables((family->variables)[i], child)){
+	result[0] = i;
+	break;
+      }
 
-
-    /* FIXME: this is unfinished! */
     p = 0;
+    n--;
     for(i=0; i < family->p->num_of_vars; i++){
-      if(p == child->num_of_parents)
+      if(p == n)
 	break; /* all pointers found */
-      for(j=0; j < child->num_of_parents; j++)
+      for(j=0; j < n; j++)
 	if(equal_variables((family->variables)[i], child->parents[j])){
-	  result[j] = i;
+	  result[j+1] = i;
 	  p++;
 	}
-    }    
-
-
-
-
-    
+    }
     child->family_mapping = result; /* MEMOIZE */
   }
   return child->family_mapping;
