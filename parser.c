@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.83 2004-09-03 08:26:49 jatoivol Exp $
+ * $Id: parser.c,v 1.84 2004-09-06 11:09:52 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -150,7 +150,6 @@ datafile *open_datafile(char *filename, char separator,
   if(!write){
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
-      printf("a line of data read\n");
       num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
       token_bounds =
 	tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 0);
