@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.54 2005-03-21 15:40:10 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.55 2005-04-01 09:11:05 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -26,7 +26,8 @@
  * TODO: 
 
  * - There's a bug in the memory allocation! (Segmentation fault...)
- *   - The segmentation fault does not occur on IRIX, Solaris or Mac OS X!
+ *   - The segmentation faults do not occur on: 
+ *      IRIX, Solaris, Mac OS X or FreeBSD !
  *   - But on itl-pc037, itl-cl1 and the linux box at home, it crashes
 
 
@@ -1188,7 +1189,7 @@ static int e_step(TimeSeries ts, potential* parameters){
     make_consistent(model);
     
 
-    /* THE CORE: Write the results of inference */
+    /*** THE CORE: Write the results of inference ***/
     for(i = 0; i < model->num_of_children; i++){
       p = results[i];
 
@@ -1222,7 +1223,7 @@ static int e_step(TimeSeries ts, potential* parameters){
 	parameters[i]->data[j] += p->data[j];
       }
     }
-    /* Finished writing results for this timestep */
+    /*** Finished writing results for this timestep ***/
 
 
     if(t > 0)
