@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.64 2004-08-13 14:38:11 jatoivol Exp $
+ * $Id: parser.c,v 1.65 2004-08-16 08:58:29 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -483,7 +483,7 @@ char *next_token(int *token_length){
   static int tokens_left;
 
   /* Pointer to the index array of token boundaries */
-  static int *indexarray;
+  static int *indexarray = NULL;
 
   /* Should a new line be read in when the next token is requested? */
   static int read_line = 1;
@@ -513,6 +513,7 @@ char *next_token(int *token_length){
      * (go to beginning of loop) */
     if(tokens_left > 0){
       /* Adjust pointer to the beginning of token boundary index array */
+      free(indexarray);
       indexarray = tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1, 1);
 
       /* Check if tokenise failed. If it failed, we have no other option
