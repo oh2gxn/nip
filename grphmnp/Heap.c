@@ -3,6 +3,8 @@
 #include "../Graph.h"
 #include "Heap.h"
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 
 /* Voi räkä */
 /* Koodi ei tässä muodossaan sovellu lapsille tai raskaana oleville tai 
@@ -145,6 +147,8 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
         return 0;
     
     min = H->heap_items[1];
+
+	printf("Eliminated node: %s (%i)\n", min.Vs[0]->symbol, min.n);
     
     H->heap_items[1] = H->heap_items[H->heap_size];
     H->heap_size--;
@@ -154,7 +158,7 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
 	for (i = 1; i < min.n; i++)         
     {
 		heap_i = get_heap_index(H, min.Vs[i]);
-		clean_heap_item(&H->heap_items[heap_i], min.Vs[0], G);
+		clean_heap_item(&H->heap_items[heap_i], &min, G);
     }
 
     /* Rebuild the heap. */
@@ -181,16 +185,42 @@ int get_heap_index(Heap* H, Variable v)
     return -1;
 }
 
-void clean_heap_item(Heap_item* hi, Variable V_removed, Graph* G)
+void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 {
-    int i;
-    for (i = 1; i < hi->n; i++)
-		if (equal_variables(hi->Vs[i], V_removed))
-        {
-			--hi->n;
-			hi->Vs[i] = hi->Vs[hi->n];
-			break;
-        }
+    int i, j, n_vars = 0, n_total;
+	Variable v_i, V_removed = min_cluster->Vs[0];
+	Variable* cluster_vars;
+
+	/* Copy all variables in hi and min_cluster together.
+	   Copy hi first, because Vs[0] must be the generating node */
+	n_total = hi->n + min_cluster->n;
+	cluster_vars = (Variable*) calloc(n_total, sizeof(Variable));
+	/*for (i = 0; i < hi->n; i++)
+		cluster_vars[i] = hi->Vs[i];
+	for (i = 0; i < min_cluster->n; i++)
+		cluster_vars[hi->n +i] = min_cluster[i];*/
+	memcpy(cluster_vars, hi->Vs, hi->n*sizeof(Variable));
+	memcpy(cluster_vars+hi->n, min_cluster->Vs, 
+		   min_cluster->n*sizeof(Variable));
+		
+	/* Remove duplicates and min_vs[0] */
+	for (i = 0; i < n_total; i++)
+	{
+		v_i = cluster_vars[i];
+		if (v_i == NULL) continue;
+		for (j = i+1; j < n_total; j++)
+		{
+			if (cluster_vars[j] == NULL) continue;
+			if (equal_variables(v_i, cluster_vars[j]) ||
+				equal_variables(V_removed, cluster_vars[j]))
+				cluster_vars[j] = NULL;					
+		}
+		cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
+	}
+		
+	hi->n = n_vars;
+	hi->Vs = (Variable*) calloc(n_vars, sizeof(Variable));
+	memcpy(hi->Vs, cluster_vars, n_vars*sizeof(Variable));
 
     hi->primary_key = edges_added(G, hi->Vs, hi->n);
     hi->secondary_key = cluster_weight(hi->Vs, hi->n);

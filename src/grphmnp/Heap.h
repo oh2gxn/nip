@@ -34,6 +34,6 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars);
 
 int get_heap_index(Heap* H, Variable v);
 
-void clean_heap_item(Heap_item* hi, Variable V_removed, Graph* G);
+void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G);
 
 #endif /* __HEAP_H__ */

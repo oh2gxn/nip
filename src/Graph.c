@@ -244,7 +244,7 @@ int triangulate(Graph* Gm, Clique** clique_p)
         
         /* Clear the variable_set for this cluster */
         memset(variable_set, 0, n*sizeof(int));
-        
+           
         for (j = 0; j < cluster_size; j++)
         {
             j_index = get_graph_index(Gm, min_cluster[j]);
