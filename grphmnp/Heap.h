@@ -17,8 +17,8 @@ typedef struct {
     int secondary_key;
 } Heap_item;
 
-typedef struct hpt {
-    Heap_item* array;
+typedef struct {
+    Heap_item* heap_items;
     int heap_size;
     /* MVK: Mikä on orig_size ? */
     /* AR: S'on heapin käyttämän taulukon koko. Ei liene tarpeellinen,
