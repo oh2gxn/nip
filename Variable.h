@@ -18,4 +18,4 @@ int equal(Variable v1, Variable v2);
 /* The order of variables is essential for working with potentials. */
 unsigned long get_id(Variable v);
 
-#endif __VARIABLE_H__
+#endif /* __VARIABLE_H__ */

@@ -51,5 +51,4 @@ int find_cliques(Graph Gm, Clique** cliques_p)
  */
 
 
-#endif __GRAPH_H__
-
+#endif /* __GRAPH_H__ */
