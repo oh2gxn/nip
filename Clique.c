@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.76 2004-08-12 14:13:28 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.77 2004-08-13 07:15:50 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -846,7 +846,6 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 #endif
 
   Heap *H = build_sepset_heap(cliques, num_of_cliques);
-  /* FIXME? Free the heap at the end of this function! */
 
   if(!H){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -905,6 +904,8 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
     }
 
   }
+
+  free_heap(H);
 
 #ifdef DEBUG_CLIQUE
   for(i = 0; i < num_of_cliques - 1; i++)

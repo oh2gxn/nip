@@ -1,5 +1,5 @@
 /*
- * Heap.h $Id: Heap.h,v 1.9 2004-06-21 06:12:27 mvkorpel Exp $
+ * Heap.h $Id: Heap.h,v 1.10 2004-08-13 07:15:58 mvkorpel Exp $
  */
 
 #ifndef __HEAP_H__
@@ -44,5 +44,7 @@ int extract_min_sepset(Heap* H, Sepset* sepset);
 int get_heap_index(Heap* H, Variable v);
 
 void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G);
+
+void free_heap(Heap* H);
 
 #endif /* __HEAP_H__ */

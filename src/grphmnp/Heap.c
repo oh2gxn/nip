@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.12 2004-06-21 06:12:27 mvkorpel Exp $
+ * Heap.c $Id: Heap.c,v 1.13 2004-08-13 07:15:58 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -303,3 +303,22 @@ void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
     hi->primary_key = edges_added(G, hi->Vs, hi->n);
     hi->secondary_key = cluster_weight(hi->Vs, hi->n);
 }
+
+void free_heap(Heap* H){
+
+  int i;
+
+  if(!H)
+    return;
+
+  for(i = 0; i < H->heap_size; i++){
+
+    /* Free each heap item */
+    free((H->heap_items)[i].Vs);
+  }
+  free(H->heap_items);
+
+  free(H);
+  return;
+}
+
