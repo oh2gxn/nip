@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.27 2004-06-24 08:24:05 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.28 2004-06-24 13:38:18 jatoivol Exp $
  */
 
 #include <string.h>
@@ -15,7 +15,6 @@ static int nip_vars_parsed = 0;
 
 static int variable_name(Variable v, const char *name);
 
-static int variable_statenames(Variable v, char **states);
 
 /*
  * Gives the Variable a verbose name.
@@ -30,15 +29,8 @@ static int variable_name(Variable v, const char *name){
 
 
 /*
- * Gives the Variable the names of the states if needed. 
  * NOTE: "the ownership" of the states (array of strings) changes.
  */
-static int variable_statenames(Variable v, char **states){
-  v->statenames = states;
-  return 0;
-}
-
-
 Variable new_variable(const char* symbol, const char* name, 
 		      char** states, int cardinality){
   static long id = VAR_MIN_ID;
@@ -63,7 +55,7 @@ Variable new_variable(const char* symbol, const char* name,
     v->name[0] = '\0';
 
   /* "the ownership" of the states (array of strings) changes */
-  variable_statenames(v, states); 
+  v->statenames = states;
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */
