@@ -5,16 +5,14 @@
 #include "potential.h"
 #include "errorhandler.h"
 
-#define TIMESLICE
-
 extern int yyparse();
 
 int main(int argc, char *argv[]){
 
   char **data;
-  int i, retval;
+  int i, retval, t = 0;
   int nip_num_of_cliques;
-  double* result;
+  double* result = NULL;
 
   Clique *nip_cliques;
   Clique clique_of_interest;
@@ -24,6 +22,10 @@ int main(int argc, char *argv[]){
   datafile* timeseries;
 
 
+  /*************************************/
+  /* Some experimental timeslice stuff */
+  /*************************************/
+  
   /*****************************************/
   /* Parse the model from a Hugin NET file */
   /*****************************************/
@@ -61,70 +63,100 @@ int main(int argc, char *argv[]){
     return -1;
   }
 
+
+
+  /* FIXME: Allocate some space for filtering and smoothing */
+
+
   retval = nextline_tokens(timeseries, ',', &data); /* 2. Read */
 
-  for(i = 0; i < retval; i++) /* 3. Insert into model */
-    enter_observation(get_variable((timeseries->node_symbols)[i]), data[i]);
 
-  for(i = 0; i < retval; i++) /* 4. Dump away */
-    free(data[i]);
+  for(t = 0; t < timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
+    
+    for(i = 0; i < retval; i++) /* 3. Insert into model */
+      enter_observation(get_variable((timeseries->node_symbols)[i]), data[i]);
+    
+    for(i = 0; i < retval; i++) /* 4. Dump away */
+      free(data[i]);
+    
+    
+    
+    /********************/
+    /* Do the inference */
+    /********************/
+
+    /* 1. Unmark all Cliques */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+    
+    /* 2. Collect evidence */
+    collect_evidence(NULL, NULL, nip_cliques[0]);
+    
+    /* 3. Unmark all Cliques */
+    for(i = 0; i < nip_num_of_cliques; i++)
+      unmark_Clique(nip_cliques[i]);
+
+    /* 4. Distribute evidence */
+    distribute_evidence(nip_cliques[0]);
+    
 
 
+    /*********************************/
+    /* Check the result of inference */
+    /*********************************/
 
-  /********************/
-  /* Do the inference */
-  /********************/
-  /* propagation */
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
-  collect_evidence(NULL, NULL, nip_cliques[0]);
+    /* 1. Decide which Variable you are interested in */
+    interesting = get_variable(argv[3]); /* THE variable */
+    
+    if(!interesting){
+      printf("In hmmtest.c : Variable of interest not found.\n");
+      return 1;
+    }
+    
+    /* 2. Find the Clique that contains the family of 
+     *    the interesting Variable */
+    clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				     &interesting, 1);
+    if(!clique_of_interest){
+      printf("In hmmtest.c : No clique found! Sorry.\n");
+      return 1;
+    }  
+    
+    /* 3. Allocate memory for the result */
+    result = (double *) calloc(number_of_values(interesting), sizeof(double));
+    if(!result){
+      printf("In hmmtest.c : Calloc failed.\n");
+      return 1;
+    }
+    
+    /* 4. Marginalisation */
+    marginalise(clique_of_interest, interesting, result);
+    
+    /* 5. Normalisation */
+    normalise(result, number_of_values(interesting));
+    
+    
+    /* 6. Print the result */
+    printf("Normalised probability of %s:\n", get_symbol(interesting));
+    for(i = 0; i < number_of_values(interesting); i++)
+      printf("P(%s=%s) = %f\n", get_symbol(interesting), 
+	     (interesting->statenames)[i], result[i]);
+    
+    printf("\n");
+    
+    retval = nextline_tokens(timeseries, ',', &data); /* 2. Read */
 
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
-  distribute_evidence(nip_cliques[0]);
 
-  interesting = get_variable(argv[3]); /* THE variable */
-
-  if(!interesting){
-    printf("In hmmtest.c : Variable of interest not found.\n");
-    return 1;
+    /* an experimental forward phase (a.k.a. filtering) */
+    if(retval > 0){
+      /* Reset the join tree and new priors from the posteriors by entering
+       * evidence. */
+      ;
+    }
   }
-
-
-
-  /*********************************/
-  /* Check the result of inference */
-  /*********************************/
-  /* 1. Find the Clique that contains the family of the interesting Variable */
-  clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
-					  &interesting, 1);
-  if(!clique_of_interest){
-    printf("In hmmtest.c : No clique found! Sorry.\n");
-    return 1;
-  }  
-
-  /* 2. Allocate memory for the result */
-  result = (double *) calloc(number_of_values(interesting), sizeof(double));
-  if(!result){
-    printf("In hmmtest.c : Calloc failed.\n");
-    return 1;
-  }
-
-  /* 3. Marginalisation */
-  marginalise(clique_of_interest, interesting, result);
-
-  /* 4. Normalisation */
-  normalise(result, number_of_values(interesting));
-
-
-  /* 5. Print the result */
-  printf("Normalised probability of %s:\n", get_symbol(interesting));
-  for(i = 0; i < number_of_values(interesting); i++)
-    printf("P(%s=%s) = %f\n", get_symbol(interesting), 
-	   (interesting->statenames)[i], result[i]);
-
-  printf("\n");
-
+  
+  
   free(result);
   return 0;
 }
+
