@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.12 2004-06-02 13:05:30 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.13 2004-06-03 15:20:07 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -104,7 +104,7 @@ char *next_token(int *token_length);
 
 /* Adds a variable into a list for creating an array. The variable is 
  * chosen from THE list of variables according to the given symbol. */
-int add_symbol(char *symbol);
+int add_symbol(Variable v);
 
 /* Gets the parsed variable according to the symbol. */
 Variable get_variable(char *symbol);

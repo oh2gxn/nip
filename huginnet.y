@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.25 2004-06-03 11:02:42 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.26 2004-06-03 15:20:07 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -77,8 +77,9 @@ input:  nodes potentials {
 ;
 
 
-nodes:         /* empty */ { nip_graph = new_graph(nip_vars_parsed) }
-             | nodeDeclaration nodes { add_pvar($1) }
+nodes:             nodeDeclaration nodes { /* add_pvar($1) */ }
+|         /* empty */ { nip_graph = new_graph(nip_vars_parsed)}
+
 ;
 
 
@@ -92,8 +93,11 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' statesDeclaration
                                              positionDeclaration
                                              parameters '}' {
   /* new_variable() */
+  int i;
   Variable v = new_variable($2, $5, $4, nip_strings_parsed); 
+
   reset_strings();
+  add_pvar(v);
   $$ = v}
 ;
 
@@ -123,15 +127,27 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
 
 
 potentialDeclaration: token_potential '(' symbol '|' symbols ')' '{' dataList '}' { 
-  Variable vars[nip_symbols_parsed + 1];
   int i;
+  Variable *vars = (Variable*) calloc(nip_symbols_parsed + 1,
+				      sizeof(Variable));
+  potential p;
+  if(!vars)
+    YYABORT;
+  printf("nip_symbols_parsed = %d\n", nip_symbols_parsed); /* DEBUG */
   vars[0] = $3;
   for(i = 0; i < nip_symbols_parsed; i++)
-    vars[i + 1] = $5[i];
-  add_initData(create_Potential(vars, nip_symbols_parsed + 1, $8), $3, $5); 
+    vars[i + 1] = ($5)[i];
+
+  printf("WTF happens here !?!?\n");
+
+  p = create_Potential(vars, nip_symbols_parsed + 1, $8);
+
+  add_initData(p, $3, $5); 
   free($8); // the data was copied at create_Potential
   reset_doubles();
-  reset_symbols()}
+  reset_symbols();
+  free(vars);
+}
 ;
 
 symbol:        UNQUOTED_STRING { $$ = get_variable($1) }
@@ -140,20 +156,33 @@ symbol:        UNQUOTED_STRING { $$ = get_variable($1) }
 
 
 symbols:       /* end of list */ { $$ = make_variable_array() }
-             | UNQUOTED_STRING symbols { add_symbol($1) }
+             | symbol2 symbols { /* add_symbol($1) */ }
+;
+
+
+symbol2:       UNQUOTED_STRING { add_symbol(get_variable($1)) }
+
 ;
 
 
 strings:       /* end of list */ { $$ = make_string_array() }
-             | QUOTED_STRING strings { add_string($1) }
+             | string strings { /* add_string($1) */ }
+;
+
+
+string:        QUOTED_STRING { add_string($1) }
 ;
 
 
 /* This should ignore all brackets between numbers! */
 numbers:       /* end of list */ { $$ = make_double_array() }
-             | NUMBER numbers { add_double($1) }
+             | num numbers { /* add_double($1) */ }
              | '(' numbers ')' {/* ignore */} // nested lists?
              | '(' numbers ')' '(' numbers ')' {/* ignore */} // nested lists?
+;
+
+
+num:           NUMBER { add_double($1) }
 ;
 
 
@@ -331,7 +360,6 @@ yylex (void)
       yylval.numval = numval;
       free(token);
 #ifdef DEBUG_BISON
-      printf("nullterminated = %s\n", nullterminated);
       printf("yylex returns NUMBER = %f.\n", numval);
 #endif
       free(nullterminated);

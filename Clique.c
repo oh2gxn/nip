@@ -1,8 +1,11 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "Clique.h"
 #include "Variable.h"
 #include "potential.h"
 #include "errorhandler.h"
+
+#define DEBUG_CLIQUE
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
@@ -90,6 +93,13 @@ potential create_Potential(Variable variables[], int num_of_vars,
   int reorder[num_of_vars];
   unsigned long temp;
   potential p;
+
+#ifdef DEBUG_CLIQUE
+  printf("In create_Potential: num_of_vars = %d\n", num_of_vars);
+  for(i = 0; i < num_of_vars; i++)
+    printf("In create_Potential: variables[%d] = %s\n", 
+	   i, variables[i]->symbol);
+#endif
 
   /* reorder[i] is the place of i:th variable (in the sense of this program) 
    * in the array variables[] */
