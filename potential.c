@@ -16,8 +16,7 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
   int size_of_data = 1;
   int *cardinal;
   double *dpointer = NULL;
-  potential p;
-  p = (potential) malloc(sizeof(ptype));
+  potential p = (potential) malloc(sizeof(ptype));
   cardinal = (int *) calloc(num_of_vars, sizeof(int));
 
   for(i = 0; i < num_of_vars; i++){

@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.19 2004-05-26 14:46:31 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.20 2004-06-03 08:19:27 jatoivol Exp $
  */
 
 #include <string.h>
@@ -17,7 +17,10 @@ Variable new_variable(const char* symbol, const char* name,
 
   v->cardinality = cardinality;
   v->id = id++;
-  v->probability = NULL;
+  v->probability = NULL; 
+  /* FIXME: This NULL is probably NOT suitable, because the variables without parents 
+   * will then have NULL as v->probability. The reason: HUGIN files don't have this 
+   * "potential ( A ) { data = ( 1 1 1 ... 1 1 1 ) }" for independent variables. */
  
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
@@ -36,6 +39,7 @@ Variable new_variable(const char* symbol, const char* name,
   return v;
 }
 
+
 int variable_name(Variable v, const char *name){
   if(!name)
     return ERROR_NULLPOINTER;
@@ -44,11 +48,13 @@ int variable_name(Variable v, const char *name){
   return NO_ERROR;
 }
 
+
 // "the ownership" of the states (array of strings) changes
 int variable_statenames(Variable v, char **states){
   v->statenames = states;
   return 0;
 }
+
 
 Variable copy_variable(Variable v){
   int i;
@@ -69,6 +75,7 @@ Variable copy_variable(Variable v){
   return v;
 }
 
+
 void free_variable(Variable v){
   if(v == NULL)
     return;
@@ -78,13 +85,16 @@ void free_variable(Variable v){
   free(v);
 }
 
+
 int equal_variables(Variable v1, Variable v2){
   return (v1->id == v2->id);
 }
 
+
 unsigned long get_id(Variable v){
   return v->id;
 }
+
 
 int update_likelihood(Variable v, double likelihood[]){
 
@@ -98,6 +108,7 @@ int update_likelihood(Variable v, double likelihood[]){
   return NO_ERROR;
 }
 
+
 int number_of_values(Variable v){
   if(v == NULL)
     return ERROR_NULLPOINTER;
@@ -105,6 +116,8 @@ int number_of_values(Variable v){
     return v->cardinality;
 }
 
+
+/* the "ownership" of the potential changes */
 int set_probability(Variable v, potential p){
   if(v == NULL)
     return ERROR_NULLPOINTER;
