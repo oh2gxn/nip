@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.16 2004-09-03 08:26:49 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.17 2004-09-03 10:15:13 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -1052,27 +1052,54 @@ prints the potentials parsed by the net language parser to the
 standard output. The function uses the information collected into the 
 temporary list by the {\it add\_initData} function.
 
-\item[set\_nip\_statenames(states)] 
+\item[set\_nip\_statenames(states)] is used only by the net language
+parser. It sets a temporary pointer to the {\it string array}
+\textbf{states}. 
 
-\item[get\_nip\_statenames()] 
+\item[get\_nip\_statenames()] is used only by the net language
+parser. It gets the temporary pointer to the {\it string array}
+set by the previous function. 
 
-\item[set\_nip\_label(label)] 
+\item[set\_nip\_label(label)] is used only by the net language
+parser. It sets a temporary pointer to the {\it string}
+\textbf{label}.
 
-\item[get\_nip\_label()] 
+\item[get\_nip\_label()] is used only by the net language
+parser. It gets the temporary pointer to the {\it string}
+set by the previous function.
 
-\item[set\_nip\_next(next)] 
+\item[set\_nip\_next(next)] is used only by the net language
+parser. It sets a temporary pointer to the {\it string}
+\textbf{next}.
 
-\item[get\_nip\_next()] 
+\item[get\_nip\_next()] is used only by the net language
+parser. It gets the temporary pointer to the {\it string}
+set by the previous function.
 
-\item[get\_nip\_symbols\_parsed()] 
+\item[get\_nip\_symbols\_parsed()] returns the number of parent
+variables when parsing a \verb+potential+ declaration of a net
+language file. It is meant to be used by the net language parser only.
 
-\item[get\_nip\_strings\_parsed()] 
+\item[get\_nip\_strings\_parsed()] returns the number of states when
+parsing a \verb+node+ declaration of a net language file. It is meant
+to be used by the net langugage parser only.
 
-\item[get\_num\_of\_cliques()] 
+\item[get\_num\_of\_cliques()] is to be used for getting the number of
+cliques created by the parser. This is one of the functions for
+finding out the results of parsing a net language file. (See also the
+other functions: \textbf{get\_cliques\_pointer} and
+\textbf{reset\_Clique\_array}) 
 
-\item[get\_cliques\_pointer()] 
+\item[get\_cliques\_pointer()] gets you a pointer to the {\it array of
+cliques} created by the net language parser. (I.e. the returned value
+is a {\it Clique**})
 
-\item[reset\_Clique\_array()]
+\item[reset\_Clique\_array()] resets the net language parser so that
+it can read more net language files. Call this function after you have
+discovered the number and location of cliques. Freeing the memory
+allocated by the join tree created by the parser is up to the user: 
+just use the {\it free\_Clique} function for every clique in the array
+when the join tree becomes useless.
 
 \end{description}
 
