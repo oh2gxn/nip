@@ -93,3 +93,12 @@ Sekalaisia huomioita:
   JOS riippumattomien muuttujien jakaumaa ei yritetä asettaa .net -tiedoston
   potentiaaleilla. Tasajakauma (1 1 ... 1) siis toimii mutta muunlainen
   näköjään ei. Miten tällaiset tilanteet pitäisi hoitaa? enter_evidence ?
+--
+
+21.6.2004 (Janne ja Mikko)
+* enter_evidencen käyttö riippumattomien muuttujien todennäköisyyksien
+  initialisoinnissa toimii. Täytynee vielä tarkistaa, mitä sellaista
+  oleellista eroa initialisen ja enter_evidencen välillä on, joka aiheuttaa
+  virheellisiä tuloksia ensin mainitun kanssa. Toki Variablen likelihood
+  pitää alustaa, mutta sen alustamattomuus ei liene syyllinen
+  esimerkkitapauksen vääriin tuloksiin.

@@ -29,7 +29,7 @@
 #define PRINT_JOINTREE
 */
 
-int yyparse();
+extern int yyparse();
 
 /*
  * Calculate the probability distribution of Variable "var".
