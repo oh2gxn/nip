@@ -76,14 +76,14 @@ int set_pvalue(potential p, int indices[], double value){
 
 double *get_ppointer(potential p, int indices[]){
 
-  int index = indices[0];
+  int index = 0;
   int i;
   int card_temp = 1;
 
-  /* THE mapping */
-  for(i = 1; i < p->num_of_vars; i++){
-    card_temp *= p->cardinality[i-1];
+  /* THE mapping (JJ: I made this clearer on 22.5.2004)*/
+  for(i = 0; i < p->num_of_vars; i++){
     index += indices[i] * card_temp;
+    card_temp *= p->cardinality[i];
   }
 
   return &(p->data[index]);

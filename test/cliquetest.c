@@ -88,7 +88,7 @@ int main(){
 
   /* A test */
   for(i = 0; i < 24; i++)
-    printf("Correct=%f ,Reordered=%f\n", model[1]->data[i], model[3]->data[i]);
+    printf("Correct=%f, Reordered=%f\n", model[1]->data[i], model[3]->data[i]);
 
   parentsA[0] = variables[1]; parentsA[1] = variables[2];
   parentsC[0] = variables[1]; parentsC[1] = variables[3];

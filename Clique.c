@@ -99,9 +99,6 @@ potential create_Potential(Variable variables[], int num_of_vars,
   for(i = 0; i < num_of_vars; i++)
     indices[i] = 0;
 
-  /* DEBUG!!! */
-  //printf("Debug 1\n");
-
   /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
   for(i = 0; i < num_of_vars; i++){
@@ -112,46 +109,48 @@ potential create_Potential(Variable variables[], int num_of_vars,
     }
   }
 
-  /* DEBUG!!! */
-  //printf("Debug 2\n");
+  for(i = 0; i < num_of_vars; i++)
+    reorder[indices[i]] = i; // fill the reordering
   
   /* Figure out some stuff */
   for(i = 0; i < num_of_vars; i++){
-    reorder[indices[i]] = i; // fill the reordering
     size_of_data *= variables[i]->cardinality; // optimal?
     cardinality[i] = variables[reorder[i]]->cardinality;
   }
 
   /* DEBUG!!! */
-  //printf("Debug: size of data = %d\n", size_of_data);
+  //for(i = 0; i < num_of_vars; i++){
+  //  printf("Debug: indices[%d] = %d\n", i, indices[i]);
+  //  printf("Debug: reorder[%d] = %d\n", i, reorder[i]);    
+  //}
 
   /* Create a potential */
   p = make_potential(cardinality, num_of_vars, NULL);
   
-  /* Copy the contents to their correct places */
+  /* Copy the contents to their correct places 
+   * JJT: In principle it is a bit ugly to do this 
+   * at this level. If potential.c changes, this has to 
+   * be revised too!!! */
   for(i = 0; i < size_of_data; i++){
     /* Now this is the trickiest part */
     // find out indices
     inverse_mapping(p, i, indices); 
 
     // calculate the address in the original array
-    index = indices[reorder[0]];
+    index = 0;
     card_temp = 1;
     /* THE mapping */
-    for(j = 1; j < num_of_vars; j++){
-      card_temp *= cardinality[j-1];
+    for(j = 0; j < num_of_vars; j++){
       index += indices[reorder[j]] * card_temp;
+      card_temp *= cardinality[reorder[j]];
     }
 
     // set the value (in a little ugly way)
     p->data[i] = data[index];
 
     /* DEBUG!!! */
-    //printf("Debug i=%d\n", i);
+    printf("Debug: i=%d, index=%d\n", i, index);
   }
-
-  /* DEBUG!!! */
-  //printf("Debug return...\n");
 
   return p;
 }
