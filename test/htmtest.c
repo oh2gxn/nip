@@ -430,7 +430,7 @@ int main(int argc, char *argv[]){
 
 
     /* a useful inference ? */
-    make_consistent(model);
+    /*make_consistent(model);*/
 
   
 
