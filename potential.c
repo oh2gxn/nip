@@ -42,8 +42,8 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
   return p;
 }
 
-int free_potential(potential p){
 
+int free_potential(potential p){
   free(p->cardinality);
   free(p->data);
   free(p);
@@ -80,6 +80,7 @@ double *get_ppointer(potential p, int indices[]){
   int i;
   int card_temp = 1;
 
+  /* THE mapping */
   for(i = 1; i < p->num_of_vars; i++){
     card_temp *= p->cardinality[i-1];
     index += indices[i] * card_temp;

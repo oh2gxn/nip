@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.18 2004-03-19 15:25:58 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.19 2004-05-20 22:02:21 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -9,6 +9,7 @@
 #define VAR_SYMBOL_LENGTH 20
 #define VAR_NAME_LENGTH 40
 #define VAR_STATENAME_LENGTH 20
+#define VAR_MIN_ID 1
 
 typedef struct {
   char symbol[VAR_SYMBOL_LENGTH + 1]; /* short symbol for the node */

@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.16 2004-03-22 14:16:07 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.17 2004-05-20 22:02:21 jatoivol Exp $
  */
 
 #include <string.h>
@@ -9,21 +9,21 @@
 #include "errorhandler.h"
 
 Variable new_variable(const char* symbol, const char* name, int cardinality){
-  static long id = 0;
+  static long id = VAR_MIN_ID;
   int i;
   double *dpointer;
   Variable v = (Variable) malloc(sizeof(vtype));
 
   v->cardinality = cardinality;
-  v->id = ++id;
+  v->id = id++;
   v->probability = NULL;
  
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
 
   if(variable_name(v, name) == ERROR_NULLPOINTER)
-    /* v->name = 0; */ /* DANGER! The name can be omitted and consequently be NULL */
-    v->name[0] = '\0'; /* MVK: Olisiko parempi? */
+    /* DANGER! The name can be omitted and consequently be NULL */
+    v->name[0] = '\0';
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */

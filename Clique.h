@@ -49,6 +49,17 @@ Sepset make_Sepset(Variable variables[], int num_of_vars, Clique cliques[]);
 /* Method for removing sepsets and freeing memory: returns an error code */
 int free_Sepset(Sepset s);
 
+/* Method for creating potentials with correct structure.
+ * - variables[] is an array of the Variables in a suitable order
+ * - num_of_vars tells how many variables there are
+ * - data[] is the data array in the order according to variables */
+potential create_Potential(Variable variables[], int num_of_vars, 
+			   double data[]);
+
+/* Method for cleaning potentials and releasing the memory. 
+ * Returns an error code. */
+int free_Potential(potential p);
+
 /* Method for unmarking a clique: call this to every clique before 
    collecting or distributing evidence. Returns an error code. */
 int unmark_Clique(Clique c);

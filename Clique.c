@@ -20,6 +20,7 @@ Clique make_Clique(Variable vars[], int num_of_vars){
   return c;
 }
 
+
 int free_Clique(Clique c){
   if(c == NULL)
     return ERROR_NULLPOINTER;
@@ -38,6 +39,7 @@ int free_Clique(Clique c){
   return 0;
 }
 
+
 int add_Sepset(Clique c, Sepset s){
   link new = (link) malloc(sizeof(element));
   new->data = s;
@@ -48,6 +50,7 @@ int add_Sepset(Clique c, Sepset s){
   c->sepsets = new;
   return 0;
 }
+
 
 Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   Sepset s = (Sepset) malloc(sizeof(sepsettype));
@@ -67,6 +70,7 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   return s;
 }
 
+
 int free_Sepset(Sepset s){
   free_potential(s->old);
   free_potential(s->new);
@@ -76,10 +80,80 @@ int free_Sepset(Sepset s){
   return 0;
 }
 
+
+potential create_Potential(Variable variables[], int num_of_vars, 
+			   double data[]){
+  // THIS IS TRICKY: we have to reorder the array and stuff...
+  int i, j, card_temp, index, size_of_data = 1;
+  int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
+  int *indices = (int *) calloc(num_of_vars, sizeof(int));
+  int reorder[num_of_vars];
+  unsigned long temp;
+  potential p;
+
+  /* reorder[i] is the place of i:th variable (in the sense of this program) 
+   * in the array variables[] */
+
+  /* init (needed?) */
+  for(i = 0; i < num_of_vars; i++)
+    indices[i] = 0;
+
+  /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
+   * Note the temporary use of indices array. */
+  for(i = 0; i < num_of_vars; i++){
+    temp = get_id(variables[i]);
+    for(j = 0; j < num_of_vars; j++){
+      if(get_id(variables[j]) > temp)
+	indices[j]++; // counts how many greater variables there are
+    }
+  }
+  
+  /* Figure out some stuff */
+  for(i = 0; i < num_of_vars; i++){
+    reorder[indices[i]] = i; // fill the reordering
+    size_of_data *= variables[i]->cardinality; // optimal?
+    cardinality[i] = variables[reorder[i]]->cardinality;
+  }
+
+  /* Create a potential */
+  p = make_potential(cardinality, num_of_vars, NULL);
+  
+  /* Copy the contents to their correct places */
+  for(i = 0; i < size_of_data; i++){
+    /* Now this is the trickiest part */
+    // find out indices
+    inverse_mapping(p, i, indices); 
+
+    // calculate the address in the original array
+    index = indices[reorder[0]];
+    card_temp = 1;
+    /* THE mapping */
+    for(i = 1; i < num_of_vars; i++){
+      card_temp *= cardinality[i-1];
+      index += indices[reorder[i]] * card_temp;
+    }
+
+    // set the value (in a little ugly way)
+    p->data[i] = data[index];
+  }
+  
+  free(cardinality);
+  free(indices);
+  //free(reorder);
+  return p;
+}
+
+
+int free_Potential(potential p){
+  return free_potential(p);
+}
+
+
 int unmark_Clique(Clique c){
   c->mark = 0;
   return 0;
 }
+
 
 int distribute_evidence(Clique c){
   /* mark */
@@ -110,6 +184,7 @@ int distribute_evidence(Clique c){
   return 0;
 }
 
+
 int collect_evidence(Clique c1, Sepset s12, Clique c2){
   /* mark */
   c2->mark = 1;
@@ -132,6 +207,7 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
 
   return 0;
 }
+
 
 int message_pass(Clique c1, Sepset s, Clique c2){
   int i, j = 0, k = 0;
@@ -172,6 +248,7 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   return 0;
 }
 
+
 int initialise(Clique c, Variable v, Variable parents[], potential p){
   int i, j = 0, k = 0;
   int diff = c->p->num_of_vars - p->num_of_vars;
@@ -205,6 +282,7 @@ int initialise(Clique c, Variable v, Variable parents[], potential p){
   return (i);
 }
 
+
 int marginalise(Clique c, Variable v, double r[]){
   int index = var_index(c, v);
 
@@ -214,6 +292,7 @@ int marginalise(Clique c, Variable v, double r[]){
   
   return(total_marginalise(c->p, r, index));
 }
+
 
 int normalise(double result[], int array_size){
   int i;
@@ -226,6 +305,7 @@ int normalise(double result[], int array_size){
     result[i] /= sum;
   return 0;
 }
+
 
 int enter_evidence(Clique c, Variable v, double evidence[]){
   int index, i;
@@ -258,6 +338,7 @@ int enter_evidence(Clique c, Variable v, double evidence[]){
 
   return 0;
 }
+
 
 int var_index(Clique c, Variable v){
   int var = 0;
