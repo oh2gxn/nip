@@ -26,6 +26,7 @@ potential make_potential(int cardinality[], int num_of_vars){
   p->size_of_data = size_of_data;
   p->num_of_vars = num_of_vars;
   p->data = (double *) calloc(size_of_data, sizeof(double));
+  /* The array has to be initialised. This is probably done somewhere else. */
 
   return p;
 }
@@ -224,8 +225,31 @@ int update_potential(potential enumerator, potential denominator,
 
 }
 
+int update_evidence(double numerator[], double denominator[], 
+		    potential target, int var){
 
+  int i, source_index;
+  int *target_indices;
 
+  target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
+  /* The general idea is the same as in marginalise */
+  for(i = 0; i < target->size_of_data; i++){
+    inverse_mapping(target, i, target_indices);
+    source_index = target_indices[var];
 
+    target->data[i] *= numerator[source_index];  /* THE multiplication */
 
+    if(denominator[source_index] == 0){
+      if(numerator[source_index] != 0)
+	return GLOBAL_RETRACTION;
+    }
+    else
+      target->data[i] /= denominator[source_index];  /* THE division */
+  }
+
+  free(target_indices);   /* JJ NOTE: GET RID OF THESE */
+
+  return GLOBAL_UPDATE;
+
+}

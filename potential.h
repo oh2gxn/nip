@@ -1,6 +1,9 @@
 #ifndef __POTENTIAL_H__
 #define __POTENTIAL_H__
 
+#define GLOBAL_UPDATE 0
+#define GLOBAL_RETRACTION 1
+
 struct pot_array {
   int size_of_data;
   int *cardinality;
@@ -84,5 +87,14 @@ int total_marginalise(potential source, double destination[], int variable);
  */
 int update_potential(potential enumerator, potential denominator, 
 		      potential target, int extra_vars[]);
+
+/* Method for...
+ * -enumerator[]: new evidence about the variable
+ * -denominator[]: old likelihood of the variable
+ * -target: the potential to be updated
+ * -var: the index (in the potential) of the variable that gets new evidence
+ */
+int update_evidence(double enumerator[], double denominator[], 
+		    potential target, int var);
 
 #endif

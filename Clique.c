@@ -170,27 +170,41 @@ int message_pass(Clique c1, Sepset s, Clique c2){
 }
 
 int marginalise(Clique c, Variable v, double r[]){
+  int index = var_index(c, v);
 
-  int i = 0;
-  /* JJT: Is this the correct idea? */
-  while(!equal_variables(v, c->variables[i])){
-    i++;
-    if(i == c->p->num_of_vars)
-      /* Variable not in this Clique => ERROR */
-      return ERROR_INVALID_ARGUMENT;
-  }
+  /* Variable not in this Clique => ERROR */
+  if(index == -1)
+    return ERROR_INVALID_ARGUMENT;
   
-  return(total_marginalise(c->p, r, i));
+  return(total_marginalise(c->p, r, index));
 }
 
 int enter_evidence(Clique c, Variable v, double evidence[]){
-  int i;
+  int index = var_index(c, v);
+  int result;
+
+  /* Variable not in this Clique => ERROR */
+  if(index == -1)
+    return ERROR_INVALID_ARGUMENT;
   
-  /* here will be the update of clique potential... */
+  /* here is the update of clique potential */
+  result = update_evidence(evidence, v->likelihood, c->p, index);
 
   /* update likelihood */
-  for(i = 0; i < v->cardinality; i++)
-    (v->likelihood)[i] = evidence[i];
+  update_likelihood(v, evidence);
+
+  /* Tässä tarvitaan varmaankin GLOBAL UPDATE tai GLOBAL RETRACTION !!! */
 
   return 0;
+}
+
+int var_index(Clique c, Variable v){
+  int var = 0;
+  while(!equal_variables(v, c->variables[var])){
+    var++;
+    if(var == c->p->num_of_vars)
+      /* Variable not in this Clique => -1 */
+      return -1;
+  }
+  return var;
 }

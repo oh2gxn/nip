@@ -76,4 +76,8 @@ int marginalise(Clique c, Variable v, double r[]);
    Returns an error code. */
 int enter_evidence(Clique c, Variable v, double evidence[]);
 
+/* Method for checking if Variable v is part of Clique c.
+   Returns -1 if not, else the index of v among the Variables in c. */
+int var_index(Clique c, Variable v);
+
 #endif /* __CLIQUE_H__ */

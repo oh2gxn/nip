@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "Variable.h"
+#include "errorhandler.h"
 
 Variable new_variable(char* name, int cardinality){
   int i;
@@ -54,7 +55,14 @@ unsigned long get_id(Variable v){
   return v->id;
 }
 
-int update_likelihood(Variable v, double* likelihood){
-  v->likelihood = likelihood;
-  return 0;
+int update_likelihood(Variable v, double likelihood[]){
+
+  int i;
+  if(v == NULL)
+    return ERROR_NULLPOINTER;
+
+  for(i = 0; i < v->cardinality; i++)
+    (v->likelihood)[i] = likelihood[i];
+
+  return NO_ERROR;
 }

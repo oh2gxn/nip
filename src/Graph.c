@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "Graph.h"
 #include "Variable.h"
+#include "Clique.h"
 
 /* XXXX SEURAAVAN REFAKTOROINTIPUUSKAN ISKIESSÄ:
    XXXX Muunnosta Variable -> adj_matrix-indeksi tarvitaan usein

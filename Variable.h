@@ -37,6 +37,6 @@ unsigned long get_id(Variable v);
 /* Gives v a new likelihood array. The size of the array
  * must match v->cardinality
  */
-int update_likelihood(Variable v, double* likelihood);
+int update_likelihood(Variable v, double likelihood[]);
 
 #endif /* __VARIABLE_H__ */
