@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.50 2004-10-21 13:33:43 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.51 2004-11-01 14:48:17 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -216,8 +216,8 @@ int general_marginalise(potential source, potential destination,
     /* flat index i  ->  index array  */
     inverse_mapping(source, i, source_indices);
 
-    /* remove extra indices, eg. if source_vars = { 1, 3 }, then
-     source_indices { 2, 6, 7, 5, 3 } becomes dest_indices { 2, 7, 3 }*/
+    /* remove extra indices, eg. if mapping = { 0, 2, 4 }, then
+       source_indices { 2, 6, 7, 5, 3 } becomes dest_indices { 2, 7, 3 }*/
     choose_indices(source_indices, dest_indices, mapping,
 		   destination->num_of_vars);
 

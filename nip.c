@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.25 2004-10-28 13:10:51 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.26 2004-11-01 14:48:17 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -281,6 +281,18 @@ int timeseries_length(TimeSeries ts){
 }
 
 
+void free_uncertainseries(UncertainSeries ucs){
+  int i, t;
+  for(t = 0; t < ucs->length; t++){
+    for(i = 0; i < ucs->num_of_vars; i++)
+      free(ucs->data[t][i]);
+    free(ucs->data[t]);
+  }
+  free(ucs->variables);
+  free(ucs);
+}
+
+
 char* get_observation(TimeSeries ts, Variable v, int time){
   int i, j = -1;
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
@@ -325,21 +337,542 @@ int insert_hard_evidence(Nip model, char* variable, char* observation){
   return ret;
 }
 
+
 /* forward-only inference consumes constant (1 time slice) amount of memory 
  * + the results (which is linear) */
 UncertainSeries forward_inference(Nip model, TimeSeries ts, 
 				  Variable vars[], int nvars){
-  /* XXX */
-  return NULL;
+  int i, j, k, t;
+  int *cardinalities = NULL;
+  int *mapping;
+  Variable temp;
+  potential timeslice_sepset = NULL;
+  Clique clique_of_interest;
+  UncertainSeries results = NULL;
+  
+  /* Allocate an array */
+  if(model->num_of_nexts > 0){
+    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+    if(!cardinalities){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return NULL;
+    }
+  }
+
+  /* Fill the array */
+  k = 0;
+  for(i = 0; i < ts->num_of_hidden; i++){
+    temp = ts->hidden[i];
+    if(temp->next)
+      cardinalities[k++] = number_of_values(temp);
+  }  
+
+  /* Allocate some space for the results */
+  results = (UncertainSeries) malloc(sizeof(uncertain_series_type));
+  if(!results){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(cardinalities);
+    return NULL;
+  }
+  
+  results->variables = (Variable*) calloc(nvars, sizeof(Variable));
+  if(!results->variables){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(results);
+    free(cardinalities);
+    return NULL;
+  }
+
+  /* Copy the references to the variables of interest */
+  memcpy(results->variables, vars, nvars*sizeof(Variable));
+  results->num_of_vars = nvars;
+  results->length = ts->length;
+
+  results->data = (double***) calloc(ts->length, sizeof(double**));
+  if(!results->data){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(results->variables);
+    free(results);
+    free(cardinalities);
+    return NULL;
+  }
+  
+  for(t = 0; t < results->length; t++){
+    results->data[t] = (double**) calloc(nvars, sizeof(double*));
+    if(!results->data[t]){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      while(t > 0)
+	free(results->data[--t]);
+      free(results->variables); /* t == -1 */
+      free(results);
+      free(cardinalities);
+      return NULL;
+    }
+
+    for(i = 0; i < nvars; i++){
+      results->data[t][i] = (double*) calloc(number_of_values(vars[i]),
+					     sizeof(double));
+      if(!results->data[t][i]){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	while(i > 0)
+	  free(results->data[t][--i]);
+	while(t > 0){
+	  t--;
+	  for(i = 0; i < nvars; i++)
+	    free(results->data[t][i]);
+	  free(results->data[t]);
+	}
+	free(results->variables); /* t == -1 */
+	free(results);
+	free(cardinalities);
+	return NULL;
+      }
+    }
+  }
+
+  /* Initialise the intermediate potential */
+  timeslice_sepset = make_potential(cardinalities, model->num_of_nexts, NULL);
+  free(cardinalities);
+
+  /*****************/
+  /* Forward phase */
+  /*****************/
+  for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
+    
+    /* Put some data in */
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			    ts->observed[i], ts->data[t][i]);
+    
+    
+    if(t > 0){
+      /* Finish the message pass between timeslices */
+
+      /* JJ_NOTE: this snippet of code is found as seven different copies! */
+      /*-------------------------------------------------------------------*/
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				       model->previous, model->num_of_nexts);
+      assert(clique_of_interest != NULL);
+      mapping = (int*) calloc(clique_of_interest->p->num_of_vars - 
+			      model->num_of_nexts, sizeof(int));
+      if(!mapping){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	free_uncertainseries(results);
+	free_potential(timeslice_sepset);
+	return NULL;
+      }
+      k = 0;
+      for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+	if(k == model->num_of_nexts)
+	  break; /* all pointers found */
+	for(j=0; j < model->num_of_nexts; j++)
+	  if(equal_variables((clique_of_interest->variables)[i], 
+			     (model->previous)[j])){
+	    mapping[j] = i;
+	    k++;
+	  }
+      }
+      /*-------------------------------------------------------------------*/
+      update_potential(timeslice_sepset, NULL, clique_of_interest->p, mapping);
+      free(mapping);
+    }
+    
+    /* Do the inference */
+    make_consistent(model);
+
+    /* Write the results */
+    for(i = 0; i < results->num_of_vars; i++){
+      
+      /* 1. Decide which Variable you are interested in */
+      temp = results->variables[i];
+      
+      /* 2. Find the Clique that contains the family of 
+       *    the interesting Variable */
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				       &temp, 1);
+      assert(clique_of_interest != NULL);
+      
+      /* 3. Marginalisation (the memory must have been allocated) */
+      marginalise(clique_of_interest, temp, results->data[t][i]);
+      
+      /* 4. Normalisation */
+      normalise(results->data[t][i], number_of_values(temp));
+    }
+    
+    /* Start a message pass between timeslices */
+    clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				     model->next, model->num_of_nexts);
+    assert(clique_of_interest != NULL);
+    mapping = (int*) calloc(clique_of_interest->p->num_of_vars - 
+			    model->num_of_nexts, sizeof(int));
+    if(!mapping){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free_uncertainseries(results);
+      free_potential(timeslice_sepset);
+      return NULL;
+    }
+
+    k = 0;
+    for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+      if(k == model->num_of_nexts)
+	break; /* all pointers found */
+      for(j=0; j < model->num_of_nexts; j++)
+	if(equal_variables((clique_of_interest->variables)[i], 
+			   (model->next)[j])){
+	  mapping[j] = i;
+	  k++;
+	}
+    }    
+    general_marginalise(clique_of_interest->p, timeslice_sepset, mapping);
+    free(mapping);    
+    
+    /* Forget old evidence */
+    reset_model(model);
+  }
+
+  free_potential(timeslice_sepset);
+
+  return results;
 }
+
 
 /* This consumes much more memory depending on the size of the 
  * sepsets between time slices. */
 UncertainSeries forward_backward_inference(Nip model, TimeSeries ts,
 					   Variable vars[], int nvars){
-  /* XXX */
-  return NULL;
+  int i, j, k, t;
+  int *cardinalities = NULL;
+  int *mapping;
+  Variable temp;
+  potential *timeslice_sepsets = NULL;
+  Clique clique_of_interest;
+  UncertainSeries results = NULL;
+
+  /* Allocate an array */
+  if(model->num_of_nexts > 0){
+    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+    if(!cardinalities){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return NULL;
+    }
+  }
+
+  /* Fill the array */
+  k = 0;
+  for(i = 0; i < ts->num_of_hidden; i++){
+    temp = ts->hidden[i];
+    if(temp->next)
+      cardinalities[k++] = number_of_values(temp);
+  }  
+
+  /* Allocate some space for the results */
+  results = (UncertainSeries) malloc(sizeof(uncertain_series_type));
+  if(!results){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(cardinalities);
+    return NULL;
+  }
+  
+  results->variables = (Variable*) calloc(nvars, sizeof(Variable));
+  if(!results->variables){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(results);
+    free(cardinalities);
+    return NULL;
+  }
+
+  /* Copy the references to the variables of interest */
+  memcpy(results->variables, vars, nvars*sizeof(Variable));
+  results->num_of_vars = nvars;
+  results->length = ts->length;
+
+  results->data = (double***) calloc(ts->length, sizeof(double**));
+  if(!results->data){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(results->variables);
+    free(results);
+    free(cardinalities);
+    return NULL;
+  }
+  
+  for(t = 0; t < results->length; t++){
+    results->data[t] = (double**) calloc(nvars, sizeof(double*));
+    if(!results->data[t]){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      while(t > 0)
+	free(results->data[--t]);
+      free(results->variables); /* t == -1 */
+      free(results);
+      free(cardinalities);
+      return NULL;
+    }
+
+    for(i = 0; i < nvars; i++){
+      results->data[t][i] = (double*) calloc(number_of_values(vars[i]),
+					     sizeof(double));
+      if(!results->data[t][i]){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	while(i > 0)
+	  free(results->data[t][--i]);
+	while(t > 0){
+	  t--;
+	  for(i = 0; i < nvars; i++)
+	    free(results->data[t][i]);
+	  free(results->data[t]);
+	}
+	free(results->variables); /* t == -1 */
+	free(results);
+	free(cardinalities);
+	return NULL;
+      }
+    }
+  }
+
+
+  /* Allocate some space for the intermediate potentials */
+  timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
+
+  /* Initialise intermediate potentials */
+  for(t = 0; t <= ts->length; t++){
+    timeslice_sepsets[t] = make_potential(cardinalities, model->num_of_nexts, 
+					  NULL);
+  }
+  free(cardinalities);
+
+
+  /*****************/
+  /* Forward phase */
+  /*****************/
+  for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
+    
+    /* Put some data in */
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			    ts->observed[i], ts->data[t][i]);
+    
+    
+    if(t > 0){
+      /* Finish the message pass between timeslices */
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				       model->previous, model->num_of_nexts);
+      assert(clique_of_interest != NULL);
+      mapping = (int*) calloc(clique_of_interest->p->num_of_vars - 
+			      model->num_of_nexts, sizeof(int));
+      if(!mapping){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	free_uncertainseries(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return NULL;
+      }
+      k = 0;
+      for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+	if(k == model->num_of_nexts)
+	  break; /* all pointers found */
+	for(j=0; j < model->num_of_nexts; j++)
+	  if(equal_variables((clique_of_interest->variables)[i], 
+			     (model->previous)[j])){
+	    mapping[j] = i;
+	    k++;
+	  }
+      }
+      update_potential(timeslice_sepsets[t - 1], NULL, 
+		       clique_of_interest->p, mapping);
+      free(mapping);
+    }
+    
+    /* Do the inference */
+    make_consistent(model);
+    
+    /* Start a message pass between timeslices */
+    clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				     model->next, model->num_of_nexts);
+    assert(clique_of_interest != NULL);
+    mapping = (int*) calloc(clique_of_interest->p->num_of_vars - 
+			    model->num_of_nexts, sizeof(int));
+    if(!mapping){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free_uncertainseries(results);
+      for(i = 0; i <= ts->length; i++)
+	free_potential(timeslice_sepsets[i]);
+      free(timeslice_sepsets);
+      return NULL;
+    }
+
+    k = 0;
+    for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+      if(k == model->num_of_nexts)
+	break; /* all pointers found */
+      for(j=0; j < model->num_of_nexts; j++)
+	if(equal_variables((clique_of_interest->variables)[i], 
+			   (model->next)[j])){
+	  mapping[j] = i;
+	  k++;
+	}
+    }    
+    general_marginalise(clique_of_interest->p, timeslice_sepsets[t],
+			mapping);
+    free(mapping);    
+    
+    /* Forget old evidence */
+    reset_model(model);
+  }  
+  
+  /******************/
+  /* Backward phase */
+  /******************/
+  
+  /* forget old evidence */
+  reset_model(model);
+  
+  for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
+    
+    /* Put some evidence in */
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			      ts->observed[i], ts->data[t][i]);
+
+    /* Pass the message from the past */
+    if(t > 0){
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				       model->previous, model->num_of_nexts);
+      assert(clique_of_interest != NULL);
+      mapping = (int*) calloc(clique_of_interest->p->num_of_vars - 
+			      model->num_of_nexts, sizeof(int));
+      if(!mapping){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	free_uncertainseries(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return NULL;
+      }
+
+      k = 0;
+      for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+	if(k == model->num_of_nexts)
+	  break; /* all pointers found */
+	for(j=0; j < model->num_of_nexts; j++)
+	  if(equal_variables((clique_of_interest->variables)[i], 
+			     (model->previous)[j])){
+	    mapping[j] = i;
+	    k++;
+	  }
+      }
+      update_potential(timeslice_sepsets[t-1], NULL,
+		       clique_of_interest->p, mapping);
+      
+      free(mapping);
+    }
+    
+    /* Pass the message from the future */
+    if(t < ts->length - 1){
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				       model->next, model->num_of_nexts);
+      assert(clique_of_interest != NULL);
+      mapping = (int*) calloc(clique_of_interest->p->num_of_vars - 
+			      model->num_of_nexts, sizeof(int));
+      if(!mapping){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	free_uncertainseries(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return NULL;
+      }
+
+      k = 0;
+      for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+	if(k == model->num_of_nexts)
+	  break; /* all pointers found */
+	for(j=0; j < model->num_of_nexts; j++)
+	  if(equal_variables((clique_of_interest->variables)[i], 
+			     (model->next)[j])){
+	    mapping[j] = i;
+	    k++;
+	  }
+      }
+      update_potential(timeslice_sepsets[t+1], timeslice_sepsets[t],
+		       clique_of_interest->p, mapping);
+
+      free(mapping);
+    }
+        
+    /* Do the inference */
+    make_consistent(model);
+
+    
+    /* Write the results */
+    for(i = 0; i < results->num_of_vars; i++){
+      
+      /* 1. Decide which Variable you are interested in */
+      temp = results->variables[i];
+      
+      /* 2. Find the Clique that contains the family of 
+       *    the interesting Variable */
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				       &temp, 1);
+      assert(clique_of_interest != NULL);
+      
+      /* 3. Marginalisation (the memory must have been allocated) */
+      marginalise(clique_of_interest, temp, results->data[t][i]);
+      
+      /* 4. Normalisation */
+      normalise(results->data[t][i], number_of_values(temp));
+    }
+    
+
+    if(t > 0){
+      /* Start a message pass between timeslices */
+      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+				       model->previous, model->num_of_nexts);
+      assert(clique_of_interest != NULL);
+      mapping = (int*) calloc(clique_of_interest->p->num_of_vars - 
+			      model->num_of_nexts, sizeof(int));
+      if(!mapping){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	free_uncertainseries(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return NULL;
+      }
+
+      k = 0;
+      for(i=0; i < clique_of_interest->p->num_of_vars; i++){
+	if(k == model->num_of_nexts)
+	  break; /* all pointers found */
+	for(j=0; j < model->num_of_nexts; j++)
+	  if(equal_variables((clique_of_interest->variables)[i], 
+			     (model->previous)[j])){
+	    mapping[j] = i;
+	    k++;
+	  }
+      }
+      general_marginalise(clique_of_interest->p, timeslice_sepsets[t],
+			  mapping);
+      free(mapping);
+    }
+
+    /* forget old evidence */
+    reset_model(model);
+  }
+
+  /* free the intermediate potentials */
+  for(t = 0; t <= ts->length; t++)
+    free_potential(timeslice_sepsets[t]);
+  free(timeslice_sepsets);
+
+  return results;
 }
+
 
 int insert_soft_evidence(Nip model, char* variable, double* distribution){
   int ret;

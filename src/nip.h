@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.12 2004-10-28 13:10:51 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.13 2004-11-01 14:48:17 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -84,6 +84,10 @@ void free_timeseries(TimeSeries ts);
 
 /* Tells the length of the timeseries. */
 int timeseries_length(TimeSeries ts);
+
+
+/* A method for freeing the memory used by an uncertain time series. */
+void free_uncertainseries(UncertainSeries ucs);
 
 
 /* A method for reading an observation from the time series. 
