@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.31 2004-06-21 06:48:15 mvkorpel Exp $
+ * Graph.c $Id: Graph.c,v 1.32 2004-07-02 09:33:08 arasinen Exp $
  */
 
 #include <string.h>
@@ -277,6 +277,7 @@ int find_cliques(Graph* G, Clique** cliques_p)
     Gm = moralise(G);
     Gu = make_undirected(Gm);
     n_cliques = triangulate(Gu, cliques_p);
+    find_sepsets(*cliques_p, n_cliques);    
 
     return n_cliques;
 }
