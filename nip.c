@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.40 2005-02-23 13:59:40 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.41 2005-02-24 10:09:16 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1008,24 +1008,35 @@ int em_learn(TimeSeries ts){
 
   while(0){ /* When should we stop? */
 
-    /* Now this is heavy stuff... */
+    /* Now this is the heavy stuff..! */
     ucs = forward_backward_inference(ts,
 				     ts->model->variables,
 				     ts->model->num_of_vars);
+
+    /* Pointers to the potentials..? */
     
     /* The job */
     for(v = 0; v < ts->model->num_of_children; v++){
 
-      /* Use mappings for referencing correct values */
+      /* Reminder: Use mappings for referencing correct values */
+
+      /* 1. Find out the structure of the potential */
+
+      /* 2. Calculate mapping "potential index -> time series index" */
+      
+      /* 3. Traverse through the potential with a flat index 
+       *    (+ flat->multidimensional conversion + the mapping above) */
 
       for(t = 0; t < ts->length; t++){
-	;
+	; /* unfinished... */
       }
 
+      /* Normalisation, creation of potentials... */
+      ;
+      
     }
 
-    /* Normalisation, creation of potentials and updating the model */
-    ;
+    /* ...and updating the model */
 
     free_uncertainseries(ucs);
   }
