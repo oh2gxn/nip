@@ -7,6 +7,17 @@
 #include "errorhandler.h"
 #include "nip.h"
 
+
+/*
+#define PRINT_CLIQUES
+*/
+
+/*
+ * HUOM! print_Cliques() kusee (ei löydä klikkejä).
+ * Taitaa johtua ohjelman "arkkitehtuuriin" tehdyistä muutoksista.
+ * Tutkitaan?
+ */
+
 int main(int argc, char *argv[]){
 
   char** tokens = NULL;
@@ -29,10 +40,11 @@ int main(int argc, char *argv[]){
   /*************************************/
   /* Some experimental timeslice stuff */
   /*************************************/
-  
+
   /*****************************************/
   /* Parse the model from a Hugin NET file */
   /*****************************************/
+
   /* -- Start parsing the network definition file */
   if(argc < 3){
     printf("Give the names of the net-file and data file, please!\n");
@@ -55,7 +67,6 @@ int main(int argc, char *argv[]){
     fprintf(stderr, "%s\n", argv[2]);
     return -1;
   }
-
 
 
   /* Figure out the number of hidden variables and variables that substitute
@@ -210,13 +221,13 @@ int main(int argc, char *argv[]){
 	printf("In hmmtest.c : No clique found! Sorry.\n");
 	return 1;
       }  
-      
+
       /* 3. Marginalisation (memory for the result must have been allocated) */
       marginalise(clique_of_interest, interesting, result[t][i]);
-      
+
       /* 4. Normalisation */
       normalise(result[t][i], number_of_values(interesting));    
-      
+
       /* 5. Print the result */
       for(j = 0; j < number_of_values(interesting); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(interesting),
@@ -224,49 +235,45 @@ int main(int argc, char *argv[]){
       printf("\n");
     }
 
-    if(t < timeseries->datarows){    
+    if(t < timeseries->datarows){
       /* forget old evidence */
       reset_model(model);
-      
+
       for(i = 0; i < num_of_hidden; i++){
 	/* old posteriors become new priors */
 	temp = hidden[i];
 	if(temp->next != NULL)
 	  update_likelihood(temp->next, result[t][i]);
       }
-      
+
       global_retraction(model->first_var, model->cliques,
 			model->num_of_cliques);
-      
+
       /* 0. Put some data in */
       for(i = 0; i < timeseries->num_of_nodes; i++)
 	if(data[t][i] >= 0)
-	  enter_i_observation(model->first_var, model->cliques, 
+	  enter_i_observation(model->first_var, model->cliques,
 			      model->num_of_cliques,
-			      get_Variable(model, 
-					   timeseries->node_symbols[i]), 
+			      get_Variable(model,
+					   timeseries->node_symbols[i]),
 			      data[t][i]);
     }
   }
-  
-  
-  
-  
+
+
   /******************/
   /* Backward phase */
   /******************/
 
   printf("## Backward phase ##\n");  
-  
+
   /* forget old evidence */
   reset_model(model);
-  
-  
+
   for(t = timeseries->datarows; t >= 0; t--){ /* FOR EVERY TIMESLICE */
-    
+
     printf("-- t = %d --\n", t);
-    
-    
+
     if(t > 0){
       for(i = 0; i < timeseries->num_of_nodes; i++){
 	temp = get_Variable(model, (timeseries->node_symbols)[i]);
@@ -279,14 +286,14 @@ int main(int argc, char *argv[]){
 			      temp, 
 			      data[t - 1][i]);
       }
-      
+
       for(i = 0; i < num_of_hidden; i++){
 	temp = hidden[i];
 	if(temp->next != NULL)
 	  enter_evidence(model->first_var, model->cliques, 
 			 model->num_of_cliques, temp->next, result[t-1][i]);
       }
-    }      
+    }
     
     if(t < timeseries->datarows){
       
@@ -315,8 +322,6 @@ int main(int argc, char *argv[]){
     /********************/
     
     make_consistent(model);
-    
-    
     
     /*********************************/
     /* Check the result of inference */
