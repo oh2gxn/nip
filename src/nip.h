@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.18 2005-02-14 15:45:58 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.19 2005-02-19 01:31:52 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -108,8 +108,7 @@ int set_observation(TimeSeries ts, Variable v, int time, char* observation);
  * is not affected by the rest of the timeseries. 
  *  You'll have to specify the variables of interest in the vars array 
  * and the number of the variables. */
-UncertainSeries forward_inference(Nip model, TimeSeries ts, 
-				  Variable vars[], int nvars);
+UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars);
 
 
 /* This one computes the probability distributions for every 
@@ -118,7 +117,7 @@ UncertainSeries forward_inference(Nip model, TimeSeries ts,
  * step t is affected by the whole timeseries. 
  *  You'll have to specify the variables of interest in the vars array 
  * and the number of the variables. */
-UncertainSeries forward_backward_inference(Nip model, TimeSeries ts, 
+UncertainSeries forward_backward_inference(TimeSeries ts, 
 					   Variable vars[], int nvars);
 
 
@@ -149,7 +148,7 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts);
  * EM-algorithm. Returns an error code as an integer. 
  * NOTE:  this is not implemented yet! 
  * NOTE2: the model is included in the TimeSeries */
-int em_learn(TimeSeries observations);
+int em_learn(TimeSeries ts);
 
 
 /********************************************************************

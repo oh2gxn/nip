@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.36 2005-02-14 22:15:31 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.37 2005-02-19 01:31:52 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -418,18 +418,18 @@ static int finish_timeslice_message_pass(Nip model, Variable vars[], int nvars,
 
 /* forward-only inference consumes constant (1 time slice) amount of memory 
  * + the results (which is linear) */
-UncertainSeries forward_inference(Nip model, TimeSeries ts, 
-				  Variable vars[], int nvars){
+UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
   int i, k, t;
   int *cardinalities = NULL;
   Variable temp;
   potential timeslice_sepset = NULL;
   Clique clique_of_interest;
   UncertainSeries results = NULL;
+  Nip model = ts->model;
   
   /* Allocate an array */
   if(model->num_of_nexts > 0){
-    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+    cardinalities = (int*) calloc(ts->model->num_of_nexts, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return NULL;
@@ -577,7 +577,7 @@ UncertainSeries forward_inference(Nip model, TimeSeries ts,
 
 /* This consumes much more memory depending on the size of the 
  * sepsets between time slices. */
-UncertainSeries forward_backward_inference(Nip model, TimeSeries ts,
+UncertainSeries forward_backward_inference(TimeSeries ts,
 					   Variable vars[], int nvars){
   int i, k, t;
   int *cardinalities = NULL;
@@ -585,6 +585,7 @@ UncertainSeries forward_backward_inference(Nip model, TimeSeries ts,
   potential *timeslice_sepsets = NULL;
   Clique clique_of_interest;
   UncertainSeries results = NULL;
+  Nip model = ts->model;
 
   /* Allocate an array for describing the dimensions of timeslice sepsets */
   if(model->num_of_nexts > 0){
@@ -949,8 +950,29 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
 
 /* Teaches the given model according to the given time series with 
  * EM-algorithm. Returns an error code as an integer. */
-int em_learn(TimeSeries observations){
+int em_learn(TimeSeries ts){
+  int v;
+  int t = 0;
+  UncertainSeries us = NULL;
 
+  while(0){ /* When should we stop? */
+
+    /* Now this is heavy stuff... */
+    us = forward_backward_inference(ts,
+				    ts->model->variables,
+				    ts->model->num_of_vars);
+    
+    /* The job */
+    for(t = 0; t < ts->length; t++){
+      for(v = 0; ts->model->num_of_vars; v++){
+	;
+      }
+    }
+
+    /* Normalisation and creation of potentials */
+    ;
+  }
+  
   /* NOT IMPLEMENTED YET! */
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   return ERROR_GENERAL;
