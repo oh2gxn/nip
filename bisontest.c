@@ -23,6 +23,8 @@
 
 #define EVIDENCE_SOTKU
 
+#define TEST_RETRACTION
+
 /*
 #define PRINT_JOINTREE
 */
@@ -131,6 +133,11 @@ int main(int argc, char *argv[]){
   double probC1[] = { 0.395, 0.605 };
   double probC4[] = { 0.018, 0.982 };
   double probC19[] = { 0.492, 0.508 };
+
+  double probC1_huuhaa[] = { 0, 1 };
+  double probC4_huuhaa[] = { 1, 0 };
+  double probC19_huuhaa[] = { 0.2, 0.8 };
+
 #endif /* EVIDENCE_SOTKU */
 
   Variable observed[3];
@@ -139,10 +146,10 @@ int main(int argc, char *argv[]){
 
 #ifdef EVIDENCE
 
-#ifdef EVIDENCE_SOTKU
-  probs[0] = probC1;
-  probs[1] = probC4;
-  probs[2] = probC19;
+#ifdef TEST_RETRACTION
+  probs[0] = probC1_huuhaa;
+  probs[1] = probC4_huuhaa;
+  probs[2] = probC19_huuhaa;
 #endif
 
 #ifndef EVIDENCE_SOTKU
@@ -168,8 +175,8 @@ int main(int argc, char *argv[]){
     return retval;
   /* The input file has been parsed. -- */
 
-  nip_cliques = get_nip_cliques();
-  nip_num_of_cliques = get_nip_num_of_cliques();
+  nip_cliques = *get_cliques_pointer();
+  nip_num_of_cliques = get_num_of_cliques();
 
 #ifdef PRINT_JOINTREE
   jtree_dfs(nip_cliques[0], print_Clique, print_Sepset);
@@ -213,6 +220,55 @@ int main(int argc, char *argv[]){
   test_evidence(observed[1], probs[1], nip_cliques, nip_num_of_cliques);
   
 #ifdef EVIDENCE_SOTKU
+
+#ifdef TEST_RETRACTION
+  /* some crappy evidence */
+  test_evidence(observed[2], probs[2], nip_cliques, nip_num_of_cliques);
+
+  printf("\n\n");
+
+  /* a propagation */
+  for(i = 0; i < nip_num_of_cliques; i++)
+    unmark_Clique(nip_cliques[i]);
+  collect_evidence(NULL, NULL, nip_cliques[0]);
+
+  for(i = 0; i < nip_num_of_cliques; i++)
+    unmark_Clique(nip_cliques[i]);
+  distribute_evidence(nip_cliques[0]);
+
+
+
+  /* marginalisation */
+  if(argc > 2)
+    interesting = get_variable(argv[2]); /* THE variable */
+  else
+    interesting = get_variable("B"); /* THE variable */
+
+  if(!interesting){
+    printf("In bisontest.c : Variable of interest not found.\n");
+    return 1;
+  }
+
+  test_probability(&result, &size_of_result, interesting, nip_cliques,
+		   nip_num_of_cliques);
+
+  printf("Normalised probability of %s:\n", get_symbol(interesting));
+  for(i = 0; i < size_of_result; i++)
+    printf("result[%d] = %f\n", i, result[i]);
+
+  printf("\n\n");
+
+#endif
+
+
+  /* new proper evidence */
+  probs[0] = probC1;
+  probs[1] = probC4;
+  probs[2] = probC19;
+
+  test_evidence(observed[0], probs[0], nip_cliques, nip_num_of_cliques);
+
+  test_evidence(observed[1], probs[1], nip_cliques, nip_num_of_cliques);
 
   test_evidence(observed[2], probs[2], nip_cliques, nip_num_of_cliques);
 

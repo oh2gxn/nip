@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.64 2004-06-22 11:10:34 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.65 2004-06-22 13:19:49 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -17,6 +17,12 @@
 #define DEBUG_CLIQUE
 */
 
+#define DEBUG_RETRACTION
+
+static Clique *nip_cliques = NULL;
+static int nip_num_of_cliques = 0;
+
+
 static int message_pass(Clique c1, Sepset s, Clique c2);
 
 static int var_index(Clique c, Variable v);
@@ -29,6 +35,10 @@ static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 static int clique_marked(Clique c);
 
 static int global_retraction(Clique c);
+
+static void retract_Clique(Clique c);
+
+static void retract_Sepset(Sepset s);
 
 Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
@@ -72,6 +82,8 @@ Clique make_Clique(Variable vars[], int num_of_vars){
   }
 
   c->p = make_potential(cardinality, num_of_vars, NULL);
+  c->original_p = make_potential(cardinality, num_of_vars, NULL);
+
   free(cardinality);
   free(indices);
   free(reorder);
@@ -97,6 +109,7 @@ int free_Clique(Clique c){
   }
   /* clean the rest */
   free_potential(c->p);
+  free_potential(c->original_p);
   free(c->variables);
   free(c);
   return 0;
@@ -575,8 +588,12 @@ int initialise(Clique c, Variable child, Variable parents[], potential p){
     }
   }
   /* rest the case */
-  set_probability(child, p); /* was this the intention?? */
   i = init_potential(p, c->p, extra_vars);
+
+  /* Some extra work is done here,
+   * because only the last initialisation counts. */
+  copy_potential(c->p, c->original_p);
+
   free(extra_vars); /* free(NULL) is O.K. */
   return (i);
 }
@@ -609,6 +626,33 @@ int normalise(double result[], int array_size){
 
 
 static int global_retraction(Clique c){
+
+  int index;
+  Variable v;
+    
+#ifdef DEBUG_RETRACTION
+  printf("Now in global_retraction\n");
+#endif
+
+  for(index = 0; index < nip_num_of_cliques; index++)
+    unmark_Clique(nip_cliques[index]);
+
+  /* Reset all the potentials back to original. */
+  jtree_dfs(c, retract_Clique, retract_Sepset);
+
+  /* Enter evidence back to the join tree. */
+  reset_Variable_list();
+
+  v = next_Variable();
+  
+  while(v != NULL){
+    
+    c = find_family(nip_cliques, nip_num_of_cliques, &v, 1);
+    index = var_index(c, v);
+
+    update_evidence(v->likelihood, NULL, c->p, index);
+    v = next_Variable();
+  }
 
   return 0;
 }
@@ -666,6 +710,12 @@ int enter_evidence(Clique c, Variable v, double evidence[]){
  */
 static int var_index(Clique c, Variable v){
   int var = 0;
+
+  if(!(c && v)){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return -1;
+  }
+
   while(!equal_variables(v, c->variables[var])){
     var++;
     if(var == c->p->num_of_vars)
@@ -676,6 +726,10 @@ static int var_index(Clique c, Variable v){
 }
 
 
+/*
+ * At the moment, the first two parameters are useless.
+ * If we change something, the parameters might be useful.
+ */
 Clique find_family(Clique *cliques, int num_of_cliques,
 		   Variable *variables, int num_of_vars){
 
@@ -883,6 +937,25 @@ void print_Sepset(Sepset s){
 }
 
 
+static void retract_Clique(Clique c){
+
+  copy_potential(c->original_p, c->p);
+
+}
+
+
+static void retract_Sepset(Sepset s){
+
+  int i;
+
+  for(i = 0; i < s->old->size_of_data; i++){
+    s->old->data[i] = 1;
+    s->new->data[i] = 1;
+  }
+
+}
+
+
 /*
  * A generic function for traversing the join tree. 
  * Cliques must be unmarked before calling this.
@@ -968,4 +1041,20 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
 
   return NO_ERROR;
 
+}
+
+
+int get_num_of_cliques(){
+
+  return nip_num_of_cliques;
+}
+
+Clique **get_cliques_pointer(){
+
+  return &nip_cliques;
+}
+
+void set_num_of_cliques(int n){
+
+  nip_num_of_cliques = n;
 }

@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.35 2004-06-21 06:48:15 mvkorpel Exp $
+ * Clique.h $Id: Clique.h,v 1.36 2004-06-22 13:19:50 mvkorpel Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -19,6 +19,7 @@ typedef element *link;
 
 typedef struct {
   potential p;
+  potential original_p;
   Variable *variables; /* p contains num_of_vars */
   link sepsets;
   int num_of_sepsets;
@@ -189,5 +190,11 @@ void print_Sepset(Sepset s);
  * Returns an error code.
  */
 int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n);
+
+int get_num_of_cliques();
+
+Clique **get_cliques_pointer();
+
+void set_num_of_cliques(int n);
 
 #endif /* __CLIQUE_H__ */

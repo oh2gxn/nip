@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.36 2004-06-22 11:10:35 mvkorpel Exp $
+ * $Id: parser.c,v 1.37 2004-06-22 13:19:50 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -26,8 +26,6 @@ static varlink nip_last_temp_var = NULL;
 static int nip_symbols_parsed = 0;
 
 static Graph *nip_graph = NULL;
-static Clique *nip_cliques = NULL;
-static int nip_num_of_cliques = 0;
 
 static doublelink nip_first_double = NULL;
 static doublelink nip_last_double = NULL;
@@ -458,24 +456,28 @@ int parsedVars2Graph(){
 
 int Graph2JTree(){
 
+  Clique **cliques = get_cliques_pointer();
+
   /* Construct the Cliques. */
-  nip_num_of_cliques = find_cliques(nip_graph, &nip_cliques);
+  set_num_of_cliques(find_cliques(nip_graph, cliques));
 
 #ifdef DEBUG_PARSER
-  printf("In parser.c: %d cliques found.\n", nip_num_of_cliques);
+  printf("In parser.c: %d cliques found.\n", get_num_of_cliques());
 #endif
 
   /* We also need Sepsets. */
 #ifdef DEBUG_PARSER
   printf("In parser.c: Making Sepsets.\n");
 #endif
-  return find_sepsets(nip_cliques, nip_num_of_cliques);
+  return find_sepsets(*cliques, get_num_of_cliques());
 }
 
 
 int parsedPots2JTree(){
-  int i;
+  int i; 
+  int nip_num_of_cliques = get_num_of_cliques();
   initDataLink initlist = nip_first_initData;
+  Clique *nip_cliques = *(get_cliques_pointer());
 
   while(initlist != NULL){
     
@@ -618,14 +620,4 @@ int get_nip_symbols_parsed(){
 int get_nip_strings_parsed(){
 
   return nip_strings_parsed;
-}
-
-int get_nip_num_of_cliques(){
-
-  return nip_num_of_cliques;
-}
-
-Clique *get_nip_cliques(){
-
-  return nip_cliques;
 }

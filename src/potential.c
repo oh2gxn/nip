@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.34 2004-06-21 06:48:15 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.35 2004-06-22 13:19:50 mvkorpel Exp $
  * Functions for handling potentials. 
  */
 
@@ -121,7 +121,6 @@ int free_potential(potential p){
 }
 
 
-/* TARVITAANKO? */
 int copy_potential(potential source, potential destination){
 
   int i;
@@ -315,15 +314,16 @@ int update_evidence(double numerator[], double denominator[],
 
     target->data[i] *= numerator[source_index];  /* THE multiplication */
 
-    if(denominator[source_index] != 0){
+    if(denominator != NULL)
+      if(denominator[source_index] != 0){
 
 #ifdef DEBUG_POTENTIAL
-      printf("In update_evidence: %f / %f\n", target->data[i],
-	     denominator[source_index]);
+	printf("In update_evidence: %f / %f\n", target->data[i],
+	       denominator[source_index]);
 #endif
 
-      target->data[i] /= denominator[source_index];  /* THE division */
-    }
+	target->data[i] /= denominator[source_index];  /* THE division */
+      }
     /* ----------------------------------------------------------- */
     /* It is assumed that: denominator[i]==0 => numerator[i]==0 !!!*/
     /* ----------------------------------------------------------- */

@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.25 2004-06-22 11:10:34 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.26 2004-06-22 13:19:50 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -54,7 +54,6 @@ Variable new_variable(const char* symbol, const char* name,
 
   v->cardinality = cardinality;
   v->id = id++;
-  v->probability = NULL; 
  
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
@@ -125,7 +124,6 @@ void free_variable(Variable v){
   if(v == NULL)
     return;
   free(v->likelihood);
-  free(v->probability);
   free(v);
 }
 
@@ -189,21 +187,10 @@ int update_likelihood(Variable v, double likelihood[]){
 
 
 int number_of_values(Variable v){
-  if(v == NULL)
-    return -1;
-  else
-    return v->cardinality;
-}
-
-
-/* the "ownership" of the potential changes */
-int set_probability(Variable v, potential p){
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-    return ERROR_NULLPOINTER;
+    return -1;
   }
-
-  free(v->probability); /* free(NULL) is O.K. */
-  v->probability = p; /* cruel, isn't it */
-  return NO_ERROR;
+  else
+    return v->cardinality;
 }

@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser.
- * $Id: parser.h,v 1.21 2004-06-22 11:10:35 mvkorpel Exp $
+ * $Id: parser.h,v 1.22 2004-06-22 13:19:50 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -137,9 +137,5 @@ char* get_nip_label();
 int get_nip_symbols_parsed();
 
 int get_nip_strings_parsed();
-
-int get_nip_num_of_cliques();
-
-Clique *get_nip_cliques();
 
 #endif /* __PARSER_H__ */

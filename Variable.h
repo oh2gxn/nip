@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.25 2004-06-22 11:10:34 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.26 2004-06-22 13:19:50 mvkorpel Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -18,8 +18,6 @@ typedef struct {
   int cardinality;
   unsigned long id; /* unique id for every variable */
   double *likelihood; /* likelihood of each value */
-  potential probability; /* probability of the variable, given parents */
-  /* JJT: potential is mainly for making global retraction easier! */
 } vtype;
 
 typedef vtype *Variable;
@@ -94,13 +92,5 @@ int update_likelihood(Variable v, double likelihood[]);
 /* Returns the number of possible values in the Variable v. (-1 if v == NULL)
  */
 int number_of_values(Variable v);
-
-
-/* Sets the conditional probability of variable v.
- * If probability is already set, the previous values are freed from memory.
- * This means that the "ownership" of the potential will change.
- * DO NOT USE THE SAME POTENTIAL FOR ANY OTHER VARIABLE!
- */
-int set_probability(Variable v, potential p);
 
 #endif /* __VARIABLE_H__ */
