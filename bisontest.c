@@ -12,7 +12,7 @@ int main(int argc, char *argv[]){
   double probD[] = {0.2, 0.3, 0.5};
   Variable observed[2];
   Variable interesting;
-  Clique intressant;
+  Clique clique_of_interest;
 
   if(argc < 2){
     if(open_infile("infile") != 0)
@@ -37,10 +37,23 @@ int main(int argc, char *argv[]){
   /* add some evidence */
   observed[0] = get_variable("B");
   observed[1] = get_variable("D");
-  enter_evidence(find_family(nip_cliques, nip_num_of_cliques, observed, 1), 
-		 observed[0], probB);
-  enter_evidence(find_family(nip_cliques, nip_num_of_cliques, observed+1, 1),
-		 observed[1], probD);
+
+  clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				   observed, 2);
+  enter_evidence(clique_of_interest, observed[0], probB);
+  printf("Entered evidence into the clique of ");
+  for(i = 0; i < clique_of_interest->p->num_of_vars - 1; i++)
+    printf("%s ", clique_of_interest->variables[i]->symbol);
+  printf("and %s.\n", clique_of_interest->variables[i]->symbol);
+
+
+  clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				   observed, 2);
+  enter_evidence(clique_of_interest, observed[1], probD);
+  printf("Entered evidence into the clique of ");
+  for(i = 0; i < clique_of_interest->p->num_of_vars - 1; i++)
+    printf("%s ", clique_of_interest->variables[i]->symbol);
+  printf("and %s.\n", clique_of_interest->variables[i]->symbol);
 
   /* another propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
@@ -56,8 +69,9 @@ int main(int argc, char *argv[]){
     return 1;
   }
 
-  intressant = find_family(nip_cliques, nip_num_of_cliques, &interesting, 1);
-  if(!intressant){
+  clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
+				   &interesting, 1);
+  if(!clique_of_interest){
     printf("No clique found! Sorry.\n");
     return 1;
   }  
@@ -70,7 +84,7 @@ int main(int argc, char *argv[]){
   }
 
   printf("Marginalisation returned %d. (0 is OK)\n", 
-	 marginalise(intressant, interesting, result));
+	 marginalise(clique_of_interest, interesting, result));
 
   /* normalization */
   normalise(result, interesting->cardinality);
