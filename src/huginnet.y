@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.32 2004-06-07 14:22:15 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.33 2004-06-08 11:47:28 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -6,12 +6,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Graph.h"
+#include "Clique.h"
 #include "Variable.h"
 #include "parser.h"
 #include "errorhandler.h"
 #include "huginnet.h"
-#include "potential.h" /* for DEBUG purposes */
 
 #define YYERROR_VERBOSE
 /* #define DEBUG_BISON */
@@ -52,9 +51,7 @@
 /* Grammar follows */
 /* NOT READY!!! 
  * TODO:
- * - create cliques correctly (with Graph.h)
- * - create sepsets somehow   (with Graph.h)
- * - figure out a way to initialise the resulting jointree
+ * - make compatible with the actual Hugin files
  * - find out what to do with the parsed stuff! */
 
 /* A PROBLEM: The graph is not entirely known until the end of the 
@@ -65,160 +62,28 @@
  * - X ? */
 %%
 input:  nodes potentials {
-  /* <final stuff here> */
 
-  /*
-   * Create the graph between parsing nodes and potentials.
-   * Graph structure and clique initialisation data 
-   * will be in initData after parsing potentials!
-   */
+  parsedVars2Graph();
 
-#ifdef DEBUG_BISON
-  int j, k;
-  int temp_index;
-  unsigned long biggest_found, biggest_ready;
-  initDataLink list = nip_first_initData;
-#endif
+  Graph2JTree();
 
-  int i;
-  varlink list_of_vars = nip_first_var;
-  initDataLink initlist = nip_first_initData;
-
-  /* Add parsed variables to the graph. */
-  while(list_of_vars != NULL){
-
-    add_variable(nip_graph, list_of_vars->data);
-    list_of_vars = list_of_vars->fwd;
-  }
-
-  /* Add child - parent relations to the graph. */
-  while(initlist != NULL){
-
-    for(i = 0; i < initlist->data->num_of_vars - 1; i++)
-      add_child(nip_graph, initlist->parents[i], initlist->child);
-
-    initlist = initlist->fwd;
-  }
-
-  /* Construct the join tree. */
-  nip_num_of_cliques = find_cliques(nip_graph, &nip_cliques);
-
-  printf("In huginnet.y: %d cliques found.\n", nip_num_of_cliques);
-
-  initlist = nip_first_initData;
-  while(initlist != NULL){
-    
-    Variable *family = (Variable *) calloc(initlist->data->num_of_vars, 
-					   sizeof(Variable));
-    Clique fam_clique;
-
-    if(!family)
-      fprintf(stderr, "In huginnet.y : Calloc failed\n");
-
-    family[0] = initlist->child;
-    for(i = 0; i < initlist->data->num_of_vars - 1; i++)
-      family[i + 1] = initlist->parents[i];
-
-    fam_clique = find_family(nip_cliques, nip_num_of_cliques,
-			     family, initlist->data->num_of_vars);
-
-    if(fam_clique != NULL)
-      initialise(fam_clique, initlist->child, initlist->parents, 
-		 initlist->data); /* THE job */
-    else
-      fprintf(stderr, "In huginnet.y : find_family failed!\n");
-
-    initlist = initlist->fwd;    
-
-  }
+  parsedPots2JTree();
 
 #ifdef DEBUG_BISON
-  /*    while(list != NULL){
-    printf("P(%s |", list->child->symbol);
-    for(i = 0; i < list->data->num_of_vars - 1; i++)
-      printf(" %s", (list->parents)[i]->symbol);
-    printf(") = {");
-    for(i = 0; i < list->data->size_of_data; i++)
-      printf(" %.2f", (list->data->data)[i]);
-    printf(" }\n\n");
-    list = list->fwd;
-    }
-  */
-
-  /* Traverse through the list of parsed potentials. */
-  while(list != NULL){
-    int *indices; 
-    unsigned long *reorder;
-
-    if((indices = (int *) calloc(list->data->num_of_vars,
-				 sizeof(int))) == NULL)
-      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
-
-    if((reorder = (unsigned long *) calloc(list->data->num_of_vars,
-					   sizeof(unsigned long))) == NULL)
-      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
-
-    /* Go through every number in the potential array. */
-    for(i = 0; i < list->data->size_of_data; i++){
-      inverse_mapping(list->data, i, indices);
-
-      reorder[0] = get_id(list->child);
-      for(j = 1; j < list->data->num_of_vars; j++)
-	reorder[j] = get_id((list->parents)[j - 1]);
-      
-      /* Make a reorder array.
-       * Smallest = 0, ..., Biggest = num_of_vars - 1
-       */
-      biggest_ready = 0; /* Initialisation doesn't matter. */
-      temp_index = 0; /* Initialisation doesn't matter. */
-      for(j = 0; j < list->data->num_of_vars; j++){
-	biggest_found = VAR_MIN_ID - 1;
-	for(k = 0; k < list->data->num_of_vars; k++){
-	  if(j == 0){
-	    if(reorder[k] > biggest_found){
-	      temp_index = k;
-	      biggest_found = reorder[k];
-	    }
-	  }
-	  else if(reorder[k] > biggest_found && reorder[k] < biggest_ready){
-	    temp_index = k;
-	    biggest_found = reorder[k];
-	  }
-	}
-	reorder[temp_index] = list->data->num_of_vars -1 - j;
-	biggest_ready = biggest_found;
-      }
-
-      printf("P( %s = %s |", list->child->symbol, 
-	     (list->child->statenames)[indices[reorder[0]]]);
-
-      for(j = 0; j < list->data->num_of_vars - 1; j++)
-	printf(" %s = %s", (list->parents)[j]->symbol,
-	       ((list->parents[j])->statenames)[indices[reorder[j + 1]]]);
-      
-      printf(" ) = %.2f \n", (list->data->data)[i]);
-    }
-    list = list->fwd;
-    
-    free(indices);
-    free(reorder);
-  }
-
-
+  print_parsed_stuff();
 #endif
 
   reset_initData()}
 ;
 
 
-nodes:             nodeDeclaration nodes { /* add_pvar($1) */ }
-|         /* empty */ { nip_graph = new_graph(nip_vars_parsed)}
-
+nodes:    /* empty */ { init_new_Graph() }         
+|         nodeDeclaration nodes {/* a variable added */}
 ;
 
 
-potentials:    /* empty */ {/* initialisation data ready at first_initData */}
-             | potentialDeclaration potentials {/* potential somewhere? */}
+potentials:    /* empty */ {/* list of initialisation data ready */}
+             | potentialDeclaration potentials {/* potential added */}
 ;
 
 

@@ -1,15 +1,15 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.14 2004-06-04 13:35:50 mvkorpel Exp $
+# $Id: Makefile,v 1.15 2004-06-08 11:47:28 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
-POT_SRCS=potential.c potentialtest.c
-CLI_SRCS=potential.c Variable.c Clique.c cliquetest.c
-PAR_SRCS=potential.c Variable.c Clique.c errorhandler.c fileio.c parser.c parsertest.c
-GRPH_SRCS=Graph.c grphmnp/Heap.c grphmnp/cls2clq.c graph_test.c
+POT_SRCS=potential.c
+CLI_SRCS=$(POT_SRCS) Variable.c Clique.c
+GRPH_SRCS=$(CLI_SRCS) Graph.c grphmnp/Heap.c grphmnp/cls2clq.c
+PAR_SRCS=$(GRPH_SRCS) errorhandler.c fileio.c parser.c
 HUG_DEFS=huginnet.y
 HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
-BIS_SRCS=$(HUG_SRCS) parser.c fileio.c Clique.c Variable.c potential.c Graph.c grphmnp/Heap.c grphmnp/cls2clq.c errorhandler.c bisontest.c
+BIS_SRCS=$(HUG_SRCS) $(PAR_SRCS)
 
 
 # XXX Replace "cliquetest" below with the name you want for your program!
@@ -27,7 +27,8 @@ CC=gcc
 CFLAGS=-O2 -g -Wall
 #CFLAGS=-Wall
 LD=gcc
-LDFLAGS=-v
+LDFLAGS=
+#LDFLAGS=-v
 YY=bison
 YYFLAGS=-v
 
@@ -38,12 +39,12 @@ LIBS=
 
 # This gives make the names of object files made by the compiler and
 # used by the linker.
-POT_OBJS=$(POT_SRCS:.c=.o)
-CLI_OBJS=$(CLI_SRCS:.c=.o)
-PAR_OBJS=$(PAR_SRCS:.c=.o)
-GRPH_OBJS=$(GRPH_SRCS:.c=.o)
-HUG_OBJS=$(HUG_SRCS:.c=.o)
-BIS_OBJS=$(BIS_SRCS:.c=.o)
+POT_OBJS=$(POT_SRCS:.c=.o) potentialtest.o
+CLI_OBJS=$(CLI_SRCS:.c=.o) cliquetest.o
+PAR_OBJS=$(PAR_SRCS:.c=.o) parsertest.o
+GRPH_OBJS=$(GRPH_SRCS:.c=.o) graph_test.o
+HUG_OBJS=$(HUG_SRCS:.c=.o) 
+BIS_OBJS=$(BIS_SRCS:.c=.o) bisontest.o
 OBJS=$(POT_OBJS) $(CLI_OBJS) $(PAR_OBJS) $(HUG_OBJS) $(GRPH_OBJS) $(BIS_OBJS)
 
 # Rules for make
@@ -63,11 +64,11 @@ $(POT_TARGET): $(POT_OBJS)
 $(CLI_TARGET): $(CLI_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(CLI_OBJS) $(LIBS)
 
-$(PAR_TARGET): $(PAR_OBJS) $(HUG_OBJS)
+$(PAR_TARGET): $(PAR_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(PAR_OBJS) $(LIBS)
 
-$(GRPH_TARGET): $(GRPH_OBJS) $(CLI_OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(GRPH_OBJS) $(CLI_OBJS) $(LIBS)
+$(GRPH_TARGET): $(GRPH_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(GRPH_OBJS) $(LIBS)
 
 $(BIS_TARGET): $(BIS_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(BIS_OBJS) $(LIBS)

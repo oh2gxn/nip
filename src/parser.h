@@ -1,4 +1,4 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.15 2004-06-08 10:04:35 mvkorpel Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.16 2004-06-08 11:47:28 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -149,5 +149,23 @@ int reset_symbols();
 
 /* Frees some memory after parsing. */
 int reset_initData();
+
+/* Initialises a new graph. */
+void init_new_Graph();
+
+/* Inserts the parsed variables and their relations into the graph.
+ * Returns an error code. (0 is O.K.) */
+int parsedVars2Graph();
+
+/* Constructs the join tree from the graph (which is hopefully ready)
+ * Returns an error code. (0 is O.K.) */
+int Graph2JTree();
+
+/* Initialises the join tree (Clique array) with parsed potentials. 
+ * Returns an error code. (0 is O.K.) */
+int parsedPots2JTree();
+
+/* Some debug printing about what was parsed. */
+void print_parsed_stuff();
 
 #endif /* __PARSER_H__ */

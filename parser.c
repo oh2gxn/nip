@@ -1,10 +1,11 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.22 2004-06-08 08:57:46 jatoivol Exp $
+ * $Id: parser.c,v 1.23 2004-06-08 11:47:28 jatoivol Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Graph.h"
 #include "parser.h"
 #include "fileio.h"
 #include "errorhandler.h"
@@ -39,7 +40,7 @@ FILE *nip_parser_infile = NULL;
 /* Is there a file open? 0 if no, 1 if yes. */
 int nip_file_open = 0;
 
-#define DEBUG_PARSER
+//#define DEBUG_PARSER
 
 int open_infile(const char *file){
   if(!nip_file_open){
@@ -378,4 +379,144 @@ int reset_initData(){
   nip_first_initData = NULL;
   nip_initData_parsed = 0;  
   return 0;
+}
+
+
+void init_new_Graph(){
+  nip_graph = new_graph(nip_vars_parsed);
+}
+
+
+int parsedVars2Graph(){
+  int i;
+  varlink list_of_vars = nip_first_var;
+  initDataLink initlist = nip_first_initData;
+  
+  /* Add parsed variables to the graph. */
+  while(list_of_vars != NULL){
+    
+    add_variable(nip_graph, list_of_vars->data);
+    list_of_vars = list_of_vars->fwd;
+  }
+
+  /* Add child - parent relations to the graph. */
+  while(initlist != NULL){
+    
+    for(i = 0; i < initlist->data->num_of_vars - 1; i++)
+      add_child(nip_graph, initlist->parents[i], initlist->child);
+    
+    initlist = initlist->fwd;
+  }
+
+  return 0;
+}
+
+
+int Graph2JTree(){
+  /* Construct the join tree. */
+  nip_num_of_cliques = find_cliques(nip_graph, &nip_cliques);
+
+  printf("In parser.c: %d cliques found.\n", nip_num_of_cliques);
+
+  return 0;
+}
+
+
+int parsedPots2JTree(){
+  int i;
+  initDataLink initlist = nip_first_initData;
+
+  while(initlist != NULL){
+    
+    Variable *family = (Variable *) calloc(initlist->data->num_of_vars, 
+					   sizeof(Variable));
+    Clique fam_clique;
+
+    if(!family)
+      fprintf(stderr, "In parser.c : Calloc failed\n");
+
+    family[0] = initlist->child;
+    for(i = 0; i < initlist->data->num_of_vars - 1; i++)
+      family[i + 1] = initlist->parents[i];
+
+    fam_clique = find_family(nip_cliques, nip_num_of_cliques,
+			     family, initlist->data->num_of_vars);
+
+    if(fam_clique != NULL)
+      initialise(fam_clique, initlist->child, initlist->parents, 
+		 initlist->data); /* THE job */
+    else
+      fprintf(stderr, "In parser.c : find_family failed!\n");
+
+    initlist = initlist->fwd;
+  }
+
+  return 0;
+}
+
+
+void print_parsed_stuff(){
+  int i, j, k;
+  int temp_index;
+  unsigned long biggest_found, biggest_ready;
+  initDataLink list = nip_first_initData;
+
+  /* Traverse through the list of parsed potentials. */
+  while(list != NULL){
+    int *indices; 
+    unsigned long *reorder;
+
+    if((indices = (int *) calloc(list->data->num_of_vars,
+				 sizeof(int))) == NULL)
+      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
+
+    if((reorder = (unsigned long *) calloc(list->data->num_of_vars,
+					   sizeof(unsigned long))) == NULL)
+      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
+
+    /* Go through every number in the potential array. */
+    for(i = 0; i < list->data->size_of_data; i++){
+      inverse_mapping(list->data, i, indices);
+
+      reorder[0] = get_id(list->child);
+      for(j = 1; j < list->data->num_of_vars; j++)
+	reorder[j] = get_id((list->parents)[j - 1]);
+      
+      /* Make a reorder array.
+       * Smallest = 0, ..., Biggest = num_of_vars - 1
+       */
+      biggest_ready = 0; /* Initialisation doesn't matter. */
+      temp_index = 0; /* Initialisation doesn't matter. */
+      for(j = 0; j < list->data->num_of_vars; j++){
+	biggest_found = VAR_MIN_ID - 1;
+	for(k = 0; k < list->data->num_of_vars; k++){
+	  if(j == 0){
+	    if(reorder[k] > biggest_found){
+	      temp_index = k;
+	      biggest_found = reorder[k];
+	    }
+	  }
+	  else if(reorder[k] > biggest_found && reorder[k] < biggest_ready){
+	    temp_index = k;
+	    biggest_found = reorder[k];
+	  }
+	}
+	reorder[temp_index] = list->data->num_of_vars -1 - j;
+	biggest_ready = biggest_found;
+      }
+
+      printf("P( %s = %s |", list->child->symbol, 
+	     (list->child->statenames)[indices[reorder[0]]]);
+
+      for(j = 0; j < list->data->num_of_vars - 1; j++)
+	printf(" %s = %s", (list->parents)[j]->symbol,
+	       ((list->parents[j])->statenames)[indices[reorder[j + 1]]]);
+      
+      printf(" ) = %.2f \n", (list->data->data)[i]);
+    }
+    list = list->fwd;
+    
+    free(indices);
+    free(reorder);
+  }
 }
