@@ -39,39 +39,45 @@ Sekalaisia huomioita:
 
 16.3.2004 (Janne)
 * Parserin m‰‰ritteleminen ei ole aivan triviaalia. On hieman muokattava 
-mm. Variable-juttuja s.e. muuttujille voi asettaa tilojen nimet ja muut 
-parametrit helposti. Parseriin tulee tietorakenteet, joihin tiedoston 
-mukaisia muuttujia/nodeja tulee... Verkon, riippuvuuksien ja taulukoiden 
-parsettaminen vaikuttaa erityisen ik‰v‰lt‰. Tutkitaan...
+  mm. Variable-juttuja s.e. muuttujille voi asettaa tilojen nimet ja muut 
+  parametrit helposti. Parseriin tulee tietorakenteet, joihin tiedoston 
+  mukaisia muuttujia/nodeja tulee... Verkon, riippuvuuksien ja taulukoiden 
+  parsettaminen vaikuttaa erityisen ik‰v‰lt‰. Tutkitaan...
+--
 
 24.5.2004 (Janne)
 * Clique.c:ss‰ on nyt funktio create_Potential(...), jonka avulla voi 
-luoda ohjelmalle kelpaavan potentiaalin mink‰ tahansa muuttujaj‰rjestyksen 
-mukaan j‰rjestetyst‰ taulukosta. T‰m‰ on tarpeen, koska Huginin 
-tiedostoformaatissa esim. potentiaalin P(C | BD) "v‰hiten merkitsev‰" 
-muuttuja on C, mutta ohjelmassamme oletetaan, ett‰ j‰rjestys on esim. BCD.
-
-25.5.2004
-* Mik‰s t‰‰ on?
-  http://www.gnu.org/software/libc/manual/html_node/Finding-Tokens-in-a-String.html#Finding%20Tokens%20in%20a%20String
+  luoda ohjelmalle kelpaavan potentiaalin mink‰ tahansa muuttujaj‰rjestyksen 
+  mukaan j‰rjestetyst‰ taulukosta. T‰m‰ on tarpeen, koska Huginin 
+  tiedostoformaatissa esim. potentiaalin P(C | BD) "v‰hiten merkitsev‰" 
+  muuttuja on C, mutta ohjelmassamme oletetaan, ett‰ j‰rjestys on esim. BCD.
+--
 
 26.5.2004
 * Tarttis keksi‰ mihin muuttujia (Variable), klikkej‰ (Clique) ja sepsettej‰ 
-(Sepset) tallennetaan! Eli miten koodiamme hyv‰ksi k‰ytt‰v‰ ohjelma p‰‰see 
-k‰siksi mihink‰‰n ja miten parseri antaa tuotoksensa ulkomaailman n‰ht‰v‰ksi?
+  (Sepset) tallennetaan! Eli miten koodiamme hyv‰ksi k‰ytt‰v‰ ohjelma p‰‰see 
+  k‰siksi mihink‰‰n ja miten parseri antaa tuotoksensa ulkomaailman n‰ht‰v‰ksi?
+--
 
 27.5.2004 (Mikko)
 * Mik‰ ajatus on Variable.c:n funktiossa
-int variable_statenames(Variable v, char **states) ?
-Tuo ei n‰yt‰ kovin paljon tekev‰n...
+  int variable_statenames(Variable v, char **states) ?
+  Tuo ei n‰yt‰ kovin paljon tekev‰n...
+--
 
 2.6.2004 (Janne)
 * variable_statenames() mahdollistaa takin k‰‰nt‰misen, jos joskus vaikka 
-vaihdettaisiin muistinvaraus strategiaa. Nyt taulukoita ei kopioida, 
-mutta vaarana on k‰ytˆss‰ olevan muistin vapauttaminen tai uudelleen 
-k‰ytt‰minen merkkijonojen osalta.
+  vaihdettaisiin muistinvaraus strategiaa. Nyt taulukoita ei kopioida, 
+  mutta vaarana on k‰ytˆss‰ olevan muistin vapauttaminen tai uudelleen 
+  k‰ytt‰minen merkkijonojen osalta.
 
 * Mit‰s mit‰s... Meill‰ ei muuten taida olla semmoista kuin 
-"GLOBAL RETRACTION", vaikka jonkunlaiset valmiudet onkin. T‰m‰ vain 
-tarkoittaa sit‰, ett‰ mik‰‰n ei saisi olla mahdotonta l. todenn‰kˆisyydelt‰‰n 
-nollaa kun dataa syˆtet‰‰n sis‰‰n.
+  "GLOBAL RETRACTION", vaikka jonkunlaiset valmiudet onkin. T‰m‰ vain 
+  tarkoittaa sit‰, ett‰ mik‰‰n ei saisi olla mahdotonta 
+  l. todenn‰kˆisyydelt‰‰n nollaa kun dataa syˆtet‰‰n sis‰‰n.
+--
+
+8.6.2004 (Janne)
+* No voi hevon kettu. Ei sitten voinut Huginin net-tiedoston esittelyss‰ 
+  kertoa kaikkia likaisia yksityiskohtia... Menee parseri pikkuisen 
+  remonttiin, mutta onneksi tehtiin Bisonilla.
