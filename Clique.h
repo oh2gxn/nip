@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.49 2004-08-30 11:48:55 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.50 2004-09-21 12:57:38 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -99,13 +99,17 @@ int distribute_evidence(Clique c);
 int collect_evidence(Clique c1, Sepset s12, Clique c2);
 
 
-/* Make up a better name for this */
 /*
+ * Initialises the clique c with the potential p. This is basically a 
+ * potential multiplication so that the clique keeps the parameters 
+ * even when retraction is used. If transient==1, the potential can 
+ * be "wiped" with retraction...
  * !!! p->num_of_vars equals "length of parents + 1" !!! 
  * Sum of the elements in the potential is assumed to be 1. 
  * The "ownership" of the potential changes.
  */
-int initialise(Clique c, Variable child, Variable parents[], potential p);
+int initialise(Clique c, Variable child, Variable parents[], potential p, 
+	       int transient);
 
 
 /*

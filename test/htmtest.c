@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "parser.h"
 #include "Clique.h"
 #include "Variable.h"
@@ -82,14 +83,15 @@ int main(int argc, char *argv[]){
 
   /* Some kludge stuff to test a hypothesis */
   if(strcmp(argv[1], "htm_timeslice.net") == 0){
+    printf(" ** This is only a test! ** Some kludge added! **\n");
     kludge_vars[0] = get_Variable(model, "B0");
     kludge_vars[1] = get_Variable(model, "S0");
     kludge_pot = make_potential(kludge_card, 2, kludge);
     clique_of_interest = find_family(model->cliques, model->num_of_cliques,
 				     kludge_vars, 2);
     initialise(clique_of_interest, kludge_vars[0], kludge_vars + 1, 
-	       kludge_pot); /* FIXME: How to prevent the persistency of
-			     * initialisation?  Multidimensional evidence? */
+	       kludge_pot, 1); /* FIXME: How to prevent the persistency of
+				* initialisation?  Multidimensional evidence?*/
   }
   /* EOK: End of kludge */
 

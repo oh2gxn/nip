@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.84 2004-09-06 11:09:52 jatoivol Exp $
+ * $Id: parser.c,v 1.85 2004-09-21 12:57:38 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1093,7 +1093,7 @@ int parsedPots2JTree(){
     if(fam_clique != NULL){
       if(initlist->data->num_of_vars > 1){
 	retval = initialise(fam_clique, initlist->child, initlist->parents, 
-			    initlist->data); /* THE job */
+			    initlist->data, 0); /* THE job */
 	if(retval != NO_ERROR){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	  return ERROR_GENERAL;

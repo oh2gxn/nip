@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.102 2004-09-20 21:13:00 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.103 2004-09-21 12:57:38 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -852,7 +852,8 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
 }
 
 
-int initialise(Clique c, Variable child, Variable parents[], potential p){
+int initialise(Clique c, Variable child, Variable parents[], potential p,
+	       int transient){
   int i, j = 0, k = 0;
   int diff = c->p->num_of_vars - p->num_of_vars;
   int *extra_vars = NULL;
@@ -896,7 +897,13 @@ int initialise(Clique c, Variable child, Variable parents[], potential p){
 
   /* Some extra work is done here,
    * because only the last initialisation counts. */
-  copy_potential(c->p, c->original_p); /* FIXME */
+  if(!transient){
+    retval = init_potential(p, c->original_p, extra_vars);
+    if(retval != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
+  }
   /* This should be an optional phase: in timeslice models 
    * some clique potentials need to be initialised but still 
    * be retractable... */
