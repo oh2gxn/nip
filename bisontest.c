@@ -29,10 +29,12 @@ int main(int argc, char *argv[]){
     return retval;
 
   /* propagation: some action */
-  /*  for(i = 0; i < nip_num_of_cliques; i++)
+  /* JJT: useless
+  for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
   collect_evidence(NULL, NULL, nip_cliques[0]);
-  distribute_evidence(nip_cliques[0]);*/
+  distribute_evidence(nip_cliques[0]);
+  */
 
   /* add some evidence */
   observed[0] = get_variable("B");
