@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.74 2004-08-18 13:39:10 mvkorpel Exp $
+ * $Id: parser.c,v 1.75 2004-08-19 13:37:34 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -617,14 +617,14 @@ char *next_token(int *token_length){
  * The variable is chosen from THE list of variables 
  * according to the given symbol. */
 int add_symbol(Variable v){
-  varlink new = (varlink) malloc(sizeof(varelement));
+  varlink new;
 
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-    free(new);
     return ERROR_NULLPOINTER;
   }
 
+  new = (varlink) malloc(sizeof(varelement));
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
@@ -1009,15 +1009,26 @@ int time2Vars(){
 
 int Graph2JTree(){
 
+  int num_of_cliques;
   Clique **cliques = get_cliques_pointer();
 
   /* Construct the Cliques. */
-  set_num_of_cliques(find_cliques(nip_graph, cliques));
+  num_of_cliques = find_cliques(nip_graph, cliques);
+
+  /* Error check */
+  if(num_of_cliques < 0){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free_graph(nip_graph);
+    nip_graph = NULL;
+    return ERROR_GENERAL;
+  }
+
+  set_num_of_cliques(num_of_cliques);
 
   free_graph(nip_graph); /* Get rid of the graph (?) */
   nip_graph = NULL;
 
-  return 0; 
+  return NO_ERROR; 
 }
 
 

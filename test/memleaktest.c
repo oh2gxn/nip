@@ -139,7 +139,6 @@ int main(int argc, char *argv[]){
   }
   printf("\rDone.                                             \n");
 
-  /* TODO: Test the free_graph function */
   printf("\nAllocating and freeing Graphs:\n");
   for(i = 0; i < n; i++){
     g = new_graph(3);
@@ -149,12 +148,12 @@ int main(int argc, char *argv[]){
     add_child(g, vars[1], vars[0]);
     add_child(g, vars[1], vars[2]);
     num_of_cliques = 0;
-    num_of_cliques = find_cliques(g, &cl2); /* THIS LEAKS! (otherwise OK) */
+    num_of_cliques = find_cliques(g, &cl2);
     printf("\rIteration %d of %d                               ", i + 1, n);
     free_graph(g);
     for(j = 0; j < num_of_cliques; j++)
       free_Clique(cl2[j]);
-    free(cl2); /* MVK: Leak fixed */
+    free(cl2);
   }
   printf("\rDone.                                             \n");
 

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.87 2004-08-19 10:57:54 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.88 2004-08-19 13:37:34 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -43,14 +43,39 @@ static void retract_Clique(Clique c);
 static void retract_Sepset(Sepset s);
 
 Clique make_Clique(Variable vars[], int num_of_vars){
-  Clique c = (Clique) malloc(sizeof(cliquetype));
-  int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
-  int *reorder = (int *) calloc(num_of_vars, sizeof(int));
-  int *indices = (int *) calloc(num_of_vars, sizeof(int));
+  Clique c;
+  int *cardinality;
+  int *reorder;
+  int *indices;
   int i, j;
   unsigned long temp;
 
-  if(!c || !cardinality || !reorder || !indices){
+  c = (Clique) malloc(sizeof(cliquetype));
+  if(!c){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }    
+
+  cardinality = (int *) calloc(num_of_vars, sizeof(int));
+  if(!cardinality){
+    free(c);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }    
+
+  reorder = (int *) calloc(num_of_vars, sizeof(int));
+  if(!reorder){
+    free(c);
+    free(cardinality);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }    
+
+  indices = (int *) calloc(num_of_vars, sizeof(int));
+  if(!indices){
+    free(c);
+    free(cardinality);
+    free(reorder);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }    
@@ -78,6 +103,15 @@ Clique make_Clique(Variable vars[], int num_of_vars){
     reorder[indices[i]] = i; /* fill the reordering */
 
   c->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
+  if(!(c->variables)){
+    free(c);
+    free(cardinality);
+    free(reorder);
+    free(indices);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
   for(i = 0; i < num_of_vars; i++){
     cardinality[i] = vars[reorder[i]]->cardinality;
     c->variables[i] = vars[reorder[i]];
@@ -138,6 +172,11 @@ int add_Sepset(Clique c, Sepset s){
 #endif
 
   link new = (link) malloc(sizeof(element));
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
   new->data = s;
   new->fwd = c->sepsets;
   new->bwd = NULL;
@@ -1196,6 +1235,7 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
 
   if(!shaved_isect){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(isect);
     return ERROR_OUTOFMEMORY;
   }
 

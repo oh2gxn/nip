@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.41 2004-08-16 12:45:45 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.42 2004-08-19 13:37:34 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -35,10 +35,17 @@ Variable new_variable(const char* symbol, const char* name,
   static long id = VAR_MIN_ID;
   int i;
   double *dpointer;
-  Variable v = (Variable) malloc(sizeof(vtype));
-  varlink new = (varlink) malloc(sizeof(varelement));
+  Variable v;
+  varlink new;
 
-  if(!(v && new)){
+  v = (Variable) malloc(sizeof(vtype));
+  if(!v){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  new = (varlink) malloc(sizeof(varelement));
+  if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(v);
     return NULL;
@@ -92,13 +99,12 @@ Variable new_variable(const char* symbol, const char* name,
 
 Variable copy_variable(Variable v){
   int i;
-  Variable copy = (Variable) malloc(sizeof(vtype));
+  Variable copy;
 
-  if(v == NULL){
-    free(copy);
+  if(v == NULL)
     return NULL;
-  }
 
+  copy = (Variable) malloc(sizeof(vtype));
   if(!copy){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;

@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.40 2004-08-18 13:39:10 mvkorpel Exp $
+ * Graph.c $Id: Graph.c,v 1.41 2004-08-19 13:37:34 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -18,11 +18,26 @@ static void sort_variables(Graph* G);
 Graph* new_graph(unsigned n)
 {
     Graph* newgraph = (Graph*) malloc(sizeof(Graph));
+    if(!newgraph)
+      return NULL;
+
     newgraph->size = n; newgraph->top = 0;
+
     newgraph->adj_matrix = (int*) calloc(n*n, sizeof(int));
+    if(!(newgraph->adj_matrix)){
+      free(newgraph);
+      return NULL;
+    }
+
     memset(newgraph->adj_matrix, 0, n*n*sizeof(int));
 
     newgraph->variables = (Variable*) calloc(n, sizeof(Variable));
+    if(!(newgraph->variables)){
+      free(newgraph->adj_matrix);
+      free(newgraph);
+      return NULL;
+    }
+
     newgraph->var_ind = NULL;
 
     return newgraph;
@@ -39,14 +54,20 @@ Graph* copy_graph(Graph* G)
     memcpy(G_copy->adj_matrix, G->adj_matrix, n*n*sizeof(int));
     memcpy(G_copy->variables, G->variables, n*sizeof(Variable));
     if (G->var_ind == NULL)
-		G_copy->var_ind = NULL;
+        G_copy->var_ind = NULL;
     else
     {
         var_ind_size = (G->max_id - G->min_id +1)*sizeof(long);
+
         G_copy->var_ind = (unsigned long*) malloc(var_ind_size);
-		memcpy(G_copy->var_ind, G->var_ind, var_ind_size);
+	if(!(G_copy->var_ind)){
+	  free_graph(G_copy);
+	  return NULL;
+	}
+
+	memcpy(G_copy->var_ind, G->var_ind, var_ind_size);
         G_copy->max_id = G->max_id;
-	    G_copy->min_id = G->min_id;
+	G_copy->min_id = G->min_id;
     }
 
     return G_copy;
@@ -172,9 +193,13 @@ static void sort_variables(Graph* G)
     
     G->var_ind = (unsigned long*) calloc(G->max_id - G->min_id +1, 
 					 sizeof(long));
+    if(!(G->var_ind))
+      return;
 	
     for (i = 0; i < G->size; i++)
 	   G->var_ind[get_id(G->variables[i]) - G->min_id] = i;
+
+    return;
 }
 
 Graph* make_undirected(Graph* G)
@@ -235,6 +260,8 @@ int triangulate(Graph* Gm, Clique** clique_p)
     H = build_heap(Gm);
 
     variable_set = (int*) calloc(n, sizeof(int));
+    if(!variable_set)
+      return -1;
 
     for (i = 0; i < n; i++)
     {
@@ -289,7 +316,16 @@ int find_cliques(Graph* G, Clique** cliques_p)
 
     Gm = moralise(G);
     Gu = make_undirected(Gm);
-    n_cliques = triangulate(Gu, cliques_p); /* THIS LEAKS */
+
+    n_cliques = triangulate(Gu, cliques_p);
+
+    /* Test if triangulate failed */
+    if(n_cliques < 0){
+      free_graph(Gu);
+      free_graph(Gm);
+      return -1;
+    }
+
     find_sepsets(*cliques_p, n_cliques);
 
     /* JJT: I added some free_graph stuff here, because I suspected
