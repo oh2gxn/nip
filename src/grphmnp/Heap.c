@@ -78,9 +78,7 @@ Heap* build_heap(Graph* Gm)
 
     free(Vs_temp);
 
-    H->heap_items = H->heap_items-1; /* Tästä ne murheet alkaa. */
-
-    for (i = n/2; i > 0; i--)
+    for (i = n/2 -1; i >= 0; i--)
         heapify(H, i);
 
     return H;
@@ -120,10 +118,9 @@ void heapify(Heap* H, int i)
     
         /* Note the different between l (ell) and i (eye) */
     
-        min = (l <= H->heap_size && lessthan(H->heap_items[l], H->heap_items[i]))?
-			   l:i;
+        min = (l < H->heap_size && lessthan(H->heap_items[l], H->heap_items[i]))? l:i;
             
-        if (r <= H->heap_size && lessthan(H->heap_items[r], H->heap_items[min]))
+        if (r < H->heap_size && lessthan(H->heap_items[r], H->heap_items[min]))
             min = r;
             
         if (min != i)
@@ -146,11 +143,11 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
     if (H->heap_size < 1)
         return 0;
     
-    min = H->heap_items[1];
+    min = H->heap_items[0];
 
 	printf("Eliminated node: %s (%i)\n", min.Vs[0]->symbol, min.n);
     
-    H->heap_items[1] = H->heap_items[H->heap_size];
+    H->heap_items[0] = H->heap_items[H->heap_size -1];
     H->heap_size--;
     
     /* Iterate over neighbours of minimum element *
@@ -164,7 +161,7 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
     /* Rebuild the heap. */
     for (i = 1; i < min.n; i++)
 		heapify(H, get_heap_index(H, min.Vs[i]));
-    heapify(H, 1);
+    heapify(H, 0);
     
     *cluster_vars = min.Vs; 
     return min.n; /* Cluster size*/
@@ -178,7 +175,7 @@ int get_heap_index(Heap* H, Variable v)
 
     int i;
 
-    for (i = 1; i <= H->heap_size; i++)
+    for (i = 0; i < H->heap_size; i++)
 		if (equal_variables(H->heap_items[i].Vs[0], v))
 			return i;
 

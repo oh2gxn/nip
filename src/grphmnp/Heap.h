@@ -4,10 +4,9 @@
 #include "../Variable.h"
 #include "../Graph.h"
 
-#define PARENT(i) (i/2)
-#define LEFT(i) (2*i)
-#define RIGHT(i) (2*i+1)
-/* Tee p = p -1; temppu. Ja sovita synnit. */
+#define PARENT(i) ((i-1)/2)
+#define LEFT(i) (2*i+1)
+#define RIGHT(i) (2*(i+1))
 
 typedef struct {
     Variable* Vs; /* Vs[0] is the variable in the array, rest are neighbours*/
