@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.37 2004-06-24 12:15:04 mvkorpel Exp $
+ * Clique.h $Id: Clique.h,v 1.38 2004-07-01 12:49:28 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -142,6 +142,8 @@ int normalise(double result[], int array_size);
  * Returns an error code.
  */
 int enter_observation(Variable v, char *state);
+
+int enter_i_observation(Variable v, int index);
 
 
 /*

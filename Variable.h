@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.29 2004-06-30 12:43:31 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.30 2004-07-01 12:49:28 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -34,7 +34,7 @@ struct varlist {
 
 typedef struct varlist varelement;
 typedef varelement *varlink;
-
+typedef varlink Variable_iterator; /* FIXME if you will */
 
 /* Creates a new Variable:
  * - symbol is a short name e.g. A (= array [A, \0])
@@ -84,12 +84,12 @@ int total_num_of_vars();
 
 
 /* Call this before searching through the list of variables. */
-void reset_Variable_list();
+Variable_iterator get_Variable_list();
 
 
 /* Gives the next Variable in the list of Variables. Returns NULL when 
  * the end of list is reached. */
-Variable next_Variable();
+Variable next_Variable(Variable_iterator *it);
 
 
 /* Gets the parsed variable according to the symbol. */

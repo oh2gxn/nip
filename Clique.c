@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.67 2004-06-24 12:15:03 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.68 2004-07-01 12:49:28 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -631,6 +631,7 @@ static int global_retraction(Clique c){
 
   int index;
   Variable v;
+  Variable_iterator it;
     
 #ifdef DEBUG_RETRACTION
   printf("Now in global_retraction\n");
@@ -643,9 +644,9 @@ static int global_retraction(Clique c){
   jtree_dfs(c, retract_Clique, retract_Sepset);
 
   /* Enter evidence back to the join tree. */
-  reset_Variable_list();
+  it = get_Variable_list();
 
-  v = next_Variable();
+  v = next_Variable(&it);
   
   while(v != NULL){
     
@@ -653,7 +654,7 @@ static int global_retraction(Clique c){
     index = var_index(c, v);
 
     update_evidence(v->likelihood, NULL, c->p, index);
-    v = next_Variable();
+    v = next_Variable(&it);
   }
 
   return 0;
@@ -661,15 +662,20 @@ static int global_retraction(Clique c){
 
 
 int enter_observation(Variable v, char *state){
-  int i, index, retval;
+  int index = get_stateindex(v, state);
+
+  return enter_i_observation(v, index);
+}
+
+
+int enter_i_observation(Variable v, int index){
+  int i, retval;
   double *evidence = (double *) calloc(v->cardinality, sizeof(double));
 
   if(!evidence){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 0);
     return ERROR_OUTOFMEMORY;
   }
-
-  index = get_stateindex(v, state);
 
   for(i = 0; i < v->cardinality; i++)
     if(i == index)

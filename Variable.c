@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.30 2004-06-30 12:43:31 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.31 2004-07-01 12:49:28 jatoivol Exp $
  */
 
 #include <string.h>
@@ -159,16 +159,16 @@ int total_num_of_vars(){
 }
 
 
-void reset_Variable_list(){
-  list_pointer = nip_first_var;
+Variable_iterator get_Variable_list(){
+  return nip_first_var;
 }
 
 
-Variable next_Variable(){
+Variable next_Variable(Variable_iterator* it){
   Variable v;
-  if(list_pointer){
-    v = list_pointer->data;
-    list_pointer = list_pointer->fwd;
+  if(*it){
+    v = (*it)->data;
+    *it = (*it)->fwd;
   }
   else
     v = NULL;
@@ -179,9 +179,8 @@ Variable next_Variable(){
 Variable get_variable(char *symbol){
 
   Variable v; 
-
-  reset_Variable_list();
-  v = next_Variable();
+  Variable_iterator it = get_Variable_list();
+  v = next_Variable(&it);
 
 #ifdef DEBUG_PARSER
   printf("In get_variable: looking for \"%s\"\n", symbol);
@@ -192,7 +191,7 @@ Variable get_variable(char *symbol){
   
   /* search for the variable reference */
   while(strcmp(symbol, v->symbol) != 0){
-    v = next_Variable();
+    v = next_Variable(&it);
     if(v == NULL){
       return NULL; /* didn't find the variable (a normal situation) */
     }

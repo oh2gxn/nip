@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.54 2004-06-30 14:07:57 mvkorpel Exp $
+ * $Id: parser.c,v 1.55 2004-07-01 12:49:28 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -927,16 +927,17 @@ void init_new_Graph(){
 int parsedVars2Graph(){
   int i;
   Variable v;
+  Variable_iterator it;
   initDataLink initlist = nip_first_initData;
 
-  reset_Variable_list();
-  v = next_Variable();
+  it = get_Variable_list();
+  v = next_Variable(&it);
   
   /* Add parsed variables to the graph. */
   while(v != NULL){
     
     add_variable(nip_graph, v);
-    v = next_Variable();
+    v = next_Variable(&it);
   }
 
   /* Add child - parent relations to the graph. */
