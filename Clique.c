@@ -3,13 +3,13 @@
 #include "potential.h"
 
 /* Method for creating cliques (without pointers to sepsets) 
-   - **variables is an array of pointers to variables */
-Clique make_Clique(Variable **variables, int num_of_vars){
+   - MVK: variables[] is an array of Variables (which are pointers) */
+Clique make_Clique(Variable variables[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
   int i;
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = *(variables[i]).cardinality;
+    cardinality[i] = variables[i]->cardinality;
   }
   c->p = make_potential(cardinality, num_of_vars);
   free(cardinality); /* the array was copied ? */
@@ -53,15 +53,14 @@ int add_Sepset(Clique c, Sepset s){
 
 
 /* Method for creating sepsets: 
-   - **variables is an array of pointers to variables
    - cliques[] is an array which contains references to BOTH 
      neighbouring cliques */
-Sepset make_Sepset(Variable **variables, int num_of_vars, Clique cliques[]){
+Sepset make_Sepset(Variable variables[], int num_of_vars, Clique cliques[]){
   Sepset s = (Sepset) malloc(sizeof(sepsettype));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
   int i;
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = *(variables[i]).cardinality;
+    cardinality[i] = variables[i]->cardinality;
   }
   s->old = make_potential(cardinality, num_of_vars);
   s->new = make_potential(cardinality, num_of_vars);

@@ -21,14 +21,13 @@ int free_potential(potential p);
 int copy_potential(potential source, potential destination);
 
 /* gets a value from the potential p */
-double get_pvalue(potential p, int indices[], int num_of_vars);
+double get_pvalue(potential p, int indices[]);
 
 /* sets a value in the potential p and returns an error code */
-int set_pvalue(potential p, int indices[], int num_of_vars, double value);
+int set_pvalue(potential p, int indices[], double value);
 
-/* Returns a pointer to the potential with given variable values (indices).
-   num_of_vars must be equal to the size of indices[] */
-double *get_ppointer(potential p, int indices[], int num_of_vars);
+/* Returns a pointer to the potential with given variable values (indices). */
+double *get_ppointer(potential p, int indices[]);
 
 /* Mapping from flat index to n-dimensional index, where n is the number of
    variables in potential p. Returns an error code. 

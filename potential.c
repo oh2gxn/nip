@@ -9,7 +9,7 @@ int free_potential(potential);
 int copy_potential(potential, potential);
 double get_pvalue(potential, int[], int);
 int set_pvalue(potential, int[], int, double);
-double *get_ppointer(potential, int[], int);
+double *get_ppointer(potential, int[]);
 int general_marginalise(potential, potential, int[]);
 int update_potential(potential, potential, potential, int[]);
 int main();
@@ -60,8 +60,8 @@ int copy_potential(potential source, potential destination){
 }
 
 /* Syntactic sugar */
-double get_pvalue(potential p, int indices[], int num_of_vars){
-  double *ppointer = get_ppointer(p, indices, num_of_vars);
+double get_pvalue(potential p, int indices[]){
+  double *ppointer = get_ppointer(p, indices);
   if(ppointer != NULL)
     return *ppointer;
   else
@@ -69,18 +69,19 @@ double get_pvalue(potential p, int indices[], int num_of_vars){
 }
 
 /* Syntactic sugar and returns an error code */
-int set_pvalue(potential p, int indices[], int num_of_vars, double value){
-  double *ppointer = get_ppointer(p, indices, num_of_vars);
+int set_pvalue(potential p, int indices[], double value){
+  double *ppointer = get_ppointer(p, indices);
   if(ppointer != NULL)
     *ppointer = value;
   return 0;
 }
 
-/* Returns a pointer to the potential with given variable values (indices).
-   num_of_vars must be equal to the size of indices[] */
-double *get_ppointer(potential p, int indices[], int num_of_vars){
+/* Returns a pointer to the potential with given variable values (indices). */
+double *get_ppointer(potential p, int indices[]){
 
-  /* JJ NOTE: num_of_vars can be found in potential! */
+  /* JJ NOTE: num_of_vars can be found in potential! 
+     MVK: fixed this in get_ppointer, get_pvalue, set_pvalue and in
+     calls to these functions */
 
   int index = indices[0];
   int i;
@@ -176,7 +177,7 @@ int general_marginalise(potential source, potential destination,
     /* get pointer to the destination potential element where the current
      data should be added */
     potvalue =
-      get_ppointer(destination, dest_indices, destination->num_of_vars);
+      get_ppointer(destination, dest_indices);
     *potvalue += source->data[i];
   }
 
@@ -261,11 +262,11 @@ int update_potential(potential enumerator, potential denominator,
     choose_indices(target, target_indices, source_indices, extra_vars);
 
     potvalue =
-      get_ppointer(enumerator, source_indices, enumerator->num_of_vars);
+      get_ppointer(enumerator, source_indices);
     target->data[i] *= *potvalue;  /* THE multiplication */
 
     potvalue = 
-      get_ppointer(denominator, source_indices, denominator->num_of_vars);
+      get_ppointer(denominator, source_indices);
     if(*potvalue == 0)
       target->data[i] = 0;  /* see Procedural Guide p. 20 */
     else

@@ -12,7 +12,7 @@ typedef element *link;
 
 typedef struct {
   potential p;
-  Variable **variables; /* p contains num_of_vars */
+  Variable *variables; /* p contains num_of_vars */
   link sepsets;
   int num_of_sepsets;
   int mark; /* the way to prevent endless loops */
@@ -23,15 +23,15 @@ typedef cliquetype *Clique;
 typedef struct {
   potential old;   /* previous potential */
   potential new;   /* current potential */
-  Variable **variables; /* p contains num_of_vars */
+  Variable *variables; /* p contains num_of_vars */
   Clique cliques[2]; /* always between two cliques */
 } sepsettype;
 
 typedef sepsettype *Sepset;
 
 /* Method for creating cliques (without pointers to sepsets) 
-   - **variables is an array of pointers to variables */
-Clique make_Clique(Variable **variables, int num_of_vars);
+   - MVK: variables[] is an array of Variables (which are pointers) */
+Clique make_Clique(Variable variables[], int num_of_vars);
 
 /* Method for adding a sepset next to a clique: returns an error code */
 int add_Sepset(Clique c, Sepset s);
@@ -42,7 +42,7 @@ int free_Clique(Clique c);
 /* Method for creating sepsets: 
    - cliques[] is an array which contains references to BOTH 
      neighbouring cliques */
-Sepset make_Sepset(Variable **variables, int num_of_vars, Clique cliques[]);
+Sepset make_Sepset(Variable variables[], int num_of_vars, Clique cliques[]);
 
 /* Method for removing sepsets and freeing memory: returns an error code */
 int free_Sepset(Sepset s);
