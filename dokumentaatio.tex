@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.29 2004-09-27 12:13:31 arasinen Exp $
+% $Id: dokumentaatio.tex,v 1.30 2004-09-27 13:58:48 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -131,8 +131,16 @@ Some outline of the system... The parts and stuff...
 % The nasty details
 \section{Variables}
 \subsection{General}
-
-The idea and mathematical formulas...
+All the variables $V$ are assumed to be discrete and have a certain
+number of states: $c_V$ which is also known as the {\it cardinality} 
+of the variable $V$. Thus the probability distribution i.e. likelihood 
+$\lambda_V$ of a variable $V$ can be represented as a table of values 
+and the size of the table is $c_V$. Furthermore, the sum of the values 
+in the table equals one:
+\begin{equation}
+\sum_{v=0}^{c_V-1} \lambda_V[v] = 1.
+\end{equation}
+% some more? About relationships between variables perhaps? child-parent...
 
 \subsection{The functionality description}
 
@@ -456,8 +464,61 @@ can be introduced with a wrapper, if desired.
 \newpage
 \section{Potentials}
 \subsection{General}
+As probability distributions of a single variable are implemented as 
+tables, probability distributions relating to multiple discrete
+variables can be represented as multidimensional tables. For example, 
+if the variable~$X$ depends on a set of variables $\mathbf{Y}=$
+$\{Y_1,\dots,Y_{N-1}\}$, the dependency can be described 
+quantitatively by the probability distribution $P(X|\mathbf{Y})$. 
+Another example could be a joint distribution $P(\mathbf{Z})$ of the 
+variables $\mathbf{Z}=\{Z_1,\dots,Z_N\}$. These kind of distributions 
+can be thought as functions from the N-dimensional space 
+(formed by the variables $\{X\} \cup \mathbf{Y}$ or~$\mathbf{Z}$) 
+to a real number $p \in [0,1]$. Since the variables have a discrete
+and finite set of states, the function can be viewed as an
+N-dimensional table $\phi_\mathbf{Z}$ containing the real numbers 
+corresponding to the probabilities. As an example, 
+the value $P(A=a_0, B=b_3, C=c_5)$ is found in a multidimensional
+table $\phi_\mathbf{Z}$ as $\phi_{\mathbf{z}={0,3,5}}$ or 
+\examplecode{P[0][3][5]}. 
 
-The idea and mathematical formulas...
+There are two kinds of operations on potentials: marginalisation and
+multiplication. Marginalisation is basically for reducing the number
+of dimensions of a potential by calculating sums over the unnecessary 
+variables. For example, if $\mathbf{X} \subseteq \mathbf{Z}$, 
+$P(\mathbf{X})$ can be calculated from $P(\mathbf{Z})$ by summing over 
+$\mathbf{Z} \setminus \mathbf{X}$ and similarly 
+\begin{equation}
+\phi_\mathbf{X} = \sum_{\mathbf{Z} \setminus \mathbf{X}} \phi_{\mathbf{Z}}.
+\end{equation}
+Which means that if we have $\mathbf{Z} = \{X, Z_2, Z_3\}$, then
+\begin{equation}
+\phi_X = \sum_{Z_2,Z_3} \phi_{\mathbf{Z}} \\
+\Leftrightarrow \phi_X[i] = \sum_{j=0}^{c_{Z_2}-1}
+\sum_{k=0}^{c_{Z_3}-1} \phi_\mathbf{Z}[i][j][k], \forall i \in [0,c_X-1]
+\end{equation}
+
+The multiplication operation has the same kind of idea: a potential can
+be weighted with another one by multiplying suitable elements one by one.
+Again, if we have $\mathbf{X} \subseteq \mathbf{Z}$, we may assign
+\begin{equation}
+\phi_\mathbf{Z} \leftarrow \phi_\mathbf{X} \phi_\mathbf{Z}.
+\end{equation}
+As an example, when $\mathbf{Z} = \{X, Z_2, Z_3\}$, the assignment
+\begin{equation}
+\phi_\mathbf{Z}[i][j][k] \leftarrow \phi_\mathbf{Z}[i][j][k]*\phi_X[i]
+\end{equation}
+is done for all combinations of 
+$(i,j,k) \in [0,c_X-1]\times[0,c_{Z_2}-1]\times[0,c_{Z_3}-1]$.
+
+From the implementation point of view, one of the most important
+notions is that a multidimensional table can be referenced by a 
+``flat index'' also. For example, if $\mathbf{X} = \{X_1,X_2\}$, then 
+$\phi_\mathbf{X}[0] = \phi_\mathbf{X}[0][0]$, 
+$\phi_\mathbf{X}[c_{X_1}-1] = \phi_\mathbf{X}[c_{X_1}-1][0]$,
+$\phi_\mathbf{X}[c_{X_1}] = \phi_\mathbf{X}[0][1]$, and 
+$\phi_\mathbf{X}[c_{X_1}*c_{X_2}-1] = \phi_\mathbf{X}[c_{X_1}-1][c_{X_2}-1]$. 
+(Assuming that the first index of an array is the less significant one.)
 
 
 \subsection{The functionality description}
@@ -644,6 +705,7 @@ the rest of the variables are in the same order in both potentials.
 \subsection{General}
 
 The idea and mathematical formulas...
+
 
 \subsection{The functionality description}
 The files \cfilename{Clique.h} and \cfilename{Clique.c} provide data 
@@ -913,16 +975,12 @@ is allocated by the function and it should be freed by the user.
 \end{description}
 
 
-\subsection{Other possibilities}
-
-How the stuff could work also...
-
-
 \newpage
 \section{The Hugin net language parser}
 \subsection{General}
 
 % The structure of net files
+
 
 \subsection{The functionality description}
 The parser, for reading models from Hugin net language files, is
