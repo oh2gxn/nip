@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.39 2004-10-18 11:02:39 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.40 2005-02-21 22:59:32 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -15,11 +15,14 @@ struct nip_var {
   char symbol[VAR_SYMBOL_LENGTH + 1]; /* short symbol for the node */
   char name[VAR_NAME_LENGTH + 1]; /* label in the Net language*/
   char **statenames; /* a string array with <cardinality> strings */
-  int cardinality;
+  int cardinality;   /* number of possible values */
   unsigned long id; /* unique id for every variable */
   double *likelihood; /* likelihood of each value */
   struct nip_var *previous;
   struct nip_var *next;
+
+  /* TODO: parents and reference to the family clique */
+
 };
 
 typedef struct nip_var vtype;

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.37 2005-02-19 01:31:52 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.38 2005-02-21 22:59:32 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -953,24 +953,26 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
 int em_learn(TimeSeries ts){
   int v;
   int t = 0;
-  UncertainSeries us = NULL;
+  UncertainSeries ucs = NULL;
 
   while(0){ /* When should we stop? */
 
     /* Now this is heavy stuff... */
-    us = forward_backward_inference(ts,
-				    ts->model->variables,
-				    ts->model->num_of_vars);
+    ucs = forward_backward_inference(ts,
+				     ts->model->variables,
+				     ts->model->num_of_vars);
     
     /* The job */
-    for(t = 0; t < ts->length; t++){
-      for(v = 0; ts->model->num_of_vars; v++){
+    for(v = 0; t < ts->length; t++){
+      for(t = 0; ts->model->num_of_vars; v++){
 	;
       }
     }
 
-    /* Normalisation and creation of potentials */
+    /* Normalisation, creation of potentials and updating the model */
     ;
+
+    free_uncertainseries(ucs);
   }
   
   /* NOT IMPLEMENTED YET! */

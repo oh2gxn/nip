@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.19 2005-02-19 01:31:52 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.20 2005-02-21 22:59:32 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -15,7 +15,6 @@ typedef struct{
   int num_of_vars;
   Clique *cliques;
   Variable *variables;
-
   Variable *next;     /* An array of the variables that will substitute 
 		       * another one in the next timeslice. */
 
@@ -25,6 +24,8 @@ typedef struct{
 
   int num_of_nexts;   /* Number of variables in the 'next' and 'previous' 
 		       * arrays*/
+
+  /* TODO: there should be a table for the child variables */
 
   /* NOTE: Should there be distinct references to the cliques containing 
    * 'nexts' and 'previous' variables? */
