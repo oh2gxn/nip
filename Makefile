@@ -4,10 +4,15 @@
 # Please modify the parts marked with XXX below!
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
-SRCS=potential.c Variable.c Clique.c cliquetest.c
+POT_SRCS=potential.c potentialtest.c
+CLI_SRCS=potential.c Variable.c Clique.c cliquetest.c
+PAR_SRCS=potential.c Variable.c Clique.c errorhandler.c fileio.c parser.c parsertest.c
 
 # XXX Replace "cliquetest" below with the name you want for your program!
-TARGET=cliquetest
+POT_TARGET=potentialtest
+CLI_TARGET=cliquetest
+PAR_TARGET=parsertest
+TARGET=POT_TARGET CLI_TARGET PAR_TARGET
 
 # You should not need to modify anything below this line...
 # Sets the name and some flags for the C compiler and linker
@@ -24,7 +29,10 @@ LIBS=
 
 # This gives make the names of object files made by the compiler and
 # used by the linker.
-OBJS=$(SRCS:.c=.o)
+POT_OBJS=$(POT_SRCS:.c=.o)
+CLI_OBJS=$(CLI_SRCS:.c=.o)
+PAR_OBJS=$(PAR_SRCS:.c=.o)
+OBJS=POT_OBJS CLI_OBJS PAR_OBJS 
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program
@@ -32,13 +40,19 @@ OBJS=$(SRCS:.c=.o)
 # NOTE the tab character! Syntax of a rule:
 # <target>: <dependencies>
 # \t<command>
-all: $(TARGET)
+all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET)
 
 # The program depends on the object files in $(OBJS). Make knows how
 # to compile a .c file into an object (.o) file; this rule tells it
 # how to link the .o files together into an executable program.
-$(TARGET): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+$(POT_TARGET): $(POT_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(POT_OBJS) $(LIBS)
+
+$(CLI_TARGET): $(CLI_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(CLI_OBJS) $(LIBS)
+
+$(PAR_TARGET): $(PAR_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(PAR_OBJS) $(LIBS)
 
 # With these lines, executing "make clean" removes the .o files that
 # are not needed after the program is compiled.
