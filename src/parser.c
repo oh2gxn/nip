@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.39 2004-06-23 13:43:33 mvkorpel Exp $
+ * $Id: parser.c,v 1.40 2004-06-24 06:32:09 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -48,6 +48,7 @@ static FILE *nip_yyparse_infile = NULL;
 /* Is there a hugin net file open? 0 if no, 1 if yes. */
 static int nip_yyparse_infile_open = 0;
 
+
 int open_yyparse_infile(const char *filename){
   if(!nip_yyparse_infile_open){
     nip_yyparse_infile = fopen(filename,"r");
@@ -61,12 +62,14 @@ int open_yyparse_infile(const char *filename){
   return NO_ERROR;
 }
 
+
 void close_yyparse_infile(){
   if(nip_yyparse_infile_open){
     fclose(nip_yyparse_infile);
     nip_yyparse_infile_open = 0;
   }
 }
+
 
 datafile *open_datafile(char *filename, int write){
 
@@ -107,6 +110,7 @@ datafile *open_datafile(char *filename, int write){
   return f;
 }
 
+
 void close_datafile(datafile *file){
 
   if(!file){
@@ -119,6 +123,7 @@ void close_datafile(datafile *file){
     file->is_open = 0;
   }
 }
+
 
 char *next_token(int *token_length){
 
