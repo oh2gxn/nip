@@ -55,3 +55,7 @@ muuttuja on C, mutta ohjelmassamme oletetaan, ett‰ j‰rjestys on esim. BCD.
 * Mik‰s t‰‰ on?
   http://www.gnu.org/software/libc/manual/html_node/Finding-Tokens-in-a-String.html#Finding%20Tokens%20in%20a%20String
 
+26.5.2004
+* Tarttis keksi‰ mihin muuttujia (Variable), klikkej‰ (Clique) ja sepsettej‰ 
+(Sepset) tallennetaan! Eli miten koodiamme hyv‰ksi k‰ytt‰v‰ ohjelma p‰‰see 
+k‰siksi mihink‰‰n ja miten parseri antaa tuotoksensa ulkomaailman n‰ht‰v‰ksi?

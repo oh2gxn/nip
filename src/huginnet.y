@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.11 2004-05-25 14:47:28 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.12 2004-05-26 14:40:49 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -43,8 +43,11 @@
 %type <name> labelDeclaration
 
 /* Grammar follows */
-/* NOT READY!!! Procedures and arrays in C do not mix well with the more 
- * or less functional paradigm of the parser. */
+/* NOT READY!!! 
+ * TODO:
+ * - create sepsets somehow
+ * - make it parse nested lists as data
+ * - find out what to do with the parsed stuff! */
 %%
 input:         /* empty string */
              | declaration input
@@ -83,13 +86,16 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' {/* ignore */}
 
 potentialDeclaration: potential '(' symbols ')' '{' dataList '}' { 
   /* <Some AI to make decisions> */ 
+
+  /* FIXME: This is totally wrong. This part should use the graph 
+   *        implementation to create cliques and sepsets according to 
+   *        the variables denoted by symbols. */
+
   Clique c = make_Clique($3, symbols_parsed);
   potential p = create_Potential($3, symbols_parsed, $6); 
   add_clique(c);
   // This assumes that the first symbol is the one and only child variable!
-  initialise(c, $3[0], $3 + 1, p);
-  
-  /* ??? HOW THE PHUK CAN YOU CREATE SEPSETS ??? */
+  initialise(c, $3, p);
 
   reset_symbols();}
 ;
@@ -117,12 +123,12 @@ dataList: data '=' '(' numbers ')' ';' { $$ = $4; }
 
 %%
 /* Lexical analyzer */
-/* Change this, this is copy-paste from a calculator example */
 /* JJT: I did some reading. Might get nasty, if there has to be a token 
  *      for a potential array and yylval becomes a double array... Only 
  *      other option: leave the creation of an array to the parser. But 
  *      how can you add elements dynamically? Cardinality & stuff?
- *      List -> Array and Array -> Potential at the end of each potdecl? 
+ *      List -> Array and Array -> Potential at the end of each 
+ *      potentialDeclaration? 
  *
  *      yylex will be able to parse strings i.e. strings are terminals: 
  *      "this is a string": char* -> [t, h, i, s, ... , g, \0] as lvalue 

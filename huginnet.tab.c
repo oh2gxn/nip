@@ -26,7 +26,6 @@
 
 #line 16 "huginnet.y"
 typedef union {
-  int intval;
   double numval;
   double *doublearray;
   char *name;
@@ -102,9 +101,9 @@ static const short yyrhs[] = {    -1,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    44,    45,    48,    49,    52,    62,    63,    66,    70,    73,
-    76,    79,    92,    93,    94,    97,    98,   101,   102,   105,
-   106,   107,   110
+    49,    50,    53,    54,    57,    67,    68,    71,    75,    78,
+    81,    84,    97,    98,    99,   102,   103,   106,   107,   110,
+   111,   112,   115
 };
 #endif
 
@@ -682,92 +681,92 @@ yyreduce:
   switch (yyn) {
 
 case 3:
-#line 48 "huginnet.y"
+#line 53 "huginnet.y"
 {/* put the node somewhere */;
     break;}
 case 4:
-#line 49 "huginnet.y"
-{/* put the potential somewhere */;
+#line 54 "huginnet.y"
+{/* put the clique somewhere */;
     break;}
 case 5:
-#line 55 "huginnet.y"
+#line 60 "huginnet.y"
 {
   /* new_variable() ??? */
-  add_pvar(new_variable(yyvsp[-6].name, strings_parsed, yyvsp[-3].intval)); 
+  add_pvar(new_variable(yyvsp[-6].name, yyvsp[-4].name, yyvsp[-3].stringarray, strings_parsed)); 
   reset_strings();;
     break;}
 case 8:
-#line 66 "huginnet.y"
+#line 71 "huginnet.y"
 { yyval.name = yyvsp[-1].name ;
     break;}
 case 9:
-#line 70 "huginnet.y"
-{ yyval.intval = strings_parsed; ;
+#line 75 "huginnet.y"
+{ yyval.stringarray = strings_parsed; ;
     break;}
 case 10:
-#line 73 "huginnet.y"
+#line 78 "huginnet.y"
 {/* ignore */;
     break;}
 case 11:
-#line 76 "huginnet.y"
+#line 81 "huginnet.y"
 {/* ignore */;
     break;}
 case 12:
-#line 79 "huginnet.y"
+#line 84 "huginnet.y"
 { 
   /* <Some AI to make decisions> */ 
   Clique c = make_Clique(yyvsp[-4].variablearray, symbols_parsed);
   potential p = create_Potential(yyvsp[-4].variablearray, symbols_parsed, yyvsp[-1].doublearray); 
   add_clique(c);
   // This assumes that the first symbol is the one and only child variable!
-  initialise(c, yyvsp[-4].variablearray[0], yyvsp[-4].variablearray + 1, p);
+  initialise(c, yyvsp[-4].variablearray, p);
   
   /* ??? HOW THE PHUK CAN YOU CREATE SEPSETS ??? */
 
   reset_symbols();;
     break;}
 case 13:
-#line 92 "huginnet.y"
+#line 97 "huginnet.y"
 { yyval.variablearray = make_variable_array(); ;
     break;}
 case 14:
-#line 93 "huginnet.y"
+#line 98 "huginnet.y"
 { add_symbol(yyvsp[-1].name); ;
     break;}
 case 15:
-#line 94 "huginnet.y"
+#line 99 "huginnet.y"
 { add_symbol(yyvsp[-2].name); ;
     break;}
 case 16:
-#line 97 "huginnet.y"
+#line 102 "huginnet.y"
 { yyval.stringarray = make_string_array(); ;
     break;}
 case 17:
-#line 98 "huginnet.y"
+#line 103 "huginnet.y"
 { add_string(yyvsp[-1].name); ;
     break;}
 case 18:
-#line 101 "huginnet.y"
+#line 106 "huginnet.y"
 { yyval.doublearray = make_double_array(); ;
     break;}
 case 19:
-#line 102 "huginnet.y"
+#line 107 "huginnet.y"
 { add_number(yyvsp[-1].numval); ;
     break;}
 case 20:
-#line 105 "huginnet.y"
-{/* ignore */;
+#line 110 "huginnet.y"
+{ free(yyvsp[0].name); /* ignore */;
     break;}
 case 21:
-#line 106 "huginnet.y"
+#line 111 "huginnet.y"
 { reset_doubles(); ;
     break;}
 case 22:
-#line 107 "huginnet.y"
+#line 112 "huginnet.y"
 {/* ignore */;
     break;}
 case 23:
-#line 110 "huginnet.y"
+#line 115 "huginnet.y"
 { yyval.doublearray = yyvsp[-2].doublearray; ;
     break;}
 }
@@ -968,15 +967,15 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 113 "huginnet.y"
+#line 118 "huginnet.y"
 
 /* Lexical analyzer */
-/* Change this, this is copy-paste from a calculator example */
 /* JJT: I did some reading. Might get nasty, if there has to be a token 
  *      for a potential array and yylval becomes a double array... Only 
  *      other option: leave the creation of an array to the parser. But 
  *      how can you add elements dynamically? Cardinality & stuff?
- *      List -> Array and Array -> Potential at the end of each potdecl? 
+ *      List -> Array and Array -> Potential at the end of each 
+ *      potentialDeclaration? 
  *
  *      yylex will be able to parse strings i.e. strings are terminals: 
  *      "this is a string": char* -> [t, h, i, s, ... , g, \0] as lvalue 
