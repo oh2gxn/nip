@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser.
- * $Id: parser.h,v 1.23 2004-06-23 12:25:25 jatoivol Exp $
+ * $Id: parser.h,v 1.24 2004-06-23 13:43:33 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -48,15 +48,25 @@ struct initDataList {
 typedef struct initDataList initDataElement;
 typedef initDataElement *initDataLink;
 
+typedef struct {
+  char *name;
+  FILE *file;
+  int is_open;
+} datafile;
+
 /* Opens an input file. Returns 0 if file was opened or if some file was
  * already open. Returns ERROR_GENERAL if an error occurred
  * opening the file.
  */
-int open_parser_infile(const char *file);
+int open_yyparse_infile(const char *filename);
 
 /* Closes the current input file (if there is one).
  */
-void close_parser_infile();
+void close_yyparse_infile();
+
+datafile *open_datafile(char *filename, int write);
+
+void close_datafile(datafile *file);
 
 /* Gets the next token from the input file.
  * Returns the token. token_length is the length of the token.

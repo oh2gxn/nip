@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.65 2004-06-22 13:19:49 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.66 2004-06-23 13:43:32 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -17,7 +17,9 @@
 #define DEBUG_CLIQUE
 */
 
+/*
 #define DEBUG_RETRACTION
+*/
 
 static Clique *nip_cliques = NULL;
 static int nip_num_of_cliques = 0;

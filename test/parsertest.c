@@ -9,10 +9,10 @@ int main(int argc, char *argv[]){
   char *token;
 
   if(argc < 2){
-    if(open_parser_infile("infile") != 0)
+    if(open_yyparse_infile("infile") != 0)
       return -1;
   }
-  else if(open_parser_infile(argv[1]) != 0)
+  else if(open_yyparse_infile(argv[1]) != 0)
     return -1;
 
   while(ok){
@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
   }
 
 
-  close_parser_infile();
+  close_yyparse_infile();
 
   return 0;
 }

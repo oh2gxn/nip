@@ -1,0 +1,56 @@
+Data Acquisition
+
+The Learning Wizard can handle two different sources for acquiring
+data for the learning:
+
+        Plain text files
+        (Databases)
+
+Plain Text Files
+
+The plain text files must conform to a certain standard:
+
+        - Each line in the file must consist of a list of values
+        - The values must be separated by a separator, with the
+          default separator being ",".
+	- All lines must contain the same number of values
+        - The following symbols are accepted as missing
+          values: "N/A", "null", "<null>"
+
+A sample data file could be:
+
+field1,field2,field3
+true,true,false
+N/A,true,true
+false,false,true
+false,true,false
+false,N/A,false
+
+Using this datafile will result in a model with three nodes named:
+field1, field2, and field3. Each node will contain the states: true,
+false.
+
+Text File Specification
+
+The specification of the text file is entered using the fields in the
+text file pane:
+
+
+The data file can either be typed manually in the text field, or the
+"Browse" button can be used to locate the data file.
+
+If the datafile does not contain the names of the fields, the "Read
+node names from file" checkbox should be unchecked. This will cause
+the Learning Wizard to treat the first line of the file in the same
+way as any other line. Furthermore, the nodes will get generic names
+(i.e., Field_n, where n = 0,..,m).
+
+If the fields in the text file is not separated by one of the standard
+separators (or if one or more of the standard separators are used in
+the field values), the user should specify a separator:
+
+
+
+This may actually be a set of separators (each character typed in the
+separator specification field will be treated as a separator), but
+this is not recommended.

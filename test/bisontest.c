@@ -161,15 +161,15 @@ int main(int argc, char *argv[]){
 
   /* -- Start parsing the network definition file */
   if(argc < 2){
-    if(open_parser_infile("infile") != NO_ERROR)
-      return -1;
+    printf("Give a file name please!\n");
+    return 0;
   }
-  else if(open_parser_infile(argv[1]) != NO_ERROR)
+  else if(open_yyparse_infile(argv[1]) != NO_ERROR)
     return -1;
 
   retval = yyparse();
 
-  close_parser_infile();
+  close_yyparse_infile();
 
   if(retval != 0)
     return retval;

@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.38 2004-06-23 12:25:25 jatoivol Exp $
+ * $Id: parser.c,v 1.39 2004-06-23 13:43:33 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -43,35 +43,80 @@ static char** nip_statenames;
 static char* nip_label;
 
 /* The current input file */
-static FILE *nip_parser_infile = NULL;
+static FILE *nip_yyparse_infile = NULL;
 
 /* Is there a hugin net file open? 0 if no, 1 if yes. */
-static int nip_parser_infile_open = 0;
+static int nip_yyparse_infile_open = 0;
 
-static FILE *nip_data_infile = NULL;
-static int nip_data_infile_open = 0;
-
-static FILE *nip_data_outfile = NULL;
-static int nip_data_outfile_open = 0;
-
-
-int open_parser_infile(const char *file){
-  if(!nip_parser_infile_open){
-    nip_parser_infile = fopen(file,"r");
-    if (!nip_parser_infile){
+int open_yyparse_infile(const char *filename){
+  if(!nip_yyparse_infile_open){
+    nip_yyparse_infile = fopen(filename,"r");
+    if (!nip_yyparse_infile){
       report_error(__FILE__, __LINE__, ERROR_IO, 1);
       return ERROR_IO; /* fopen(...) failed */
     }
     else
-      nip_parser_infile_open = 1;
+      nip_yyparse_infile_open = 1;
   }
   return NO_ERROR;
 }
 
-void close_parser_infile(){
-  if(nip_parser_infile_open){
-    fclose(nip_parser_infile);
-    nip_parser_infile_open = 0;
+void close_yyparse_infile(){
+  if(nip_yyparse_infile_open){
+    fclose(nip_yyparse_infile);
+    nip_yyparse_infile_open = 0;
+  }
+}
+
+datafile *open_datafile(char *filename, int write){
+
+  int length_of_name = 0;
+
+  datafile *f = (datafile *) malloc(sizeof(datafile));
+
+  if(!f){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  if(write)
+    f->file = fopen(filename,"w");
+  else
+    f->file = fopen(filename,"r");
+
+  if (!f->file){
+    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    free(f);
+    return NULL; /* fopen(...) failed */
+  }
+  else
+    f->is_open = 1;
+
+  while(filename[length_of_name] != '\0')
+    length_of_name++;
+
+  f->name = (char *) calloc(length_of_name + 1, sizeof(char));
+  if(!f->name){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(f);
+    return NULL;
+  }
+
+  strcpy(f->name, filename);
+
+  return f;
+}
+
+void close_datafile(datafile *file){
+
+  if(!file){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return;
+  }
+
+  if(file->is_open){
+    fclose(file->file);
+    file->is_open = 0;
   }
 }
 
@@ -97,13 +142,13 @@ char *next_token(int *token_length){
     return NULL;
 
   /* Return if input file is not open */
-  if(!nip_parser_infile_open)
+  if(!nip_yyparse_infile_open)
     return NULL;
 
   /* Read new line if needed and do other magic... */
   while(read_line){
     /* Read the line and check for EOF */
-    if(!(fgets(last_line, MAX_LINELENGTH, nip_parser_infile))){
+    if(!(fgets(last_line, MAX_LINELENGTH, nip_yyparse_infile))){
       *token_length = 0;
       return NULL;
     }
