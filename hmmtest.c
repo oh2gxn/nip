@@ -248,9 +248,10 @@ int main(int argc, char *argv[]){
     global_retraction(nip_cliques[0]);
 
     /* 0. Put some data in */
-    for(i = 0; i < timeseries->num_of_nodes; i++)
-      enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
-			  data[t][i]);
+    if(t < timeseries->datarows)
+      for(i = 0; i < timeseries->num_of_nodes; i++)
+	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
+			    data[t][i]);
   }
   
   
