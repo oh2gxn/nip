@@ -8,16 +8,6 @@
 #include "nip.h"
 
 
-/*
-#define PRINT_CLIQUES
-*/
-
-/*
- * HUOM! print_Cliques() kusee (ei löydä klikkejä).
- * Taitaa johtua ohjelman "arkkitehtuuriin" tehdyistä muutoksista.
- * Tutkitaan?
- */
-
 int main(int argc, char *argv[]){
 
   char** tokens = NULL;
