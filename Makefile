@@ -3,6 +3,7 @@
 POT_SRCS=potential.c potentialtest.c
 CLI_SRCS=potential.c Variable.c Clique.c cliquetest.c
 PAR_SRCS=potential.c Variable.c Clique.c errorhandler.c fileio.c parser.c parsertest.c
+GRPH_SRCS=Graph.c grphmnp/Heap.c grphmnp/cls2clq.c graphtest.c
 BIS_SRCS=huginnet.tab.c parser.c huginnet.tab.c Clique.c Variable.c potential.c Graph.c errorhandler.c bisontest.c
 HUG_DEFS=huginnet.y
 HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
@@ -11,9 +12,10 @@ HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
 POT_TARGET=potentialtest
 CLI_TARGET=cliquetest
 PAR_TARGET=parsertest
-BIS_TARGET=bisontest
-TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(BIS_TARGET)
+GRPH_TARGET=graphtest
 
+BIS_TARGET=bisontest
+TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET)
 
 # You should not need to modify anything below this line...
 # Sets the name and some flags for the C compiler and linker
@@ -34,9 +36,10 @@ LIBS=
 POT_OBJS=$(POT_SRCS:.c=.o)
 CLI_OBJS=$(CLI_SRCS:.c=.o)
 PAR_OBJS=$(PAR_SRCS:.c=.o)
+GRPH_OBJS=$(GRPH_SRCS:.c=.o)
 HUG_OBJS=$(HUG_SRCS:.c=.o)
 BIS_OBJS=$(BIS_SRCS:.c=.o)
-OBJS=$(POT_OBJS) $(CLI_OBJS) $(PAR_OBJS) $(HUG_OBJS) $(BIS_OBJS)
+OBJS=$(POT_OBJS) $(CLI_OBJS) $(PAR_OBJS) $(HUG_OBJS) $(GRPH_OBJS) $(BIS_OBJS)
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program
@@ -44,7 +47,7 @@ OBJS=$(POT_OBJS) $(CLI_OBJS) $(PAR_OBJS) $(HUG_OBJS) $(BIS_OBJS)
 # NOTE the tab character! Syntax of a rule:
 # <target>: <dependencies>
 # \t<command>
-all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(BIS_TARGET)
+all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET)
 
 # The program depends on the object files in $(OBJS). Make knows how
 # to compile a .c file into an object (.o) file; this rule tells it
@@ -57,6 +60,9 @@ $(CLI_TARGET): $(CLI_OBJS)
 
 $(PAR_TARGET): $(PAR_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(PAR_OBJS) $(LIBS)
+
+$(GRPH_TARGET): $(GRPH_OBJS) $(CLI_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(GRPH_OBJS) $(LIBS)
 
 $(BIS_TARGET): $(BIS_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(BIS_OBJS) $(LIBS)
