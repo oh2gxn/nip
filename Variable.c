@@ -1,10 +1,14 @@
+/*
+ * Variable.c $Id: Variable.c,v 1.14 2004-02-13 14:12:20 mvkorpel Exp $
+ */
+
 #include <string.h>
 #include <stdlib.h>
 #include "Variable.h"
 #include "potential.h"
 #include "errorhandler.h"
 
-Variable new_variable(char* name, int cardinality){
+Variable new_variable(const char* symbol, int cardinality){
   static long id = 0;
   int i;
   double *dpointer;
@@ -14,14 +18,22 @@ Variable new_variable(char* name, int cardinality){
   v->id = ++id;
   v->probability = NULL;
  
-  strncpy(v->name, name, VAR_NAME_LENGTH);
-  v->name[VAR_NAME_LENGTH] = '\0';
+  strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
+  v->symbol[VAR_SYMBOL_LENGTH] = '\0';
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   /* initialise likelihoods to 1 */
   for(dpointer=v->likelihood, i=0; i < cardinality; *dpointer++ = 1, i++);
 
   return v;
+}
+
+int variable_name(Variable v, const char *name){
+  if(!name)
+    return ERROR_NULLPOINTER;
+  strncpy(v->name, name, VAR_NAME_LENGTH);
+  v->symbol[VAR_NAME_LENGTH] = '\0';
+  return NO_ERROR;
 }
 
 Variable copy_variable(Variable v){

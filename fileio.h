@@ -1,8 +1,9 @@
 /*
- * fileio.h $Id: fileio.h,v 1.2 2004-02-12 14:49:19 mvkorpel Exp $
+ * fileio.h $Id: fileio.h,v 1.3 2004-02-13 14:12:20 mvkorpel Exp $
  */
 
 #ifndef __FILEIO_H__
+#include "Graph.h"
 #define __FILEIO_H__
 
 /* Counts the number of words in string s.
@@ -24,5 +25,10 @@ int *tokenise(char *s, int n);
  * - indices: an index array (see tokenise(...))
  */
 char **split(char s[], int indices[], int n);
+
+/* Reads the variables of a graph from the given file. Returns a graph
+ * containing the variables.
+ */
+Graph *read_model(const char *filename);
 
 #endif /* __FILEIO_H__ */

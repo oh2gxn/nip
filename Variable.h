@@ -1,10 +1,16 @@
+/*
+ * Variable.h $Id: Variable.h,v 1.16 2004-02-13 14:12:20 mvkorpel Exp $
+ */
+
 #ifndef __VARIABLE_H__
 #define __VARIABLE_H__
 
 #include "potential.h"
+#define VAR_SYMBOL_LENGTH 20
 #define VAR_NAME_LENGTH 40
 
 typedef struct {
+  char symbol[VAR_SYMBOL_LENGTH + 1];
   char name[VAR_NAME_LENGTH + 1];
   int cardinality;
   unsigned long id; /* unique id for every variable */
@@ -16,7 +22,10 @@ typedef struct {
 typedef vtype *Variable;
 
 /* Creates a new Variable */
-Variable new_variable(char* name, int cardinality);
+Variable new_variable(const char* symbol, int cardinality);
+
+/* Gives the Variable a verbose name */
+int variable_name(Variable v, const char *name);
 
 /* Function for copying a Variable (if needed). Handle with care.
  * v: the Variable to be copied

@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.3 2004-02-12 14:49:19 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.4 2004-02-13 14:12:20 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -7,6 +7,13 @@
 #include <string.h>
 #include "fileio.h"
 #include "errorhandler.h"
+#include "Graph.h"
+
+#define COMMENT_CHAR '%'
+#define LINELENGTH 10000
+#define STRING_NODE "node"
+#define STRING_STATES "states"
+#define STRING_LABEL "label"
 
 int count_words(char *s, int *chars){
   int words = 0, state = 0;
@@ -100,4 +107,47 @@ char **split(char s[], int indices[], int n){
   }
 
   return words;
+}
+
+Graph *read_model(const char *filename){
+
+  FILE *f;
+  char s[LINELENGTH];
+  int words;
+  int *wordbounds;
+  int state = 0;
+  f=fopen(filename, "r");
+  if(!f){
+    report_error(ERROR_IO, 1);
+    return NULL;
+  }
+
+  /* Read a line at a time from the file. */
+  while(fgets(s, LINELENGTH, f) != NULL){
+    words = count_words(s, NULL);
+    wordbounds = tokenise(s, words);
+
+    /* TO DO */
+
+    /* Process the input line with an FSA */
+    while(1){
+      switch(state){
+	/* 0: looking for upper level token "node" */
+	case 0 :
+	  
+	  break;
+
+	case 1 :
+	  
+	  break;
+
+	case 2 :
+
+	  break;
+      }            
+    } /* end line processing */
+
+  } /* end of file */
+
+  return NULL;
 }
