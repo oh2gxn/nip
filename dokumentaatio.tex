@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.36 2004-10-21 13:33:43 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.37 2004-11-22 16:16:07 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -153,7 +153,7 @@ length is defined as \cdefine{VAR\_SYMBOL\_LENGTH} in
 \cfilename{Variable.h}. To ensure the correct operation of the system, the 
 symbol should be unique.
 
-\item[name] is a little longer name to describe the variable: it is
+\item[name] is usually a longer name to describe the variable: it is
 called {\it label} in the Hugin net language files. This is NOT used for 
 identification of the variables and it doesn't need to be unique. 
 The maximum length is defined as \cdefine{VAR\_NAME\_LENGTH} in 
@@ -216,97 +216,100 @@ be a null pointer.
 The functions provided in \cfilename{Variable.c} are
 %The interface + how the stuff works...
 \begin{description}
-\item[new\_variable(symbol, name, states, cardinality)] creates a
-variable identified with the \cparameter{symbol} string. The 
-\cparameter{name} string will be copied as the name field of the new 
-variable. Both the \cparameter{symbol} and \cparameter{name} strings 
-may be truncated to the allowed length. The states of the new variable 
-will be named according to the given string array \cparameter{states}. 
-All the given strings are copied, so remember to free them after they 
-become useless.
+\item[new\_variable(symbol, name, states, cardinality)] creates a variable
+identified with the \cparameter{symbol} string. The \cparameter{name}
+string will be copied as the name field of the new variable. Both the
+\cparameter{symbol} and \cparameter{name} strings may be truncated to the
+allowed length. The states of the new variable will be named according to
+the given string array \cparameter{states}.  All the given strings are
+copied, so remember to free them after they become useless.
 
 \item[copy\_variable(v)] returns an exact copy of the
 variable~\cparameter{v}. Note that also the id~field is copied and
-consequently there may not be two copies of the same variable in the
-same model.
+consequently there may not be two copies of the same variable in the same
+model.
 
 \item[free\_variable(v)] frees the memory allocated for the
-variable~\cparameter{v}. 
+variable~\cparameter{v}.
 
 \item[equal\_variables(v1, v2)] returns 0 if either of the variables
 are null. Otherwise it will tell if the variables have equal id fields
 or not.
 
-\item[get\_id(v)] will return the unsigned long id field of the 
+\item[get\_id(v)] will return the unsigned long id field of the
 variable~\cparameter{v}.
 
-\item[get\_symbol(v)] returns the symbol of the
-variable~\cparameter{v}. It will not make a copy of the string so
-don't mess with it.
+\item[get\_symbol(v)] returns the symbol of the variable~\cparameter{v}. It
+will not make a copy of the string so don't mess with it.
 
-\item[get\_stateindex(v, state)] tells the place of the string
+q\item[get\_stateindex(v, state)] tells the place of the string
 \cparameter{state} in the state name array of the
 variable~\cparameter{v}. This index can be used for interpreting various
 arrays describing probability distributions. 
 
-\item[total\_num\_of\_vars()] is used only for aiding the Hugin net 
-language file parser to return the total number of newly created 
-variables. All the variables (created with the
-\cfunction{new\_variable} function) are accumulated in a list and
-this function can tell the size of that list.
+\item[total\_num\_of\_vars()] is used only for aiding the Hugin net
+language file parser to return the total number of newly created
+variables. All the variables (created with the \cfunction{new\_variable}
+function) are accumulated in a list and this function can tell the size of
+that list.
 
-\item[get\_first\_variable()] gives the first element in the list
-of newly created variables mentioned above.
+\item[get\_first\_variable()] gives the first element in the list of newly
+created variables mentioned above.
 
-\item[get\_last\_variable()] gives the last element in the list
-of newly created variables mentioned above.
+\item[get\_last\_variable()] gives the last element in the list of newly
+created variables mentioned above.
 
-\item[reset\_Variable\_list()] will replace the list of recently
-created variables with \cdatatype{NULL} and set the size of the list
-to zero. This is used only for resetting the list after copying the
-list pointer to a new model. Otherwise all the models would share the
-same list of parsed variables.
+\item[reset\_Variable\_list()] will replace the list of recently created
+variables with \cdatatype{NULL} and set the size of the list to zero. This
+is used only for resetting the list after copying the list pointer to a new
+model. Otherwise all the models would share the same list of parsed
+variables.
 
 \item[next\_Variable(it)] will give the next variable pointed by the
 variable iterator~\cparameter{it} and advance the pointer to the next
-variable in the list. The function returns \cdatatype{NULL} if the
-iterator runs out of variables.
+variable in the list. The function returns \cdatatype{NULL} if the iterator
+runs out of variables.
 
-\item[get\_parser\_variable(symbol)] aids the net language parser 
-to find a variable, identified by the \cparameter{symbol} string, in the 
-list of newly created variables.
+\item[get\_parser\_variable(symbol)] aids the net language parser to find a
+variable, identified by the \cparameter{symbol} string, in the list of
+newly created variables.
 
-\item[get\_variable(vars, nvars, symbol)] searches the 
-\cdatatype{Variable array}~\cparameter{vars} for a variable identified 
-by the string \cparameter{symbol}. Also the size of the array has to be 
-specified as the \cdatatype{integer}~\cparameter{nvars}.
+\item[get\_variable(vars, nvars, symbol)] searches the \cdatatype{Variable
+array}~\cparameter{vars} for a variable identified by the string
+\cparameter{symbol}. Also the size of the array has to be specified as the
+\cdatatype{integer}~\cparameter{nvars}.
 
-\item[update\_likelihood(v, likelihood)] will set the likelihood array
-of variable~\cparameter{v} according to the given double array
-\cparameter{likelihood}. Size of the given array should be the same
-(or more) than the cardinality of the variable.
+\item[update\_likelihood(v, likelihood)] will set the likelihood array of
+variable~\cparameter{v} according to the given double array
+\cparameter{likelihood}. Size of the given array should be the same (or
+more) than the cardinality of the variable.
 
 \item[reset\_likelihood(v)] fills the likelihood array of the
 variable~\cparameter{v} with ones. This means that the likelihood of the
 variable states will be uniform.
 
 \item[number\_of\_values(v)] returns the cardinality of the
-variable~\cparameter{v}. It is the exact number of states the variable
-has and will always have.
+variable~\cparameter{v}. It is the exact number of states the variable has
+and will always have.
 \end{description}
 
 
 \subsection{Other possibilities}
-The Hugin net language parser is made with Bison and consequently the 
-\cfunction{yyparse} function is not able to return a list of
-variables etc. This makes it awkward to pass the results of parsing to
-the rest of the program. Our solution is to create a list of parsed
-variables in \cfilename{Variable.c} but it could also be at
-\cfilename{parser.c} in order to avoid having weird functions like
-\cfunction{get\_parser\_variable}.
+The Hugin net language parser is made with Bison and consequently the
+\cfunction{yyparse} function is not able to return a list of variables
+etc. This makes it awkward to pass the results of parsing to the rest of
+the program. Our solution is to create a list of parsed variables in
+\cfilename{Variable.c} by appending every newly created variable to it. The
+list could also be at \cfilename{parser.c} in order to avoid having weird
+functions like \cfunction{get\_parser\_variable}.
 
 % length limitations of symbols, variable and state names?
-% a tree of Variables instead of an array?
+We decided to have limitations for the lengths of variable symbols, labels
+and state names. This made implementation a bit easier and limits the time
+used for various comparison operations. This can also produce troubles in
+the case that two variables have very long and almost identical names or
+symbols. Truncating the length of variable symbols would then cause the
+variables to be treated equal.
 
 
 \newpage
@@ -467,30 +470,28 @@ can be introduced with a wrapper, if desired.
 \newpage
 \section{Potentials}
 \subsection{General}
-As probability distributions of a single variable are implemented as 
-tables, probability distributions relating to multiple discrete
-variables can be represented as multidimensional tables. For example, 
-if the variable~$X$ depends on a set of variables $\mathbf{Y}=$
-$\{Y_1,\dots,Y_{N-1}\}$, the dependency can be described 
-quantitatively by the probability distribution $P(X|\mathbf{Y})$. 
-Another example could be a joint distribution $P(\mathbf{Z})$ of the 
-variables $\mathbf{Z}=\{Z_1,\dots,Z_N\}$. These kind of distributions 
-can be thought as functions from the N-dimensional space 
-(formed by the variables $\{X\} \cup \mathbf{Y}$ or~$\mathbf{Z}$) 
-to a real number $p \in [0,1]$. Since the variables have a discrete
-and finite set of states, the function can be viewed as an
-N-dimensional table $\phi_\mathbf{Z}$ containing the real numbers 
-corresponding to the probabilities. As an example, 
-the value $P(A=a_0, B=b_3, C=c_5)$ is found in a multidimensional
-table $\phi_\mathbf{Z}$ as $\phi_{\mathbf{z}={0,3,5}}$ or 
-\examplecode{P[0][3][5]}. 
+As probability distributions of single variables are implemented as tables,
+probability distributions relating to multiple discrete variables can be
+represented as multidimensional tables. For example, if the variable~$X$
+depends on a set of variables $\mathbf{Y}=$ $\{Y_1,\dots,Y_{N-1}\}$, the
+dependency can be described quantitatively by the probability distribution
+$P(X|\mathbf{Y})$.  Another example could be a joint distribution
+$P(\mathbf{Z})$ of the variables $\mathbf{Z}=\{Z_1,\dots,Z_N\}$. These kind
+of distributions can be thought as functions from the N-dimensional space
+(formed by the variables $\{X\} \cup \mathbf{Y}$ or~$\mathbf{Z}$) to a real
+number $p \in [0,1]$. Since the variables have a discrete and finite set of
+states, the function can be viewed as an N-dimensional table
+$\phi_\mathbf{Z}$ containing the real numbers corresponding to the
+probabilities. As an example, the value $P(A=a_0, B=b_3, C=c_5)$ is found
+in a multidimensional table $\phi_\mathbf{Z}$ as
+$\phi_{\mathbf{z}={0,3,5}}$ or as \examplecode{P[0][3][5]} in a program.
 
 There are two kinds of operations on potentials: marginalisation and
-multiplication. Marginalisation is basically for reducing the number
-of dimensions of a potential by calculating sums over the unnecessary 
-variables. For example, if $\mathbf{X} \subseteq \mathbf{Z}$, 
-$P(\mathbf{X})$ can be calculated from $P(\mathbf{Z})$ by summing over 
-$\mathbf{Z} \setminus \mathbf{X}$ and similarly 
+multiplication. Marginalisation is basically for reducing the number of
+dimensions of a potential by calculating sums over the unnecessary
+variables. For example, if $\mathbf{X} \subseteq \mathbf{Z}$,
+$P(\mathbf{X})$ can be calculated from $P(\mathbf{Z})$ by summing over
+$\mathbf{Z} \setminus \mathbf{X}$ and similarly
 \begin{equation}
 \phi_\mathbf{X} = \sum_{\mathbf{Z} \setminus \mathbf{X}} \phi_{\mathbf{Z}}.
 \end{equation}
@@ -516,38 +517,43 @@ $(i,j,k) \in [0,c_X-1]\times[0,c_{Z_2}-1]\times[0,c_{Z_3}-1]$.
 
 From the implementation point of view, one of the most important
 notions is that a multidimensional table can be referenced by a 
-``flat index'' also. For example, if $\mathbf{X} = \{X_1,X_2\}$, then 
-$\phi_\mathbf{X}[0] = \phi_\mathbf{X}[0][0]$, 
-$\phi_\mathbf{X}[c_{X_1}-1] = \phi_\mathbf{X}[c_{X_1}-1][0]$,
-$\phi_\mathbf{X}[c_{X_1}] = \phi_\mathbf{X}[0][1]$, and 
-$\phi_\mathbf{X}[c_{X_1}*c_{X_2}-1] = \phi_\mathbf{X}[c_{X_1}-1][c_{X_2}-1]$. 
-(Assuming that the first index of an array is the less significant one.)
+``flat index'' also. For example, if we assume that the first index of an
+array is the less significant one and $\mathbf{X} = \{X_1,X_2\}$, then 
+\begin{itemize}
+\item $\phi_\mathbf{X}[0] = \phi_\mathbf{X}[0][0]$, 
+\item $\phi_\mathbf{X}[i] = \phi_\mathbf{X}[i][0]$, if $i<c_{X_1}$,
+\item $\phi_\mathbf{X}[i] = \phi_\mathbf{X}[i-c_{X_1}][1]$, if 
+  $c_{X_1} \leq i < 2c_{X_1}$ etc.,
+\item $\phi_\mathbf{X}[c_{X_1}] = \phi_\mathbf{X}[0][1]$, and 
+\item $\phi_\mathbf{X}[c_{X_1}*c_{X_2}-1] = 
+  \phi_\mathbf{X}[c_{X_1}-1][c_{X_2}-1]$ which is the last element. 
+\end{itemize}
 
 
 \subsection{The functionality description}
 %The interface + how the stuff works...
 \subsubsection{The data structure}
-The data type \cdatatype{potential} defined in \cfilename{potential.h} 
-is a pointer to a struct which contains the following fields:
+The data type \cdatatype{potential} defined in \cfilename{potential.h} is a
+pointer to a struct which contains the following fields:
 \begin{description}
-\item[size\_of\_data] is an \cdatatype{integer} telling the total
-number of elements in the potential. It must be the product of all the
-elements in the \cstructfield{cardinality} array (or one if the number
-of variables equals zero).
-\item[cardinality] is an array of \cdatatype{integers}. The integers
-are the cardinalities of each variable the potential is related
-to. Thus the size of the array must be the same as the number of
-variables. Also the order of the cardinality array is significant
-because the variables are assumed to have a certain order.
-\item[num\_of\_vars] is an \cdatatype{integer} which tells the number
-of variables associated with the potential.
+\item[size\_of\_data] is an \cdatatype{integer} telling the total number of
+elements in the potential. It must be the product of all the elements in
+the \cstructfield{cardinality} array (or one if the number of variables
+equals zero).
+\item[cardinality] is an array of \cdatatype{integers}. The integers are
+the cardinalities of each variable the potential is related to. Thus the
+size of the array must be the same as the number of variables. Also the
+order of the cardinality array is significant because the variables are
+assumed to have a certain order.
+\item[num\_of\_vars] is an \cdatatype{integer} which tells the number of
+variables associated with the potential.
 \item[data] is the \cdatatype{double array} describing a probability
-distribution of the associated variables. The size of this array is in
-the \cstructfield{size\_of\_data} field. The data in the array is
-arranged according to the order of the corresponding variables: the
-variable which has its cardinality first in the
-\cstructfield{cardinality} array is considered least significant in
-the sense of placing a value in the \cstructfield{data} array.
+distribution of the associated variables. The size of this array is in the
+\cstructfield{size\_of\_data} field. The data in the array is arranged
+according to the order of the corresponding variables: the variable which
+has its cardinality first in the \cstructfield{cardinality} array is
+considered least significant in the sense of placing a value in the
+\cstructfield{data} array.
 \end{description}
 
 
@@ -556,166 +562,191 @@ The functions provided for manipulating \cdatatype{potentials} are
 placed in \cfilename{potential.c} and are as follows:
 \begin{description}
 \item[make\_potential(cardinality, num\_of\_vars, data)] creates a
-potential struct according to the parameters and returns a pointer
-to it. The resulting potential will have its cardinalities of
-variables set according to the given \cparameter{cardinality} array by
-copying the elements in it. The number of associated variables is
-given as the integer \cparameter{num\_of\_vars}. 
+potential struct according to the parameters and returns a pointer to
+it. The resulting potential will have its cardinalities of variables set
+according to the given \cparameter{cardinality} array by copying the
+elements in it. The number of associated variables is given as the integer
+\cparameter{num\_of\_vars}.
 
-The \cparameter{data} parameter can be a null pointer or a 
-\cdatatype{double array} of the size equal to the product of the 
-cardinalities of the variables. In case of a null pointer, the
-potential will be initialised to uniform distribution. Otherwise the 
-contents of the \cstructfield{data} array in the potential struct will
-be copied from the given \cparameter{data} array.
+The \cparameter{data} parameter can be a null pointer or a
+\cdatatype{double array} of the size equal to the product of the
+cardinalities of the variables. In case of a null pointer, the potential
+will be initialised to uniform distribution. Otherwise the contents of the
+\cstructfield{data} array in the potential struct will be copied from the
+given \cparameter{data} array.
 
 \item[free\_potential(p)] frees the memory allocated for the
-potential~\cparameter{p}. 
+potential~\cparameter{p}.
 
 \item[copy\_potential(source, destination)] copies the distribution
 contained in the \cparameter{source} potential to the given
 \cparameter{destination} potential. Note that both of the potentials must
-be already existent and otherwise equal. Use the 
-\cfunction{make\_potential} function if you need an entire new copy of 
-a potential.
+be already existent and otherwise equal. Use the
+\cfunction{make\_potential} function if you need an entire new copy of a
+potential.
 
 \item[get\_pvalue(p, indices)] retrieves the possibly non-normalised
-probability of the configuration of variables, described by the 
-\cdatatype{integer array} \cparameter{indices}, from the 
-\cdatatype{potential}~\cparameter{p}. The \cparameter{indices} array 
-tells which value each of the associated variables are assigned: 
-$n-1$ in the array corresponds to the $n$:th value of the variable. 
-The \cparameter{indices} must be in the same order as the corresponding 
-variables and their cardinalities in the potential~\cparameter{p}. 
+probability of the configuration of variables, described by the
+\cdatatype{integer array} \cparameter{indices}, from the
+\cdatatype{potential}~\cparameter{p}. The \cparameter{indices} array tells
+which value each of the associated variables are assigned: $n-1$ in the
+array corresponds to the $n$:th value of the variable.  The
+\cparameter{indices} must be in the same order as the corresponding
+variables and their cardinalities in the potential~\cparameter{p}.
 
 \item[set\_pvalue(p, indices, value)] sets a \cdatatype{double}
-\cparameter{value} in the \cdatatype{potential}~\cparameter{p} the same 
-way as \\ \cfunction{get\_pvalue(p, indices)} retrieves it. 
-(See the description above.)
+\cparameter{value} in the \cdatatype{potential}~\cparameter{p} the same way
+as \\ \cfunction{get\_pvalue(p, indices)} retrieves it.  (See the
+description above.)
 
-\item[inverse\_mapping(p, flat\_index, indices)] transforms a
-so-called flat index into the \cdatatype{integer array} 
-\cparameter{indices} according to the \cdatatype{potential}~\cdatatype{p}. 
-A flat index is an index used for addressing data in the potential and 
-is therefore an integer between \examplecode{0} and
-\examplecode{p->size\_of\_data - 1} inclusive. Shortly, this function is 
-made for finding out which configuration of states of the variables 
-corresponds to each element in the potential. Note that the 
-\cparameter{indices} array is not allocated by the function.
+\item[inverse\_mapping(p, flat\_index, indices)] transforms a so-called
+flat index into the \cdatatype{integer array} \cparameter{indices}
+according to the \cdatatype{potential}~\cdatatype{p}.  A flat index is an
+index used for addressing data in the potential and is therefore an integer
+between \examplecode{0} and \examplecode{p->size\_of\_data - 1}
+inclusive. Shortly, this function is made for finding out which
+configuration of states of the variables corresponds to each element in the
+potential. Note that the \cparameter{indices} array is not allocated by the
+function.
 
-\item[general\_marginalise(source, destination, mapping)] is one
-of the most useful functions since it computes the marginalisation
-i.e. a sum over the variables not being indicated by the given 
-\cdatatype{integer array} \cparameter{mapping} and places the 
-result in the given \cparameter{destination} potential. To make any 
-sense, the number of associated variables in \cparameter{source} must 
-be greater than in \cparameter{destination}. 
+\item[general\_marginalise(source, destination, mapping)] is one of the
+most useful functions since it computes the marginalisation i.e. a sum over
+the variables not being indicated by the given \cdatatype{integer array}
+\cparameter{mapping} and places the result in the given
+\cparameter{destination} potential. To make any sense, the number of
+associated variables in \cparameter{source} must be greater than in
+\cparameter{destination}.
 
-The \cparameter{mapping} array tells which variable in
-\cparameter{source} corresponds to each of the variables in
-\cparameter{destination}. It consists of indices ranging from
-\examplecode{0} to \examplecode{source->num\_of\_vars - 1} inclusive.
-The $n$'th variable of destination potential corresponds to the 
-$mapping[n]$'th variable in the source potential. Size of the array must 
-equal the number of variables associated with the destination potential.
-Note that the result of marginalisation is not normalised.
+The \cparameter{mapping} array tells which variable in \cparameter{source}
+corresponds to each of the variables in \cparameter{destination}. It
+consists of indices ranging from \examplecode{0} to
+\examplecode{source->num\_of\_vars - 1} inclusive.  The $n$'th variable of
+destination potential corresponds to the $mapping[n]$'th variable in the
+source potential. Size of the array must equal the number of variables
+associated with the destination potential.  Note that the result of
+marginalisation is not normalised.
 
-\item[total\_marginalise(source, destination, variable)] can be used
-for finding out the probability distribution of a single variable
-according to the \cparameter{source} potential. The function is
-similar to the \cfunction{general\_marginalise} but the user must
-indicate which one of the variables is left unmarginalised. The 
-parameter \cparameter{variable} is an \cdatatype{integer} ranging from
-\examplecode{0} to \examplecode{source->num\_of\_vars - 1}
-inclusive. Zero indicates the first variable in the potential.
+\item[total\_marginalise(source, destination, variable)] can be used for
+finding out the probability distribution of a single variable according to
+the \cparameter{source} potential. The function is similar to the
+\cfunction{general\_marginalise} but the user must indicate which one of
+the variables is left unmarginalised. The parameter \cparameter{variable}
+is an \cdatatype{integer} ranging from \examplecode{0} to
+\examplecode{source->num\_of\_vars - 1} inclusive. Zero indicates the first
+variable in the potential.
 
-Another difference arises from the fact that the probability 
-distribution of a single variable fits into a one-dimensional array. 
-The place to put the resulting \cdatatype{double array} 
-(\cparameter{destination}) is given to the function as one of the
-parameters. Size of the array must be equal (or greater) to the
-cardinality of the desired variable, so remember to allocate one
-before calling this function. Note that the result of marginalisation 
-is not normalised.
+Another difference arises from the fact that the probability distribution
+of a single variable fits into a one-dimensional array.  The place to put
+the resulting \cdatatype{double array} (\cparameter{destination}) is given
+to the function as one of the parameters. Size of the array must be equal
+(or greater) to the cardinality of the desired variable, so remember to
+allocate one before calling this function. Note that the result of
+marginalisation is not normalised.
 
-\item[update\_potential(numerator, denominator, target, mapping)] 
-implements the multiplication of potentials. The function simply
-multiplies the elements of the \cparameter{target} potential with the
-corresponding elements in the \cparameter{numerator} potential. At the
-same time, the function is able to divide the \cparameter{target}
-potential with the optional \cparameter{denominator} potential. If no
-division is needed, \cparameter{denominator} can be \cdatatype{NULL}.
-The \cparameter{numerator} and \cparameter{denominator} potentials are 
-left unchanged by the function.
+\item[update\_potential(numerator, denominator, target, mapping)]
+implements the multiplication of potentials. The function simply multiplies
+the elements of the \cparameter{target} potential with the corresponding
+elements in the \cparameter{numerator} potential. At the same time, the
+function is able to divide the \cparameter{target} potential with the
+optional \cparameter{denominator} potential. If no division is needed,
+\cparameter{denominator} can be \cdatatype{NULL}.  The
+\cparameter{numerator} and \cparameter{denominator} potentials are left
+unchanged by the function.
 
-The function is made for multiplying the a clique potential with the 
-old and new sepset potentials. It is assumed that the variables
-associated with the multiplier potentials correspond to a subset of the
-variables associated with the target potential. Thus the user needs to
-indicate which of the variables in the target potential correspond to
-each variable in the multiplier potentials. This is achieved with the
-fourth parameter \cparameter{mapping} which is an 
-\cdatatype{integer array}. The variables of numerator and denominator 
-potentials are assumed to be in the same order. For example, the array 
-\examplecode{\{0, 3, 1\}} tells that the first variable of
-\cparameter{numerator} is also first in the \cparameter{target}, but
-the second variable of \cparameter{numerator} is the fourth (3+1)
-variable of the \cparameter{target} potential.
+The function is made for multiplying the a clique potential with the old
+and new sepset potentials. It is assumed that the variables associated with
+the multiplier potentials correspond to a subset of the variables
+associated with the target potential. Thus the user needs to indicate which
+of the variables in the target potential correspond to each variable in the
+multiplier potentials. This is achieved with the fourth parameter
+\cparameter{mapping} which is an \cdatatype{integer array}. The variables
+of numerator and denominator potentials are assumed to be in the same
+order. For example, the array \examplecode{\{0, 3, 1\}} tells that the
+first variable of \cparameter{numerator} is also first in the
+\cparameter{target}, but the second variable of \cparameter{numerator} is
+the fourth (3+1) variable of the \cparameter{target} potential.
 
-\item[update\_evidence(numerator, denominator, target, var)] is made
-for multiplying potentials with probability distributions of a single
+\item[update\_evidence(numerator, denominator, target, var)] is made for
+multiplying potentials with probability distributions of a single
 variable. The potential to be manipulated is given as the
-\cparameter{target} parameter. It is multiplied by the given 
-\cdatatype{double array} \cparameter{numerator} which usually
-represents the probability distribution of a variable. The 
-\cparameter{denominator} is a similar \cdatatype{double array} used 
-for dividing the \cparameter{target} potential. If not needed, the 
-\cparameter{denominator} can be \cdatatype{NULL}.
+\cparameter{target} parameter. It is multiplied by the given
+\cdatatype{double array} \cparameter{numerator} which usually represents
+the probability distribution of a variable. The \cparameter{denominator} is
+a similar \cdatatype{double array} used for dividing the
+\cparameter{target} potential. If not needed, the \cparameter{denominator}
+can be \cdatatype{NULL}.
 
-Typically the function is used for multiplying evidence into a clique 
-potential and dividing with possible old evidence. The variable, whose 
-distribution is to be passed into the potential, must be indicated 
-with the \cparameter{var} \cdatatype{integer}. E.g. a zero tells the 
-function that the evidence is about the first variable associated with 
-the potential.
+Typically the function is used for multiplying evidence into a clique
+potential and dividing with possible old evidence. The variable, whose
+distribution is to be passed into the potential, must be indicated with the
+\cparameter{var} \cdatatype{integer}. E.g. a zero tells the function that
+the evidence is about the first variable associated with the potential.
 
-\item[init\_potential(probs, target, mapping)] is essentially the
-same as the \cfunction{update\_potential} function. It is meant for
-multiplying the \cparameter{target} potential with the given
-\cparameter{probs} potential. If the potentials are similar, i.e. they
-have the same associated variables and in the same order, the 
-\cparameter{mapping} parameter may be \cdatatype{NULL}. Otherwise, 
-\cparameter{mapping} is an \cdatatype{integer array} indicating which
-of the variables associated with the target potential correspond to
-each of the variables in the multiplier potential.
+\item[init\_potential(probs, target, mapping)] is essentially the same as
+the \cfunction{update\_potential} function. It is meant for multiplying the
+\cparameter{target} potential with the given \cparameter{probs}
+potential. If the potentials are similar, i.e. they have the same
+associated variables and in the same order, the \cparameter{mapping}
+parameter may be \cdatatype{NULL}. Otherwise, \cparameter{mapping} is an
+\cdatatype{integer array} indicating which of the variables associated with
+the target potential correspond to each of the variables in the multiplier
+potential.
 
-\item[print\_potential(p)] is mainly for debugging purposes. It prints 
-the contents of the \cdatatype{potential}~\cparameter{p} to the 
-standard output.
+\item[print\_potential(p)] is mainly for debugging purposes. It prints the
+contents of the \cdatatype{potential}~\cparameter{p} to the standard
+output.
 \end{description}
 
 
 \subsection{Other possibilities}
 There are several ways of implementing the calculations of the
-potentials. The first implementation relied on keeping the
-associated variables in a certain order. Unfortunately this caused
-problems with time slice models where the variables of a time slice
-correspond to a different set of variables in the previous time
-slice. If the order of variables in a potential is fixed, then a subset
-of variables in a time slice should be in the same order as the
-other set of corresponding variables in the previous time slice.
-By using an integer array to remap the order of the variables, we
-avoid this and possibly other problems. In the previous
-implementation, the used had to specify (in a certain order) which
-variables were NOT shared by the potentials and usage was therefore 
-less intuitive. Note that the join tree implementation still requires 
-a static and total order among variables.
+potentials. The first of our implementations relied on keeping the
+associated variables in a certain order. Unfortunately this caused problems
+with time slice models where the variables of a time slice correspond to a
+different set of variables in the previous time slice. If the order of
+variables in a potential is fixed, then a subset of variables in a time
+slice should be in the same order as the other set of corresponding
+variables in the previous time slice.  By using an integer array to remap
+the order of the variables, we avoid this and possibly other problems. In
+the previous implementation, the used had to specify (in a certain order)
+which variables were NOT shared by the operands of a potential operation
+and use was therefore less intuitive. Note that the join tree
+implementation still requires a static and total order among variables.
 
 \newpage
 \section{Join trees} % Cliques and sepsets
 \subsection{General}
+The inference engine of the system uses join trees for practically all of
+its calculations. A good introduction on inference in belief networks can
+be found in~\cite{huang1994} or~\cite{Cowell1999ch}. Shortly, the graph
+implementation, described previously in this document, transforms a graph
+into a set of {\it cliques}. The cliques are connected to each other by 
+{\it sepsets} to form a structure called {\it join tree} or 
+{\it junction tree}. The inference calculations are considerably simpler to
+make according to such a secondary structure instead of the plain belief
+network.
 
-The idea and mathematical formulas...
+Traditionally the word clique means a complete subgraph of some graph or
+just the set of nodes in such a subgraph. In this document the word clique
+refers to a structure which contains the variables of a maximal subgraph of
+a slightly modified version the belief network at hand. A clique has also a 
+{\it potential} $\phi_\mathbf{X}$ for describing the dependencies of its 
+variables $\mathbf{X}$.
+
+There are also the separator sets, or just shortly sepsets, connecting the
+cliques together. A sepset contains the intersection of the two neigbouring
+cliques i.e. the variables common to both cliques. In the inference
+machine, a sepset between cliques $\mathbf{X}$ and $\mathbf{Y}$ contains
+also two potentials $\phi_\mathbf{R}$ and $\phi_\mathbf{R}^{old}$ in
+addition to the variables $\mathbf{R} = \mathbf{X} \cap \mathbf{Y}$.
+
+% The join tree property: if two cliques have a common variable, every
+% clique and sepset on the path between the two cliques have the variable
+% also. 
+
+% The propagation of evidence
+
+% XXXXX To be continued...
 
 
 \subsection{The functionality description}
@@ -1438,7 +1469,9 @@ How the stuff could work also...
 
 
 \newpage
-\section{The timeslice handler} % Some system which handles time series?
+\section{The NIP and timeslice handler} 
+% Some system which handles time series?
+
 \subsection{General}
 
 The idea and mathematical formulas...
@@ -1450,7 +1483,7 @@ The interface + how the stuff works...
 \subsection{Other possibilities}
 
 How the stuff could work also...
-
+% a tree of Variables instead of an array?
 
 
 \newpage
