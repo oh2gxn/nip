@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.35 2004-10-18 14:25:30 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.36 2004-10-21 13:33:43 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -305,6 +305,9 @@ variables in \cfilename{Variable.c} but it could also be at
 \cfilename{parser.c} in order to avoid having weird functions like
 \cfunction{get\_parser\_variable}.
 
+% length limitations of symbols, variable and state names?
+% a tree of Variables instead of an array?
+
 
 \newpage
 \section{Graphs}
@@ -600,36 +603,31 @@ made for finding out which configuration of states of the variables
 corresponds to each element in the potential. Note that the 
 \cparameter{indices} array is not allocated by the function.
 
-% FIXME: the assumptions about the ordering of variables will be relieved
-\item[general\_marginalise(source, destination, source\_vars)] is one
+\item[general\_marginalise(source, destination, mapping)] is one
 of the most useful functions since it computes the marginalisation
-i.e. a sum over the variables indicated by the given 
-\cdatatype{integer array} \cparameter{source\_vars} and places the 
+i.e. a sum over the variables not being indicated by the given 
+\cdatatype{integer array} \cparameter{mapping} and places the 
 result in the given \cparameter{destination} potential. To make any 
 sense, the number of associated variables in \cparameter{source} must 
-be greater than in \cparameter{destination}. The implementation
-assumes that the variables common to the potentials are in the same 
-order. Consequently, all the variables in a system must have a total 
-and static ordering in order to keep all the sets of variables shared 
-by neigbouring clique potentials in order.
+be greater than in \cparameter{destination}. 
 
-The \cdatatype{integer array} \cparameter{source\_vars} indicates which
-variables are marginalised away. It consists of indices ranging from
-\examplecode{0} to \examplecode{source->num\_of\_vars - 1} inclusive. 
-The array must be arranged in ascending order and the size must equal 
-the difference in the numbers of associated variables in the potentials. 
-Simply, a zero in the array tells the function to marginalise over the 
-first variable. Note that the result is not normalised.
+The \cparameter{mapping} array tells which variable in
+\cparameter{source} corresponds to each of the variables in
+\cparameter{destination}. It consists of indices ranging from
+\examplecode{0} to \examplecode{source->num\_of\_vars - 1} inclusive.
+The $n$'th variable of destination potential corresponds to the 
+$mapping[n]$'th variable in the source potential. Size of the array must 
+equal the number of variables associated with the destination potential.
+Note that the result of marginalisation is not normalised.
 
 \item[total\_marginalise(source, destination, variable)] can be used
 for finding out the probability distribution of a single variable
 according to the \cparameter{source} potential. The function is
-similar to the \cfunction{general\_marginalise} but instead of telling 
-which variables to marginalise away, the user must indicate which
-variable is left unmarginalised. The parameter \cparameter{variable} is 
-an \cdatatype{integer} ranging from \examplecode{0} to
-\examplecode{source->num\_of\_vars - 1} inclusive. Zero indicates the 
-first variable in the potential.
+similar to the \cfunction{general\_marginalise} but the user must
+indicate which one of the variables is left unmarginalised. The 
+parameter \cparameter{variable} is an \cdatatype{integer} ranging from
+\examplecode{0} to \examplecode{source->num\_of\_vars - 1}
+inclusive. Zero indicates the first variable in the potential.
 
 Another difference arises from the fact that the probability 
 distribution of a single variable fits into a one-dimensional array. 
@@ -637,9 +635,10 @@ The place to put the resulting \cdatatype{double array}
 (\cparameter{destination}) is given to the function as one of the
 parameters. Size of the array must be equal (or greater) to the
 cardinality of the desired variable, so remember to allocate one
-before calling this function. Note that the result is not normalised.
+before calling this function. Note that the result of marginalisation 
+is not normalised.
 
-\item[update\_potential(numerator, denominator, target, extra\_vars)] 
+\item[update\_potential(numerator, denominator, target, mapping)] 
 implements the multiplication of potentials. The function simply
 multiplies the elements of the \cparameter{target} potential with the
 corresponding elements in the \cparameter{numerator} potential. At the
@@ -651,16 +650,17 @@ left unchanged by the function.
 
 The function is made for multiplying the a clique potential with the 
 old and new sepset potentials. It is assumed that the variables
-associated with the multiplier potentials are a subset of the
+associated with the multiplier potentials correspond to a subset of the
 variables associated with the target potential. Thus the user needs to
-indicate which of the variables in the target potential are not
-associates with the multiplier potentials. This is achieved with the
-fourth parameter \cparameter{extra\_vars} which is an 
-\cdatatype{integer array}. The array must be in ascending order. For 
-example, a zero in the array indicates that the first variable of the 
-target potential is not amongst those associated with the multiplicand 
-potentials.
-% EOF - end of fixme
+indicate which of the variables in the target potential correspond to
+each variable in the multiplier potentials. This is achieved with the
+fourth parameter \cparameter{mapping} which is an 
+\cdatatype{integer array}. The variables of numerator and denominator 
+potentials are assumed to be in the same order. For example, the array 
+\examplecode{\{0, 3, 1\}} tells that the first variable of
+\cparameter{numerator} is also first in the \cparameter{target}, but
+the second variable of \cparameter{numerator} is the fourth (3+1)
+variable of the \cparameter{target} potential.
 
 \item[update\_evidence(numerator, denominator, target, var)] is made
 for multiplying potentials with probability distributions of a single
@@ -679,15 +679,15 @@ with the \cparameter{var} \cdatatype{integer}. E.g. a zero tells the
 function that the evidence is about the first variable associated with 
 the potential.
 
-% FIXME
-\item[init\_potential(probs, target, extra\_vars)] is essentially the
+\item[init\_potential(probs, target, mapping)] is essentially the
 same as the \cfunction{update\_potential} function. It is meant for
 multiplying the \cparameter{target} potential with the given
 \cparameter{probs} potential. If the potentials are similar, i.e. they
-have the same associated variables, the \cparameter{extra\_vars} parameter 
-should be \cdatatype{NULL}. Otherwise, \cparameter{extra\_vars} is an 
-\cdatatype{integer array} indicating which of the variables associated 
-with the target potential are not associated with the multiplier potential.
+have the same associated variables and in the same order, the 
+\cparameter{mapping} parameter may be \cdatatype{NULL}. Otherwise, 
+\cparameter{mapping} is an \cdatatype{integer array} indicating which
+of the variables associated with the target potential correspond to
+each of the variables in the multiplier potential.
 
 \item[print\_potential(p)] is mainly for debugging purposes. It prints 
 the contents of the \cdatatype{potential}~\cparameter{p} to the 
@@ -696,12 +696,20 @@ standard output.
 
 
 \subsection{Other possibilities}
-There are several ways of implementing the calculations of the potentials
-without keeping the corresponding variables in a certain order. This
-could be achieved by using an integer array to remap the order of the
-variables instead of telling which are not included and assuming that
-the rest of the variables are in the same order in both potentials.
-% EOF - end of fixme
+There are several ways of implementing the calculations of the
+potentials. The first implementation relied on keeping the
+associated variables in a certain order. Unfortunately this caused
+problems with time slice models where the variables of a time slice
+correspond to a different set of variables in the previous time
+slice. If the order of variables in a potential is fixed, then a subset
+of variables in a time slice should be in the same order as the
+other set of corresponding variables in the previous time slice.
+By using an integer array to remap the order of the variables, we
+avoid this and possibly other problems. In the previous
+implementation, the used had to specify (in a certain order) which
+variables were NOT shared by the potentials and usage was therefore 
+less intuitive. Note that the join tree implementation still requires 
+a static and total order among variables.
 
 \newpage
 \section{Join trees} % Cliques and sepsets

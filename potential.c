@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.49 2004-10-18 14:25:30 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.50 2004-10-21 13:33:43 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -401,7 +401,7 @@ int init_potential(potential probs, potential target, int mapping[]){
       return ERROR_OUTOFMEMORY;
     }
   }
-  else /* probs is a scalar & normalised => probs = 1 */
+  else /* probs is a scalar & normalised => probs == 1 */
     return NO_ERROR;
 
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
