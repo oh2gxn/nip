@@ -17,17 +17,18 @@ int marginalise(Clique, Variable, double[]);
 int insert_evidence(Clique, double *);
 
 /* Method for creating cliques (without pointers to sepsets) 
-   - MVK: variables[] is an array of Variables (which are pointers) */
-Clique make_Clique(Variable variables[], int num_of_vars){
+   - MVK: vars[] is an array of Variables (which are pointers) */
+Clique make_Clique(Variable vars[], int num_of_vars){
   Clique c = (Clique) malloc(sizeof(cliquetype));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
   int i;
+  c->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
   for(i = 0; i < num_of_vars; i++){
     cardinality[i] = variables[i]->cardinality;
+    c->variables[i] = vars[i];
   }
   c->p = make_potential(cardinality, num_of_vars);
-  free(cardinality); /* the array was copied ? */
-  c->variables = variables; /* BUT THIS IS NOT copied */
+  free(cardinality);
   c->sepsets = 0;
   c->mark = 0;
   return c;
@@ -46,7 +47,7 @@ int free_Clique(Clique c){
   }
   /* clean the rest */
   free_potential(c->p);
-  free(c->variables); /* is this a good idea ? */
+  free(c->variables);
   free(c);
   return 0;
 }
@@ -68,18 +69,20 @@ int add_Sepset(Clique c, Sepset s){
 /* Method for creating sepsets: 
    - cliques[] is an array which contains references to BOTH 
      neighbouring cliques */
-Sepset make_Sepset(Variable variables[], int num_of_vars, Clique cliques[]){
+Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   Sepset s = (Sepset) malloc(sizeof(sepsettype));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
   int i;
+  s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = variables[i]->cardinality;
+    cardinality[i] = vars[i]->cardinality;
+    s->variables = vars[i];
   }
   s->old = make_potential(cardinality, num_of_vars);
   s->new = make_potential(cardinality, num_of_vars);
   free(cardinality); /* the array was copied ? */
-  s->variables = variables; /* <- */
-  s->cliques = cliques; /*  <---- but these arrays are not copied !? */
+  s->cliques[0] = cliques[0]; /* Hopefully the space was allocated! */
+  s->cliques[1] = cliques[1];
   return s;
 }
 
