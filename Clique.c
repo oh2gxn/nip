@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.78 2004-08-13 14:38:11 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.79 2004-08-16 11:23:43 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -209,23 +209,66 @@ void remove_Sepset(Clique c, Sepset s){
  */
 Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
 
-  Sepset s = (Sepset) malloc(sizeof(sepsettype));
-  int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
-  int *reorder = (int *) calloc(num_of_vars, sizeof(int));
-  int *indices = (int *) calloc(num_of_vars, sizeof(int));
+  Sepset s;
+  int *cardinality;
+  int *reorder;
+  int *indices;
   int i, j;
   unsigned long temp;
 
-  if(!s || !cardinality || !reorder || !indices){
-    /* fail-fast OR operation? */
+  s = (Sepset) malloc(sizeof(sepsettype));
+
+  if(!s){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  cardinality = (int *) calloc(num_of_vars, sizeof(int));
+
+  if(!cardinality){
+    free(s);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  reorder = (int *) calloc(num_of_vars, sizeof(int));
+
+  if(!reorder){
+    free(s);
+    free(cardinality);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  indices = (int *) calloc(num_of_vars, sizeof(int));
+
+  if(!indices){
+    free(s);
+    free(cardinality);
+    free(reorder);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
   s->cliques = (Clique *) calloc(2, sizeof(Clique));
+
+  if(!s->cliques){
+    free(s);
+    free(cardinality);
+    free(reorder);
+    free(indices);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
   s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
 
-  if(!s->variables || !s->cliques){ /* fail-fast OR operation? */
+  if(!s->variables){
+    free(cardinality);
+    free(reorder);
+    free(indices);
+    free(s->cliques);
+    free(s);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
