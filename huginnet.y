@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.55 2004-08-24 08:29:54 mvkorpel Exp $
+ * huginnet.y $Id: huginnet.y,v 1.56 2004-08-25 11:14:41 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -11,12 +11,6 @@
 #include "Variable.h"
 #include "parser.h"
 #include "errorhandler.h"
-
-#define YYERROR_VERBOSE
-
-/*
-#define DEBUG_BISON
-*/
 
 static int
 yylex (void);

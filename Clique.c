@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.93 2004-08-24 08:29:53 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.94 2004-08-25 11:14:41 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -827,16 +827,16 @@ int marginalise(Clique c, Variable v, double r[]){
 }
 
 
-int normalise(double result[], int array_size){
+void normalise(double result[], int array_size){
   int i;
   double sum = 0;
   for(i = 0; i < array_size; i++)
     sum += result[i];
   if(sum == 0)
-    return 0;
+    return;
   for(i = 0; i < array_size; i++)
     result[i] /= sum;
-  return NO_ERROR;
+  return;
 }
 
 
@@ -947,8 +947,12 @@ int enter_evidence(Variable_iterator vars, Clique* cliques,
     }
   }
 
-  /* Update likelihood. No need to check return value. */
-  update_likelihood(v, evidence);
+  /* Update likelihood. Check the return value. */
+  retval = update_likelihood(v, evidence);
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return ERROR_GENERAL;
+  }
 
   if(retraction){
     retval = global_retraction(vars, cliques, num_of_cliques);

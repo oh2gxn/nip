@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.45 2004-08-23 13:55:46 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.46 2004-08-25 11:14:41 mvkorpel Exp $
  * Functions for handling potentials. 
  */
 
@@ -13,9 +13,9 @@
 
 static double *get_ppointer(potential p, int indices[]);
 
-static int choose_indices(potential source, int source_indices[],
-			  int dest_indices[], int source_vars[],
-			  int size_of_source_vars);
+static void choose_indices(potential source, int source_indices[],
+			   int dest_indices[], int source_vars[],
+			   int size_of_source_vars);
 
 /*
  * Returns a pointer to the potential with given variable values (indices).
@@ -42,7 +42,7 @@ static double *get_ppointer(potential p, int indices[]){
  * source_vars must be in ascending order (see marginalise(...)). 
  * dest_indices[] must be of the right size. Returns an error code.
  */
-static int choose_indices(potential source, int source_indices[],
+static void choose_indices(potential source, int source_indices[],
 			  int dest_indices[], int source_vars[],
 			  int size_of_source_vars){
 
@@ -61,7 +61,7 @@ static int choose_indices(potential source, int source_indices[],
       k++;
     }
   } 
-  return NO_ERROR;
+  return;
 }
 
 
@@ -132,12 +132,12 @@ void free_potential(potential p){
 }
 
 
-int copy_potential(potential source, potential destination){
+void copy_potential(potential source, potential destination){
 
   int i;
   for(i = 0; i < source->size_of_data; i++)
     destination->data[i] = source->data[i];
-  return NO_ERROR;
+  return;
 }
 
 
@@ -152,15 +152,15 @@ double get_pvalue(potential p, int indices[]){
 }
 
 
-int set_pvalue(potential p, int indices[], double value){
+void set_pvalue(potential p, int indices[], double value){
   double *ppointer = get_ppointer(p, indices);
   if(ppointer != NULL)
     *ppointer = value;
-  return NO_ERROR;
+  return;
 }
 
 
-int inverse_mapping(potential p, int flat_index, int indices[]){
+void inverse_mapping(potential p, int flat_index, int indices[]){
 
   int x = p->size_of_data;
   int i;
@@ -174,7 +174,7 @@ int inverse_mapping(potential p, int flat_index, int indices[]){
     flat_index -= indices[i] * x;
   }
 
-  return NO_ERROR;
+  return;
 }
 
 

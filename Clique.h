@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.45 2004-08-23 13:55:46 mvkorpel Exp $
+ * Clique.h $Id: Clique.h,v 1.46 2004-08-25 11:14:41 mvkorpel Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -120,7 +120,7 @@ int marginalise(Clique c, Variable v, double r[]);
  * Normalises the array. Divides every member by their sum.
  * The function modifies the given array.
  */
-int normalise(double result[], int array_size);
+void normalise(double result[], int array_size);
 
 
 /* Method for backing away from impossibilities in observation. */

@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.25 2004-08-23 13:55:46 mvkorpel Exp $
+ * potential.h $Id: potential.h,v 1.26 2004-08-25 11:14:41 mvkorpel Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -24,9 +24,8 @@ void free_potential(potential p);
 
 /* Make a copy of a potential. 
  * Source and destination must be potentials of same cardinality! 
- * Returns an error code.
  */
-int copy_potential(potential source, potential destination);
+void copy_potential(potential source, potential destination);
 
 /* Gets a value from the potential p. Syntactic sugar. */
 double get_pvalue(potential p, int indices[]);
@@ -34,12 +33,12 @@ double get_pvalue(potential p, int indices[]);
 /* Sets a value in the potential p and returns an error code.
  * Syntactic sugar.
  */
-int set_pvalue(potential p, int indices[], double value);
+void set_pvalue(potential p, int indices[], double value);
 
 /* Mapping from flat index to n-dimensional index, where n is the number of
- * variables in potential p. Returns an error code. 
+ * variables in potential p.
  * USUALLY NOT NEEDED outside of potential.c */
-int inverse_mapping(potential p, int flat_index, int indices[]);
+void inverse_mapping(potential p, int flat_index, int indices[]);
 
 /* Method for marginalising over certain variables. Useful in message passing
  * from clique to sepset. It is best that sepsets have two static potentials 

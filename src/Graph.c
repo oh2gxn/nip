@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.42 2004-08-23 13:18:18 mvkorpel Exp $
+ * Graph.c $Id: Graph.c,v 1.43 2004-08-25 11:14:41 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -148,7 +148,7 @@ int is_child(Graph* G, Variable parent, Variable child)
 int add_variable(Graph* G, Variable v)
 {
     if (G->top == G->size)
-	   return -1; /* Cannot add more items. */
+	   return ERROR_GENERAL; /* Cannot add more items. */
 
     G->variables[G->top] = v;
     G->top++;
@@ -156,7 +156,7 @@ int add_variable(Graph* G, Variable v)
     if (G->top == G->size)
 		sort_variables(G);
 
-    return 0; /* Error codes need work */
+    return NO_ERROR;
 }
 
 int add_child(Graph* G, Variable parent, Variable child)
@@ -167,11 +167,11 @@ int add_child(Graph* G, Variable parent, Variable child)
     child_i = get_graph_index(G, child);
 
     if (parent_i == -1 || child_i == -1)
-	   return -1;
+	   return ERROR_GENERAL;
 
     ADJM(G, parent_i, child_i) = 1;
 
-    return 0;
+    return NO_ERROR;
 }
 
 /*** OPERATIONS (methods) ***/

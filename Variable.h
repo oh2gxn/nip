@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.34 2004-08-16 12:45:45 mvkorpel Exp $
+ * Variable.h $Id: Variable.h,v 1.35 2004-08-25 11:14:41 mvkorpel Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -107,7 +107,7 @@ Variable get_variable(Variable_iterator it, char *symbol);
 Variable get_parser_variable(char *symbol);
 
 /* Gives v a new likelihood array. The size of the array
- * must match v->cardinality
+ * must match v->cardinality. Returns an error code.
  */
 int update_likelihood(Variable v, double likelihood[]);
 
