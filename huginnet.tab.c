@@ -23,8 +23,9 @@
 #include "Variable.h"
 #include "parser.h"
 #include "errorhandler.h"
+#include "huginnet.h"
 
-#line 16 "huginnet.y"
+#line 17 "huginnet.y"
 typedef union {
   double numval;
   double *doublearray;
@@ -103,9 +104,9 @@ static const short yyrhs[] = {    20,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-    63,    76,    77,    81,    82,    86,    97,    98,   102,   107,
-   113,   117,   121,   139,   144,   145,   149,   150,   155,   156,
-   157,   161,   162,   163,   167
+    64,    77,    78,    82,    83,    87,    98,    99,   103,   108,
+   114,   118,   122,   140,   145,   146,   150,   151,   156,   157,
+   158,   162,   163,   164,   168
 };
 #endif
 
@@ -689,7 +690,7 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 63 "huginnet.y"
+#line 64 "huginnet.y"
 {
   /* final stuff here */
 
@@ -702,23 +703,23 @@ case 1:
   reset_initData();
     break;}
 case 2:
-#line 76 "huginnet.y"
+#line 77 "huginnet.y"
 { nip_graph = new_graph(nip_vars_parsed) ;
     break;}
 case 3:
-#line 77 "huginnet.y"
+#line 78 "huginnet.y"
 { add_pvar(yyvsp[-1].variable) ;
     break;}
 case 4:
-#line 81 "huginnet.y"
+#line 82 "huginnet.y"
 {/* initialisation data ready at first_initData */;
     break;}
 case 5:
-#line 82 "huginnet.y"
+#line 83 "huginnet.y"
 {/* potential somewhere? */;
     break;}
 case 6:
-#line 89 "huginnet.y"
+#line 90 "huginnet.y"
 {
   /* new_variable() */
   Variable v = new_variable(yyvsp[-6].name, yyvsp[-4].name, yyvsp[-3].stringarray, nip_strings_parsed); 
@@ -726,25 +727,25 @@ case 6:
   yyval.variable = v;
     break;}
 case 9:
-#line 102 "huginnet.y"
+#line 103 "huginnet.y"
 { yyval.name = yyvsp[-1].name ;
     break;}
 case 10:
-#line 107 "huginnet.y"
+#line 108 "huginnet.y"
 { 
   /* makes an array of strings out of the parsed list of strings */
   yyval.stringarray = yyvsp[-2].stringarray ;
     break;}
 case 11:
-#line 113 "huginnet.y"
+#line 114 "huginnet.y"
 {/* ignore */;
     break;}
 case 12:
-#line 117 "huginnet.y"
+#line 118 "huginnet.y"
 {/* ignore */;
     break;}
 case 13:
-#line 121 "huginnet.y"
+#line 122 "huginnet.y"
 { 
   /*
    * FIXME: This is still wrong. Variables should be added to the graph
@@ -763,51 +764,51 @@ case 13:
   reset_symbols();
     break;}
 case 14:
-#line 139 "huginnet.y"
+#line 140 "huginnet.y"
 { yyval.variable = get_variable(yyvsp[0].name) ;
     break;}
 case 15:
-#line 144 "huginnet.y"
+#line 145 "huginnet.y"
 { yyval.variablearray = make_variable_array() ;
     break;}
 case 16:
-#line 145 "huginnet.y"
+#line 146 "huginnet.y"
 { add_symbol(yyvsp[-1].name) ;
     break;}
 case 17:
-#line 149 "huginnet.y"
+#line 150 "huginnet.y"
 { yyval.stringarray = make_string_array() ;
     break;}
 case 18:
-#line 150 "huginnet.y"
+#line 151 "huginnet.y"
 { add_string(yyvsp[-1].name) ;
     break;}
 case 19:
-#line 155 "huginnet.y"
+#line 156 "huginnet.y"
 { yyval.doublearray = make_double_array() ;
     break;}
 case 20:
-#line 156 "huginnet.y"
+#line 157 "huginnet.y"
 { add_number(yyvsp[-1].numval) ;
     break;}
 case 21:
-#line 157 "huginnet.y"
+#line 158 "huginnet.y"
 { add_number(yyvsp[-2].numval) ;
     break;}
 case 22:
-#line 161 "huginnet.y"
+#line 162 "huginnet.y"
 { free(yyvsp[0].name) /* ignore */;
     break;}
 case 23:
-#line 162 "huginnet.y"
+#line 163 "huginnet.y"
 { reset_doubles() /* ignore */;
     break;}
 case 24:
-#line 163 "huginnet.y"
+#line 164 "huginnet.y"
 {/* ignore */;
     break;}
 case 25:
-#line 167 "huginnet.y"
+#line 168 "huginnet.y"
 { yyval.doublearray = yyvsp[-2].doublearray ;
     break;}
 }
@@ -1008,7 +1009,7 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 170 "huginnet.y"
+#line 171 "huginnet.y"
 
 /* Lexical analyzer */
 /* JJT: I did some reading. Might get nasty, if there has to be a token 
@@ -1025,6 +1026,8 @@ yyerrhandle:
  *      is more or less implicitly defined :-( */
 
 #include <ctype.h>
+#include <stdlib.h>
+#include <errno.h>
 
 int
 yylex (void)
