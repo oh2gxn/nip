@@ -21,6 +21,7 @@
  * same clique.
  */
 
+#define TEST
 
 int main(int argc, char *argv[]){
 
@@ -31,16 +32,7 @@ int main(int argc, char *argv[]){
   int i, j, k, m, n, retval, t = 0;
   int num_of_hidden = 0;
   int num_of_nexts = 0;
-  double** result; /* probs of the hidden variables */
-
-
-  int kludge_card[] = {3, 3};
-  double kludge[] = {0.1283333333, 0.0650, 0.8066666667, 
-                     0.9033333333, 0.0566666667, 0.0400,
-                     0.0793333333, 0.5396666667, 0.3810};
-  potential kludge_pot;
-  Variable kludge_vars[2];
-  
+  double** result; /* probs of the hidden variables */  
 
   Nip model = NULL;
   Clique clique_of_interest = NULL;
@@ -77,25 +69,6 @@ int main(int argc, char *argv[]){
   if(model == NULL)
     return -1;
   /* The input file has been parsed. -- */
-
-
-
-
-  /* Some kludge stuff to test a hypothesis */
-  if(strcmp(argv[1], "htm_timeslice.net") == 0 && 0){
-    printf(" ** This is only a test! ** Some kludge added! **\n");
-    kludge_vars[0] = get_Variable(model, "B1");
-    kludge_vars[1] = get_Variable(model, "S1");
-    kludge_pot = make_potential(kludge_card, 2, kludge);
-    clique_of_interest = find_family(model->cliques, model->num_of_cliques,
-				     kludge_vars, 2);
-    initialise(clique_of_interest, kludge_vars[0], kludge_vars + 1, 
-	       kludge_pot, 1); /* FIXME: How to prevent the persistency of
-				* initialisation?  Multidimensional evidence?*/
-  }
-  /* EOK: End of kludge */
-
-
 
 
   /*****************************/
@@ -264,9 +237,8 @@ int main(int argc, char *argv[]){
   free(cardinalities);
 
 
-      /**************************************/
-      /* FIX ME: there's a bug somewhere!!! */
-      /**************************************/
+  /* FIX ME: there's a bug somewhere!!! */
+  /* Nope... It's a feature. */
 
 
   /*****************/
@@ -416,7 +388,9 @@ int main(int argc, char *argv[]){
     
     printf("-- t = %d --\n", t+1);
 
-#ifdef KEIJO
+
+#ifdef TEST2
+    if(t == timeseries->datarows - 1){ /* The last timeslice */
 #endif
     /* Put some evidence in */
     for(i = 0; i < timeseries->num_of_nodes; i++)
@@ -426,9 +400,14 @@ int main(int argc, char *argv[]){
 			    get_Variable(model, 
 					 timeseries->node_symbols[i]), 
 			    data[t][i]);
-
+#ifdef TEST2
+    }
+#endif
     
 
+#ifdef TEST
+    if(t == timeseries->datarows - 1){ /* The last timeslice */
+#endif
     /* Pass the message from the past */
     if(t > 0){
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
@@ -455,7 +434,9 @@ int main(int argc, char *argv[]){
       
       free(temp_vars);
     }
-
+#ifdef TEST
+    }
+#endif
 
 
     /* a useful inference ? */
@@ -482,8 +463,13 @@ int main(int argc, char *argv[]){
 	else
 	  temp_vars[k++] = i;
       }
+#ifdef TEST
+      update_potential(timeslice_sepsets[t+1], NULL,
+		       clique_of_interest->p, temp_vars);
+#else
       update_potential(timeslice_sepsets[t+1], timeslice_sepsets[t],
 		       clique_of_interest->p, temp_vars);
+#endif
       free(temp_vars);
     }
 
