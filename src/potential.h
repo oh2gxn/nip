@@ -38,7 +38,18 @@ void marginalise(potential source, potential destination, int source_vars[]);
    passing from sepset to clique. 
 -target: the potential whose values are updated
 -enumerator: multiplier, usually the newer sepset potential
--denominator: divider, usually the older sepset potential */
-void update(potential enumerator, potential denominator, potential target);
+-denominator: divider, usually the older sepset potential 
+-extra_vars: an integer array which holds the target variable ID's 
+ that are NOT in source potentials and in ascending order. Length of the 
+ array must be at least the number of variables in source potentials */
+void update(potential enumerator, potential denominator, potential target,
+	    int extra_vars[]);
 
 #endif
+
+
+
+
+
+
+

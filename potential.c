@@ -11,7 +11,7 @@ double get_pvalue(potential, int[], int);
 void set_pvalue(potential, int[], int, double);
 double *get_ppointer(potential, int[], int);
 void marginalise(potential, potential, int[]);
-void update(potential, potential, potential);
+void update(potential, potential, potential, int[]);
 int main();
 
 /* Make a num_of_vars -dimension potential array. */
@@ -77,6 +77,8 @@ void set_pvalue(potential p, int indices[], int num_of_vars, double value){
    num_of_vars must be equal to the size of indices[] */
 double *get_ppointer(potential p, int indices[], int num_of_vars){
 
+  /* JJ NOTE: num_of_vars can be found in potential! */
+
   int index = indices[0];
   int i;
   int card_temp = 1;
@@ -106,8 +108,9 @@ void inverse_mapping(potential p, int big_index, int indices[]){
   return;
 }
 
-/* Drops the indices that are marginalised. source_vars must be in ascending
-   order (see marginalise(...). dest_indices[] must be of right size */
+/* Drops the indices that are marginalised or multiplied. 
+   source_vars must be in ascending order (see marginalise(...). 
+   dest_indices[] must be of right size */
 void choose_indices(potential source, int source_indices[],
 		    int dest_indices[], int source_vars[]){
 
@@ -150,6 +153,13 @@ void marginalise(potential source, potential destination, int source_vars[]){
       get_ppointer(destination, dest_indices, destination->num_of_vars);
     *potvalue += source->data[i];
   }
+
+  /* free(source_indices);
+     free(dest_indices); */ /* is allocating and freeing slow??? */
+
+  /* JJ NOTE: WHAT IF EACH POTENTIAL HAD A SMALL ARRAY CALLED temp_indices ??? 
+     The space is needed anyway in marginalise() and update()... */
+
   return;
 }
 
@@ -157,12 +167,39 @@ void marginalise(potential source, potential destination, int source_vars[]){
    potentials and dividing with denominator potentials. Useful in message 
    passing from sepset to clique. 
 -target: the potential whose values are updated
--enumerator: multiplier, usually the newer sepset potential
--denominator: divider, usually the older sepset potential */
-void update(potential enumerator, potential denominator, potential target){
+-enumerator: multiplier, usually the newer sepset potential (source)
+-denominator: divider, usually the older sepset potential. This MUST have 
+ similar geometry to enumerator.
+-extra_vars: an integer array which holds the target variable ID's 
+ that are NOT in source potentials and in ascending order. Length of the 
+ array must be at least the number of variables in source potentials */
+void update(potential enumerator, potential denominator, potential target,
+	    int extra_vars[]){
 
-  /* a VERY intriguing task: which target variables correspond to the 
-     multiplier variables? */
+  int i;
+  int *source_indices, *target_indices;
+  double *potvalue;
+
+  source_indices = (int *) calloc(enumerator->num_of_vars, sizeof(int));
+  target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
+
+  for(i = 0; i < target->size_of_data; i++){
+    inverse_mapping(target, i, target_indices);
+    choose_indices(target, target_indices, source_indices, extra_vars);
+
+    potvalue =
+      get_ppointer(enumerator, source_indices, enumerator->num_of_vars);
+    target->data[i] *= *potvalue;  /* THE multiplication */
+
+    potvalue = 
+      get_ppointer(denominator, source_indices, denominator->num_of_vars);
+    target->data[i] /= *potvalue;  /* THE division */
+  }
+
+  free(source_indices); /* JJ NOTE: GET RID OF THESE */
+  free(target_indices);
+
+  return;  
 
 }
 
