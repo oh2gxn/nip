@@ -1,0 +1,58 @@
+# Example of a model specification
+# NOT FINISHED YET
+# $Id: network_example.txt,v 1.1 2004-04-16 14:44:30 mvkorpel Exp $
+
+node jokke
+{
+	states = ("eating" "sleeping" "picking nose");
+	label = "What is Jokke doing?";
+}
+
+node summer_student
+{
+	states = ("programming" "studying" "writing report" "dreaming");
+	label = "What is the summer student doing?";
+}
+
+node obelix
+{
+	states = ("under influence" "sober");
+	label = "Has Obelix taken any magic potion?";
+}
+
+node mclaren
+{
+	states = ("engine" "transmission" "clutch");
+	label = "Cause of failure?";
+}
+
+node spede
+{
+	states = ("alive" "dead");
+	label = "Is Spede alive?";
+}
+
+potential (obelix | summer_student mclaren)
+{
+
+data = (0.4, 1,1,1,  0.6, 1,1,1,
+        1,   1,1,1,  1,   1,1,1,
+        1,   1,1,1,  1,   1,1,1);
+
+}
+
+potential (spede | mclaren)
+{
+
+data = (0.6,    0.2,    0.2,
+        0.15,   0.25,   0.6);
+
+}
+
+potential (jokke | summer_student obelix)
+{
+
+data = (0.1, 0.3, 0.6,  1,1,1,  1,1,1,  1,1,1,
+        1,   1,   1,    1,1,1,  1,1,1,  1,1,1);
+
+}
