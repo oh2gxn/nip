@@ -1,6 +1,5 @@
 # Example of a model specification
-# NOT FINISHED YET
-# $Id: network_example.txt,v 1.1 2004-04-16 14:44:30 mvkorpel Exp $
+# $Id: network_example.txt,v 1.2 2004-04-22 14:23:03 mvkorpel Exp $
 
 node jokke
 {
@@ -32,27 +31,31 @@ node spede
 	label = "Is Spede alive?";
 }
 
+# 2 * 4 * 3
 potential (obelix | summer_student mclaren)
 {
 
-data = (0.4, 1,1,1,  0.6, 1,1,1,
-        1,   1,1,1,  1,   1,1,1,
-        1,   1,1,1,  1,   1,1,1);
+data = (0.4, 0.6,    0.2, 0.8,    0.05, 0.95,    0.7, 0.3,
+        0.99, 0.01,  0.6, 0.4,    0.2,  0.8,     0.1, 0.9,
+        0.23, 0.77,  0.45, 0.55,  0.95, 0.05,    0.43, 0.57);
 
 }
 
+# 2 * 3
 potential (spede | mclaren)
 {
 
-data = (0.6,    0.2,    0.2,
-        0.15,   0.25,   0.6);
+data = (0.6,    0.4,
+        0.2,    0.8,
+        0.75,   0.25);
 
 }
 
+# 3 * 4 * 2
 potential (jokke | summer_student obelix)
 {
 
-data = (0.1, 0.3, 0.6,  1,1,1,  1,1,1,  1,1,1,
-        1,   1,   1,    1,1,1,  1,1,1,  1,1,1);
+data = (0.5, 0.3, 0.2,   0.7, 0.1, 0.2,   0.1, 0.44, 0.46,   0.43, 0.22, 0.35,
+        0.9, 0.05, 0.05, 0.2, 0.5, 0.3,   0.75, 0.12, 0.13,  0.86, 0.08, 0.06);
 
 }

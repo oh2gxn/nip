@@ -1,10 +1,15 @@
-/* Definitions for the bison parser. $Id: parser.h,v 1.6 2004-03-23 13:30:25 jatoivol Exp $
+/* Definitions for the bison parser. $Id: parser.h,v 1.7 2004-04-22 14:23:03 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
 #define __PARSER_H__
 
 #define MAX_LINELENGTH 1000
+
+/* Comment character in input files.
+ * After this, the rest of the line is ignored.
+ */
+#define COMMENT_CHAR '#'
 
 #include "Variable.h"
 #include "potential.h"
@@ -58,7 +63,8 @@ static FILE *parser_infile = NULL;
 static int file_open = 0;
 
 /* Opens an input file. Returns 0 if file was opened or if some file was
- * already open. Returns 1 if an error occurred opening the file.
+ * already open. Returns ERROR_GENERAL if an error occurred
+ * opening the file.
  */
 int open_infile(const char *file);
 
@@ -68,6 +74,8 @@ void close_infile();
 
 /* Gets the next token from the input file.
  * Returns the token. token_length is the length of the token.
+ * The token is a null terminated string.
+ * *token_length doesn't include the null character.
  * After the token has been used, PLEASE free the memory allocated for it.
  * If token_length == 0, there are no more tokens.
  */

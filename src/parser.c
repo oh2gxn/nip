@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.6 2004-03-23 13:30:25 jatoivol Exp $
+ * $Id: parser.c,v 1.7 2004-04-22 14:23:03 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -13,7 +13,7 @@ int open_infile(const char *file){
   if(!file_open){
     parser_infile = fopen(file,"r");
     if (!parser_infile)
-      return 1; /* fopen(...) failed */
+      return ERROR_GENERAL; /* fopen(...) failed */
     else
       file_open = 1;
   }
@@ -44,7 +44,7 @@ char *next_token(int *token_length){
   /* The token we return */
   char *token;
 
-  int tokenlength;
+  int nexttoken_length;
 
   /* Return if some evil mastermind gives us a NULL pointer */
   if(!token_length)
@@ -70,12 +70,16 @@ char *next_token(int *token_length){
       /* Adjust pointer to the beginning of token boundary index array */
       indexarray = tokenise(last_line, tokens_left, 1);
 
-      read_line = 0;
+      /* Ignore lines that have COMMENT_CHAR as first non-whitespace char */
+      if(last_line[indexarray[0]] == COMMENT_CHAR)
+	read_line = 1;
+      else
+	read_line = 0;
     }
   }
 
-  tokenlength = indexarray[1] - indexarray[0];
-  token = (char *) calloc(tokenlength, sizeof(char));
+  *token_length = indexarray[1] - indexarray[0];
+  token = (char *) calloc(*token_length + 1, sizeof(char));
   if(!token){
     report_error(ERROR_OUTOFMEMORY, 0);
     *token_length = -1;
@@ -83,12 +87,19 @@ char *next_token(int *token_length){
   }
 
   /* Copy the token */
-  strncpy(token, &(last_line[indexarray[0]]), tokenlength);
+  strncpy(token, &(last_line[indexarray[0]]), *token_length);
+
+  /* Null terminate the token. */
+  token[*token_length] = '\0';
 
   indexarray += 2;
   
   /* If all the tokens have been handled, read a new line next time */
   if(--tokens_left == 0)
+    read_line = 1;
+
+  /* Still some tokens left. Check for COMMENT_CHAR. */
+  else if(last_line[indexarray[0]] == COMMENT_CHAR)
     read_line = 1;
 
   return token;
@@ -127,7 +138,7 @@ int add_string(char* string){
   new->fwd = 0;
   new->bwd = last_string;
   if(first_string = 0)
-    firststring = new;
+    first_string = new;
   last_string = new;
   doubles_parsed++;
   return 0;
