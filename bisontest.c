@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
     return retval;
 
   /* propagation: some action */
-  /* JJT: useless
+  /*
   for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
   collect_evidence(NULL, NULL, nip_cliques[0]);
@@ -61,8 +61,8 @@ int main(int argc, char *argv[]){
   /* another propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
     unmark_Clique(nip_cliques[i]);
-  collect_evidence(NULL, NULL, clique_of_interest);
-  distribute_evidence(clique_of_interest);
+  collect_evidence(NULL, NULL, nip_cliques[0]);
+  distribute_evidence(nip_cliques[0]);
 
 
   /* marginalisation */

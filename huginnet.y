@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.35 2004-06-09 08:00:34 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.36 2004-06-09 15:02:44 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -13,7 +13,7 @@
 #include "huginnet.h"
 
 #define YYERROR_VERBOSE
-/* #define DEBUG_BISON */
+#define DEBUG_BISON
 
 %}
 
@@ -104,9 +104,9 @@ potentials:    /* empty */ {/* list of initialisation data ready */}
 
 nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   /* new_variable() */
-  Variable v = new_variable($2, get_nip_label(),
-			    get_nip_statenames(), nip_strings_parsed);
-
+  Variable v = new_variable($2, get_nip_label(), get_nip_statenames(), 
+			    nip_strings_parsed);
+  free($2);
   reset_strings();
   add_pvar(v);
   $$ = v}
@@ -128,7 +128,7 @@ labelDeclaration:     token_label '=' QUOTED_STRING ';' { $$ = $3 }
 ;
 
 
-/* JJT: cardinality == strings_parsed ? */
+/* JJT: cardinality == nip_strings_parsed ? */
 statesDeclaration:    token_states '=' '(' strings ')' ';' { 
   /* makes an array of strings out of the parsed list of strings */
   $$ = make_string_array() }
@@ -179,16 +179,16 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 }
 ;
 
-child:        UNQUOTED_STRING { $$ = get_variable($1) }
+child:        UNQUOTED_STRING { $$ = get_variable($1); free($1)}
 ;
 
 
 symbols:       /* end of list */
-             | symbol symbols { /* add_symbol($1) */ }
+             | symbol symbols { /* add_symbol(get_variable($1)) */ }
 ;
 
 
-symbol:       UNQUOTED_STRING { add_symbol(get_variable($1)) }
+symbol:       UNQUOTED_STRING { add_symbol(get_variable($1)); free($1)}
 ;
 
 
@@ -201,21 +201,19 @@ string:        QUOTED_STRING { add_string($1) }
 ;
 
 
-/* This should ignore all brackets between numbers! */
 numbers:     /* end of list */
            | num numbers { /* add_double($1) */ }
            | '(' numbers ')' numbers {/* ignore brackets */}
 ;
 
 
-/* This should ignore all brackets between numbers! */
-ignored_numbers:     /* end of list */
-           | NUMBER ignored_numbers { /* ignore the NUMBER */ }
-           | '(' ignored_numbers ')' ignored_numbers {/* ignore brackets */}
+num:       NUMBER { add_double($1) }
 ;
 
 
-num:       NUMBER { add_double($1) }
+ignored_numbers:     /* end of list */
+           | NUMBER ignored_numbers { /* ignore the NUMBER */ }
+           | '(' ignored_numbers ')' ignored_numbers {/* ignore brackets */}
 ;
 
 

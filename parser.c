@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.24 2004-06-08 13:00:37 mvkorpel Exp $
+ * $Id: parser.c,v 1.25 2004-06-09 15:02:44 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -43,7 +43,7 @@ int nip_file_open = 0;
 static char** nip_statenames;
 static char* nip_label;
 
-/*#define DEBUG_PARSER */
+#define DEBUG_PARSER
 
 int open_infile(const char *file){
   if(!nip_file_open){
@@ -477,14 +477,18 @@ void print_parsed_stuff(){
 					   sizeof(unsigned long))) == NULL)
       fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
 
+    
     /* Go through every number in the potential array. */
     for(i = 0; i < list->data->size_of_data; i++){
-      inverse_mapping(list->data, i, indices);
+      
 
+#ifdef SUSI
+      inverse_mapping(list->data, i, indices);
+      
       reorder[0] = get_id(list->child);
       for(j = 1; j < list->data->num_of_vars; j++)
 	reorder[j] = get_id((list->parents)[j - 1]);
-      
+
       /* Make a reorder array.
        * Smallest = 0, ..., Biggest = num_of_vars - 1
        */
@@ -507,6 +511,10 @@ void print_parsed_stuff(){
 	reorder[temp_index] = list->data->num_of_vars -1 - j;
 	biggest_ready = biggest_found;
       }
+      
+      for(j = 0; j < list->data->num_of_vars; j++)
+	printf("reorder[%d] = %lu\n", j, reorder[j]);
+
 
       printf("P( %s = %s |", list->child->symbol, 
 	     (list->child->statenames)[indices[reorder[0]]]);
@@ -516,6 +524,10 @@ void print_parsed_stuff(){
 	       ((list->parents[j])->statenames)[indices[reorder[j + 1]]]);
       
       printf(" ) = %.2f \n", (list->data->data)[i]);
+#endif
+
+      printf("data[%d] = %f\n", i, (list->data->data)[i]);
+
     }
     list = list->fwd;
     
