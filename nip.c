@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.48 2005-03-16 13:47:55 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.49 2005-03-17 10:10:57 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -24,6 +24,9 @@
  *           (assuming sepsets between timeslices have a constant size)
 
  * TODO: 
+
+ * - There's a bug in the forward_inference! (Segmentation fault...)
+
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *   - another forward-like algorithm with elements of dynamic programming
 
@@ -32,10 +35,9 @@
  *   - Invent a concise and efficient way of computing each of the parameters.
  *     - in which order? ("Time-First" or "Family-First")
  *     - one kind of solution:
- *       1: run family_inference -> FamilySeries == P(c, PA(c) | t)
- *       2: sum up the "soft" frequencies of the (multidimensional) events
- *       3: normalise the results and create suitable potentials out of them
- *          -> P(x | pa(x))
+ *       - build it around the forward-backward inference... (E-step)
+ *       - due to the fact that the child is always the first variable in 
+ *         the potentials defining the model, the M-step is quite trivial
  *
  *   - Find a neat way to replace the original parameters of the model.
  *     - gather a potential for each family of variables
@@ -43,6 +45,7 @@
  *
  *   - Determine the parameters of the algorithm
  *     - when to stop?
+ *       - difference in the negative loglikelihood of the timeseries...
  *****/
 
 extern int yyparse();
@@ -489,6 +492,9 @@ static int finish_timeslice_message_pass(Nip model, int direction,
 /* forward-only inference consumes constant (1 time slice) amount of memory 
  * + the results (which is linear) */
 UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
+
+  /* FIXME: a bug causing seg.faults */
+
   int i, k, t;
   int *cardinalities = NULL;
   Variable temp;
@@ -600,6 +606,9 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
 			    model->cliques, model->num_of_cliques, 
 			    ts->observed[i], ts->data[t][i]);
     
+
+    printf("DEBUG: forward_inference \n");
+
     
     if(t > 0)
       if(finish_timeslice_message_pass(model, FORWARD, 

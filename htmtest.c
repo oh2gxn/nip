@@ -19,6 +19,8 @@
  * implies that the variables, which have links to the 
  * variables in the next timeslice, can be found in the 
  * same clique.
+ *
+ * (JJT: Currently, the problems seem to be solved.)
  */
 
 /*
@@ -78,9 +80,9 @@ int main(int argc, char *argv[]){
 
   /* Try this kind of iteration:
    * + put data in
-   * - pass the message from previous sepset to the next one
-   * - print the result
-   * - reset model
+   * + pass the message from previous sepset to the next one
+   * + print the result
+   * + reset model
    */
 
 

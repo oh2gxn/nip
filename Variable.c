@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.51 2005-03-16 12:14:17 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.52 2005-03-17 10:10:57 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -338,19 +338,21 @@ int number_of_parents(Variable v){
 
 int set_parents(Variable v, Variable *parents, int nparents){
   int i;
-  if(v == NULL || parents == NULL){
+  if(v == NULL || (nparents > 0 && parents == NULL)){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
   }
   
-  v->parents = (Variable *) calloc(nparents, sizeof(Variable));
-  if(!(v->parents)){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+  if(nparents > 0){
+    v->parents = (Variable *) calloc(nparents, sizeof(Variable));
+    if(!(v->parents)){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return ERROR_OUTOFMEMORY;
+    }
+    
+    for(i = 0; i < nparents; i++)
+      v->parents[i] = parents[i]; /* makes a copy of the array */
   }
-
-  for(i = 0; i < nparents; i++)
-    v->parents[i] = parents[i]; /* makes a copy of the array */
   
   v->num_of_parents = nparents;  
   return NO_ERROR;
