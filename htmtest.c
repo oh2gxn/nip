@@ -10,6 +10,15 @@
 #define PRINT_CLIQUES
 */
 
+/***********************************************************
+ * The timeslice concept features some major difficulties 
+ * because the actual calculations are done in the join tree
+ * instead of the graph. The program should be able to 
+ * figure out how the join tree repeats itself and store 
+ * somekind of sepsets between the timeslices...
+ */
+
+
 extern int yyparse();
 
 
@@ -242,7 +251,7 @@ int main(int argc, char *argv[]){
     
     printf("-- t = %d --\n", t+1);
     
-    /* 2. Put some data in */
+    /* Put some data in */
     for(i = 0; i < timeseries->num_of_nodes; i++)
       if(data[t][i] >= 0)
 	enter_i_observation(get_variable((timeseries->node_symbols)[i]), 
@@ -284,7 +293,8 @@ int main(int argc, char *argv[]){
 
     }
 
-    /* 5. Start a message pass between timeslices */
+    /* Start a message pass between timeslices */
+    /* NOTE: Let's hope the "next" variables are in the same clique! */
     clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				     next, num_of_nexts);
     assert(clique_of_interest != NULL);
@@ -294,7 +304,7 @@ int main(int argc, char *argv[]){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return 1;
     }
-    /* NOTE: Let's hope the "next" variables are in correct order */
+    /* NOTE: Let's hope the "next" variables are in correct order! */
     m = 0;
     n = 0;
     for(j=0; j < clique_of_interest->p->num_of_vars; j++){
@@ -309,11 +319,11 @@ int main(int argc, char *argv[]){
     general_marginalise(clique_of_interest->p, timeslice_sepsets[t],
 			temp_vars);
     
-    /* 0. Forget old evidence */
+    /* Forget old evidence */
     forget_evidence(nip_cliques[0]);
     
     if(t < timeseries->datarows - 1){
-      /* 1. Finish the message pass between timeslices */
+      /* Finish the message pass between timeslices */
       clique_of_interest = find_family(nip_cliques, nip_num_of_cliques, 
 				       previous, num_of_nexts);
       assert(clique_of_interest != NULL);
