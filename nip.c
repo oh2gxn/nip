@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.26 2004-11-01 14:48:17 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.27 2004-11-01 15:08:12 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -290,6 +290,11 @@ void free_uncertainseries(UncertainSeries ucs){
   }
   free(ucs->variables);
   free(ucs);
+}
+
+
+int uncertainseries_length(UncertainSeries ucs){
+  return ucs->length;
 }
 
 
@@ -977,6 +982,10 @@ double *get_probability(Nip model, Variable v, int print){
 }
 
 
+
+/* TODO: Figure out if we need the stuff below this comment. (Probably in 
+ *       some form yes, but...) */
+
 static int increment_indices(int indices[], Variable vars[], int num_of_vars){
 
   int finger = 0;
@@ -1063,7 +1072,8 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 
   printf("Variables in sorted order:\n");
   for(i = 0; i < num_of_vars; i++)
-    printf("Symbol: %s\tId: %ld\n", vars_sorted[i]->symbol, vars_sorted[i]->id);
+    printf("Symbol: %s\tId: %ld\n", 
+	   vars_sorted[i]->symbol, vars_sorted[i]->id);
 #endif
 
   cardinality = (int *) calloc(num_of_vars, sizeof(int));
