@@ -21,6 +21,8 @@ Clique make_Clique(Variable vars[], int num_of_vars){
 }
 
 int free_Clique(Clique c){
+  if(c == NULL)
+    return ERROR_NULLPOINTER;
   /* clean the list of sepsets */
   link l1 = c->sepsets;
   link l2 = c->sepsets;
