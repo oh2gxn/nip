@@ -34,7 +34,7 @@ typedef sepsettype *Sepset;
 Clique make_Clique(Variable **variables, int num_of_vars);
 
 /* Method for adding a sepset next to a clique: returns an error code */
-int add_sepset(Clique c, Sepset s);
+int add_Sepset(Clique c, Sepset s);
 
 /* Method for removing cliques and freeing memory: returns an error code */
 int free_Clique(Clique c);

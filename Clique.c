@@ -40,7 +40,7 @@ int free_Clique(Clique c){
 
 
 /* Method for adding a sepset next to a clique: returns an error code */
-int add_sepset(Clique c, Sepset s){
+int add_Sepset(Clique c, Sepset s){
   link new = (link) malloc(sizeof(element));
   new->data = s;
   new->fwd = c->sepsets;
