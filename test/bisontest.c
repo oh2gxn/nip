@@ -4,7 +4,7 @@
 #include "Variable.h"
 #include "potential.h"
 
-/*#define PRINT_POTENTIALS*/
+#define PRINT_POTENTIALS
 
 /*
 #define DEBUG_BISONTEST
@@ -14,7 +14,7 @@
 #define EVIDENCE
 */
 
-#define EVIDENCE1
+/*#define EVIDENCE1*/
 
 int yyparse();
 
