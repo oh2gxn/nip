@@ -1,13 +1,13 @@
-/* huginnet.y $Id: huginnet.y,v 1.2 2004-03-09 16:05:36 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.3 2004-03-11 14:40:45 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
 %{
-#define YYSTYPE double
 #include <stdio.h>
 %}
 
 /* BISON Declarations */
+/* These are the data types for semantic values. */
 %union {
   double numval;
   char *name;
@@ -18,6 +18,9 @@
 %token states "states"
 %token label "label"
 %token <name> NODEID
+%token <name> STRINGVALUE
+%token <numval> NUMBER
+%token UNKNOWN
 
 /* Grammar follows */
 /* NOT READY!!! */
@@ -30,10 +33,37 @@ declaration:   nodedecl
              | potdecl
 ;
 
-nodedecl:      node NODEID '{' '}'
+nodedecl:      node NODEID '{' parameters  '}'
 ;
 
-potdecl:       potential '{' '}'
+parameters:    /* empty string */
+             | labeldecl parameters
+             | statesdecl parameters
+	     | unknown_decl parameters
+;
+
+labeldecl:
+;
+
+statesdecl:
+;
+
+unknown_decl:  UNKNOWN '=' value ';'
+;
+
+value:         string
+             | list
+             | NUMBER
+;
+
+string:        '"' STRINGVALUE '"'
+;
+
+list:          '(' list  ')' /* woot? */
+;
+
+potdecl:       potential '{' '}' /* arbitrary array? */
+;
 
 %%
 /* Lexical analyzer */
