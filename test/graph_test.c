@@ -5,6 +5,23 @@
 #include "Graph.h"
 #include "Variable.h"
 
+void print_adjm(Graph* G)
+{
+	Variable* v;
+	int i,j,n;
+
+	v = get_variables(G);
+	n = get_size(G);
+
+	printf("\t\tAdjacency matrix:\n");
+	for (i = 0; i < n; i++)
+	{
+		printf("\t\t");
+		for (j=0; j < n; j++)
+			printf("%d ", is_child(G, v[i], v[j]));
+		printf("\n");
+	}
+}
 
 Graph* test1(void)
 {
@@ -136,30 +153,44 @@ void test5(Graph* G)
 	printf("\tTest 5 done.\n");
 }
 
-void test6(Graph* G)
+void test6()
 {
-	Graph *Gm, *Gu;
-	int i,j,n,n_cliques;
-	Variable *v;
-	Clique* fooga;
+	Graph *G, *Gu, *Gm;
+	int i,n=8;
+	Clique* cliques;
+	Variable v[8];
 	
-	printf("\tTest 6... triangulate\n");
+	printf("\tTest 6... triangulation\n");
+	G = new_graph(n);
+	
+	v[0] =  new_variable("A", "", NULL, 2);
+	v[1] =  new_variable("B", "", NULL, 2);
+	v[2] =  new_variable("C", "", NULL, 2);
+	v[3] =  new_variable("D", "", NULL, 2);
+	v[4] =  new_variable("E", "", NULL, 2);
+	v[5] =  new_variable("F", "", NULL, 2);
+	v[6] =  new_variable("G", "", NULL, 2);
+	v[7] =  new_variable("H", "", NULL, 2);
+
+	for(i=0;i<n;i++)
+		add_variable(G, v[i]);
+		
+	add_child(G, v[0],v[1]);
+	add_child(G, v[0],v[2]);
+	add_child(G, v[1],v[3]);	
+	add_child(G, v[2],v[4]);
+	add_child(G, v[2],v[6]);	
+	add_child(G, v[3],v[5]);
+	add_child(G, v[4],v[5]);
+	add_child(G, v[4],v[7]);
+	add_child(G, v[6],v[7]);	
+
 	Gm = moralise(G);
 	Gu = make_undirected(Gm);
-	n_cliques = triangulate(Gu, &fooga);
-
-	n = get_size(Gu);
-	v = get_variables(Gu);
-
-	printf("\tAdjacency matrix:\n");
-	for (i=0;i<n;i++)
-	{
-		for (j=0; j<n; j++)
-			printf("%d ",is_child(Gu, v[i], v[j]));
-		printf("\n");
-	}
-
-	printf("\tTest6 done.\n");
+	triangulate(Gu, &cliques);
+	print_adjm(Gu);
+	
+	printf("\tTest 6 done.\n");
 }
 
 void main(void)
@@ -173,6 +204,6 @@ void main(void)
     test3(G);
     test4(G);
     test5(G);
-    test6(G);
+    test6();
 }
 
