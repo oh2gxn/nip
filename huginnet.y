@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.15 2004-05-31 10:36:54 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.16 2004-05-31 11:18:19 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -67,12 +67,12 @@ input:  nodes potentials {
   // Graph structure and clique initialisation data 
   // will be in initData after parsing potentials!
 
-  reset_initData();}
+  reset_initData()}
 ;
 
 
-nodes:         /* empty */ { nip_graph = new_Graph(nip_vars_parsed); }
-             | nodeDeclaration nodes { add_pvar($1); }
+nodes:         /* empty */ { nip_graph = new_Graph(nip_vars_parsed) }
+             | nodeDeclaration nodes { add_pvar($1) }
 ;
 
 
@@ -88,7 +88,7 @@ nodeDeclaration:    node UNQUOTED_STRING '{' labelDeclaration
   /* new_variable() */
   Variable v = new_variable($2, $4, $5, strings_parsed); 
   reset_strings();
-  $$ = v;}
+  $$ = v}
 ;
 
 
@@ -104,7 +104,7 @@ labelDeclaration:     label '=' QUOTED_STRING ';' { $$ = $3 }
 /* JJT: cardinality == strings_parsed ? */
 statesDeclaration:    states '=' '(' strings ')' ';' { 
   // makes an array of strings out of the parsed list of strings
-  $$ = $4; }
+  $$ = $4 }
 ;
 
 
@@ -124,44 +124,44 @@ potentialDeclaration: potential '(' symbol '|' symbols ')' '{' dataList '}' {
 
   // OBVIOUSLY the parents should be separated from the children somehow!
 
-  Variable vars[symbols_parsed + 1];
+  Variable vars[nip_symbols_parsed + 1];
   int i;
   vars[0] = $3;
-  for(i = 0; i < symbols_parsed; i++)
+  for(i = 0; i < nip_symbols_parsed; i++)
     vars[i + 1] = $5[i];
-  add_initData(create_Potential(vars, symbols_parsed + 1, $8), $3, $5); 
-  reset_symbols();}
+  add_initData(create_Potential(vars, nip_symbols_parsed + 1, $8), $3, $5); 
+  reset_symbols()}
 ;
 
-symbol:        UNQUOTED_STRING { $$ = get_variable($1); }
+symbol:        UNQUOTED_STRING { $$ = get_variable($1) }
 
-;
-
-
-symbols:       /* end of list */ { $$ = make_variable_array(); }
-             | UNQUOTED_STRING symbols { add_symbol($1); }
 ;
 
 
-strings:       /* end of list */ { $$ = make_string_array(); }
-             | QUOTED_STRING strings { add_string($1); }
+symbols:       /* end of list */ { $$ = make_variable_array() }
+             | UNQUOTED_STRING symbols { add_symbol($1) }
+;
+
+
+strings:       /* end of list */ { $$ = make_string_array() }
+             | QUOTED_STRING strings { add_string($1) }
 ;
 
 
 /* This should ignore all brackets between numbers! */
-numbers:       /* end of list */ { $$ = make_double_array(); }
-             | NUMBER numbers { add_number($1); }
-             | '(' NUMBER numbers ')' { add_number($2); } //nested lists?
+numbers:       /* end of list */ { $$ = make_double_array() }
+             | NUMBER numbers { add_number($1) }
+             | '(' NUMBER numbers ')' { add_number($2) } //nested lists?
 ;
 
 
-value:         QUOTED_STRING { free($1); /* ignore */}
-             | '(' numbers ')' { reset_doubles(); /* ignore */}
+value:         QUOTED_STRING { free($1) /* ignore */}
+             | '(' numbers ')' { reset_doubles() /* ignore */}
              | NUMBER {/* ignore */}
 ;
 
 
-dataList: data '=' '(' numbers ')' ';' { $$ = $4; }
+dataList: data '=' '(' numbers ')' ';' { $$ = $4 }
 ;
 
 %%

@@ -697,15 +697,15 @@ case 1:
   // Graph structure and clique initialisation data 
   // will be in initData after parsing potentials!
 
-  reset_initData();;
+  reset_initData();
     break;}
 case 2:
 #line 74 "huginnet.y"
-{ nip_graph = new_Graph(nip_vars_parsed); ;
+{ nip_graph = new_Graph(nip_vars_parsed) ;
     break;}
 case 3:
 #line 75 "huginnet.y"
-{ add_pvar(yyvsp[-1].variable); ;
+{ add_pvar(yyvsp[-1].variable) ;
     break;}
 case 4:
 #line 79 "huginnet.y"
@@ -721,7 +721,7 @@ case 6:
   /* new_variable() */
   Variable v = new_variable(yyvsp[-6].name, yyvsp[-4].name, yyvsp[-3].stringarray, strings_parsed); 
   reset_strings();
-  yyval.variable = v;;
+  yyval.variable = v;
     break;}
 case 9:
 #line 100 "huginnet.y"
@@ -731,7 +731,7 @@ case 10:
 #line 105 "huginnet.y"
 { 
   // makes an array of strings out of the parsed list of strings
-  yyval.stringarray = yyvsp[-2].stringarray; ;
+  yyval.stringarray = yyvsp[-2].stringarray ;
     break;}
 case 11:
 #line 111 "huginnet.y"
@@ -751,53 +751,53 @@ case 13:
 
   // OBVIOUSLY the parents should be separated from the children somehow!
 
-  Variable vars[symbols_parsed + 1];
+  Variable vars[nip_symbols_parsed + 1];
   int i;
   vars[0] = yyvsp[-6].variable;
-  for(i = 0; i < symbols_parsed; i++)
+  for(i = 0; i < nip_symbols_parsed; i++)
     vars[i + 1] = yyvsp[-4].variablearray[i];
-  add_initData(create_Potential(vars, symbols_parsed + 1, yyvsp[-1].doublearray), yyvsp[-6].variable, yyvsp[-4].variablearray); 
-  reset_symbols();;
+  add_initData(create_Potential(vars, nip_symbols_parsed + 1, yyvsp[-1].doublearray), yyvsp[-6].variable, yyvsp[-4].variablearray); 
+  reset_symbols();
     break;}
 case 14:
 #line 136 "huginnet.y"
-{ yyval.variable = get_variable(yyvsp[0].name); ;
+{ yyval.variable = get_variable(yyvsp[0].name) ;
     break;}
 case 15:
 #line 141 "huginnet.y"
-{ yyval.variablearray = make_variable_array(); ;
+{ yyval.variablearray = make_variable_array() ;
     break;}
 case 16:
 #line 142 "huginnet.y"
-{ add_symbol(yyvsp[-1].name); ;
+{ add_symbol(yyvsp[-1].name) ;
     break;}
 case 17:
 #line 146 "huginnet.y"
-{ yyval.stringarray = make_string_array(); ;
+{ yyval.stringarray = make_string_array() ;
     break;}
 case 18:
 #line 147 "huginnet.y"
-{ add_string(yyvsp[-1].name); ;
+{ add_string(yyvsp[-1].name) ;
     break;}
 case 19:
 #line 152 "huginnet.y"
-{ yyval.doublearray = make_double_array(); ;
+{ yyval.doublearray = make_double_array() ;
     break;}
 case 20:
 #line 153 "huginnet.y"
-{ add_number(yyvsp[-1].numval); ;
+{ add_number(yyvsp[-1].numval) ;
     break;}
 case 21:
 #line 154 "huginnet.y"
-{ add_number(yyvsp[-2].numval); ;
+{ add_number(yyvsp[-2].numval) ;
     break;}
 case 22:
 #line 158 "huginnet.y"
-{ free(yyvsp[0].name); /* ignore */;
+{ free(yyvsp[0].name) /* ignore */;
     break;}
 case 23:
 #line 159 "huginnet.y"
-{ reset_doubles(); /* ignore */;
+{ reset_doubles() /* ignore */;
     break;}
 case 24:
 #line 160 "huginnet.y"
@@ -805,7 +805,7 @@ case 24:
     break;}
 case 25:
 #line 164 "huginnet.y"
-{ yyval.doublearray = yyvsp[-2].doublearray; ;
+{ yyval.doublearray = yyvsp[-2].doublearray ;
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
