@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.54 2004-06-16 13:06:49 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.55 2004-06-16 14:08:59 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -800,7 +800,7 @@ int clique_search(Clique one, Clique two){
       if(clique_search(s->cliques[0], two))
 	return 1;
     }
-    else if(!(s->cliques[1])){
+    else if(!clique_marked(s->cliques[1])){
 #ifdef DEBUG_CLIQUE
       printf("In clique_search: s->cliques[1] not marked.\n");
 #endif
