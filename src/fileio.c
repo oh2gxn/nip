@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.4 2004-02-13 14:12:20 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.5 2004-03-19 15:09:28 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -29,12 +29,39 @@ int count_words(char *s, int *chars){
     else if((*s == ' ') || (*s == '\t') || (*s == '\n'))
       state = 0;
     s++;
-    (*chars)++;
+    if(chars)
+      (*chars)++;
   }
   return words;
 }
 
-int *tokenise(char s[], int n){
+int count_tokens(char *s, int *chars){
+  int tokens = 0, state = 0;
+  if(chars)
+    *chars = 0;
+  while (*s != '\0'){
+    if((*s == '(') || (*s == ')') || (*s == '{') ||
+       (*s == '=') || (*s == ';')){
+      tokens++;
+      state = 0;
+    }
+    else if(state == 0){
+      if((*s != ' ') && (*s != '\t') && (*s != '\n')){
+	tokens++;	  
+	state = 1;
+      }
+    }
+    else if((*s == ' ') || (*s == '\t') || (*s == '\n'))
+      state = 0;
+    s++;
+    if(chars)
+      (*chars)++;
+  }
+  return tokens;
+}
+
+
+int *tokenise(char s[], int n, int mode){
   int *indices;
   int i = 0, j = 0, state = 0, arraysize = 2*n;
 
@@ -43,6 +70,10 @@ int *tokenise(char s[], int n){
     return NULL;
   }
   if(n < 1){
+    report_error(ERROR_INVALID_ARGUMENT, 0);
+    return NULL;
+  }
+  if(mode != 0 && mode != 1){
     report_error(ERROR_INVALID_ARGUMENT, 0);
     return NULL;
   }
@@ -55,7 +86,14 @@ int *tokenise(char s[], int n){
   }
 
   while (s[i] != '\0'){
-    if(state == 0){
+    if(mode == 1 &&
+       ((*s == '(') || (*s == ')') || (*s == '{') ||
+	(*s == '=') || (*s == ';'))){
+      state = 0;
+      indices[j++] = i;
+      indices[j++] = i + 1;
+    }
+    else if(state == 0){
       if((s[i] != ' ') && (s[i] != '\t') && (s[i] != '\n')){
 	indices[j++] = i;
 	state = 1;
@@ -109,6 +147,7 @@ char **split(char s[], int indices[], int n){
   return words;
 }
 
+/* Not used. Parser is done with bison instead.*/
 Graph *read_model(const char *filename){
 
   FILE *f;
