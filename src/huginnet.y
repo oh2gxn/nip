@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.24 2004-06-03 09:57:01 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.25 2004-06-03 11:02:42 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -13,6 +13,7 @@
 #include "huginnet.h"
 
 #define YYERROR_VERBOSE
+#define DEBUG_BISON
 %}
 
 /* BISON Declarations */
@@ -86,12 +87,12 @@ potentials:    /* empty */ {/* initialisation data ready at first_initData */}
 ;
 
 
-nodeDeclaration:    token_node UNQUOTED_STRING '{' labelDeclaration 
-                                             statesDeclaration
+nodeDeclaration:    token_node UNQUOTED_STRING '{' statesDeclaration 
+                                             labelDeclaration
                                              positionDeclaration
                                              parameters '}' {
   /* new_variable() */
-  Variable v = new_variable($2, $4, $5, nip_strings_parsed); 
+  Variable v = new_variable($2, $5, $4, nip_strings_parsed); 
   reset_strings();
   $$ = v}
 ;
@@ -181,7 +182,6 @@ dataList: token_data '=' '(' numbers ')' ';' { $$ = $4 }
  *      is more or less implicitly defined :-( */
 
 #include <ctype.h>
-#include <errno.h>
 
 int
 yylex (void)
@@ -189,6 +189,7 @@ yylex (void)
   int tokenlength;
   char *token = next_token(&tokenlength);
   char *nullterminated;
+  char *endptr;
   double numval;
 
   /* EOF or error */
@@ -212,6 +213,9 @@ yylex (void)
     if(isalpha((int)*token)){
       yylval.name = nullterminated;
       free(token);
+#ifdef DEBUG_BISON
+      printf("yylex returns UNQUOTED_STRING.\n");
+#endif
       return UNQUOTED_STRING;
     }
 
@@ -238,15 +242,24 @@ yylex (void)
     if(tokenlength == 5 &&
        strncmp("label", token, 5) == 0){
       free(token);
+#ifdef DEBUG_BISON
+      printf("yylex returns token_label.\n");
+#endif
       return token_label;
     }
     /* node */
     if(tokenlength == 4){
       if(strncmp("node", token, 4) == 0){
 	free(token);
+#ifdef DEBUG_BISON
+	printf("yylex returns token_node.\n");
+#endif
 	return token_node;
       }else if(strncmp("data", token, 4) == 0){
 	free(token);
+#ifdef DEBUG_BISON
+	printf("yylex returns token_data.\n");
+#endif
 	return token_data;
       }
     }
@@ -254,18 +267,27 @@ yylex (void)
     if(tokenlength == 9 &&
        strncmp("potential", token, 9) == 0){
       free(token);
+#ifdef DEBUG_BISON
+      printf("yylex returns token_potential.\n");
+#endif
       return token_potential;
     }
     /* states */
     if(tokenlength == 6 &&
        strncmp("states", token, 6) == 0){
       free(token);
+#ifdef DEBUG_BISON
+      printf("yylex returns token_states.\n");
+#endif
       return token_states;
     }
     /* position */
     if(tokenlength == 8 &&
        strncmp("position", token, 8) == 0){
       free(token);
+#ifdef DEBUG_BISON
+      printf("yylex returns token_position.\n");
+#endif
       return token_position;
     }
     /* End of literal string tokens */
@@ -287,6 +309,9 @@ yylex (void)
       yylval.name = nullterminated;
 
       free(token);
+#ifdef DEBUG_BISON
+      printf("yylex returns QUOTED_STRING.\n");
+#endif
       return QUOTED_STRING;
     }
 
@@ -300,20 +325,32 @@ yylex (void)
     nullterminated[tokenlength] = '\0';
 
     /* NUMBER ? */
-    errno = 0;
-    numval = strtod(nullterminated, 0);
+    numval = strtod(nullterminated, &endptr);
     /* No error, so the token is a valid double. */
-    if(errno == 0){
+    if(!(nullterminated == endptr && numval == 0)){
       yylval.numval = numval;
       free(token);
+#ifdef DEBUG_BISON
+      printf("nullterminated = %s\n", nullterminated);
+      printf("yylex returns NUMBER = %f.\n", numval);
+#endif
       free(nullterminated);
       return NUMBER;
     }
+
+#ifdef DEBUG_BISON
+    printf("Not a number: %s\n", nullterminated);
+#endif
       
     /* Everything else is UNQUOTED_STRING */
     yylval.name = nullterminated;
 
     free(token);
+
+#ifdef DEBUG_BISON
+    printf("yylex returns UNQUOTED_STRING.\n");
+#endif
+
     return UNQUOTED_STRING;
 
   }

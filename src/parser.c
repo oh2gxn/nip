@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.16 2004-06-02 13:05:30 mvkorpel Exp $
+ * $Id: parser.c,v 1.17 2004-06-03 11:02:42 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -37,7 +37,7 @@ FILE *nip_parser_infile = NULL;
 /* Is there a file open? 0 if no, 1 if yes. */
 int nip_file_open = 0;
 
-//#define DEBUG_PARSER
+#define DEBUG_PARSER
 
 int open_infile(const char *file){
   if(!nip_file_open){
@@ -141,6 +141,10 @@ char *next_token(int *token_length){
   /* Still some tokens left. Check for COMMENT_CHAR. */
   else if(last_line[indexarray[0]] == COMMENT_CHAR)
     read_line = 1;
+
+#ifdef DEBUG_PARSER
+  printf("%s\n", token);
+#endif
 
   return token;
 }
