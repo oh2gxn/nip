@@ -8,16 +8,20 @@
    imettäville naisille. */
 int lessthan(Heap_item h1, Heap_item h2)
 {
+    return (h1.primary_key < h2.primary_key) || 
+           (h1.primary_key == h2.primary_key && 
+            h1.secondary_key < h2.secondary_key);
+  
     /* Ei kovin NULL-varma. */
     /* The heap has two keys */
-    if (h1.primary_key < h2.primary_key)
+/*if (h1.primary_key < h2.primary_key)
         return 1;
     if (h1.primary_key > h2.primary_key)
-        return 0;
+        return 0; */
     /* If we reach this point, primary_key keys are the same */
-    if (h1.secondary_key < h2.secondary_key)
+    /*if (h1.secondary_key < h2.secondary_key)
         return 1;
-    return 0;
+    return 0;*/
 }
 
 void destroy_node()
@@ -25,16 +29,18 @@ void destroy_node()
 }
 
 /* MVK: Kusee. Ei käänny. */
+/* AR: Eipä joo. Ei sitä mistään kyllä kutsutakaan :)
+       Muistinhallinnalliset asiat vielä hiomatta. */
 void remove_node(Heap_item* node)
 {
     int i;
-    
+   /* 
 
     for (i = 0; i < node->n; i++)
     {
-        node->adj_list.vars[i]
+        node->adj_list.vars[i] = 0;
     }
-
+    */
 }
 
 int edges_added(Graph* G, Variable* vs, int n)
@@ -45,9 +51,14 @@ int edges_added(Graph* G, Variable* vs, int n)
 
     for (i = 0; i < n; i++)
         for (j = i+1; j < n; j++)
+            sum += !is_child(G, vs[i], vs[j]);
+
 	  /* MVK: poistin "~"-merkin is_childin edestä.
 	   Ei kai se kuulu siihen? Bitwise not. */
-            sum += is_child(G, vs[i], vs[j]);
+      /* AR: Joo, po. looginen not. Tarkoitus on laskea, kuinka monta
+         kaarta on lisättävä graafiin, eli kaikki ne tapaukset, 
+         kun A ei ole B:n lapsi. Tässä käydään taulukko vain yhteen suuntaan,
+         eroaa alkuperäisestä ideasta kertoimella 2.*/
    
     return sum; /* Number of links to add */
 }
@@ -81,27 +92,23 @@ Heap* build_heap(Graph* Gm)
     for (i = 0; i < n; i++)
     {
         hi = &(H->array[i]);
-        hi->n = get_neighbours(Gm, &Vs_temp) +1;
+        hi->n = get_neighbours(Gm, &Vs_temp, Gm->variables[i]) +1;
+        /* get_neighbours could be modified the array Vs directly;
+           the cost associated with it would be having all Vs take
+           get_size(G) units of memory.
+        */
 
-	/* MVK: Tässä oli näin:
-	 *  hi->Vs = calloc(hi->n, sizeof(int));
-	 * Muutin seuraavaksi lauseeksi: */
-	hi->Vs = (Variable *) calloc(hi->n, sizeof(Variable));
+	    hi->Vs = (Variable *) calloc(hi->n, sizeof(Variable));
 
-	/* MVK: Tässä oli näin:
-	 *  hi->Vs[0] = vars[i];
-	 * Muutin seuraavaksi lauseeksi (mahtaako olla oikea ajatus?) : */
-	hi->Vs[0] = Gm->variables[i];
+	   hi->Vs[0] = Gm->variables[i];
         
         for (j = 1; j < hi->n; j++)   /* Copy variable-pointers from Vs_temp */
             hi->Vs[j] = Vs_temp[j-1]; /* Note the index-shifting */
 
         hi->primary_key = edges_added(Gm, hi->Vs, hi->n);
-	/* MVK: Poistin kutsusta ensimmäisen parametrin "Gm". */
         hi->secondary_key = cluster_weight(hi->Vs, hi->n);
     }
 
-    /* MVK: Poistin "delete Vs_temp;" ja korvasin toisella lauseella */
     free(Vs_temp);
 
     H->array = H->array-1; /* Tästä ne murheet alkaa. */
@@ -109,7 +116,6 @@ Heap* build_heap(Graph* Gm)
     for (i = n/2; i > 0; i--)
         heapify(H, i);
 
-    /* MVK: Lisäsin palautuksen */
     return H;
 }
 
@@ -153,24 +159,19 @@ Variable* extract_min(Heap* H, Graph* G)
         return NULL;
     
     min = H->array[1];
-
-    /* XX Etsi minin naapurit */
-    /* ja ne johonki taulukkoon. neighbors */
     
     H->array[1] = H->array[H->heap_size];
     H->heap_size--;
     
     /* Iterate over neighbours of minimum element *
      * and update keys. The loop could be heavy.  */
-    for (i = 1; i < min.n; i++)         /* This loop could be heavy. */
+    for (i = 1; i < min.n; i++)         
     {
-	heap_i = get_heap_index(H, min.Vs[i]);
-	clean_heap_item(&H->array[heap_i], min.Vs[0], G);
+	   heap_i = get_heap_index(H, min.Vs[i]);
+	   clean_heap_item(&H->array[heap_i], min.Vs[0], G);
     }
 
     /* Rebuild the heap. */
-    /* MVK: Muutin A -> H. Tätäkö tässä tarkoitettiin? */
-    /* Muutin myös -> tilalle . */
     for (i = 1; i < min.n; i++)
         heapify(H, get_heap_index(H, min.Vs[i]));
     heapify(H, 1);
@@ -195,13 +196,15 @@ int get_heap_index(Heap* H, Variable v)
 
 void clean_heap_item(Heap_item* hi, Variable V_removed, Graph* G)
 {
-  int i;
-  for(i = 1; i < hi->n; i++)
-    if(hi->Vs[i] == V_removed){
-	hi->Vs[i] = hi->Vs[hi->n];
-	--hi->n;
-	break;
-    }
+    int i;
+    for(i = 1; i < hi->n; i++)
+        if(hi->Vs[i] == V_removed)
+        {
+	       hi->Vs[i] = hi->Vs[hi->n];
+	       --hi->n;
+	       break;
+        }
+
     hi->primary_key = edges_added(G, hi->Vs, hi->n);
     hi->secondary_key = cluster_weight(hi->Vs, hi->n);
 }

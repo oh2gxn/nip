@@ -4,8 +4,10 @@
 #include "Variable.h"
 #include "Clique.h"
 
+#define ADJM(G, i, j) (G->adj_matrix[i*G->size + j])
+
 typedef struct {
-    int** adj_matrix;
+    int* adj_matrix;
     Variable* variables;
     unsigned size;
     int top;

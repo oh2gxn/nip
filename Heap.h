@@ -10,21 +10,22 @@
 /* Teepä p = p -1; temppu. Ja sovita synnit. */
 
 typedef struct {
-    Variable V;
-  /* MVK: Tarvitaan ilmeisesti tällainen Vs. Täytyi lisätä. Mikä se on? */
-    Variable* Vs;
+    Variable* Vs; /* Vs[0] is the variable in the array, rest are neighbours*/
+    int n; /* size (always at least 1) */
+
     int primary_key;
     int secondary_key;
-  /* MVK: Mikä n on? Täytyi lisätä, kun sellaista oli käytetty. */
-    int n;
 } Heap_item;
 
 typedef struct {
     Heap_item* array;
     int heap_size;
-  /* MVK: Mikä on orig_size ? */
+    /* MVK: Mikä on orig_size ? */
+    /* AR: S'on heapin käyttämän taulukon koko. Ei liene tarpeellinen,
+     * ellei sitten heappia tuhottaessa. */
     int orig_size;
 } Heap;
+
 
 Heap* build_heap(Graph* Gm);
 
