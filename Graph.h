@@ -22,6 +22,7 @@ int add_all_variables(Graph G, Variable* vars);
 /* Adds all variables to the graph G.
  * Parameter vars: a Variable-array, size n
  * Returns true, if success. False otherwise.
+ * Bugger ye all, if ye use an array other than size n.
  */
 
 int add_child(Graph G, Variable parent, Variable child);
