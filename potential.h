@@ -1,9 +1,6 @@
 #ifndef __POTENTIAL_H__
 #define __POTENTIAL_H__
 
-#define GLOBAL_UPDATE 0
-#define GLOBAL_RETRACTION 1
-
 struct pot_array {
   int size_of_data;
   int *cardinality;
@@ -88,7 +85,9 @@ int total_marginalise(potential source, double destination[], int variable);
 int update_potential(potential enumerator, potential denominator, 
 		      potential target, int extra_vars[]);
 
-/* Method for...
+/* Method for updating potential according to new evidence.
+ * MUST BE: evidence[i] > 0 => v->likelihood[i] > 0
+ * Otherwise a global retraction must be done before calling this !!!!!!
  * -enumerator[]: new evidence about the variable
  * -denominator[]: old likelihood of the variable
  * -target: the potential to be updated

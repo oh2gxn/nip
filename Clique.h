@@ -71,6 +71,11 @@ int message_pass(Clique c1, Sepset s, Clique c2);
 - The returned value is an error code. */
 int marginalise(Clique c, Variable v, double r[]);
 
+/* Normalises the array. Divides every member by their sum.
+ * The function modifies the given array.
+ */
+int normalise(double result[], int array_size);
+
 /* Method for entering evidence to a clique. 
    sizeof(evidence) must equal variable->cardinality.
    Returns an error code. */

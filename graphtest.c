@@ -45,6 +45,10 @@ int main(){
 
   free_graph(gr);
 
+  /* Tarkistetaan, että muuttujat ovat vielä hengissä. */
+  for(i = 0; i < 5; i++)
+    printf("%s\n", variables[i]->name);
+
   /* Luodaan monta verkkoa, joilla on yhteiset muuttujat. */
   for(i = 0; i < GRAPHS; i++){
     graphs[i] = new_graph(5);

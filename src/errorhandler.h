@@ -7,6 +7,9 @@
 #define ERROR_DIVBYZERO 2
 #define ERROR_INVALID_ARGUMENT 3
 
+#define GLOBAL_UPDATE 4
+#define GLOBAL_RETRACTION 5
+
 /* Method for reporting an error. 
  * - errorcode is for example ERROR_DIVBYZERO
  * - if verbose is other than 0, a message will be displayed 

@@ -49,6 +49,7 @@ int add_Sepset(Clique c, Sepset s){
 
 Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   Sepset s = (Sepset) malloc(sizeof(sepsettype));
+  s->cliques = (Clique *) calloc(2, sizeof(Clique));
   int *cardinality = (int *) calloc(num_of_vars, sizeof(int));
   int i;
   s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
@@ -179,21 +180,46 @@ int marginalise(Clique c, Variable v, double r[]){
   return(total_marginalise(c->p, r, index));
 }
 
+int normalise(double result[], int array_size){
+  int i;
+  double sum = 0;
+  for(i = 0; i < array_size; i++)
+    sum += result[i];
+  if(sum == 0)
+    return 0;
+  for(i = 0; i < array_size; i++)
+    result[i] /= sum;
+  return 0;
+}
+
 int enter_evidence(Clique c, Variable v, double evidence[]){
-  int index = var_index(c, v);
-  int result;
+  int index, i;
+
+  if(c == NULL || v == NULL || evidence == NULL)
+    return ERROR_NULLPOINTER;
+    
+  index = var_index(c, v);
 
   /* Variable not in this Clique => ERROR */
   if(index == -1)
     return ERROR_INVALID_ARGUMENT;
+
+  for(i = 0; i < v->cardinality; i++)
+    if((v->likelihood)[i] == 0 && evidence[i] != 0)
+      return GLOBAL_RETRACTION;
   
-  /* here is the update of clique potential */
-  result = update_evidence(evidence, v->likelihood, c->p, index);
+  /* Here is the update of clique potential. */
+  update_evidence(evidence, v->likelihood, c->p, index);
 
   /* update likelihood */
   update_likelihood(v, evidence);
 
-  /* Tässä tarvitaan varmaankin GLOBAL UPDATE tai GLOBAL RETRACTION !!! */
+  /* GLOBAL UPDATE or GLOBAL RETRACTION probably needed !!! */
+  
+  /* JJ NOTE: update_evidence or enter_evidence should be 
+   *          'fail fast' and there could be global retraction 
+   *	      upon failure. 
+   *	      Zeros are a menace! */
 
   return 0;
 }

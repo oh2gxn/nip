@@ -33,11 +33,15 @@ void free_graph(Graph* G){
   if(G == NULL)
     return;
   size = G->size;
+
   for(i = 0; i < size; i++)
-    free(&(G->adj_matrix[i]));
-  free(&(G->adj_matrix));
-  free(&(G->variables));
-  free(&G);
+    free(G->adj_matrix[i]);
+  free(G->adj_matrix);
+
+  /* Dangerous if we have add_all_variables(...) as it is now. */
+  free(G->variables);
+
+  free(G);
 }
 
 int add_variable(Graph* G, Variable v)
@@ -54,6 +58,8 @@ int add_variable(Graph* G, Variable v)
 int add_all_variables(Graph* G, Variable vars[])
 {
     free(G->variables);
+
+    /* MVK NOTE: Too dangerous ( see free_graph(...) ) */
     G->variables = vars; /* Mostly (dangerous) syntactic syrup. */
     /* XX Ei paluuarvoa... */
 

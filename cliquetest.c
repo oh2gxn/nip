@@ -1,11 +1,12 @@
 #include "Clique.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 #define YKS_KARDINALITEETTI_VAAN 2
 
 int main(){
   int i;
-  double c[YKS_KARDINALITEETTI_VAAN];
-  double sum = 0;
+  double result[YKS_KARDINALITEETTI_VAAN];
 
   /* create the variables */
   Variable variables[5];
@@ -24,7 +25,7 @@ int main(){
   Clique clique_pile[3];
   Sepset sepset_pile[2];
   clique_pile[0] = make_Clique(variables, 3);
-  clique_pile[1] = make_Clique(&(variables[1]), 3); /* odd, isn't it? */
+  clique_pile[1] = make_Clique(&(variables[1]), 3);
   clique_pile[2] = make_Clique(&(variables[3]), 2);
   sepset_pile[0] = make_Sepset(&(variables[1]), 2, &(clique_pile[0]));
   sepset_pile[1] = make_Sepset(&(variables[3]), 1, &(clique_pile[1]));
@@ -34,7 +35,8 @@ int main(){
   add_Sepset(clique_pile[2], sepset_pile[1]);
 
   /* initialization */
-
+  
+  
   /* observation entry */
   
 
@@ -45,15 +47,13 @@ int main(){
   distribute_evidence(clique_pile[1]);
 
   /* marginalization */
-  marginalise(clique_pile[1], variables[2], c);
+  marginalise(clique_pile[1], variables[2], result);
 
   /* normalization */
-  for(int i = 0; i < YKS_KARDINALITEETTI_VAAN; i++)
-    sum += c[i];
-  if(sum != 0)
-    for(int i = 0; i < YKS_KARDINALITEETTI_VAAN; i++)
-      c[i] /= sum;
+  normalise(result, YKS_KARDINALITEETTI_VAAN);
   
+  for(i = 0; i < YKS_KARDINALITEETTI_VAAN; i++)
+    printf("result[%d] = %f\n", i, result[i]);
   /* To be continued... */
 
   return 0;

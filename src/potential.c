@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "potential.h" 
+#include "errorhandler.h"
 
 int choose_indices(potential source, int source_indices[],
 		   int dest_indices[], int source_vars[]);
@@ -64,10 +65,6 @@ int set_pvalue(potential p, int indices[], double value){
 }
 
 double *get_ppointer(potential p, int indices[]){
-
-  /* JJ NOTE: num_of_vars can be found in potential! 
-     MVK: fixed this in get_ppointer, get_pvalue, set_pvalue and in
-     calls to these functions */
 
   int index = indices[0];
   int i;
@@ -157,7 +154,8 @@ int general_marginalise(potential source, potential destination,
   free(dest_indices); /* is allocating and freeing slow??? */
 
   /* JJ NOTE: WHAT IF EACH POTENTIAL HAD A SMALL ARRAY CALLED temp_indices ??? 
-     The space is needed anyway in general_marginalise() and update()... */
+     The space is needed anyway in general_marginalise() and 
+     update_potential()... */
 
   return 0;
 }
@@ -235,16 +233,13 @@ int update_evidence(double numerator[], double denominator[],
 
   /* The general idea is the same as in marginalise */
   for(i = 0; i < target->size_of_data; i++){
-    inverse_mapping(target, i, target_indices);
+    inverse_mapping(target, i, target_indices); 
+    /* some of the work above is useless (only one index is used) */
     source_index = target_indices[var];
 
     target->data[i] *= numerator[source_index];  /* THE multiplication */
 
-    if(denominator[source_index] == 0){
-      if(numerator[source_index] != 0)
-	return GLOBAL_RETRACTION;
-    }
-    else
+    if(denominator[source_index] != 0)
       target->data[i] /= denominator[source_index];  /* THE division */
   }
 
