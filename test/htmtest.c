@@ -27,31 +27,31 @@
 
 int main(int argc, char *argv[]){
 
-  char** tokens;
-  int** data;
-  int* cardinalities;
+  char** tokens = NULL;
+  int** data = NULL;
+  int* cardinalities = NULL;
   int* temp_vars = NULL;
   int i, j, k, m, n, retval, t = 0;
   int num_of_hidden = 0;
   int num_of_nexts = 0;
   double** result; /* probs of the hidden variables */
   
-  Nip model;
-  Clique clique_of_interest;
+  Nip model = NULL;
+  Clique clique_of_interest = NULL;
   
-  potential *timeslice_sepsets;
+  potential *timeslice_sepsets = NULL;
   /* for reordering sepsets between timeslices
      potential temp_potential;
      potential reordered;
   */
-  Variable *hidden;
-  Variable *next;
-  Variable *previous;
-  Variable temp;
-  Variable interesting;
-  Variable_iterator it;
+  Variable *hidden = NULL;
+  Variable *next = NULL;
+  Variable *previous = NULL;
+  Variable temp = NULL;
+  Variable interesting = NULL;
+  Variable_iterator it = NULL;
 
-  datafile* timeseries;
+  datafile* timeseries = NULL;
 
   /*************************************/
   /* Some experimental timeslice stuff */
@@ -110,16 +110,36 @@ int main(int argc, char *argv[]){
 
   /* Allocate arrays for hidden variables. */
   hidden = (Variable *) calloc(num_of_hidden, sizeof(Variable));
-  next = (Variable *) calloc(num_of_nexts, sizeof(Variable));
-  previous = (Variable *) calloc(num_of_nexts, sizeof(Variable));
-  cardinalities = (int*) calloc(num_of_nexts, sizeof(int));
-  if(!(hidden && next && previous && cardinalities)){
+  if(!hidden){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(hidden);
-    free(next);
-    free(previous);
-    free(cardinalities);
     return 1;
+  }
+
+  if(num_of_nexts > 0){
+
+    next = (Variable *) calloc(num_of_nexts, sizeof(Variable));
+    if(!next){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(hidden);
+      return 1;
+    }
+
+    previous = (Variable *) calloc(num_of_nexts, sizeof(Variable));
+    if(!previous){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(hidden);
+      free(next);
+      return 1;
+    }
+
+    cardinalities = (int*) calloc(num_of_nexts, sizeof(int));
+    if(!cardinalities){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(hidden);
+      free(next);
+      free(previous);
+      return 1;
+    }
   }
 
   /* Fill the arrays */

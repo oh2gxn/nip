@@ -14,22 +14,22 @@
 
 int main(int argc, char *argv[]){
 
-  char** tokens;
-  int** data;
+  char** tokens = NULL;
+  int** data = NULL;
   int i, j, k, l, retval, t = 0;
   int num_of_hidden = 0;
-  double** quotient;
-  double*** result; /* probs of the hidden variables */
+  double** quotient = NULL;
+  double*** result = NULL; /* probs of the hidden variables */
 
-  Nip model;
-  Clique clique_of_interest;
+  Nip model = NULL;
+  Clique clique_of_interest = NULL;
 
-  Variable *hidden;
-  Variable temp;
-  Variable interesting;
-  Variable_iterator it;
+  Variable *hidden = NULL;
+  Variable temp = NULL;
+  Variable interesting = NULL;
+  Variable_iterator it = NULL;
 
-  datafile* timeseries;
+  datafile* timeseries = NULL;
 
   /*************************************/
   /* Some experimental timeslice stuff */
