@@ -378,6 +378,13 @@ int main(int argc, char *argv[]){
     
   }
   
+
+  /* A NEW IDEA: 
+   * - start with a blank join tree
+   * - add the evidence just like in forward phase
+   * - collect & distribute evidence
+   * - change the evidence for hidden variables with "next" pointers 
+   * - collect & distribute again. */
   
   
   return 0;
