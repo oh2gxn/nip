@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.14 2004-08-30 11:07:00 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.15 2004-08-31 08:41:36 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -15,6 +15,7 @@ extern int yyparse();
 static int increment_indices(int indices[], Variable vars[], int num_of_vars);
 static double get_data(double data[], int indices[],
 		       int num_of_vars, int cardinality[]);
+
 
 void reset_model(Nip model){
   int retval;
@@ -204,6 +205,7 @@ double *get_probability(Nip model, Variable v, int print){
 
 }
 
+
 static int increment_indices(int indices[], Variable vars[], int num_of_vars){
 
   int finger = 0;
@@ -224,6 +226,7 @@ static int increment_indices(int indices[], Variable vars[], int num_of_vars){
   return 0; /* FALSE */
 }
 
+
 static double get_data(double data[], int indices[],
 		       int num_of_vars, int cardinality[]){
 
@@ -239,6 +242,7 @@ static double get_data(double data[], int indices[],
   return data[index];
 
 }
+
 
 double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 			      int print){
@@ -367,3 +371,33 @@ double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 
 }
 
+
+void print_Cliques(Nip model){
+
+  int i;
+  int num_of_cliques;
+  Clique clique_of_interest;
+  Sepset_link sepsetlist;
+  Clique *cliques;
+
+  if(!model){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return;
+  }
+
+  cliques = model->cliques;
+  num_of_cliques = model->num_of_cliques;
+
+  printf("Found Cliques:\n");
+  for(i = 0; i < num_of_cliques; i++){
+    clique_of_interest = cliques[i];
+    print_Clique(clique_of_interest);
+    sepsetlist = clique_of_interest->sepsets;
+    while(sepsetlist){
+      print_Sepset((Sepset)sepsetlist->data);
+      sepsetlist = sepsetlist->fwd;
+    }
+    printf("\n");
+  }
+
+}

@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.7 2004-08-27 14:18:20 mvkorpel Exp $
+ * nip.h $Id: nip.h,v 1.8 2004-08-31 08:41:36 mvkorpel Exp $
  */
 
 #ifndef __NIP_H__
@@ -66,7 +66,30 @@ void make_consistent(Nip model);
 double *get_probability(Nip model, Variable v, int print);
 
 
+/*
+ * Calculates the joint probability distribution of a set of Variables.
+ * The Variables MUST be in the SAME CLIQUE.
+ * The join tree MUST be consistent before calling this.
+ * Parameters:
+ * - model: the model that contains the Variable
+ * - vars: the Variables whose distribution we want
+ * - num_of_vars: the number of Variables (size of "vars")
+ * - print: zero if we don't want the result printed. Non-zero is the opposite.
+ * Returns an array of doubles (remember to free the result when not needed).
+ * The returned array is of size
+ *   vars[0]->cardinality * ... * vars[num_of_vars - 1]->cardinality.
+ * The array can be addressed with multiple indices,
+ *   i.e. array[i0][i1][i2], where the indices are in the same order as
+ *   the array "vars".
+ * In case of problems, NULL is returned.
+ */
 double *get_joint_probability(Nip model, Variable *vars, int num_of_vars,
 			      int print);
+
+
+/*
+ * Prints the Cliques in the given Nip model.
+ */
+void print_Cliques(Nip model);
 
 #endif /* __NIP_H__ */
