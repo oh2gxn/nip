@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.15 2004-08-13 14:38:26 jatoivol Exp $
+ * Heap.c $Id: Heap.c,v 1.16 2004-08-17 12:59:54 mvkorpel Exp $
  */
 
 #include <stdlib.h>
@@ -325,7 +325,7 @@ void free_heap(Heap* H){
 
   for(i = 0; i < H->orig_size; i++){
     /* Free each heap item */
-    free((H->heap_items)[i].Vs);
+    free((H->heap_items[i]).Vs);
   }
   free(H->heap_items);
 
