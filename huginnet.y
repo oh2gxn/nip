@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.6 2004-03-19 15:25:58 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.7 2004-03-23 13:25:23 mvkorpel Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -7,6 +7,7 @@
 #include "Graph.h"
 #include "Variable.h"
 #include "parser.h"
+#include "errorhandler.h"
 %}
 
 /* BISON Declarations */
@@ -99,23 +100,80 @@ potdecl:       potential '{' '}' /* arbitrary array? */
 int
 yylex (void)
 {
-  int c;
-  
-  /* skip white space  */
-  while ((c = getchar ()) == ' ' || c == '\t')
-    ;
-  /* process numbers   */
-  if (c == '.' || isdigit (c))
-    {
-      ungetc (c, stdin);
-      scanf ("%lf", &yylval);
-      return NUM;
-    }
-  /* return end-of-file  */
-  if (c == EOF)
+  int tokenlength;
+  char *token = next_token(&tokenlength);
+
+  /* EOF or error */
+  if(tokenlength <= 0)
     return 0;
-  /* return single chars */
-  return c;
+
+  /* Single character */
+  else if(tokenlength == 1){
+    int retval = *token;
+    free(token);
+    return retval;
+  }
+
+  /* Multicharacter tokens */
+  else{
+    /* Literal string tokens */ 
+    /* label */
+    if(tokenlength == 5 &&
+       strncmp("label", token, 5) == 0){
+      free(token);
+      return label;
+    }
+    /* node */
+    if(tokenlength == 4 &&
+       strncmp("node", token, 4) == 0){
+      free(token);
+      return node;
+    }
+    /* potential */
+    if(tokenlength == 9 &&
+       strncmp("potential", token, 9) == 0){
+      free(token);
+      return potential;
+    }
+    /* states */
+    if(tokenlength == 6 &&
+       strncmp("states", token, 6) == 0){
+      free(token);
+      return states;
+    }
+    /* End of literal string tokens */
+
+    /* Regular tokens (not literal string) */
+    /* STRING (enclosed in double quotes) */
+    if(token[0] == '"' &&
+       token[tokenlength - 1] == '"'){
+      char *stringval = (char *) calloc(tokenlength - 1, sizeof(char));
+      if(!stringval){
+	report_error(ERROR_OUTOFMEMORY, 0);
+	free(token);
+	return 0; /* In the case of an (unlikely) error, stop the parser */
+      }
+      /* For the semantic value of the string, strip off double quotes
+       * and insert terminating null character. */
+      strncpy(stringval, &(token[1]), tokenlength - 2);
+      stringval[tokenlength - 2] = '\0';
+      yylval.name = stringval;
+
+      free(token);
+      return STRING;
+    }
+
+    /* NUMBER */    
+
+    /* NODEID */
+
+    /* UNKNOWN */
+    else
+      return UNKNOWN;
+
+    /* End of regular tokens */
+  }
+
 }
 
 void
