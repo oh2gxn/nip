@@ -61,7 +61,11 @@ int main(int argc, char *argv[]){
   /*****************************/
   /* read the data from a file */
   /*****************************/
+
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   ts = read_timeseries(model, argv[2]);
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
+
   if(ts == NULL){
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
     fprintf(stderr, "%s\n", argv[2]);

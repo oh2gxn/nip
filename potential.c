@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.53 2005-03-18 15:40:49 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.54 2005-03-21 10:53:41 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -119,7 +119,12 @@ void free_potential(potential p){
   if(p){
     free(p->cardinality);
     free(p->data);
+
+    /* WTF? How can this cause a segmentation fault with one
+     * parameter but not with another (on Linux). */
+    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
     free(p);
+    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   }
   return;
 }

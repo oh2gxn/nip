@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.51 2005-03-18 15:40:49 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.52 2005-03-21 10:53:40 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -26,8 +26,8 @@
  * TODO: 
 
  * - There's a bug in the forward_inference! (Segmentation fault...)
- *   - The segmentation fault does not occur on the Pyramid!
- *   - But on itl-pc037 the program crashes
+ *   - The segmentation fault does not occur on the Pyramid or iBook!
+ *   - But on itl-pc037 and the linux box at home the program crashes
 
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
@@ -197,7 +197,10 @@ TimeSeries read_timeseries(Nip model, char* filename){
   }
   ts->model = model;
 
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   df = open_datafile(filename, ',', 0, 1);
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
+
   if(df == NULL){
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
     fprintf(stderr, "%s\n", filename);
@@ -650,12 +653,10 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
     reset_model(model);
   }
 
-
-  printf("DEBUG 1: nip.c line 654\n");
   /* FIXME: this one crashes on PC:s (not on pyramid though) */
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   free_potential(timeslice_sepset); 
-  printf("DEBUG 2: nip.c line 657\n");
-
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
 
   return results;
 }

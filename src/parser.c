@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.88 2005-03-07 16:46:23 jatoivol Exp $
+ * $Id: parser.c,v 1.89 2005-03-21 10:53:41 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -107,13 +107,19 @@ datafile *open_datafile(char *filename, char separator,
   int i, j;
   stringlink *statenames = NULL;
   stringlink temp, temp2;
-  datafile *f = (datafile *) malloc(sizeof(datafile));
+  datafile *f = NULL;
+
+  /* WTF? This causes a segmentation fault on linux machines, but only 
+   * with certain data files. Note that this piece of code does NOT 
+   * depend on the parameters... So how can this fail? */
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
+  f = (datafile *) malloc(sizeof(datafile));
+  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
 
   if(!f){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
-
 
   if(write)
     f->file = fopen(filename,"w");
