@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.18 2004-09-07 10:16:38 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.19 2004-10-11 13:07:35 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -13,6 +13,17 @@
 /*
 #define DEBUG_NIP
 */
+
+/***** 
+ * TODO: 
+ * - some sort of a function for the forward-backward algorithm
+ *   - a data type that can be returned by the algorithm (how to index?)
+ *   - some abstraction for a time series (structure and access to data..?)
+ *
+ * - Viterbi algorithm for the ML-estimate of the latent variables
+ *
+ * - EM algorithm for estimating parameters of the model
+ *****/
 
 extern int yyparse();
 
