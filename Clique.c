@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.81 2004-08-17 08:48:42 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.82 2004-08-17 11:35:48 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -223,31 +223,35 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
     return NULL;
   }
 
-  cardinality = (int *) calloc(num_of_vars, sizeof(int));
+  if(num_of_vars){
+    cardinality = (int *) calloc(num_of_vars, sizeof(int));
+    if(!cardinality){
+      free(s);
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return NULL;
+    }
 
-  if(!cardinality){
-    free(s);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
+    reorder = (int *) calloc(num_of_vars, sizeof(int));
+    if(!reorder){
+      free(s);
+      free(cardinality);
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return NULL;
+    }
+
+    indices = (int *) calloc(num_of_vars, sizeof(int));
+    if(!indices){
+      free(s);
+      free(cardinality);
+      free(reorder);
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return NULL;
+    }
   }
-
-  reorder = (int *) calloc(num_of_vars, sizeof(int));
-
-  if(!reorder){
-    free(s);
-    free(cardinality);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-
-  indices = (int *) calloc(num_of_vars, sizeof(int));
-
-  if(!indices){
-    free(s);
-    free(cardinality);
-    free(reorder);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
+  else{
+    cardinality = NULL;
+    reorder = NULL;
+    indices = NULL;
   }
 
   s->cliques = (Clique *) calloc(2, sizeof(Clique));
@@ -261,16 +265,17 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
     return NULL;
   }
 
-  s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
-
-  if(!s->variables){
-    free(cardinality);
-    free(reorder);
-    free(indices);
-    free(s->cliques);
-    free(s);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
+  if(num_of_vars){
+    s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
+    if(!s->variables){
+      free(cardinality);
+      free(reorder);
+      free(indices);
+      free(s->cliques);
+      free(s);
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return NULL;
+    }
   }
 
   /* reorder[i] is the place of i:th variable (in the sense of this program) 

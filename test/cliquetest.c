@@ -17,6 +17,11 @@ int main(){
   char nameC[] = "jokke";
   char nameD[] = "spede";
   char nameE[] = "raimo";
+  char *statesA[3];
+  char *statesB[4];
+  char *statesC[2];
+  char *statesD[3];
+  char *statesE[2];
   int cardinality[3];
 
   /* parameters of the model:
@@ -57,12 +62,27 @@ int main(){
 
   Clique **cliques_pointer;
 
+  statesA[0] = "a1";
+  statesA[1] = "a2";
+  statesA[2] = "a3";
+  statesB[0] = "b1";
+  statesB[1] = "b2";
+  statesB[2] = "b3";
+  statesB[3] = "b4";
+  statesC[0] = "c1";
+  statesC[1] = "c2";
+  statesD[0] = "d1";
+  statesD[1] = "d2";
+  statesD[2] = "d3";
+  statesE[0] = "e1";
+  statesE[1] = "e2";
+
   /* Create the variables (without statenames) */
-  variables[0] = new_variable("A", nameA, NULL, 3);
-  variables[1] = new_variable("B", nameB, NULL, 4);
-  variables[2] = new_variable("C", nameC, NULL, 2); /* note1 */
-  variables[3] = new_variable("D", nameD, NULL, 3);
-  variables[4] = new_variable("E", nameE, NULL, 2);
+  variables[0] = new_variable("A", nameA, statesA, 3);
+  variables[1] = new_variable("B", nameB, statesB, 4);
+  variables[2] = new_variable("C", nameC, statesC, 2); /* note1 */
+  variables[3] = new_variable("D", nameD, statesD, 3);
+  variables[4] = new_variable("E", nameE, statesE, 2);
 
   clique_pile[0] = make_Clique(variables, 3);
   clique_pile[1] = make_Clique(&(variables[1]), 3);

@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.72 2004-08-17 08:48:42 mvkorpel Exp $
+ * $Id: parser.c,v 1.73 2004-08-17 11:35:49 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -512,6 +512,7 @@ char *next_token(int *token_length){
       indexarray = NULL;
       indexarray_original = NULL;
     }
+
     return NULL;
   }
 
@@ -522,6 +523,7 @@ char *next_token(int *token_length){
       indexarray = NULL;
       indexarray_original = NULL;
     }
+
     return NULL;
   }
 
@@ -529,11 +531,13 @@ char *next_token(int *token_length){
   while(nip_read_line){
     /* Read the line and check for EOF */
     if(!(fgets(last_line, MAX_LINELENGTH, nip_yyparse_infile))){
+
       if(indexarray_original){
 	free(indexarray_original);
 	indexarray = NULL;
 	indexarray_original = NULL;
       }
+
       *token_length = 0;
       return NULL;
     }
@@ -549,6 +553,7 @@ char *next_token(int *token_length){
 	indexarray = NULL;
 	indexarray_original = NULL;
       }
+
       indexarray = tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1, 1);
       indexarray_original = indexarray;
 

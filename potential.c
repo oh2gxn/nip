@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.38 2004-07-08 12:51:55 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.39 2004-08-17 11:35:49 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -75,13 +75,22 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
   int *cardinal;
   double *dpointer = NULL;
   potential p = (potential) malloc(sizeof(ptype));
-  cardinal = (int *) calloc(num_of_vars, sizeof(int));
 
-  if((!p) || (!cardinal)){
+  if(!p){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(p);
     return NULL;
   }  
+
+  if(num_of_vars){
+    cardinal = (int *) calloc(num_of_vars, sizeof(int));
+    if(!cardinal){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(p);
+      return NULL;
+    }  
+  }
+  else
+    cardinal = NULL;
 
   for(i = 0; i < num_of_vars; i++){
     size_of_data *= cardinality[i];
@@ -171,16 +180,34 @@ int general_marginalise(potential source, potential destination,
 			int source_vars[]){
 
   int i;
-  int *source_indices, *dest_indices;
+  int *source_indices = NULL; 
+  int *dest_indices = NULL;
   double *potvalue;
 
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) */
-  source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
-  dest_indices = (int *) calloc(destination->num_of_vars, sizeof(int));
 
-  if((!dest_indices) || (!source_indices)){
+  if(destination->num_of_vars){
+    dest_indices = (int *) calloc(destination->num_of_vars, sizeof(int));
+    
+    if(!dest_indices){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return ERROR_OUTOFMEMORY;
+    }
+  }
+  else{ /* the rare event of potential being scalar */
+    destination->data[0] = 0;
+
+    for(i = 0; i < source->size_of_data; i++)
+      destination->data[0] += source->data[i];
+    return NO_ERROR;
+  }
+
+  /* source->num_of_vars > 0 always */
+  source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
+  
+  if(!source_indices){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(source_indices);
+    free(dest_indices);
     return ERROR_OUTOFMEMORY;
   }
 
@@ -222,11 +249,17 @@ int total_marginalise(potential source, double destination[], int variable){
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) 
                          |  |  |
      variable index:     0  1  2... (or 'significance') */
-  source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
-
-  if(!source_indices){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);    
-    return ERROR_OUTOFMEMORY;
+  if(source->num_of_vars){
+    source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
+    
+    if(!source_indices){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);    
+      return ERROR_OUTOFMEMORY;
+    }
+  }
+  else{
+    destination[0] = source->data[0];
+    return NO_ERROR;
   }
 
   /* initialization */
@@ -246,25 +279,50 @@ int total_marginalise(potential source, double destination[], int variable){
     destination[index] += source->data[i]; 
   }
   free(source_indices);
-  return 0;
+  return NO_ERROR;
 }
 
 int update_potential(potential numerator, potential denominator, 
 		     potential target, int extra_vars[]){
 
   int i;
-  int *source_indices, *target_indices;
+  int *source_indices = NULL; 
+  int *target_indices = NULL;
   double *potvalue;
 
-  if(!numerator){
+  if(!numerator || 
+     (denominator && (numerator->num_of_vars != denominator->num_of_vars))){
+    /* I hope the logic is "fail fast" and the above evaluation stops if 
+     * denominator == NULL ! */
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
   }
   
-  source_indices = (int *) calloc(numerator->num_of_vars, sizeof(int));
+  if(numerator->num_of_vars){
+    source_indices = (int *) calloc(numerator->num_of_vars, sizeof(int));
+
+    if(!source_indices){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(source_indices);
+      return ERROR_OUTOFMEMORY;
+    }
+  }
+  else{ /* when numerator & denominator are scalar */
+    for(i = 0; i < target->size_of_data; i++){
+      target->data[i] *= numerator->data[0];
+      if(denominator){
+	if(denominator->data[0])
+	  target->data[i] /= denominator->data[0];
+	else
+	  target->data[i] = 0;
+      }
+    }
+    return NO_ERROR;
+  }
+
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
-  if(!(target_indices && source_indices)){
+  if(!target_indices){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(source_indices);
     return ERROR_OUTOFMEMORY;
@@ -281,17 +339,17 @@ int update_potential(potential numerator, potential denominator,
 
     if(denominator){
       potvalue = get_ppointer(denominator, source_indices);
-      if(*potvalue == 0)
-	target->data[i] = 0;  /* see Procedural Guide p. 20 */
-      else
+      if(*potvalue)
 	target->data[i] /= *potvalue;  /* THE division */
+      else
+	target->data[i] = 0;  /* see Procedural Guide p. 20 */
     }
   }
 
   free(source_indices); /* JJ NOTE: GET RID OF THESE */
   free(target_indices);
 
-  return 0;
+  return NO_ERROR;
 
 }
 
@@ -301,6 +359,7 @@ int update_evidence(double numerator[], double denominator[],
   int i, source_index;
   int *target_indices;
 
+  /* target->num_of_vars > 0  always */
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
   if(!target_indices){
@@ -347,13 +406,24 @@ int init_potential(potential probs, potential target, int extra_vars[]){
   /* probs is assumed to be normalised */
 
   int i;
-  int *probs_indices, *target_indices;
+  int *probs_indices = NULL; 
+  int *target_indices = NULL;
   double *potvalue;
 
-  probs_indices = (int *) calloc(probs->num_of_vars, sizeof(int));
+  if(probs->num_of_vars){
+    probs_indices = (int *) calloc(probs->num_of_vars, sizeof(int));
+    if(!probs_indices){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return ERROR_OUTOFMEMORY;
+    }
+  }
+  else{ /* probs is a scalar & normalised => probs = 1 */
+    return NO_ERROR;
+  }
+
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
-  if(!(target_indices && probs_indices)){
+  if(!target_indices){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(probs_indices);
     return ERROR_OUTOFMEMORY;
@@ -384,7 +454,14 @@ int init_potential(potential probs, potential target, int extra_vars[]){
 void print_potential(potential p){
 
   int big_index, i;
-  int *indices = (int *) calloc(p->num_of_vars, sizeof(int));
+  int *indices = NULL;
+
+  if(p->num_of_vars)
+    indices = (int *) calloc(p->num_of_vars, sizeof(int));
+  else{
+    printf("P(0) = %f\n", p->data[0]);
+    return;
+  }
 
   if(!indices)
     return;
