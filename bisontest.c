@@ -3,6 +3,7 @@
 #include "Clique.h"
 #include "Variable.h"
 #include "potential.h"
+#include "errorhandler.h"
 
 /*
 #define PRINT_POTENTIALS
@@ -58,10 +59,10 @@ int main(int argc, char *argv[]){
 
   /* -- Start parsing the network definition file */
   if(argc < 2){
-    if(open_infile("infile") != 0)
+    if(open_infile("infile") != NO_ERROR)
       return -1;
   }
-  else if(open_infile(argv[1]) != 0)
+  else if(open_infile(argv[1]) != NO_ERROR)
     return -1;
 
   retval = yyparse();

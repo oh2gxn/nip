@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.32 2004-06-14 14:42:33 jatoivol Exp $
+ * $Id: parser.c,v 1.33 2004-06-17 15:28:50 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -51,12 +51,14 @@ static char* nip_label;
 int open_infile(const char *file){
   if(!nip_file_open){
     nip_parser_infile = fopen(file,"r");
-    if (!nip_parser_infile)
-      return ERROR_GENERAL; /* fopen(...) failed */
+    if (!nip_parser_infile){
+      report_error(__FILE__, __LINE__, ERROR_IO, 1);
+      return ERROR_IO; /* fopen(...) failed */
+    }
     else
       nip_file_open = 1;
   }
-  return 0;
+  return NO_ERROR;
 }
 
 void close_infile(){
@@ -111,7 +113,7 @@ char *next_token(int *token_length){
        * than to stop: return NULL, *token_length = 0.
        */
       if(!indexarray){
-	report_error(ERROR_GENERAL, 0);
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 0);
 	*token_length = 0;
 
 	return NULL;
@@ -128,7 +130,7 @@ char *next_token(int *token_length){
   *token_length = indexarray[1] - indexarray[0];
   token = (char *) calloc(*token_length + 1, sizeof(char));
   if(!token){
-    report_error(ERROR_OUTOFMEMORY, 0);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     *token_length = -1;
     return NULL;
   }
@@ -163,8 +165,16 @@ char *next_token(int *token_length){
 int add_symbol(Variable v){
   varlink new = (varlink) malloc(sizeof(varelement));
 
-  if(v == NULL)
-    return ERROR_INVALID_ARGUMENT;
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    free(new);
+    return ERROR_NULLPOINTER;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
 
   new->data = v;
   new->fwd = NULL;
@@ -178,7 +188,7 @@ int add_symbol(Variable v){
   nip_last_temp_var = new;
   nip_symbols_parsed++;
 
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -192,13 +202,13 @@ Variable get_variable(char *symbol){
 #endif
 
   if(pointer == NULL)
-    return NULL; /* didn't find the variable */
+    return NULL; /* didn't find the variable (possibly normal) */
   
   /* search for the variable reference */
   while(strcmp(symbol, pointer->data->symbol) != 0){
     pointer = pointer->fwd;
     if(pointer == NULL){
-      return NULL; /* didn't find the variable */
+      return NULL; /* didn't find the variable (a normal situation) */
     }
   }
   return pointer->data;
@@ -208,6 +218,12 @@ Variable get_variable(char *symbol){
 /* correctness? */
 int add_initData(potential p, Variable child, Variable* parents){
   initDataLink new = (initDataLink) malloc(sizeof(initDataElement));
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
   new->data = p;
   new->child = child;
   new->parents = parents;
@@ -221,13 +237,19 @@ int add_initData(potential p, Variable child, Variable* parents){
   nip_last_initData = new;
 
   nip_initData_parsed++;
-  return 0;
+  return NO_ERROR;
 }
 
 
 /* correctness? */
 int add_pvar(Variable var){
   varlink new = (varlink) malloc(sizeof(varelement));
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
   new->data = var;
   new->fwd = NULL;
   new->bwd = nip_last_var;
@@ -239,13 +261,19 @@ int add_pvar(Variable var){
   nip_last_var = new;
   nip_vars_parsed++;
 
-  return 0;
+  return NO_ERROR;
 }
 
 
 /* correctness? */
 int add_double(double d){
   doublelink new = (doublelink) malloc(sizeof(doubleelement));
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
   new->data = d;
   new->fwd = NULL;
   new->bwd = nip_last_double;
@@ -256,13 +284,19 @@ int add_double(double d){
 
   nip_last_double = new;
   nip_doubles_parsed++;
-  return 0;
+  return NO_ERROR;
 }
 
 
 /* correctness? */
 int add_string(char* string){
   stringlink new = (stringlink) malloc(sizeof(stringelement));
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
   new->data = string;
   new->fwd = NULL;
   new->bwd = nip_last_string;
@@ -274,7 +308,7 @@ int add_string(char* string){
   nip_last_string = new;
   nip_strings_parsed++;
 
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -286,6 +320,12 @@ Variable* make_variable_array(){
   int i;
   Variable* vars1 = (Variable*) calloc(nip_symbols_parsed, sizeof(Variable));
   varlink pointer = nip_last_temp_var;
+
+  if(!vars1){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
   for(i = 0; i < nip_symbols_parsed; i++){
     vars1[i] = pointer->data;
     pointer = pointer->bwd;
@@ -301,6 +341,12 @@ double* make_double_array(){
   /* free() is at ? */
   int i;
   doublelink ln = nip_first_double;
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
   for(i = 0; i < nip_doubles_parsed; i++){
     new[i] = ln->data; /* the data is copied here (=> not lost in reset) */
     ln = ln->fwd;
@@ -316,6 +362,12 @@ char** make_string_array(){
   /* free() is probably at free_variable() */
   int i;
   stringlink ln = nip_first_string;
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
   for(i = 0; i < nip_strings_parsed; i++){
     new[i] = ln->data; /* char[] references copied */
     ln = ln->fwd;
@@ -337,7 +389,7 @@ int reset_doubles(){
   }
   nip_first_double = NULL;
   nip_doubles_parsed = 0;
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -352,7 +404,7 @@ int reset_strings(){
   }
   nip_first_string = NULL;
   nip_strings_parsed = 0;  
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -366,7 +418,7 @@ int reset_symbols(){
   }
   nip_first_temp_var = NULL;
   nip_symbols_parsed = 0;
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -384,7 +436,7 @@ int reset_initData(){
   }
   nip_first_initData = NULL;
   nip_initData_parsed = 0;  
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -414,7 +466,7 @@ int parsedVars2Graph(){
     initlist = initlist->fwd;
   }
 
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -445,8 +497,10 @@ int parsedPots2JTree(){
 					   sizeof(Variable));
     Clique fam_clique;
 
-    if(!family)
-      fprintf(stderr, "In parser.c : Calloc failed\n");
+    if(!family){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return ERROR_OUTOFMEMORY;
+    }
 
     family[0] = initlist->child;
     for(i = 0; i < initlist->data->num_of_vars - 1; i++)
@@ -464,7 +518,7 @@ int parsedPots2JTree(){
     initlist = initlist->fwd;
   }
 
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -480,17 +534,26 @@ void print_parsed_stuff(){
     Variable *variables;
 
     if((indices = (int *) calloc(list->data->num_of_vars,
-				 sizeof(int))) == NULL)
-      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
+				 sizeof(int))) == NULL){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return;
+    }
 
     if((temp_array = (int *) calloc(list->data->num_of_vars,
-				 sizeof(int))) == NULL)
-      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");
+				    sizeof(int))) == NULL){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(indices);
+      return;
+    }
 
     if((variables = (Variable *) calloc(list->data->num_of_vars,
-					sizeof(Variable))) == NULL)
-      fprintf(stderr, "In huginnet.y: Calloc failed => crash.");    
-
+					sizeof(Variable))) == NULL){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(indices);
+      free(temp_array);
+      return;
+    }
+    
     variables[0] = list->child;
     for(i = 1; i < list->data->num_of_vars; i++)
       variables[i] = (list->parents)[i - 1];

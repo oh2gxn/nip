@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.22 2004-06-16 13:06:49 mvkorpel Exp $
+ * Variable.c $Id: Variable.c,v 1.23 2004-06-17 15:28:49 jatoivol Exp $
  */
 
 #include <string.h>
@@ -14,6 +14,11 @@ Variable new_variable(const char* symbol, const char* name,
   int i;
   double *dpointer;
   Variable v = (Variable) malloc(sizeof(vtype));
+
+  if(!v){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
 
   v->cardinality = cardinality;
   v->id = id++;
@@ -39,7 +44,7 @@ Variable new_variable(const char* symbol, const char* name,
 
 int variable_name(Variable v, const char *name){
   if(!name)
-    return ERROR_NULLPOINTER;
+    return ERROR_NULLPOINTER; /* possibly a normal situation */
   strncpy(v->name, name, VAR_NAME_LENGTH);
   v->name[VAR_NAME_LENGTH] = '\0';
   return NO_ERROR;
@@ -57,8 +62,15 @@ Variable copy_variable(Variable v){
   int i;
   Variable copy = (Variable) malloc(sizeof(vtype));
 
-  if(v == NULL)
+  if(v == NULL){
+    free(copy);
     return NULL;
+  }
+
+  if(!copy){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
 
   copy->cardinality = v->cardinality;
   copy->id = v->id;
@@ -67,11 +79,18 @@ Variable copy_variable(Variable v){
   copy->name[VAR_NAME_LENGTH] = '\0';
 
   copy->likelihood = (double *) calloc(copy->cardinality, sizeof(double));
+
+  if(!(copy->likelihood)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(copy);
+    return NULL;
+  }  
+
   /* initialise likelihoods to 1 */
   for(i = 0; i < copy->cardinality; i++)
     copy->likelihood[i] = v->likelihood[i];
 
-  return v;
+  return copy;
 }
 
 
@@ -79,32 +98,39 @@ void free_variable(Variable v){
   if(v == NULL)
     return;
   free(v->likelihood);
-  if(v->probability != NULL)
-    free(v->probability);
+  free(v->probability);
   free(v);
 }
 
 
 int equal_variables(Variable v1, Variable v2){
-  return (v1->id == v2->id);
+  if(v1 && v2)
+    return (v1->id == v2->id);
+  return 0; /* FALSE if nullpointers */
 }
 
 
 unsigned long get_id(Variable v){
-  return v->id;
+  if(v)
+    return v->id;
+  return 0;
 }
 
 
 char *get_symbol(Variable v){
-  return v->symbol;
+  if(v)
+    return v->symbol;
+  return NULL;
 }
 
 
 int update_likelihood(Variable v, double likelihood[]){
 
   int i;
-  if(v == NULL)
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
+  }
 
   for(i = 0; i < v->cardinality; i++)
     (v->likelihood)[i] = likelihood[i];
@@ -115,7 +141,7 @@ int update_likelihood(Variable v, double likelihood[]){
 
 int number_of_values(Variable v){
   if(v == NULL)
-    return ERROR_NULLPOINTER;
+    return -1;
   else
     return v->cardinality;
 }
@@ -123,11 +149,12 @@ int number_of_values(Variable v){
 
 /* the "ownership" of the potential changes */
 int set_probability(Variable v, potential p){
-  if(v == NULL)
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
+  }
 
-  if(v->probability != NULL)
-    free(v->probability);
-  v->probability = p;
+  free(v->probability); /* free(NULL) is O.K. */
+  v->probability = p; /* cruel, isn't it */
   return NO_ERROR;
 }

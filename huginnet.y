@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.41 2004-06-17 10:19:20 mvkorpel Exp $
+/* huginnet.y $Id: huginnet.y,v 1.42 2004-06-17 15:28:49 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language
  */
 
@@ -148,8 +148,10 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   Variable *parents = make_variable_array();
   double *doubles = $8;
 
-  if(!vars || !parents)
+  if(!(parents && vars)){
+    free(vars);
     YYABORT;
+  }
 
 #ifdef DEBUG_BISON
   printf("nip_symbols_parsed = %d\n", get_nip_symbols_parsed());
@@ -263,7 +265,7 @@ yylex (void)
 
     nullterminated = (char *) calloc(2, sizeof(char));
     if(!nullterminated){
-      report_error(ERROR_OUTOFMEMORY, 0);
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free(token);
       return 0; /* In the case of an (unlikely) error, stop the parser */
     }
@@ -350,7 +352,7 @@ yylex (void)
        token[tokenlength - 1] == '"'){
       nullterminated = (char *) calloc(tokenlength - 1, sizeof(char));
       if(!nullterminated){
-	report_error(ERROR_OUTOFMEMORY, 0);
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	free(token);
 	return 0; /* In the case of an (unlikely) error, stop the parser */
       }
@@ -367,7 +369,7 @@ yylex (void)
 
     nullterminated = (char *) calloc(tokenlength + 1, sizeof(char));
     if(!nullterminated){
-      report_error(ERROR_OUTOFMEMORY, 0);
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free(token);
       return 0; /* In the case of an (unlikely) error, stop the parser */
     }

@@ -14,10 +14,12 @@
 #define GLOBAL_RETRACTION 101
 
 /* Method for reporting an error. 
+ * - srcFile is the source file (__FILE__)
+ * - line is the number of the line in the source code (__LINE__)
  * - errorcode is for example ERROR_DIVBYZERO
  * - if verbose is other than 0, a message will be displayed 
  */
-void report_error(int errorcode, int verbose);
+void report_error(char *srcFile, int line, int errorcode, int verbose);
 
 /* Method for resetting the errorcounter. */
 void reset_errorhandler();

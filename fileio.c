@@ -1,5 +1,5 @@
 /*
- * fileio.c $Id: fileio.c,v 1.13 2004-06-16 13:06:49 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.14 2004-06-17 15:28:49 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -89,22 +89,22 @@ int *tokenise(const char s[], int n, int mode){
   char ch, ch2;
 
   if(s == NULL){
-    report_error(ERROR_NULLPOINTER, 0);
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 0);
     return NULL;
   }
   if(n < 1){
-    report_error(ERROR_INVALID_ARGUMENT, 0);
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
-  if(mode != 0 && mode != 1){
-    report_error(ERROR_INVALID_ARGUMENT, 0);
+  if(!(mode == 0 || mode == 1)){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
   indices = (int *) calloc(arraysize, sizeof(int));
   /* Couldn't allocate memory */
   if(!indices){
-    report_error(ERROR_OUTOFMEMORY, 1);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -194,7 +194,7 @@ char **split(const char s[], int indices[], int n){
   char **words = (char **) calloc(n, sizeof(char *));
   /* Couldn't allocate memory */
   if(!words){
-    report_error(ERROR_OUTOFMEMORY, 1);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -205,7 +205,7 @@ char **split(const char s[], int indices[], int n){
     words[i] = (char *) calloc(wordlength + 1, sizeof(char));
     /* Couldn't allocate memory */
     if(!words[i]){
-      report_error(ERROR_OUTOFMEMORY, 1);
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return NULL;
     }
     strncpy(words[i], &s[begin], wordlength);

@@ -11,9 +11,30 @@ int ERROR_COUNTER = 0;
 /* Errorcode of the last error */
 int ERRORCODE = NO_ERROR; 
 
-void report_error(int errorcode, int verbose){
+void report_error(char *srcFile, int line, int errorcode, int verbose){
   ERRORCODE = errorcode;
   ERROR_COUNTER++;
+  if(verbose){
+    fprintf(stderr, "In %s (%d): ", srcFile, line);
+    switch(errorcode)
+      {
+      case NO_ERROR : 
+	fprintf(stderr, "O.K.\n"); break;
+      case ERROR_NULLPOINTER : 
+	fprintf(stderr, "Nullpointer given.\n"); break;
+      case ERROR_DIVBYZERO :
+	fprintf(stderr, "Division by zero.\n"); break;
+      case ERROR_INVALID_ARGUMENT :
+	fprintf(stderr, "Invalid argument given.\n"); break;
+      case ERROR_OUTOFMEMORY :
+	fprintf(stderr, "Malloc or calloc failed.\n"); break;
+      case ERROR_IO :
+	fprintf(stderr, "I/O failure.\n"); break;
+      case ERROR_GENERAL :
+	fprintf(stderr, "An error encountered.\n"); break;
+      default : fprintf(stderr, "Something went wrong.\n");
+      }
+  }
 }
 
 void reset_errorhandler(){

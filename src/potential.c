@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.32 2004-06-17 06:26:09 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.33 2004-06-17 15:28:50 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -27,6 +27,12 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
   potential p = (potential) malloc(sizeof(ptype));
   cardinal = (int *) calloc(num_of_vars, sizeof(int));
 
+  if((!p) || (!cardinal)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(p);
+    return NULL;
+  }  
+
   for(i = 0; i < num_of_vars; i++){
     size_of_data *= cardinality[i];
     cardinal[i] = cardinality[i];
@@ -36,6 +42,13 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
   p->size_of_data = size_of_data;
   p->num_of_vars = num_of_vars;
   p->data = (double *) calloc(size_of_data, sizeof(double));
+  
+  if(!(p->data)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free_potential(p);
+    return NULL;
+  }
+
   if(data == NULL){
     /* The array has to be initialised. Let's do it right away. */
     for(dpointer=p->data, i=0; i < size_of_data; *dpointer++ = 1, i++);
@@ -57,6 +70,7 @@ int free_potential(potential p){
   return 0;
 }
 
+
 /* TARVITAANKO? */
 int copy_potential(potential source, potential destination){
 
@@ -66,13 +80,17 @@ int copy_potential(potential source, potential destination){
   return 0;
 }
 
+
 double get_pvalue(potential p, int indices[]){
   double *ppointer = get_ppointer(p, indices);
   if(ppointer != NULL)
     return *ppointer;
-  else
+  else{
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return -1;
+  }
 }
+
 
 int set_pvalue(potential p, int indices[], double value){
   double *ppointer = get_ppointer(p, indices);
@@ -80,6 +98,7 @@ int set_pvalue(potential p, int indices[], double value){
     *ppointer = value;
   return 0;
 }
+
 
 double *get_ppointer(potential p, int indices[]){
 
@@ -97,6 +116,7 @@ double *get_ppointer(potential p, int indices[]){
 
 }
 
+
 int inverse_mapping(potential p, int big_index, int indices[]){
 
   int x = p->size_of_data;
@@ -111,8 +131,9 @@ int inverse_mapping(potential p, int big_index, int indices[]){
     big_index -= indices[i] * x;
   }
 
-  return 0;
+  return NO_ERROR;
 }
+
 
 /* Drops the indices that are marginalised or multiplied. 
  * source_vars must be in ascending order (see marginalise(...)). 
@@ -137,8 +158,9 @@ int choose_indices(potential source, int source_indices[],
       k++;
     }
   } 
-  return 0;
+  return NO_ERROR;
 }
+
 
 int general_marginalise(potential source, potential destination, 
 			int source_vars[]){
@@ -150,6 +172,12 @@ int general_marginalise(potential source, potential destination,
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) */
   source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
   dest_indices = (int *) calloc(destination->num_of_vars, sizeof(int));
+
+  if((!dest_indices) || (!source_indices)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(source_indices);
+    return ERROR_OUTOFMEMORY;
+  }
 
   /* Remove old garbage */
   for(i = 0; i < destination->size_of_data; i++)
@@ -179,7 +207,7 @@ int general_marginalise(potential source, potential destination,
      The space is needed anyway in general_marginalise() and 
      update_potential()... */
 
-  return 0;
+  return NO_ERROR;
 }
 
 int total_marginalise(potential source, double destination[], int variable){
@@ -190,6 +218,11 @@ int total_marginalise(potential source, double destination[], int variable){
                          |  |  |
      variable index:     0  1  2... (or 'significance') */
   source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
+
+  if(!source_indices){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);    
+    return ERROR_OUTOFMEMORY;
+  }
 
   /* initialization */
   for(i = 0; i < source->cardinality[variable]; i++)
@@ -221,6 +254,12 @@ int update_potential(potential enumerator, potential denominator,
   source_indices = (int *) calloc(enumerator->num_of_vars, sizeof(int));
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
+  if(!(target_indices && source_indices)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(source_indices);
+    return ERROR_OUTOFMEMORY;
+  }
+
   /* The general idea is the same as in marginalise */
   for(i = 0; i < target->size_of_data; i++){
     inverse_mapping(target, i, target_indices);
@@ -251,6 +290,11 @@ int update_evidence(double numerator[], double denominator[],
   int *target_indices;
 
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
+
+  if(!target_indices){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
 
   /* The general idea is the same as in marginalise */
   for(i = 0; i < target->size_of_data; i++){
@@ -295,6 +339,12 @@ int init_potential(potential probs, potential target, int extra_vars[]){
 
   probs_indices = (int *) calloc(probs->num_of_vars, sizeof(int));
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
+
+  if(!(target_indices && probs_indices)){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(probs_indices);
+    return ERROR_OUTOFMEMORY;
+  }
 
   /* The general idea is the same as in marginalise */
   if(extra_vars == NULL) /* this is one kind of a bug fix */

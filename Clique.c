@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.59 2004-06-17 13:31:34 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.60 2004-06-17 15:28:49 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -26,7 +26,7 @@ Clique make_Clique(Variable vars[], int num_of_vars){
   unsigned long temp;
 
   if(!c || !cardinality || !reorder || !indices){
-    fprintf(stderr, "In Clique.c: malloc failed.\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }    
 
@@ -155,7 +155,7 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
 
   if(!s || !cardinality || !reorder || !indices){
     /* fail-fast OR operation? */
-    fprintf(stderr, "In Clique.c: malloc failed.\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -163,7 +163,7 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
 
   if(!s->variables || !s->cliques){ /* fail-fast OR operation? */
-    fprintf(stderr, "In Clique.c: malloc failed.\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -247,21 +247,27 @@ potential create_Potential(Variable variables[], int num_of_vars,
   potential p;
 
   if((cardinality = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-    fprintf(stderr, "In Clique.c: malloc failed\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
   if((indices = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-    fprintf(stderr, "In Clique.c: malloc failed\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(cardinality);
     return NULL;
   }
 
   if((temp_array = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-    fprintf(stderr, "In Clique.c: malloc failed\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(cardinality);
+    free(indices);
     return NULL;
   }
   if((reorder = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-    fprintf(stderr, "In Clique.c: malloc failed\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(cardinality);
+    free(indices);
+    free(temp_array);
     return NULL;
   }
 
@@ -479,14 +485,14 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   source_vars = (int *) calloc(c1->p->num_of_vars - s->new->num_of_vars,
 			       sizeof(int));
   if(!source_vars){
-    fprintf(stderr, "In Clique.c: Calloc failed.\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
 
   extra_vars = (int *) calloc(c2->p->num_of_vars - s->new->num_of_vars,
 			      sizeof(int));
   if(!extra_vars){
-    fprintf(stderr, "In Clique.c: Calloc failed.\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(source_vars);
     return ERROR_OUTOFMEMORY;
   }
@@ -575,8 +581,10 @@ int marginalise(Clique c, Variable v, double r[]){
   int index = var_index(c, v);
 
   /* Variable not in this Clique => ERROR */
-  if(index == -1)
+  if(index == -1){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
+  }
   
   return(total_marginalise(c->p, r, index));
 }
@@ -598,14 +606,18 @@ int normalise(double result[], int array_size){
 int enter_evidence(Clique c, Variable v, double evidence[]){
   int index, i;
 
-  if(c == NULL || v == NULL || evidence == NULL)
+  if(c == NULL || v == NULL || evidence == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
+  }
     
   index = var_index(c, v);
 
   /* Variable not in this Clique => ERROR */
-  if(index == -1)
+  if(index == -1){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);
     return ERROR_INVALID_ARGUMENT;
+  }
 
   for(i = 0; i < v->cardinality; i++)
     if((v->likelihood)[i] == 0 && evidence[i] != 0)
@@ -625,7 +637,7 @@ int enter_evidence(Clique c, Variable v, double evidence[]){
    *	      Zeros are a menace!
    */
 
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -686,7 +698,7 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
   Heap *H = build_sepset_heap(cliques, num_of_cliques);
 
   if(!H){
-    fprintf(stderr, "In Clique.C: build_sepset_heap returned NULL.\n");
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return ERROR_GENERAL;
   }
 
@@ -694,8 +706,7 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 
     /* Extract the "best" candidate sepset from the heap. */
     if(extract_min_sepset(H, &s)){
-      fprintf(stderr, "In Clique.c: find_sepsets failed after %d sepsets.\n",
-	      inserted);
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }
 
@@ -776,7 +787,7 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
     printf("All connections between Cliques are OK!\n");
 #endif
 
-  return 0;
+  return NO_ERROR;
 
 }
 
@@ -793,15 +804,15 @@ int clique_search(Clique one, Clique two){
   printf("\n");
 #endif
 
-  if(one == NULL || two == NULL)
-    return 0;
+  if(one == NULL || two == NULL) /* normal situation or an error? */
+    return 0; /* as in FALSE */
 
   /* mark */
   one->mark = 1;
 
   /* NOTE: this defines the equality of cliques. */
   if(one == two)
-    return 1;
+    return 1; /* TRUE (end of recursion) */
 
 #ifdef DEBUG_CLIQUE
   if(l == NULL){
@@ -820,19 +831,19 @@ int clique_search(Clique one, Clique two){
       printf("In clique_search: s->cliques[0] not marked.\n");
 #endif
       if(clique_search(s->cliques[0], two))
-	return 1;
+	return 1; /* TRUE */
     }
     else if(!clique_marked(s->cliques[1])){
 #ifdef DEBUG_CLIQUE
       printf("In clique_search: s->cliques[1] not marked.\n");
 #endif
       if(clique_search(s->cliques[1], two))
-	return 1;
+	return 1; /* TRUE */
     }
     l = l->fwd;
   }
 
-  return 0;
+  return 0; /* FALSE */
 }
 
 
@@ -884,7 +895,7 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
   isect = (Variable *) calloc(max_vars, sizeof(Variable));
 
   if(!isect){
-    fprintf(stderr, "In Clique.c: calloc failed.\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
 
@@ -900,7 +911,7 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
 
   /* This should not happen. We are not making the array bigger. */
   if(!shaved_isect){
-    fprintf(stderr, "In Clique.c: calloc failed.\n");
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
 
@@ -911,6 +922,6 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
   *vars = shaved_isect;
   *n = realsize;
 
-  return 0;
+  return NO_ERROR;
 
 }

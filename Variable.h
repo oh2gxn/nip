@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.22 2004-06-16 12:04:26 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.23 2004-06-17 15:28:49 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -77,7 +77,7 @@ char *get_symbol(Variable v);
 int update_likelihood(Variable v, double likelihood[]);
 
 
-/* Returns the number of possible values in the Variable v.
+/* Returns the number of possible values in the Variable v. (-1 if v == NULL)
  */
 int number_of_values(Variable v);
 
