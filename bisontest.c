@@ -73,8 +73,7 @@ static void test_probability(double **result, int *size_of_result,
 /*
  * Enter some evidence of Variable "observed".
  */
-static void test_evidence(Variable observed, double data[], Clique cliques[],
-			  int num_of_cliques){
+static void test_evidence(Variable observed, double data[]){
 
 #ifdef DEBUG_BISONTEST
   int evidence_retval;
@@ -212,15 +211,15 @@ int main(int argc, char *argv[]){
 
 
 
-  test_evidence(observed[0], probs[0], nip_cliques, nip_num_of_cliques);
+  test_evidence(observed[0], probs[0]);
 
-  test_evidence(observed[1], probs[1], nip_cliques, nip_num_of_cliques);
+  test_evidence(observed[1], probs[1]);
   
 #ifdef EVIDENCE_SOTKU
 
 #ifdef TEST_RETRACTION
   /* some crappy evidence */
-  test_evidence(observed[2], probs[2], nip_cliques, nip_num_of_cliques);
+  test_evidence(observed[2], probs[2]);
 
   /* a propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
@@ -261,11 +260,11 @@ int main(int argc, char *argv[]){
   probs[1] = probC4;
   probs[2] = probC19;
 
-  test_evidence(observed[0], probs[0], nip_cliques, nip_num_of_cliques);
+  test_evidence(observed[0], probs[0]);
 
-  test_evidence(observed[1], probs[1], nip_cliques, nip_num_of_cliques);
+  test_evidence(observed[1], probs[1]);
 
-  test_evidence(observed[2], probs[2], nip_cliques, nip_num_of_cliques);
+  test_evidence(observed[2], probs[2]);
 
 #endif /* EVIDENCE_SOTKU */
 

@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.42 2004-06-24 12:15:04 mvkorpel Exp $
+ * $Id: parser.c,v 1.43 2004-06-28 14:36:13 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -48,6 +48,9 @@ static FILE *nip_yyparse_infile = NULL;
 /* Is there a hugin net file open? 0 if no, 1 if yes. */
 static int nip_yyparse_infile_open = 0;
 
+static int add_to_stringlink(stringlink *s, char* string);
+
+static int search_stringlinks(stringlink s, char* string);
 
 int open_yyparse_infile(const char *filename){
   if(!nip_yyparse_infile_open){
@@ -71,9 +74,19 @@ void close_yyparse_infile(){
 }
 
 
-datafile *open_datafile(char *filename, char separator, int write){
+datafile *open_datafile(char *filename, char separator,
+			int write, int nodenames){
 
+  char last_line[MAX_LINELENGTH];
+  char *token;
   int length_of_name = 0;
+  int num_of_tokens;
+  int *token_bounds;
+  int linecounter = 0;
+  int dividend;
+  int i, j;
+  stringlink *statenames = NULL;
+  stringlink temp;
 
   datafile *f = (datafile *) malloc(sizeof(datafile));
 
@@ -109,6 +122,191 @@ datafile *open_datafile(char *filename, char separator, int write){
 
   f->separator = separator;
 
+  /*
+   * If file is opened in read mode, check the contents.
+   * This includes names of nodes and their states.
+   */
+  if(!write){
+
+    while(fgets(last_line, MAX_LINELENGTH, f->file)){
+      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0);
+      token_bounds = tokenise(last_line, num_of_tokens, 0, &separator, 1, 0);
+
+      /* Read node names or make them up. */
+      if(linecounter == 0){
+	f->num_of_nodes = num_of_tokens;
+	f->node_symbols = (char **) calloc(num_of_tokens, sizeof(char *));
+
+	if(!f->node_symbols){
+	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  free(f->name);
+	  free(f);
+	  return NULL;
+	}
+
+	statenames = (stringlink *) calloc(num_of_tokens, sizeof(stringlink));
+
+	if(!statenames){
+	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  free(f->name);
+	  free(f->node_symbols);
+	  free(f);
+	  return NULL;
+	}
+
+	f->num_of_states = (int *) calloc(num_of_tokens, sizeof(int));
+
+	if(!f->num_of_states){
+	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  free(f->name);
+	  free(f->node_symbols);
+	  free(f);
+	  free(statenames);
+	  return NULL;
+	}
+
+	f->node_states = (char ***) calloc(num_of_tokens, sizeof(char **));
+
+	if(!f->node_states){
+	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  free(f->name);
+	  free(f->node_symbols);
+	  free(f->num_of_states);
+	  free(f);
+	  free(statenames);
+	  return NULL;
+	}
+
+	if(nodenames){
+	  for(i = 0; i < num_of_tokens; i++){
+
+	    f->node_symbols[i] =
+	      (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
+			      sizeof(char));
+	    if(!f->node_symbols[i]){
+	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	      free(f->name);
+	      for(j = 0; j < i; j++)
+		free(f->node_symbols[j]);
+	      free(f->node_symbols);
+	      free(f->num_of_states);
+	      free(f->node_states);
+	      free(f);
+	      free(statenames);
+	      return NULL; /* error horror */
+	    }
+
+	    strncpy(f->node_symbols[i], &(last_line[token_bounds[2*i]]),
+		    token_bounds[2*i+1] - token_bounds[2*i]);
+	    f->node_symbols[i][token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
+	  }
+
+	}
+	else{
+
+	  for(i = 0; i < num_of_tokens; i++){
+
+	    dividend = i + 1;
+	    length_of_name = 5;
+
+	    while((dividend /= 10) > 1)
+	      length_of_name++;
+
+	    f->node_symbols[i] = (char *) calloc(length_of_name, sizeof(char));
+	    if(!f->node_symbols[i]){
+	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	      free(f->name);
+	      for(j = 0; j < i; j++)
+		free(f->node_symbols[j]);
+	      free(f->node_symbols);
+	      free(f->num_of_states);
+	      free(f->node_states);
+	      free(f);
+	      free(statenames);
+	      return NULL; /* error horror */
+	    }
+
+	    sprintf(f->node_symbols[i], "node%d", i + 1);
+	  }
+	}
+      }
+
+      /* Read observations. */
+      if(linecounter != 0 || (linecounter == 0 && !nodenames)){
+
+	for(i = 0; i < num_of_tokens; i++){
+
+	  token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
+				  sizeof(char));
+
+	  if(!token){
+	    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	    free(f->name);
+	    for(j = 0; j < f->num_of_nodes; j++)
+	      free(f->node_symbols[j]);
+	    free(f->node_symbols);
+	    free(f->num_of_states);
+	    free(f->node_states);
+	    free(f);
+	    free(statenames);
+	    return NULL;
+	  }
+
+	  strncpy(token, &(last_line[token_bounds[2*i]]),
+		  token_bounds[2*i+1] - token_bounds[2*i]);
+
+	  token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
+
+	  if(!search_stringlinks(statenames[i], token))
+	    add_to_stringlink(&(statenames[i]), token);
+	  else
+	    free(token);
+	}
+      }
+
+      free(token_bounds);
+      linecounter++;
+    }
+
+    for(i = 0; i < f->num_of_nodes; i++){
+      j = 0;
+      temp = statenames[i];
+      while(temp != NULL){
+	j++;
+	temp = temp->fwd;
+      }
+      f->num_of_states[i] = j;
+    }
+
+    for(i = 0; i < f->num_of_nodes; i++){
+
+      f->node_states[i] =
+	(char **) calloc(f->num_of_states[i], sizeof(char *));
+
+      if(!f->node_states[i]){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	free(f->name);
+	for(j = 0; j < f->num_of_nodes; j++)
+	  free(f->node_symbols[j]);
+	free(f->node_symbols);
+	free(f->num_of_states);
+	for(j = 0; j < i; j++)
+	  free(f->node_states[j]);
+	free(f->node_states);
+	free(f);
+	free(statenames);
+	return NULL;
+      }
+
+      temp = statenames[i];
+      for(j = 0; j < f->num_of_states[i]; j++){
+	f->node_states[i][j] = temp->data;
+	temp = temp->fwd;
+      }
+    }
+
+  }
+
   return f;
 }
 
@@ -124,6 +322,9 @@ void close_datafile(datafile *file){
     fclose(file->file);
     file->is_open = 0;
   }
+
+  /* This function could probably also release the memory of "file", 
+     leaving a pointer to "nowhere". */
 }
 
 
@@ -329,7 +530,6 @@ int add_double(double d){
 }
 
 
-/* correctness? */
 int add_string(char* string){
   stringlink new = (stringlink) malloc(sizeof(stringelement));
 
@@ -352,6 +552,35 @@ int add_string(char* string){
   return NO_ERROR;
 }
 
+
+/* correctness? */
+static int add_to_stringlink(stringlink *s, char* string){
+  stringlink new = (stringlink) malloc(sizeof(stringelement));
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->data = string;
+  new->fwd = *s;
+  new->bwd = NULL;
+  (*s)->bwd = new;
+  *s = new;
+
+  return NO_ERROR;
+}
+
+static int search_stringlinks(stringlink s, char* string){
+
+  while(s != NULL){
+    if(strcmp(string, s->data) == 0)
+      return 1;
+    s = s->fwd;
+  }
+
+  return 0;
+}
 
 /* Creates an array from the variable in the list. 
  * NOTE: because of misunderstanding, the list is backwards. 

@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser.
- * $Id: parser.h,v 1.26 2004-06-24 10:55:14 mvkorpel Exp $
+ * $Id: parser.h,v 1.27 2004-06-28 14:36:13 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -53,6 +53,13 @@ typedef struct {
   char separator;
   FILE *file;
   int is_open;
+
+  char **node_symbols;
+  int num_of_nodes;
+
+  char ***node_states; /* 1st index = node, 2nd index = state */
+  int *num_of_states;
+
 } datafile;
 
 
@@ -68,12 +75,17 @@ int open_yyparse_infile(const char *filename);
 void close_yyparse_infile();
 
 
-/* Opens a file by creating a datafile struct. The struct can be used 
+/*
+ * Opens a file by creating a datafile struct. The struct can be used 
  * for reading or writing after opening. Parameters:
  * - filename : the name of the file to be opened
+ * - separator : the separator character between fields
  * - write : 0 if the file is opened for reading only, 
- *           e.g. 1 if the file is opened for writing only. */
-datafile *open_datafile(char *filename, char separator, int write);
+ *           e.g. 1 if the file is opened for writing only.
+ * - nodenames : 1 if the first row contains names of nodes
+ */
+datafile *open_datafile(char *filename, char separator,
+			int write, int nodenames);
 
 
 /* Closes a file described by the datafile struct. */
