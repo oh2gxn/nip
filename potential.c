@@ -1,4 +1,4 @@
-/* Tässä on jotain säätöä. Ei ole ihan yhteensopiva potential.h:n kanssa. */
+/* Tässä on vielä jotain säätöä. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -213,3 +213,9 @@ void update(potential enumerator, potential denominator, potential target,
   return;  
 
 }
+
+
+
+
+
+
