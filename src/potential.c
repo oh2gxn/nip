@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.41 2004-08-19 15:11:27 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.42 2004-08-20 09:53:48 mvkorpel Exp $
  * Functions for handling potentials. 
  */
 
@@ -128,7 +128,7 @@ int free_potential(potential p){
     free(p->data);
     free(p);
   }
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -137,7 +137,7 @@ int copy_potential(potential source, potential destination){
   int i;
   for(i = 0; i < source->size_of_data; i++)
     destination->data[i] = source->data[i];
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -156,7 +156,7 @@ int set_pvalue(potential p, int indices[], double value){
   double *ppointer = get_ppointer(p, indices);
   if(ppointer != NULL)
     *ppointer = value;
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -418,9 +418,8 @@ int init_potential(potential probs, potential target, int extra_vars[]){
       return ERROR_OUTOFMEMORY;
     }
   }
-  else{ /* probs is a scalar & normalised => probs = 1 */
+  else /* probs is a scalar & normalised => probs = 1 */
     return NO_ERROR;
-  }
 
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
@@ -448,7 +447,7 @@ int init_potential(potential probs, potential target, int extra_vars[]){
   free(probs_indices); /* JJ NOTE: GET RID OF THESE? */
   free(target_indices);
 
-  return 0;
+  return NO_ERROR;
 
 }
 

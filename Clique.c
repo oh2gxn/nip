@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.88 2004-08-19 13:37:34 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.89 2004-08-20 09:53:48 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -119,7 +119,20 @@ Clique make_Clique(Variable vars[], int num_of_vars){
   
   c->p = make_potential(cardinality, num_of_vars, NULL);
   c->original_p = make_potential(cardinality, num_of_vars, NULL);
-  
+
+  /* Propagation of error */
+  if(c->p == NULL || c->original_p == NULL){
+    free(cardinality);
+    free(indices);
+    free(reorder);
+    free(c->variables);
+    free_potential(c->p);
+    free_potential(c->original_p);
+    free(c);
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return NULL;
+  }
+
   free(cardinality);
   free(indices);
   free(reorder);
@@ -344,8 +357,24 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
     cardinality[i] = vars[reorder[i]]->cardinality;
     s->variables[i] = vars[reorder[i]];
   }
+
   s->old = make_potential(cardinality, num_of_vars, NULL);
   s->new = make_potential(cardinality, num_of_vars, NULL);
+
+  /* Propagation of error */
+  if(s->old == NULL || s->new == NULL){
+    free(cardinality);
+    free(indices);
+    free(reorder);
+    free(s->cliques);
+    free(s->variables);
+    free_potential(s->old);
+    free_potential(s->new);
+    free(s);
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return NULL;
+  }
+
   free(cardinality); /* the array was copied ? */
   free(reorder);
   free(indices);
@@ -457,6 +486,16 @@ potential create_Potential(Variable variables[], int num_of_vars,
 
   /* Create a potential */
   p = make_potential(cardinality, num_of_vars, NULL);
+
+  /* Propagation of error */
+  if(p == NULL){
+    free(cardinality);
+    free(indices);
+    free(temp_array);
+    free(reorder);
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return NULL;
+  }
   
   /*
    * NULL data is accepted.
@@ -628,6 +667,7 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
  */
 static int message_pass(Clique c1, Sepset s, Clique c2){
   int i, j = 0, k = 0;
+  int retval;
   int *source_vars;
   int *extra_vars;
 
@@ -667,7 +707,13 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
   }
 
   /* Information flows from Clique c1 to Sepset s. */
-  general_marginalise(c1->p, s->new, source_vars);
+  retval = general_marginalise(c1->p, s->new, source_vars);
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free(source_vars);
+    free(extra_vars);
+    return ERROR_GENERAL;
+  }
 
   j = 0; k = 0;
 
@@ -686,12 +732,18 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
   }
 
   /* Information flows from Sepset s to Clique c2. */
-  update_potential(s->new, s->old, c2->p, extra_vars);
+  retval = update_potential(s->new, s->old, c2->p, extra_vars);
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free(source_vars);
+    free(extra_vars);
+    return ERROR_GENERAL;
+  }
 
   free(source_vars);
   free(extra_vars);
 
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -700,6 +752,7 @@ int initialise(Clique c, Variable child, Variable parents[], potential p){
   int diff = c->p->num_of_vars - p->num_of_vars;
   int *extra_vars = NULL;
   int extra;
+  int retval;
   Variable var = NULL;
 
   if(diff > 0){
@@ -730,19 +783,24 @@ int initialise(Clique c, Variable child, Variable parents[], potential p){
     }
   }
   /* rest the case */
-  i = init_potential(p, c->p, extra_vars);
+  retval = init_potential(p, c->p, extra_vars);
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return ERROR_GENERAL;
+  }
 
   /* Some extra work is done here,
    * because only the last initialisation counts. */
   copy_potential(c->p, c->original_p);
 
   free(extra_vars); /* free(NULL) is O.K. */
-  return (i);
+  return NO_ERROR;
 }
 
 
 int marginalise(Clique c, Variable v, double r[]){
   int index = var_index(c, v);
+  int retval;
 
   /* Variable not in this Clique => ERROR */
   if(index == -1){
@@ -750,7 +808,11 @@ int marginalise(Clique c, Variable v, double r[]){
     return ERROR_INVALID_ARGUMENT;
   }
   
-  return(total_marginalise(c->p, r, index));
+  retval = total_marginalise(c->p, r, index);
+  if(retval != NO_ERROR)
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+
+  return(retval);
 }
 
 
@@ -771,6 +833,7 @@ int global_retraction(Variable_iterator vars, Clique* cliques,
 		      int num_of_cliques){
 
   int index;
+  int retval;
   Variable v;
   Clique c;
 
@@ -792,11 +855,16 @@ int global_retraction(Variable_iterator vars, Clique* cliques,
     c = find_family(cliques, num_of_cliques, &v, 1);
     index = var_index(c, v);
 
-    update_evidence(v->likelihood, NULL, c->p, index);
+    retval = update_evidence(v->likelihood, NULL, c->p, index);
+    if(retval != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
+
     v = next_Variable(&vars);
   }
 
-  return 0;
+  return NO_ERROR;
 }
 
 
@@ -814,7 +882,7 @@ int enter_i_observation(Variable_iterator vars, Clique* cliques,
   double *evidence = (double *) calloc(v->cardinality, sizeof(double));
 
   if(!evidence){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 0);
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
 
@@ -835,6 +903,7 @@ int enter_evidence(Variable_iterator vars, Clique* cliques,
 		   int num_of_cliques, Variable v, double evidence[]){
   int index, i;
   int retraction = 0;
+  int retval;
   Clique c;
 
   if(v == NULL || evidence == NULL){
@@ -859,14 +928,23 @@ int enter_evidence(Variable_iterator vars, Clique* cliques,
    * Here is the update of clique potential.
    * MUST be done before update_likelihood.
    */
-  if(!retraction)
-    update_evidence(evidence, v->likelihood, c->p, index);
+  if(!retraction){
+    retval = update_evidence(evidence, v->likelihood, c->p, index);
+    if(retval != NULL){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
+  }
 
   /* update likelihood */
   update_likelihood(v, evidence);
 
-  if(retraction)
-    return global_retraction(vars, cliques, num_of_cliques);
+  if(retraction){
+    retval = global_retraction(vars, cliques, num_of_cliques);
+    if(retval != NO_ERROR)
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return(retval);
+  }
 
   return NO_ERROR;
 }

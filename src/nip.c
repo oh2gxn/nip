@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.6 2004-08-16 12:45:45 mvkorpel Exp $
+ * nip.c $Id: nip.c,v 1.7 2004-08-20 09:53:48 mvkorpel Exp $
  */
 
 #include "nip.h"
@@ -31,8 +31,10 @@ Nip parse_model(char* file){
   }
   
   /* 1. Parse */
-  if(open_yyparse_infile(file) != NO_ERROR)
+  if(open_yyparse_infile(file) != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return NULL;
+  }
 
   retval = yyparse();
 
