@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.36 2004-06-22 13:19:50 mvkorpel Exp $
+ * Clique.h $Id: Clique.h,v 1.37 2004-06-24 12:15:04 mvkorpel Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -137,13 +137,20 @@ int normalise(double result[], int array_size);
 
 
 /*
- * Method for entering evidence to a clique. 
- * sizeof(evidence) must equal variable->cardinality.
- * Returns an error code. *** NOTE: If this returns GLOBAL_RETRACTION, 
- * it failed and an initialisation should be made before calling this 
- * again.
+ * Function for entering an observation to a clique tree.
+ * The observed state of the variable is given as a string.
+ * Returns an error code.
  */
-int enter_evidence(Clique c, Variable v, double evidence[]);
+int enter_observation(Variable v, char *state);
+
+
+/*
+ * Function for entering evidence to a clique tree.
+ * sizeof(evidence) must equal variable->cardinality.
+ * This function might do a global retraction.
+ * Returns an error code.
+ */
+int enter_evidence(Variable v, double evidence[]);
 
 
 /* Finds a clique containing a family of variables. Returns the first

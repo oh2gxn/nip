@@ -55,6 +55,8 @@ int main(){
 
   Variable set_of_variables[3];
 
+  Clique **cliques_pointer;
+
   /* Create the variables (without statenames) */
   variables[0] = new_variable("A", nameA, NULL, 3);
   variables[1] = new_variable("B", nameB, NULL, 4);
@@ -65,6 +67,11 @@ int main(){
   clique_pile[0] = make_Clique(variables, 3);
   clique_pile[1] = make_Clique(&(variables[1]), 3);
   clique_pile[2] = make_Clique(&(variables[3]), 2);
+
+  /* Ugly hack */
+  cliques_pointer = get_cliques_pointer();
+  *cliques_pointer = clique_pile;
+
   sepset_pile[0] = make_Sepset(&(variables[1]), 2, &(clique_pile[0]));
   sepset_pile[1] = make_Sepset(&(variables[3]), 1, &(clique_pile[1]));
   add_Sepset(clique_pile[0], sepset_pile[0]);
@@ -111,8 +118,8 @@ int main(){
 
   /* observation entry: This information is from the given data. */
   /* data please? anyone? */
-  enter_evidence(clique_pile[1], variables[1], probB);
-  enter_evidence(clique_pile[1], variables[3], probD);
+  enter_evidence(variables[1], probB);
+  enter_evidence(variables[3], probD);
 
   /* DEBUG */
   /* printf("BCD after evidence:\n"); */

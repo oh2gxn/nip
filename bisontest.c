@@ -76,19 +76,16 @@ static void test_probability(double **result, int *size_of_result,
 static void test_evidence(Variable observed, double data[], Clique cliques[],
 			  int num_of_cliques){
 
-  Clique clique_of_interest =
-    find_family(cliques, num_of_cliques, &observed, 1);
-
 #ifdef DEBUG_BISONTEST
   int evidence_retval;
 #endif
 
 #ifndef DEBUG_BISONTEST
-  enter_evidence(clique_of_interest, observed, data);
+  enter_evidence(observed, data);
 #endif
 
 #ifdef DEBUG_BISONTEST
-  evidence_retval = enter_evidence(clique_of_interest, observed, data);
+  evidence_retval = enter_evidence(observed, data);
   printf("\n\nEntered evidence into ");
   print_Clique(clique_of_interest);
   printf("enter_evidence returned %d.\n", evidence_retval);

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.66 2004-06-23 13:43:32 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.67 2004-06-24 12:15:03 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -660,22 +660,48 @@ static int global_retraction(Clique c){
 }
 
 
-int enter_evidence(Clique c, Variable v, double evidence[]){
+int enter_observation(Variable v, char *state){
+  int i, index, retval;
+  double *evidence = (double *) calloc(v->cardinality, sizeof(double));
+
+  if(!evidence){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 0);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  index = get_stateindex(v, state);
+
+  for(i = 0; i < v->cardinality; i++)
+    if(i == index)
+      evidence[i] = 1;
+    else
+      evidence[i] = 0;
+
+  retval = enter_evidence(v, evidence);
+  free(evidence);
+
+  return retval;
+}
+
+
+int enter_evidence(Variable v, double evidence[]){
   int index, i;
   int retraction = 0;
+  Clique c;
 
-  if(c == NULL || v == NULL || evidence == NULL){
+  if(v == NULL || evidence == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
   }
     
-  index = var_index(c, v);
+  c = find_family(nip_cliques, nip_num_of_cliques, &v, 1);
 
-  /* Variable not in this Clique => ERROR */
-  if(index == -1){
+  if(!c){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);
     return ERROR_INVALID_ARGUMENT;
   }
+
+  index = var_index(c, v);
 
   for(i = 0; i < v->cardinality; i++)
     if((v->likelihood)[i] == 0 && evidence[i] != 0)
