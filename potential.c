@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.46 2004-08-25 11:14:41 mvkorpel Exp $
+ * potential.c $Id: potential.c,v 1.47 2004-08-26 10:37:27 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -374,20 +374,10 @@ int update_evidence(double numerator[], double denominator[],
     /* some of the work above is useless (only one index is used) */
     source_index = target_indices[var];
 
-#ifdef DEBUG_POTENTIAL
-    printf("In update_evidence: %f * %f\n", target->data[i],
-	   numerator[source_index]);
-#endif
-
     target->data[i] *= numerator[source_index];  /* THE multiplication */
 
     if(denominator != NULL)
       if(denominator[source_index] != 0){
-
-#ifdef DEBUG_POTENTIAL
-	printf("In update_evidence: %f / %f\n", target->data[i],
-	       denominator[source_index]);
-#endif
 
 	target->data[i] /= denominator[source_index];  /* THE division */
       }

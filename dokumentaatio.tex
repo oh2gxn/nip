@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.7 2004-08-25 11:50:16 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.8 2004-08-26 10:37:26 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -410,7 +410,7 @@ according to the \textbf{source} potential. The function is similar to
 the \textbf{general\_marginalise} but instead of telling which
 variables to marginalise away, the user must indicate which
 variable is left unmarginalised. The parameter \textbf{variable} is 
-an {\it integer} ranging from \verb+0+ to
+an {\it integer} ranging from \verb+0+ to\\
 \verb+source->num_of_vars - 1+ inclusive. Zero indicates the first
 variable in the potential.
 
@@ -423,13 +423,49 @@ cardinality of the desired variable, so remember to allocate one
 before calling this function. Note that the result is not normalised.
 
 \item[update\_potential(numerator, denominator, target, extra\_vars)] 
+implements the multiplication of potentials. The function simply
+multiplies the elements of the \textbf{target} potential with the
+corresponding elements in the \textbf{numerator} potential. At the
+same time, the function is able to divide the \textbf{target}
+potential with the optional \textbf{denominator} potential. If no
+division is needed, \textbf{denominator} can be {\it NULL}.
+The \textbf{numerator} and \textbf{denominator} potentials are left
+unchanged by the function.
 
+The function is made for multiplying the a clique potential with the 
+old and new sepset potentials. It is assumed that the variables
+associated with the multiplier potentials are a subset of the
+variables associated with the target potential. Thus the user needs to
+indicate which of the variables in the target potential are not
+associates with the multiplier potentials. This is achieved with the
+fourth parameter \textbf{extra\_vars} which is an {\it integer array}. 
+The array must be in ascending order. For example, a zero in the array 
+indicates that the first variable of the target potential is not
+amongst those associated with the multiplicand potentials.
 
-\item[update\_evidence(numerator, denominator, target, var)] 
+\item[update\_evidence(numerator, denominator, target, var)] is made
+for multiplying potentials with probability distributions of a single
+variable. The potential to be manipulated is given as the
+\textbf{target} parameter. It is multiplied by the given {\it double
+array} \textbf{numerator} which usually represents the probability
+distribution of a variable. The \textbf{denominator} is a similar 
+{\it double array} used for dividing the \textbf{target} potential. 
+If not needed, the \textbf{denominator} can be {\it NULL}.
 
+Typically the function is used for multiplying evidence into a clique 
+potential and dividing with possible old evidence. The variable, whose 
+distribution is to be passed into the potential, must be indicated 
+with the \textbf{var} {\it integer}. E.g. a zero tells the function 
+that the evidence is about the first variable associated with the potential.
 
-\item[init\_potential(probs, target, extra\_vars)] 
-
+\item[init\_potential(probs, target, extra\_vars)] is essentially the
+same as the \textbf{update\_potential} function. It is meant for
+multiplying the \textbf{target} potential with the given
+\textbf{probs} potential. If the potentials are similar, i.e. they
+have the same associated variables, the \textbf{extra\_vars} parameter 
+should be {\it NULL}. Otherwise \textbf{extra\_vars} is an 
+{\it integer array} indicating which of the variables associated with
+the target potential are not associated with the multiplier potential.
 
 \item[print\_potential(p)] is mainly for debugging purposes. It prints 
 the contents of the potential~\textbf{p} to the standard output.
