@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.12 2004-08-30 11:48:55 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.13 2004-08-31 13:51:42 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -124,42 +124,35 @@ The idea and mathematical formulas...
 The data type {\it Variable} defined in \verb+Variable.h+ is a pointer 
 to a struct which has the following fields: 
 \begin{description}
-\item[symbol] is a short string used to identify the variable. Maximum
+\item[symbol] is a short string used for identifying the variable. Maximum
 length is defined as \textbf{VAR\_SYMBOL\_LENGTH} in
 \verb+Variable.h+. To ensure the correct operation of the system, the 
 symbol should be unique.
-
 \item[name] is a little longer name to describe the variable: it is
 called {\it label} in the Hugin net files. This is NOT used for 
 identification of the variables and it doesn't need to be unique. 
 The maximum length is defined as \textbf{VAR\_NAME\_LENGTH} in 
 \verb+Variable.h+.
-
 \item[statenames] is an array of strings containing names for all
 possible states of the variable. The identification of data relies on
 these strings. The size of the statenames array i.e. number of
 strings should be the same as the number of states indicated by
 cardinality field described below.
-
 \item[cardinality] is a positive integer which tells how many states
 the variable can have. It plays an important role in all calculations
 so it better be correct: the value is not meant to be altered.
-
 \item[id] is an {\it unsigned long} used for identification inside the
 system. It is set automatically by the \verb+new_variable+ function
 and should not be tampered after that.
-
 \item[likelihood] is a {\it double} array describing the probability
 distribution of the states of the variable. It is used only for
 entering evidence into the system and likelihood arrays of the latent
 variables remain filled with ones. Size of the array equals
 cardinality, of course.
-
-\item[previous] is used to describe the repetitive structure in
+\item[previous] is used for describing the repetitive structure in
 timeslice models. It is a pointer to the variable which this variable
 will replace in previous timeslice. The pointer is {\it NULL} if the
 model has no repetitive structure.
-
 \item[next] is a same kind of pointer as \textbf{previous} above, but
 this one tells which variable will be replaced in the next timeslice.
 The \textbf{previous} and \textbf{next} pointers should be symmetrical
@@ -172,10 +165,8 @@ pointers to structs which contain following fields:
 \begin{description}
 \item[data] is the variable (i.e. pointer to a variable struct) 
 contained by the list element.
-
 \item[fwd] is a pointer to the next element in the list or {\it NULL}
 at the end of the list.
-
 \item[bwd] is a pointer to the previous element in the list or 
 {\it NULL} at the beginning of the list.
 \end{description}
@@ -198,70 +189,54 @@ string will be copied as the name field of the new variable. Both the
 allowed length. The states of the new variable will be named according 
 to the given string array \textbf{states}. All the given strings are 
 copied, so remember to free them after they become useless.
-
 \item[copy\_variable(v)] returns an exact copy of the
 variable~\textbf{v}. Note that also the id~field is copied and 
 consequently there may not be two copies of the same variable in the 
 same model.
-
 \item[free\_variable(v)] frees the memory allocated for the
 variable~\textbf{v}. 
-
 \item[equal\_variables(v1, v2)] returns 0 if either of the variables
 are null. Otherwise it will tell if the variables have equal id fields
 or not.
-
 \item[get\_id(v)] will return the unsigned long id field of the 
 variable~\textbf{v}.
-
 \item[get\_symbol(v)] returns the symbol of the variable~\textbf{v}. It
 will not make a copy of the string so don't mess with it.
-
 \item[get\_stateindex(v, state)] tells the place of the string
 \textbf{state} in the state name array of the
-variable~\textbf{v}. This index can be used to interpret various
+variable~\textbf{v}. This index can be used for interpreting various
 arrays describing probability distributions. 
-
-\item[total\_num\_of\_vars()] is used only to aid the Hugin net file
+\item[total\_num\_of\_vars()] is used only for aiding the Hugin net file
 parser to return the total number of newly created variables. All 
 the variables created with \textbf{new\_variable} are accumulated 
 in a list and this function can tell the size of that list.
-
 \item[get\_first\_variable()] gives the first element in the list
 of newly created variables mentioned above.
-
 \item[get\_last\_variable()] gives the last element in the list
 of newly created variables mentioned above.
-
 \item[reset\_Variable\_list()] will replace the list of recently created
 variables with {\it NULL} and set the size of the list to zero. This
 is used only for resetting the list after copying the list pointer
 to a new model. Otherwise all the models would share the same list of
 parsed variables.
-
 \item[next\_Variable(it)] will give the next variable pointed by the
 variable iterator~\textbf{it} and advance the pointer to the next
 variable in the list. The function returns {\it NULL} if the iterator
 runs out of variables.
-
 \item[get\_parser\_variable(symbol)] aids the net file parser to find a
 variable, identified by the \textbf{symbol} string, in the list of newly
 created variables.
-
 \item[get\_variable(it, symbol)] searches the
 variable iterator~\textbf{it} for a variable identified by the string
 \textbf{symbol}. The iterator will be used by the function, so it will
 not be pointing to the beginning of any lists anymore.
-
 \item[update\_likelihood(v, likelihood)] will set the likelihood array
 of variable~\textbf{v} according to the given double array 
 \textbf{likelihood}. Size of the given array should be the same 
 (or more) than the cardinality of the variable.
-
 \item[reset\_likelihood(v)] fills the likelihood array of the
 variable~\textbf{v} with ones. This means that the likelihood of the
 variable states will be uniform.
-
 \item[number\_of\_values(v)] returns the cardinality of the
 variable~\textbf{v}. It is the exact number of states the variable has
 and will always have.
@@ -313,16 +288,13 @@ pointer to a struct which contains the following fields:
 elements in the potential. It must be the product of all the elements 
 in the \textbf{cardinality} array (or one if the number of variables 
 equals zero).
-
 \item[cardinality] is an array of {\it integers}. The integers are the
 cardinalities of each variable the potential is related to. Thus the
 size of the array must be the same as the number of variables. Also
 the order of the cardinality array is significant because the
 variables are assumed to have a certain order.
-
 \item[num\_of\_vars] is an {\it integer} which tells the number of variables
 associated with the potential.
-
 \item[data] is the {\it double array} describing a probability
 distribution of the associated variables. The size of this array is in
 the \textbf{size\_of\_data} field. The data in the array is arranged
@@ -351,30 +323,25 @@ variables. In case of a null pointer, the potential will be
 initialised to uniform distribution. Otherwise the contents of 
 the \textbf{data} array in the potential struct will be copied from
 the given \textbf{data} array.
-
 \item[free\_potential(p)] frees the memory allocated for the
 potential~\textbf{p}. 
-
 \item[copy\_potential(source, destination)] copies the distribution
 contained in the \textbf{source} potential to the given
 \textbf{destination} potential. Note that both of the potentials must
 be already existent and otherwise equal. Use the 
 \textbf{make\_potential} function if you need an entire new copy of 
 a potential.
-
 \item[get\_pvalue(p, indices)] retrieves the possibly non-normalised
-probability of the configuration of variables, described by the integer 
-array \textbf{indices}, from the potential~\textbf{p}. The
-\textbf{indices} array tells which value each of the associated
+probability of the configuration of variables, described by the 
+{\it integer array} \textbf{indices}, from the potential~\textbf{p}. 
+The \textbf{indices} array tells which value each of the associated
 variables are assigned: $n-1$ in the array corresponds to the $n$:th 
 value of the variable. The \textbf{indices} must be in the same order
 as the corresponding variables and their cardinalities in the
 potential~\textbf{p}. 
-
 \item[set\_pvalue(p, indices, value)] sets a {\it double}
 \textbf{value} in the potential~\textbf{p} the same way as 
 \verb+get_pvalue(p, indices)+ retrieves it. (See the description above.)
-
 \item[inverse\_mapping(p, flat\_index, indices)] transforms a
 so-called flat index into the {\it integer array} \textbf{indices} according 
 to the potential~\textbf{p}. A flat index is an index used for addressing
@@ -383,7 +350,6 @@ data in the potential and is therefore an integer between \verb+0+ and
 finding out which configuration of states of the variables corresponds
 to each element in the potential. Note that the \textbf{indices} array 
 is not allocated by the function.
-
 \item[general\_marginalise(source, destination, source\_vars)] is one
 of the most useful functions since it computes the marginalisation
 i.e. a sum over the variables indicated by the given {\it integer
@@ -403,7 +369,6 @@ must be arranged in ascending order and the size must equal the
 difference in the numbers of associated variables in the potentials. 
 Simply, a zero in the array tells the function to marginalise over the 
 first variable. Note that the result is not normalised.
-
 \item[total\_marginalise(source, destination, variable)] can be used
 for finding out the probability distribution of a single variable
 according to the \textbf{source} potential. The function is similar to
@@ -421,7 +386,6 @@ The place to put the resulting {\it double array}
 parameters. Size of the array must be equal (or greater) to the
 cardinality of the desired variable, so remember to allocate one
 before calling this function. Note that the result is not normalised.
-
 \item[update\_potential(numerator, denominator, target, extra\_vars)] 
 implements the multiplication of potentials. The function simply
 multiplies the elements of the \textbf{target} potential with the
@@ -442,7 +406,6 @@ fourth parameter \textbf{extra\_vars} which is an {\it integer array}.
 The array must be in ascending order. For example, a zero in the array 
 indicates that the first variable of the target potential is not
 amongst those associated with the multiplicand potentials.
-
 \item[update\_evidence(numerator, denominator, target, var)] is made
 for multiplying potentials with probability distributions of a single
 variable. The potential to be manipulated is given as the
@@ -457,7 +420,6 @@ potential and dividing with possible old evidence. The variable, whose
 distribution is to be passed into the potential, must be indicated 
 with the \textbf{var} {\it integer}. E.g. a zero tells the function 
 that the evidence is about the first variable associated with the potential.
-
 \item[init\_potential(probs, target, extra\_vars)] is essentially the
 same as the \\ \textbf{update\_potential} function. It is meant for
 multiplying the \textbf{target} potential with the given
@@ -466,10 +428,8 @@ have the same associated variables, the \textbf{extra\_vars} parameter
 should be {\it NULL}. Otherwise \textbf{extra\_vars} is an 
 {\it integer array} indicating which of the variables associated with
 the target potential are not associated with the multiplier potential.
-
 \item[print\_potential(p)] is mainly for debugging purposes. It prints 
 the contents of the potential~\textbf{p} to the standard output.
-
 \end{description}
 
 
@@ -500,15 +460,12 @@ and {\it Clique}. {\it Sepset} is a pointer to a struct which has the
 following fields:
 \begin{description}
 \item[old] is older of the two last {\it potentials} passed via the sepset.
-
 \item[new] is the last {\it potential} passed via the sepset.
-
 \item[variables] is an {array of Variables}. These are the variables
 associated with the sepset. They are in the same order as their
 cardinalities in the potentials \textbf{old} and \textbf{new}. 
 The number of the variables can be found in either of the potentials 
 \textbf{old} and \textbf{new}.
-
 \item[cliques] is an {array of Cliques}. The references to the
 adjacent cliques are there. The size of the array is always two
 because of the nature of sepsets.
@@ -523,10 +480,8 @@ have defined sepsets. Sepsets can't be defined before cliques and
 cliques can't be defined before lists of sepsets.) When the list of
 sepsets is used, the \textbf{data} field has to be cast to the 
 {\it Sepset} type. 
-
 \item[fwd] is the next {\it Sepset\_link} in the list or {\it NULL} at
 the end of the list.
-
 \item[bwd] is the previous {\it Sepset\_link} in the list or 
 {\it NULL} at the beginning of the list.
 
@@ -536,20 +491,15 @@ The data type {\it Clique} is a pointer to a struct containing all the
 necessary for working with cliques. The fields are
 \begin{description}
 \item[p] is the clique {\it potential}
-
 \item[original\_p] is the original clique {\it potential} initialised
 according to the parameters of the model
-
 \item[variables] is an {\it array of Variables}. These are the
 references to the variables associated with the clique. They are in
 the same order as their cardinalities in the potential~\textbf{p}.
 The number of variables can be found in the potential~\textbf{p}.
-
 \item[sepsets] is a {\it Sepset\_link} i.e. either {\it NULL} or a
 list of sepsets. The list contains the references to the adjacent sepsets.
-
 \item[num\_of\_sepsets] is the number of adjacent sepsets.
-
 \item[mark] is an {\it integer} used as a flag by various algorithms. For
 example a depth-first search and the propagation of evidence uses the 
 \textbf{mark} field to identify the cliques which have already been 
@@ -567,18 +517,15 @@ associated variables are given as the {\it Variable array}
 \textbf{num\_of\_vars}. A shallow copy of the array is made, so
 remember to free it (but not the contents). The clique will not have 
 any adjacent sepsets initially. Sepsets must be added separately.
-
 \item[free\_Clique(c)] frees the memory allocated by a the 
 {\it Clique}~\textbf{c}. It will not free the memory allocated for 
 the corresponding {\it Variables}, but all the adjacent {\it Sepsets} 
 are freed and removed automatically so that rest of the join tree 
 remains valid. Note that freeing an entire join tree can be done by 
 calling this function for every clique.
-
 \item[add\_Sepset(c, s)] adds the {\it Sepset} \textbf{s} to the 
 {\it Clique}~\textbf{c}. Remember to add the sepset to both adjacent
 cliques and never add a sepset to the same clique twice.
-
 \item[make\_Sepset(variables, num\_of\_vars, cliques)] creates a {\it
 Sepset}. The associated variables are given as the {\it Variable
 array} \textbf{variables} and the size of the array as the {\it
@@ -587,13 +534,11 @@ as an {\it array of Cliques} (\textbf{cliques}). This usually means that
 the {\it Cliques} must be created before the {\it Sepsets}.
 Note that a shallow copy of the parameter arrays is made, so freeing 
 the arrays after calling the function is up to the user.
-
 \item[free\_Sepset(s)] just frees the memory allocated for the {\it
 Sepset} \textbf{s}. This is called automatically by
 \textbf{free\_Clique} so usually this function is needed only for
 freeing possible useless {\it Sepsets} which are not included in the 
 join tree.
-
 \item[create\_Potential(variables, num\_of\_vars, data)] can help if
 you need to create potentials out of {\it double arrays} like 
 the \textbf{data} parameter. The function creates a {\it potential} 
@@ -612,23 +557,18 @@ variable should be the first in the array. Note that for some reason
 the first parent variable specified in the Hugin net files should be 
 the last in the \textbf{variables} array, and the last parent should
 be the second right after the child variable.
-
 \item[unmark\_Clique(c)] resets the mark in the {\it
 Clique}~\textbf{c}. Note that this has to be done for every clique 
 before calling \textbf{distribute\_evidence} or 
 \textbf{collect\_evidence}.
-
 \item[clique\_num\_of\_vars(c)] tells how many associated variables the 
 {\it Clique}~\textbf{c} has.
-
 \item[sepset\_num\_of\_vars(s)] tells how many associated variables the 
 {\it Sepset}~\textbf{s} has.
-
 \item[distribute\_evidence(c)] implements the algorithm which spreads 
 the evidence entered in to the cliques away from the given 
 {\it Clique}~\textbf{c}. See \cite{procedural_guide} page 21 for
 details. 
-
 \item[collect\_evidence(c1, s12, c2)] implements the algorithm which 
 collects evidence from the subtree rooted in the given {\it
 Clique}~\textbf{c2} and passes the evidence to the {\it
@@ -637,7 +577,6 @@ between the two cliques. The function is recursive and is usually
 used like this: \verb+collect_evidence(NULL, NULL, c);+ where \verb+c+
 is some {\it Clique}. This causes the evidence to be collected from
 the entire join tree.
-
 \item[initialise(c, child, parents, p)] is used for entering the
 quantitative parameters of the model into the join tree. This function
 initialises the {\it Clique}~\textbf{c} with the given {\it
@@ -654,7 +593,6 @@ specify the \textbf{child} {\it Variable} and the {\it array of
 variables} which contain the \textbf{parents}. The order of the
 variables in the \textbf{parents} array is not relevant and the 
 array is not needed after the function has executed.
-
 \item[marginalise(c, v, r)] is one of the most useful functions
 because it finds out the probability distribution of the {\it
 Variable}~\textbf{v} according to the {\it Clique}~\textbf{c} and
@@ -662,13 +600,11 @@ writes it into the {\it double array}~\textbf{r} (as in
 \textbf{r}esult). The array must be allocated before the function is
 called and the size must be at least \verb+v->cardinality+. 
 Note that the result is NOT normalised.
-
 \item[normalise(result, array\_size)] simply normalises the {\it
 double array} \textbf{result}. After the function has executed, sum of
 the elements in the array will be one, unless it's filled with zeros. 
 If the array is full of zeros, it is left unchanged. The size of the
 array must be specified as the {\it integer} \textbf{array\_size}.
-
 \item[global\_retraction(vars, cliques, num\_of\_cliques)] resets the 
 clique potentials to the state they had after the initialisation and 
 enters the most recent evidence into the cliques. Thus the join tree
@@ -683,7 +619,6 @@ variables and run \textbf{global\_retraction}. The
 a {\it Clique array} \textbf{cliques} must be specified. Also the
 number of the cliques has to be given to the function as the {\it
 integer} \textbf{num\_of\_cliques}.
-
 \item[enter\_observation(vars, cliques, num\_of\_cliques, v, state)] 
 is made for incorporating hard evidence into a join tree. The observed
 state of the {\it Variable}~\textbf{v} is given as a {\it string} named
@@ -693,15 +628,13 @@ as the {\it integer} \textbf{num\_of\_cliques}. The reference
 \textbf{vars} to the list of all variables is needed because of the
 possible global retraction. The function \textbf{global\_retraction}
 is called automatically if needed.
-
 \item[enter\_i\_observation(vars, cliques, num\_of\_cliques, v, index)]
 is made for entering an observation as an {\it integer} into a join
 tree. This is equal to the function \textbf{enter\_observation} but
 instead of telling the observation as a string, the user should encode
 the observation as the {\it integer} \textbf{index}. A zero
 corresponds to the first state of the variable defined in the Hugin
-net file. (See the \textbf{get_stateindex} function also.)
-
+net file. (See the \textbf{get\_stateindex} function also.)
 \item[enter\_evidence(vars, cliques, num\_of\_cliques, v, evidence)]
 is made for entering soft evidence into a join tree. (Note that hard
 evidence is only a special case of soft evidence.) The function is
@@ -710,7 +643,6 @@ similar to the \textbf{enter\_observation} and
 describing a single state, the user must specify a probability
 distribution as the {\it double array} \textbf{evidence}. The array is
 assumed to be normalised.
-
 \item[find\_family(cliques, num\_of\_cliques, variables, num\_of\_vars)]
 tries to find a {\it Clique} which contains all the variables (or
 more) specified in the {\it Variable array} \textbf{variables}. The 
@@ -718,7 +650,6 @@ number of variables has to be given as the fourth parameter
 \textbf{num\_of\_vars}. The function returns {\it NULL} if there are
 no suitable cliques in the specified {\it array of Cliques} 
 (\textbf{cliques}) within the given size \textbf{num\_of\_cliques}.
-
 \item[find\_sepsets(cliques, num\_of\_cliques)] creates and inserts 
 the sepsets between the {\it Cliques} specified in the array 
 \textbf{cliques}. The size of the array must be given as the 
@@ -726,15 +657,12 @@ the sepsets between the {\it Cliques} specified in the array
 used only once after all of the cliques have been created. 
 Consequently, it is not intended for repairing partially created 
 join trees.
-
 \item[print\_Clique(c)] is meant for debugging purposes. It prints the
 symbols of the variables associated with the {\it Clique}~\textbf{c}
 to the standard output.
-
 \item[print\_Sepset(s)] is meant for debugging purposes. It prints the
 symbols of the variables associated with the {\it Sepset}~\textbf{s}
 to the standard output.
-
 \item[clique\_intersection(cl1, cl2, vars, n)] finds out which
 variables are common to the specified {\it Cliques}~\textbf{cl1}
 and~\textbf{cl2}. The parameter \textbf{vars} is a {\it pointer to an
@@ -755,11 +683,210 @@ How the stuff could work also...
 \section{The Hugin net file parser}
 \subsection{General}
 
-The idea and mathematical formulas...
+% The structure of net files
 
 \subsection{The functionality description}
+The parser for reading models from Hugin net files is written in two
+files: \verb+huginnet.y+ contains the lexer and description of the
+files for the Bison parser generator and \verb+parser.c+ contains lots
+of helper functions for the parser. The data structures used for
+parsing are defined in the \verb+parser.h+ file.
 
-The interface + how the stuff works...
+\subsubsection{The data structures}
+The \verb+parser.h+ file defines several data types used with the
+parser implementation. One of them is {\it doublelink} which is a
+pointer to a struct which can hold a {\it double} and consequently
+form a list of floating point numbers. The struct contains the
+following fields
+\begin{description}
+\item[data] is the {\it double} number contained by the list element.
+\item[fwd] is a {\it doublelink} i.e. a pointer to the next element in
+the list or {\it NULL} at the end of the list.
+\item[bwd] is a {\it doublelink} i.e. a pointer to the previous element in
+the list or {\it NULL} at the beginning of the list.
+\end{description}
+
+Another kind of useful data type is {\it stringlink} which is a
+pointer to a struct. The struct can be used as an element in a list of
+strings. The element contains the following fields
+\begin{description}
+\item[data] is the {\it string} i.e. an array of characters.
+\item[fwd] is a {\it stringlink} i.e. a pointer to the next element in
+the list or {\it NULL} at the end of the list.
+\item[bwd] is a {\it stringlink} i.e. a pointer to the previous element in
+the list or {\it NULL} at the beginning of the list.
+\end{description}
+
+Since the conditional probability distributions and the structure of
+the model are both encoded into the \verb+potential+ declarations of
+the net files, the distributions have to be temporarily stored until
+the entire net file has been parsed and the join tree is made. In
+other words, you can't enter the quantitative parameters of the model
+until you know the qualitative structure of it. This is why the parser
+stores all the {\it potentials} read from the net file into a list
+until the end of parsing. This is where the data type 
+{\it initDataLink} comes handy. It is a pointer to a struct which
+holds the following fields
+\begin{description}
+\item[data] is the {\it potential} stored by the list element.
+\item[child] is the {\it Variable} which was defined to depend on
+other variables in the potential declaration of the net file.
+\item[parents] is an {\it array of Variables} which contains the
+parent variables of the \textbf{child}. Instead of an array it may be
+{\it NULL} if the \textbf{child} was an independent variable and had
+no parents.
+\item[fwd] is a pointer to the next element in the list or {\it NULL}
+at the end of the list.
+\item[bwd] is a pointer to the previous element in the list or {\it NULL}
+at the beginning of the list.
+\end{description}
+
+A same kind of problem arises with the \verb+node+ declarations of the
+Hugin net files when timeslices are defined. The parser can't assign
+the pointer from a {\it Variable} to the corresponding {\it Variable}
+in the next timeslice before both of the variables have been
+parsed. This is solved by collecting the information about timeslice 
+dependencies into a list until all the variables have been read from
+the net file. The file \verb+parser.h+ defines a data type for this
+purpose: {\it time\_init\_link} is a pointer to a struct which can be
+used as an element in a linked list and holds the following fields
+\begin{description}\item[var] is the {\it Variable} which corresponds to another one in
+the next timeslice.
+\item[next] is the symbol {\it string} which identifies the corresponding 
+variable in the next timeslice.
+\item[fwd] is a {\it time\_init\_link} i.e. a pointer to the next
+element in the list or {\it NULL} at the end of the list.
+\end{description}
+
+There's also a small parser for the data files. A data type has been
+defined for reading timeseries data from files. The data type 
+{\it datafile} is a struct which contains the following fields
+\begin{description}
+\item[name] is a string ({\it char array}) which contains the 
+name of the file.
+
+\item[separator] is the character (a single {\it char}) which is used 
+as the separator between elements on a row in the data file.
+
+\item[file] is a file handle of the type {\it FILE}.
+
+\item[is\_open] is an {\it integer} telling whether the file is open
+or not.
+
+\item[firstline\_labels] is an {\it integer} which indicates whether
+the first line of the data file contains node labels of the
+corresponding variables or not. 
+
+\item[line\_now] is an {\it integer} which tells the current position
+in the file.
+
+\item[datarows] is an {\it integer} telling the number of data rows in
+the file i.e. the length of a timeseries. If there's a line containing
+the node labels in the beginning of the file, it is not counted as a
+data row.
+
+\item[node\_symbols] is an {\it array of strings}. It contains the
+symbols (short names) of the observed variables. These are usually
+found on the first line of the data file.
+
+\item[num\_of\_nodes] tells the number of the observed variables as an
+{\it integer}.
+
+\item[node\_states] is a {\it two-dimensional array of strings}. It
+contains the names of the states of every observed variable. For
+example \verb+node_states[i][j]+ is a name of a state of the $i:th$
+observed variable, assuming that $j \in [0, c[$, where $c$ is the 
+cardinality of the variable. This array is particularly useful if the
+model is created automatically from data and not read from a net file.
+
+\item[num\_of\_states] is an {\it array of integers} which tells how
+many different states corresponding observed variable has had in the
+data file.
+\end{description}
+
+
+\subsubsection{The functions}
+% sumthin
+\begin{description}
+\item[yyparse()]
+
+\end{description}
+
+% sumthin
+\begin{description}
+\item[open\_yyparse\_infile(filename)]
+
+\item[close\_yyparse\_infile()]
+
+\item[open\_datafile(filename, separator, write, nodenames)]
+
+\item[close\_datafile(file)]
+
+\item[nextline\_tokens(f, separator, tokens)]
+
+\item[next\_token(token\_length)]
+
+\item[add\_symbol(v)]
+
+\item[add\_initData(p, child, parents)]
+
+\item[add\_time\_init(var, next)]
+
+\item[add\_double(d)]
+
+\item[add\_string(string)]
+
+\item[make\_variable\_array()]
+
+\item[make\_double\_array()]
+
+\item[make\_string\_array()]
+
+\item[reset\_doubles()]
+
+\item[reset\_strings()]
+
+\item[reset\_symbols()]
+
+\item[reset\_initData()]
+
+\item[reset\_timeinit()]
+
+\item[init\_new\_Graph()]
+
+\item[parsedVars2Graph()]
+
+\item[time2Vars()]
+
+\item[Graph2JTree()]
+
+\item[parsedPots2JTree()]
+
+\item[print\_parsed\_stuff()]
+
+\item[set\_nip\_statenames(states)]
+
+\item[get\_nip\_statenames()]
+
+\item[set\_nip\_label(label)]
+
+\item[get\_nip\_label()]
+
+\item[set\_nip\_next(next)]
+
+\item[get\_nip\_next()]
+
+\item[get\_nip\_symbols\_parsed()]
+
+\item[get\_nip\_strings\_parsed()]
+
+\item[get\_num\_of\_cliques()]
+
+\item[get\_cliques\_pointer()]
+
+\item[reset\_Clique\_array()]
+
+\end{description}
 
 \subsection{Other possibilities}
 
