@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.41 2005-02-24 10:09:16 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.42 2005-03-07 15:21:56 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1026,6 +1026,8 @@ int em_learn(TimeSeries ts){
       
       /* 3. Traverse through the potential with a flat index 
        *    (+ flat->multidimensional conversion + the mapping above) */
+
+      /* A specialised case can be found at HMModel.java lines 290-314 */
 
       for(t = 0; t < ts->length; t++){
 	; /* unfinished... */
