@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser and for other parsers.
- * $Id: parser.h,v 1.32 2004-06-30 08:31:42 mvkorpel Exp $
+ * $Id: parser.h,v 1.33 2004-06-30 10:46:38 mvkorpel Exp $
  */
 
 #ifndef __PARSER_H__
@@ -55,6 +55,9 @@ typedef struct {
   int is_open;
   int firstline_labels; /* Does the first line contain node labels?*/
   int line_now; /* Current position in file */
+
+  /* Number of rows in the file, excluding the line containing node labels */
+  int datarows;
 
   char **node_symbols;
   int num_of_nodes;

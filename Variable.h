@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.27 2004-06-24 08:24:05 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.28 2004-06-30 10:46:38 mvkorpel Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -11,15 +11,18 @@
 #define VAR_STATENAME_LENGTH 20
 #define VAR_MIN_ID 1
 
-typedef struct {
+struct nip_var {
   char symbol[VAR_SYMBOL_LENGTH + 1]; /* short symbol for the node */
   char name[VAR_NAME_LENGTH + 1]; /* label in the Net language*/
   char **statenames; /* a string array with <cardinality> strings */
   int cardinality;
   unsigned long id; /* unique id for every variable */
   double *likelihood; /* likelihood of each value */
-} vtype;
+  nip_var *previous;
+  nip_var *next;
+};
 
+typedef struct nip_var vtype;
 typedef vtype *Variable;
 
 

@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.28 2004-06-24 13:38:18 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.29 2004-06-30 10:46:38 mvkorpel Exp $
  */
 
 #include <string.h>
@@ -46,6 +46,8 @@ Variable new_variable(const char* symbol, const char* name,
 
   v->cardinality = cardinality;
   v->id = id++;
+  v->previous = NULL;
+  v->next = NULL;
  
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';

@@ -22,6 +22,7 @@ int main(int argc, char *argv[]){
   printf("\tName: %s\n", file->name);
   printf("\tSeparator: %c\n", file->separator);
   printf("\tis_open: %d\n", file->is_open);
+  printf("\tNumber of data rows: %d\n", file->datarows);
   printf("\tNumber of nodes: %d\n", file->num_of_nodes);
   printf("Nodes:\n");
   for(i = 0; i < file->num_of_nodes; i++){
