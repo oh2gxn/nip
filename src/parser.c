@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.62 2004-08-11 12:19:42 jatoivol Exp $
+ * $Id: parser.c,v 1.63 2004-08-12 10:59:32 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -851,6 +851,7 @@ int reset_doubles(){
     free(ln->fwd); /* free(NULL) is O.K. at the beginning */
     ln = ln->bwd;
   }
+  free(nip_first_double);
   nip_first_double = NULL;
   nip_doubles_parsed = 0;
   return NO_ERROR;
@@ -867,6 +868,7 @@ int reset_strings(){
     free(ln->fwd); /* free(NULL) is O.K. at the beginning */
     ln = ln->bwd;
   }
+  free(nip_first_string);
   nip_first_string = NULL;
 
   for(i = 0; i < nip_strings_parsed; i++)
@@ -887,6 +889,7 @@ int reset_symbols(){
     free(ln->fwd); /* free(NULL) is O.K. at the beginning */
     ln = ln->bwd;
   }
+  free(nip_first_temp_var);
   nip_first_temp_var = NULL;
   nip_symbols_parsed = 0;
   return NO_ERROR;
@@ -897,13 +900,14 @@ int reset_symbols(){
  * JJT: DO NOT TOUCH THE ACTUAL DATA, OR IT WILL BE LOST. */
 int reset_initData(){
   initDataLink ln = nip_last_initData;
+  initDataLink temp;
   nip_last_initData = NULL;
   while(ln != NULL){
-    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
-    /* NOTE: the potential is probably a part of a variable somewhere */
-    /* free_potential(ln->data); */
+    free_potential(ln->data);
     free(ln->parents); /* calloc is in make_variable_array(); */
+    temp = ln;
     ln = ln->bwd;
+    free(temp);
   }
   nip_first_initData = NULL;
   nip_initData_parsed = 0;  
