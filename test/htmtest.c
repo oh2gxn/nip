@@ -31,7 +31,16 @@ int main(int argc, char *argv[]){
   int num_of_hidden = 0;
   int num_of_nexts = 0;
   double** result; /* probs of the hidden variables */
+
+
+  int kludge_card[] = {3, 3};
+  double kludge[] = {0.1283333333, 0.0650, 0.8066666667, 
+                     0.9033333333, 0.0566666667, 0.0400,
+                     0.0793333333, 0.5396666667, 0.3810};
+  potential kludge_pot;
+  Variable kludge_vars[2];
   
+
   Nip model = NULL;
   Clique clique_of_interest = NULL;
   
@@ -67,6 +76,24 @@ int main(int argc, char *argv[]){
   if(model == NULL)
     return -1;
   /* The input file has been parsed. -- */
+
+
+
+
+  /* Some kludge stuff to test a hypothesis */
+  if(strcmp(argv[1], "htm_timeslice.net") == 0){
+    kludge_vars[0] = get_Variable(model, "B0");
+    kludge_vars[1] = get_Variable(model, "S0");
+    kludge_pot = make_potential(kludge_card, 2, kludge);
+    clique_of_interest = find_family(model->cliques, model->num_of_cliques,
+				     kludge_vars, 2);
+    initialise(clique_of_interest, kludge_vars[0], kludge_vars + 1, 
+	       kludge_pot); /* FIXME: How to prevent the persistency of
+			     * initialisation?  Multidimensional evidence? */
+  }
+  /* EOK: End of kludge */
+
+
 
 
   /*****************************/
