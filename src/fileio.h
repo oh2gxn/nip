@@ -1,5 +1,5 @@
 /*
- * fileio.h $Id: fileio.h,v 1.10 2004-06-24 10:55:14 mvkorpel Exp $
+ * fileio.h $Id: fileio.h,v 1.11 2004-06-29 11:45:22 mvkorpel Exp $
  */
 
 #ifndef __FILEIO_H__
@@ -30,9 +30,13 @@ int count_words(const char *s, int *chars);
  *     the number of characters in *separators
  * - sep_tokens:
  *     if != 0, separators are themselves considered to be tokens
+ * - wspace_sep:
+ *     if != 0, whitespace is a separator of tokens,
+ *     but is not considered a token itself
  */
 int count_tokens(const char *s, int *chars, int quoted_strings,
-		 char *separators, int numof_separators, int sep_tokens);
+		 char *separators, int numof_separators, int sep_tokens,
+		 int wspace_sep);
 
 /*
  * Extracts n first words or tokens of string s. Returns an array of indices
@@ -43,7 +47,8 @@ int count_tokens(const char *s, int *chars, int quoted_strings,
  * See the parameters of count_tokens.
  */
 int *tokenise(const char s[], int n, int quoted_strings,
-	      char *separators, int numof_separators, int sep_tokens);
+	      char *separators, int numof_separators, int sep_tokens,
+	      int wspace_sep);
 
 /*
  * Splits string s into n null terminated tokens.

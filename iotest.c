@@ -1,5 +1,5 @@
 /*
- * iotest.c $Id: iotest.c,v 1.3 2004-06-24 10:55:14 mvkorpel Exp $
+ * iotest.c $Id: iotest.c,v 1.4 2004-06-29 11:45:22 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -36,16 +36,16 @@ int main(int argc, char **argv){
     printf("%s\n", s);
 
 #if defined(TOKENS)
-    wordtemp = count_tokens(s, &chartemp, 1, "(){}=,;", 7, 1);
+    wordtemp = count_tokens(s, &chartemp, 1, "(){}=,;", 7, 1, 1);
 #else
     wordtemp = count_words(s, &chartemp);
 #endif
 
     if(!only_count){
 #if defined(TOKENS)
-      wordbounds = tokenise(s, wordtemp, 1, "(){}=,;", 7, 1);
+      wordbounds = tokenise(s, wordtemp, 1, "(){}=,;", 7, 1, 1);
 #else
-      wordbounds = tokenise(s, wordtemp, 0, NULL, 0, 0);
+      wordbounds = tokenise(s, wordtemp, 0, NULL, 0, 0, 1);
 #endif
 
       if(words < PRINTWORDS){

@@ -1,6 +1,6 @@
 /*
  * Functions for the bison parser.
- * $Id: parser.c,v 1.46 2004-06-29 08:40:50 mvkorpel Exp $
+ * $Id: parser.c,v 1.47 2004-06-29 11:45:22 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -57,6 +57,8 @@ static int add_to_stringlink(stringlink *s, char* string);
 static int search_stringlinks(stringlink s, char* string);
 
 static int nullobservation(char *token);
+
+static int min(int i1, int i2);
 
 int open_yyparse_infile(const char *filename){
   if(!nip_yyparse_infile_open){
@@ -143,8 +145,9 @@ datafile *open_datafile(char *filename, char separator,
 #endif
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
-      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0);
-      token_bounds = tokenise(last_line, num_of_tokens, 0, &separator, 1, 0);
+      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
+      token_bounds =
+	tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 0);
 
       /* Read node names or make them up. */
       if(linecounter == 0){
@@ -237,7 +240,7 @@ datafile *open_datafile(char *filename, char separator,
 	printf("Now in open_datafile (4), linecounter == %d\n", linecounter);
 #endif
 
-	for(i = 0; i < num_of_tokens; i++){
+	for(i = 0; i < min(f->num_of_nodes, num_of_tokens); i++){
 
 	  token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
 				  sizeof(char));
@@ -263,7 +266,7 @@ datafile *open_datafile(char *filename, char separator,
 	  token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
 
 #ifdef DEBUG_DATAFILE
-	  printf("Now in open_datafile (7), linecounter == %d\n", linecounter);
+	  printf("Now in open_datafile (7), linecounter == %d, token == %s\n", linecounter, token);
 #endif
 
 	  if(!(search_stringlinks(statenames[i], token) ||
@@ -276,8 +279,12 @@ datafile *open_datafile(char *filename, char separator,
 	    printf("Now in open_datafile (9), linecounter == %d, token == %s\n", linecounter, token);
 #endif
 	  }
-	  else
+	  else{
+#ifdef DEBUG_DATAFILE
+	    printf("Now in open_datafile (8), linecounter == %d, token == %s, else\n", linecounter, token);
+#endif
 	    free(token);
+	  }
 	}
       }
 
@@ -320,22 +327,45 @@ datafile *open_datafile(char *filename, char separator,
 }
 
 
+static int min(int i1, int i2){
+
+  if(i1 < i2)
+    return i1;
+  else
+    return i2;
+}
+
+
 /*
  * Tells if the given token indicates a missing value, a "null observation".
  * The token must be nul terminated.
  */
 static int nullobservation(char *token){
 
-  if(token == NULL)
+#ifdef DEBUG_DATAFILE
+  printf("nullobservation called\n");
+#endif
+
+  if(token == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return 0;
+  }
 
   else if((strcmp("N/A", token) == 0) ||
 	  (strcmp("null", token) == 0) ||
-	  (strcmp("<null>", token) == 0))
+	  (strcmp("<null>", token) == 0)){
+#ifdef DEBUG_DATAFILE
+    printf("in nullobservation: WAS a null observation\n");
+#endif
     return 1;
+  }
 
-  else
+  else{
+#ifdef DEBUG_DATAFILE
+    printf("in nullobservation: was NOT a null observation\n");
+#endif
     return 0;
+  }
 }
 
 
@@ -410,13 +440,13 @@ char *next_token(int *token_length){
       return NULL;
     }
     /* How many tokens in the line? */
-    tokens_left = count_tokens(last_line, NULL, 1, "(){}=,;", 7, 1);
+    tokens_left = count_tokens(last_line, NULL, 1, "(){}=,;", 7, 1, 1);
 
     /* Check whether the line has any tokens. If not, read a new line
      * (go to beginning of loop) */
     if(tokens_left > 0){
       /* Adjust pointer to the beginning of token boundary index array */
-      indexarray = tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1);
+      indexarray = tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1, 1);
 
       /* Check if tokenise failed. If it failed, we have no other option
        * than to stop: return NULL, *token_length = 0.
@@ -644,11 +674,24 @@ static int add_to_stringlink(stringlink *s, char* string){
 
 static int search_stringlinks(stringlink s, char* string){
 
+#ifdef DEBUG_DATAFILE
+  printf("search_stringlinks called\n");
+  printf("string == %s\n", string);
+#endif
+
   while(s != NULL){
-    if(strcmp(string, s->data) == 0)
+    if(strcmp(string, s->data) == 0){
+#ifdef DEBUG_DATAFILE
+      printf("search_stringlinks finished OK (found)\n");
+#endif
       return 1;
+    }
     s = s->fwd;
   }
+
+#ifdef DEBUG_DATAFILE
+  printf("search_stringlinks finished OK (not found)\n");
+#endif
 
   return 0;
 }

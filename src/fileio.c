@@ -1,7 +1,8 @@
 /*
- * fileio.c $Id: fileio.c,v 1.15 2004-06-24 10:55:14 mvkorpel Exp $
+ * fileio.c $Id: fileio.c,v 1.16 2004-06-29 11:45:21 mvkorpel Exp $
  */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,13 +13,15 @@
 
 int count_words(const char *s, int *chars){
 
-  return count_tokens(s, chars, 0, NULL, 0, 0);
+  return count_tokens(s, chars, 0, NULL, 0, 0, 1);
 
 }
 
 int count_tokens(const char *s, int *chars, int quoted_strings,
-		 char *separators, int numof_separators, int sep_tokens){
-  int tokens = 0, state = 0, i;
+		 char *separators, int numof_separators, int sep_tokens,
+		 int wspace_sep){
+  int i;
+  int tokens = 0, state = 0;
   int separator_found = 0;
   char ch;
   if(chars)
@@ -59,13 +62,14 @@ int count_tokens(const char *s, int *chars, int quoted_strings,
 	}
     }
     else if(state == 0){
-      if((*s != ' ') && (*s != '\t') && (*s != '\n')){
+      if((wspace_sep && !isspace((int)*s)) ||
+	 !wspace_sep){
 	tokens++;	  
 	state = 1;
       }
     }
-    else if(state == 1 &&
-	    ((*s == ' ') || (*s == '\t') || (*s == '\n')))
+    else if((wspace_sep && state == 1 && isspace((int)*s)) ||
+	    *s == '\n')
       state = 0;
     else if(quoted_strings && state == 2 && (*s == '"'))
       state = 0;
@@ -80,7 +84,7 @@ int count_tokens(const char *s, int *chars, int quoted_strings,
 
 int *tokenise(const char s[], int n, int quoted_strings,
 	      char *separators, int numof_separators,
-	      int sep_tokens){
+	      int sep_tokens, int wspace_sep){
   int *indices;
   int i = 0, j = 0, state = 0, arraysize = 2*n, k;
   int separator_found = 0;
@@ -148,13 +152,14 @@ int *tokenise(const char s[], int n, int quoted_strings,
 	}
     }
     else if(state == 0){
-      if((ch != ' ') && (ch != '\t') && (ch != '\n')){
+      if((wspace_sep && !isspace((int)ch)) ||
+	 !wspace_sep){
 	indices[j++] = i;
 	state = 1;
       }
     }
-    else if(state == 1 &&
-	    ((ch == ' ') || (ch == '\t') || (ch == '\n'))){
+    else if((wspace_sep && state == 1 && isspace((int)ch)) ||
+	    ch == '\n'){
       indices[j++] = i;
       state = 0;
     }
