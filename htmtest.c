@@ -15,7 +15,9 @@
  * because the actual calculations are done in the join tree
  * instead of the graph. The program should be able to 
  * figure out how the join tree repeats itself and store 
- * somekind of sepsets between the timeslices...
+ * somekind of sepsets between the timeslices... Note that 
+ * there can be only one sepset between two adjacent 
+ * timeslices, because the join tree can't have loops.
  */
 
 
