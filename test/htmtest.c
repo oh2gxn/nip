@@ -238,6 +238,15 @@ int main(int argc, char *argv[]){
   /*****************/
   /* Forward phase */
   /*****************/
+
+  /* Try this kind of iteration:
+   * - put data in
+   * - pass the message from previous sepset to the next one
+   * - print the result
+   * - reset model
+   */
+
+
   printf("## Forward phase ##\n");  
 
   for(t = 0; t < timeseries->datarows; t++){ /* FOR EVERY TIMESLICE */
