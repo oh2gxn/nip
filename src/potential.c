@@ -5,13 +5,13 @@
 #include "potential.h" 
 
 potential make_potential(int[], int);
-void free_potential(potential);
-void copy_potential(potential, potential);
+int free_potential(potential);
+int copy_potential(potential, potential);
 double get_pvalue(potential, int[], int);
-void set_pvalue(potential, int[], int, double);
+int set_pvalue(potential, int[], int, double);
 double *get_ppointer(potential, int[], int);
-void marginalise(potential, potential, int[]);
-void update_potential(potential, potential, potential, int[]);
+int marginalise(potential, potential, int[]);
+int update_potential(potential, potential, potential, int[]);
 int main();
 
 /* Make a num_of_vars -dimension potential array. */
@@ -37,24 +37,26 @@ potential make_potential(int cardinality[], int num_of_vars){
   return p;
 }
 
-/* Free the memory used by potential p */
-void free_potential(potential p){
+/* Free the memory used by potential p. Returned value is an error code. */
+int free_potential(potential p){
 
   free(p->cardinality);
   free(p->data);
   free(p);
-
+  return 0;
 }
 
 /* Make a copy of a potential. 
- source and destination must be potentials of same cardinality! */
+ Source and destination must be potentials of same cardinality! 
+ Returns an error code.
+*/
 /* TARVITAANKO? */
-void copy_potential(potential source, potential destination){
+int copy_potential(potential source, potential destination){
 
   int i;
   for(i = 0; i < source->size_of_data; i++)
     destination->data[i] = source->data[i];
-
+  return 0;
 }
 
 /* Syntactic sugar */
@@ -66,11 +68,12 @@ double get_pvalue(potential p, int indices[], int num_of_vars){
     return -1;
 }
 
-/* Syntactic sugar */
-void set_pvalue(potential p, int indices[], int num_of_vars, double value){
+/* Syntactic sugar and returns an error code */
+int set_pvalue(potential p, int indices[], int num_of_vars, double value){
   double *ppointer = get_ppointer(p, indices, num_of_vars);
   if(ppointer != NULL)
     *ppointer = value;
+  return 0;
 }
 
 /* Returns a pointer to the potential with given variable values (indices).
@@ -93,8 +96,9 @@ double *get_ppointer(potential p, int indices[], int num_of_vars){
 }
 
 /* Mapping from flat index to n-dimensional index, where n is the number of
-   variables in potential p. */
-void inverse_mapping(potential p, int big_index, int indices[]){
+   variables in potential p. Returns an error code.
+*/
+int inverse_mapping(potential p, int big_index, int indices[]){
 
   int x = p->size_of_data;
   int i;
@@ -105,13 +109,14 @@ void inverse_mapping(potential p, int big_index, int indices[]){
     big_index -= indices[i] * x;
   }
 
-  return;
+  return 0;
 }
 
 /* Drops the indices that are marginalised or multiplied. 
    source_vars must be in ascending order (see marginalise(...)). 
-   dest_indices[] must be of the right size */
-void choose_indices(potential source, int source_indices[],
+   dest_indices[] must be of the right size. Returns an error code.
+*/
+int choose_indices(potential source, int source_indices[],
 		    int dest_indices[], int source_vars[]){
 
   /* JJ NOTE: What if this is done only once to form some sort of 
@@ -126,7 +131,7 @@ void choose_indices(potential source, int source_indices[],
       k++;
     }
   } 
-  return;
+  return 0;
 }
 
 /* Method for marginalising over certain variables. Useful in message passing
@@ -139,8 +144,10 @@ void choose_indices(potential source, int source_indices[],
              (ascending order and between 0...num_of_vars-1 inclusive!) 
 EXAMPLE: If sepset variables are the second (i.e. 1) and third (i.e. 2) 
 variable in a five variable clique, the call is 
-marginalise(cliquePotential, newSepsetPotential, {0, 3, 4}) */
-void marginalise(potential source, potential destination, int source_vars[]){
+marginalise(cliquePotential, newSepsetPotential, {0, 3, 4}) 
+-Returns an error code.
+*/
+int marginalise(potential source, potential destination, int source_vars[]){
 
   int i;
   int *source_indices, *dest_indices;
@@ -166,7 +173,7 @@ void marginalise(potential source, potential destination, int source_vars[]){
   /* JJ NOTE: WHAT IF EACH POTENTIAL HAD A SMALL ARRAY CALLED temp_indices ??? 
      The space is needed anyway in marginalise() and update()... */
 
-  return;
+  return 0;
 }
 
 /* Method for updating target potential by multiplying with enumerator 
@@ -183,9 +190,10 @@ void marginalise(potential source, potential destination, int source_vars[]){
 EXAMPLE: If two sepset variables are the third and fifth variables in 
 a five variable clique, the call is 
 update(newSepsetPotential, oldSepsetPotential, cliquePotential, {0, 1, 3}) 
+-Returns an error code.
 */
-void update_potential(potential enumerator, potential denominator, 
-		      potential target, int extra_vars[]){
+int update_potential(potential enumerator, potential denominator, 
+		     potential target, int extra_vars[]){
 
   int i;
   int *source_indices, *target_indices;
@@ -213,7 +221,7 @@ void update_potential(potential enumerator, potential denominator,
   free(source_indices); /* JJ NOTE: GET RID OF THESE */
   free(target_indices);
 
-  return;  
+  return 0;
 
 }
 

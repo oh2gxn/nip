@@ -33,34 +33,35 @@ typedef sepsettype *Sepset;
    - **variables is an array of pointers to variables */
 Clique make_Clique(Variable **variables, int num_of_vars);
 
-/* Method for adding a sepset next to a clique */
-void add_sepset(Clique c, Sepset s);
+/* Method for adding a sepset next to a clique: returns an error code */
+int add_sepset(Clique c, Sepset s);
 
-/* Method for removing cliques and freeing memory */
-void free_Clique(Clique c);
+/* Method for removing cliques and freeing memory: returns an error code */
+int free_Clique(Clique c);
 
 /* Method for creating sepsets: 
    - cliques[] is an array which contains references to BOTH 
      neighbouring cliques */
 Sepset make_Sepset(Variable **variables, int num_of_vars, Clique cliques[]);
 
-/* Method for removing sepsets and freeing memory */
-void free_Sepset(Sepset s);
+/* Method for removing sepsets and freeing memory: returns an error code */
+int free_Sepset(Sepset s);
 
 /* Method for unmarking a clique: call this to every clique before 
-   collecting or distributing evidence. */
-void unmark_Clique(Clique c);
+   collecting or distributing evidence. Returns an error code. */
+int unmark_Clique(Clique c);
 
-/* Call Distribute-Evidence for c. */
-void distribute_evidence(Clique c);
+/* Call Distribute-Evidence for c. Returns an error code. */
+int distribute_evidence(Clique c);
 
-/* Call Collect-Evidence for Clique c2 from Clique c1 (or nullpointer). */
-void collect_evidence(Clique c1, Clique c2);
+/* Call Collect-Evidence for Clique c2 from Clique c1 (or nullpointer). 
+   Returns an error code. */
+int collect_evidence(Clique c1, Clique c2);
 
-/* Method for passing messages between cliques. */
-void message_pass(Clique c1, Sepset s, Clique c2);
+/* Method for passing messages between cliques. Returns an error code. */
+int message_pass(Clique c1, Sepset s, Clique c2);
 
-/* This will change or be removed */
-void insert_evidence(Clique c, double *data);
+/* This will change or be removed (Returns an error code.)*/
+int insert_evidence(Clique c, double *data);
 
 #endif /* __CLIQUE_H__ */

@@ -20,8 +20,8 @@ Clique make_Clique(Variable **variables, int num_of_vars){
 }
 
 
-/* Method for removing cliques and freeing memory */
-void free_Clique(Clique c){
+/* Method for removing cliques and freeing memory: returns an error code */
+int free_Clique(Clique c){
   /* clean the list of sepsets */
   link l1 = c->sepsets;
   link l2 = c->sepsets;
@@ -35,11 +35,12 @@ void free_Clique(Clique c){
   free_potential(c->p);
   free(c->variables); /* is this a good idea ? */
   free(c);
+  return 0;
 }
 
 
-/* Method for adding a sepset next to a clique */
-void add_sepset(Clique c, Sepset s){
+/* Method for adding a sepset next to a clique: returns an error code */
+int add_sepset(Clique c, Sepset s){
   link new = (link) malloc(sizeof(element));
   new->data = s;
   new->fwd = c->sepsets;
@@ -47,6 +48,7 @@ void add_sepset(Clique c, Sepset s){
   if(c->sepsets != 0)
     c->sepsets->bwd = new;
   c->sepsets = new;
+  return 0;
 }
 
 
@@ -70,25 +72,27 @@ Sepset make_Sepset(Variable **variables, int num_of_vars, Clique cliques[]){
 }
 
 
-/* Method for removing sepsets and freeing memory */
-void free_Sepset(Sepset s){
+/* Method for removing sepsets and freeing memory: returns an error code */
+int free_Sepset(Sepset s){
   free_potential(s->old);
   free_potential(s->new);
   free(s->variables);
   free(s->cliques);
   free(s);
+  return 0;
 }
 
 
 /* Method for unmarking a clique: call this to every clique before 
-   collecting or distributing evidence. */
-void unmark_Clique(Clique c){
+   collecting or distributing evidence. Returns an error code */
+int unmark_Clique(Clique c){
   c->mark = 0;
+  return 0;
 }
 
 
-/* Call Distribute-Evidence for c. */
-void distribute_evidence(Clique c){
+/* Call Distribute-Evidence for c. Returns an error code. */
+int distribute_evidence(Clique c){
   /* mark */
   c->mark = 1;
 
@@ -114,13 +118,14 @@ void distribute_evidence(Clique c){
       distribute_evidence(s->cliques[1]);
     l = l->fwd;
   }
+  return 0;
 }
 
 
 /* Call Collect-Evidence from Clique c1 (or nullpointer) for Clique c2. 
    Sepset s12 is the sepset between c1 and c2 or nullpointer to get
-   started. */
-void collect_evidence(Clique c1, Sepset s12, Clique c2){
+   started. Returns an error code. */
+int collect_evidence(Clique c1, Sepset s12, Clique c2){
   /* mark */
   c2->mark = 1;
 
@@ -139,11 +144,13 @@ void collect_evidence(Clique c1, Sepset s12, Clique c2){
   /* pass the message to c1 */
   if((c1 != 0) && (s12 != 0))
     message_pass(c2, s12, c1);
+
+  return 0;
 }
 
 
-/* Method for passing messages between cliques. */
-void message_pass(Clique c1, Sepset s, Clique c2){
+/* Method for passing messages between cliques. Returns an error code. */
+int message_pass(Clique c1, Sepset s, Clique c2){
   int i, j = 0, k = 0;
   int source_vars[c1->p->num_of_vars - s->new->num_of_vars];
   int extra_vars[c2->p->num_of_vars - s->new->num_of_vars];
@@ -179,10 +186,12 @@ void message_pass(Clique c1, Sepset s, Clique c2){
     }
   } /* rest the case */
   update_potential(s->new, s->old, c2->p, extra_vars);
+  return 0;
 }
 
 
-/* TODO */
-void insert_evidence(Clique c, double *data){
+/* TODO  Returns an error code. */
+int insert_evidence(Clique c, double *data){
   /* copy the pointer or the data? */
+  return 0;
 }
