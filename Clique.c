@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.55 2004-06-16 14:08:59 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.56 2004-06-16 14:26:39 mvkorpel Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -153,14 +153,19 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   int i, j;
   unsigned long temp;
 
+  if(!s || !cardinality || !reorder || !indices){
+    /* fail-fast OR operation? */
+    fprintf(stderr, "In Clique.c: malloc failed.\n");
+    return NULL;
+  }
+
   s->cliques = (Clique *) calloc(2, sizeof(Clique));
   s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
 
-  if(!s || !cardinality || !reorder || !indices || 
-     !s->variables || !s->cliques){ /* fail-fast OR operation? */
+  if(!s->variables || !s->cliques){ /* fail-fast OR operation? */
     fprintf(stderr, "In Clique.c: malloc failed.\n");
     return NULL;
-  }    
+  }
 
   /* reorder[i] is the place of i:th variable (in the sense of this program) 
    * in the array variables[].
@@ -463,14 +468,17 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   s->old = s->new;
   s->new = temp;
 
-  source_vars = (int *) calloc(c1->p->num_of_vars - s->new->num_of_vars,
+  /*
+   * CHECK THIS!!! Jos "+ 1" poistetaan, tuloksena on kakkaa.
+   */
+  source_vars = (int *) calloc(c1->p->num_of_vars - s->new->num_of_vars + 1,
 			       sizeof(int));
   if(!source_vars){
     fprintf(stderr, "In Clique.c: Calloc failed.\n");
     return ERROR_OUTOFMEMORY;
   }
 
-  extra_vars = (int *) calloc(c2->p->num_of_vars - s->new->num_of_vars,
+  extra_vars = (int *) calloc(c2->p->num_of_vars - s->new->num_of_vars + 1,
 			      sizeof(int));
   if(!extra_vars){
     fprintf(stderr, "In Clique.c: Calloc failed.\n");
@@ -492,6 +500,7 @@ int message_pass(Clique c1, Sepset s, Clique c2){
   general_marginalise(c1->p, s->new, source_vars);
 
   j = 0; k = 0;
+
   /* update (absorption) 
      first: select the variables */
   for(i=0; i < c2->p->num_of_vars; i++){

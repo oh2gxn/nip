@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.18 2004-06-15 11:46:32 jatoivol Exp $
+# $Id: Makefile,v 1.19 2004-06-16 14:26:40 mvkorpel Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -24,8 +24,8 @@ TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET)
 # You should not need to modify anything below this line...
 # Sets the name and some flags for the C compiler and linker
 CC=gcc
-#CFLAGS=-O2 -g -Wall
-CFLAGS=-g -Wall --save-temps
+CFLAGS=-O2 -g -Wall
+#CFLAGS=-g -Wall --save-temps
 #CFLAGS=-Wall
 LD=gcc
 LDFLAGS=
@@ -80,7 +80,7 @@ $(HUG_SRCS): $(HUG_DEFS)
 # With these lines, executing "make clean" removes the .o files that
 # are not needed after the program is compiled.
 clean:
-	rm -f $(OBJS) $(HUG_SRCS)
+	rm -f $(OBJS) $(HUG_SRCS) *.i *.s
 
 # "make realclean" does the same as "make clean", and also removes the
 # compiled program and a possible "core" file.
