@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.82 2004-09-01 11:23:32 jatoivol Exp $
+ * $Id: parser.c,v 1.83 2004-09-03 08:26:49 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1045,7 +1045,7 @@ int time2Vars(){
 int Graph2JTree(){
 
   int num_of_cliques;
-  Clique **cliques = get_cliques_pointer();
+  Clique **cliques = &nip_cliques;
 
   /* Construct the Cliques. */
   num_of_cliques = find_cliques(nip_graph, cliques);
@@ -1069,10 +1069,8 @@ int Graph2JTree(){
 
 int parsedPots2JTree(){
   int i; 
-  int nip_num_of_cliques = get_num_of_cliques();
   int retval;
   initDataLink initlist = nip_first_initData;
-  Clique *nip_cliques = *(get_cliques_pointer());
 
   while(initlist != NULL){
     
@@ -1103,8 +1101,8 @@ int parsedPots2JTree(){
 	}
       }
       else{
-	retval = enter_evidence(get_first_variable(), *get_cliques_pointer(), 
-				get_num_of_cliques(), initlist->child, 
+	retval = enter_evidence(get_first_variable(), nip_cliques, 
+				nip_num_of_cliques, initlist->child, 
 				initlist->data->data);
 	if(retval != NO_ERROR){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1239,7 +1237,6 @@ int get_nip_symbols_parsed(){
 int get_nip_strings_parsed(){
   return nip_strings_parsed;
 }
-
 
 
 int get_num_of_cliques(){

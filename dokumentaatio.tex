@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.15 2004-09-02 12:15:00 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.16 2004-09-03 08:26:49 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -1016,19 +1016,41 @@ Only the list structure and the stored symbol string are freed, not
 the referenced variables. The function is meant to be used only by the
 net language parser.
 
-\item[init\_new\_Graph()] is mean to be used only by the net language
+\item[init\_new\_Graph()] is meant to be used only by the net language
 parser. The function initialises a new {\it Graph} which can hold as
 many variables than is parsed from the file so far.
 
-\item[parsedVars2Graph()] 
+\item[parsedVars2Graph()] executes one stage in the net language
+parser. It inserts the {\it Variables} into the initialised {\it
+Graph} after all of the variables have been created. The function adds
+also the child-parent relation to the {\it Graph}. Therefore it
+must be called after all of the \verb+potential+ declarations of the
+net file have been parsed and the information can be found from the
+initialisation list accumulated by the \textbf{add\_initData}
+function.
 
-\item[time2Vars()] 
+\item[time2Vars()] is used only by the net language parser. The
+function adds the information about the correspondence of variables
+between timeslices to the {\it Variables}. The procedure must be
+executed after all of the \verb+node+ declarations of the net language
+file have been parsed. It uses the information gathered into the
+temporary list created by the \textbf{add\_time\_init} function.
 
-\item[Graph2JTree()] 
+\item[Graph2JTree()] creates a join tree from the {\it Graph} made by
+the previous functions. This function is to be executed only by the
+net language parser. After the {\it Cliques} (and {\it Sepsets}) have 
+been created, the procedure frees the memory used by the graph.
 
-\item[parsedPots2JTree()] 
+\item[parsedPots2JTree()] is meant to be used only by the net language
+parser. The function initialises the cliques created by the previous
+functions and uses the {\it potentials} collected into the temporary
+list by the {\it add\_initData} function. Thus the parameters of the
+model will be entered into the data structure.
 
-\item[print\_parsed\_stuff()] 
+\item[print\_parsed\_stuff()] is meant only for debugging purposes. It
+prints the potentials parsed by the net language parser to the
+standard output. The function uses the information collected into the 
+temporary list by the {\it add\_initData} function.
 
 \item[set\_nip\_statenames(states)] 
 
