@@ -1,5 +1,5 @@
 /* Functions for the bison parser.
- * $Id: parser.c,v 1.21 2004-06-07 11:38:01 mvkorpel Exp $
+ * $Id: parser.c,v 1.22 2004-06-08 08:57:46 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -272,14 +272,16 @@ int add_string(char* string){
 
 
 /* Creates an array from the double values in the list. 
- * The size will be doubles_parsed. */
+ * The size will be doubles_parsed. 
+ * NOTE: because of misunderstanding, the list is backwards. 
+ * (Can't understand Hugin fellows...) */
 Variable* make_variable_array(){
   int i;
   Variable* vars1 = (Variable*) calloc(nip_symbols_parsed, sizeof(Variable));
-  varlink pointer = nip_first_temp_var;
+  varlink pointer = nip_last_temp_var;
   for(i = 0; i < nip_symbols_parsed; i++){
     vars1[i] = pointer->data;
-    pointer = pointer->fwd;
+    pointer = pointer->bwd;
   }
   return vars1;
 }
