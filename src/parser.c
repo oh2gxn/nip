@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.67 2004-08-16 12:45:45 mvkorpel Exp $
+ * $Id: parser.c,v 1.68 2004-08-16 13:33:48 mvkorpel Exp $
  */
 
 #include <stdio.h>
@@ -265,9 +265,7 @@ datafile *open_datafile(char *filename, char separator,
 	       nullobservation(token))){
 	    add_to_stringlink(&(statenames[i]), token);
 	  }
-	  else{
-	    free(token);
-	  }
+	  free(token);
 	}
       }
 
@@ -492,17 +490,25 @@ char *next_token(int *token_length){
   char *token;
 
   /* Return if some evil mastermind gives us a NULL pointer */
-  if(!token_length)
+  if(!token_length){
+    if(indexarray)
+      free(indexarray);
     return NULL;
+  }
 
   /* Return if input file is not open */
-  if(!nip_yyparse_infile_open)
+  if(!nip_yyparse_infile_open){
+    if(indexarray)
+      free(indexarray);
     return NULL;
+  }
 
   /* Read new line if needed and do other magic... */
   while(read_line){
     /* Read the line and check for EOF */
     if(!(fgets(last_line, MAX_LINELENGTH, nip_yyparse_infile))){
+      if(indexarray != NULL)
+	free(indexarray);
       *token_length = 0;
       return NULL;
     }
@@ -513,7 +519,7 @@ char *next_token(int *token_length){
      * (go to beginning of loop) */
     if(tokens_left > 0){
       /* Adjust pointer to the beginning of token boundary index array */
-      if(indexarray)
+      if(indexarray != NULL)
 	free(indexarray);
       indexarray = tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1, 1);
 
@@ -538,6 +544,8 @@ char *next_token(int *token_length){
   *token_length = indexarray[1] - indexarray[0];
   token = (char *) calloc(*token_length + 1, sizeof(char));
   if(!token){
+    if(indexarray)
+      free(indexarray);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     *token_length = -1;
     return NULL;
@@ -706,11 +714,22 @@ static int add_to_stringlink(stringlink *s, char* string){
   }
 
   if(s == NULL){
+    free(new);
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
   }
 
-  new->data = string;
+  /*  new->data = string; */ /* Let's copy the string instead */
+  if(string){
+    new->data = (char *) calloc(strlen(string) + 1, sizeof(char));
+    if(!(new->data)){
+      free(new);
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return ERROR_OUTOFMEMORY;
+    }
+    strcpy(new->data, string);
+  }
+
   new->fwd = *s;
   new->bwd = NULL;
 
