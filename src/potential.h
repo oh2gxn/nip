@@ -30,6 +30,10 @@ void set_pvalue(potential p, int indices[], int num_of_vars, double value);
    num_of_vars must be equal to the size of indices[] */
 double *get_ppointer(potential p, int indices[], int num_of_vars);
 
+/* Mapping from flat index to n-dimensional index, where n is the number of
+   variables in potential p. USUALLY NOT NEEDED outside of potential.c */
+void inverse_mapping(potential p, int big_index, int indices[]);
+
 /* method for marginalising over certain variables */
 void marginalise(potential source, potential destination, int source_vars[]);
 
