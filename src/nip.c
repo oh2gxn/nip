@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.53 2005-03-21 12:22:58 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.54 2005-03-21 15:40:10 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -25,9 +25,9 @@
 
  * TODO: 
 
- * - There's a bug in the forward_inference! (Segmentation fault...)
- *   - The segmentation fault does not occur on the Pyramid or iBook!
- *   - But on itl-pc037 and the linux box at home the program crashes
+ * - There's a bug in the memory allocation! (Segmentation fault...)
+ *   - The segmentation fault does not occur on IRIX, Solaris or Mac OS X!
+ *   - But on itl-pc037, itl-cl1 and the linux box at home, it crashes
 
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
@@ -58,6 +58,8 @@ static int start_timeslice_message_pass(Nip model, int direction,
 static int finish_timeslice_message_pass(Nip model, int direction,
 					 potential num, potential den);
 
+static int e_step(TimeSeries ts, potential* results);
+static int m_step(potential* results, Nip model);
 
 void reset_model(Nip model){
   int i, retval;
@@ -331,25 +333,6 @@ int uncertainseries_length(UncertainSeries ucs){
 }
 
 
-void free_familyseries(FamilySeries fs){
-  int t, c;
-  if(fs){
-    for(t=0; t < fs->length; t++){
-      for(c=0; c < fs->model->num_of_children; c++)
-	free_potential(fs->families[t][c]);
-      free(fs->families[t]);
-    }
-    free(fs->families);
-    free(fs);
-  }
-}
-
-
-int familyseries_length(FamilySeries fs){
-  return fs->length;
-}
-
-
 char* get_observation(TimeSeries ts, Variable v, int time){
   int i, j = -1;
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
@@ -476,7 +459,6 @@ static int finish_timeslice_message_pass(Nip model, int direction,
       model->front_clique = c;
   }
   assert(c != NULL);
-
 
   mapping = (int*) calloc(c->p->num_of_vars - nvars, sizeof(int));
   if(!mapping){
@@ -870,7 +852,8 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
     /* Do the inference */
     make_consistent(model);
     
-    /* Write the results */
+
+    /* THE CORE: Write the results */
     for(i = 0; i < results->num_of_vars; i++){
       
       /* 1. Decide which Variable you are interested in */
@@ -888,7 +871,8 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
       /* 4. Normalisation */
       normalise(results->data[t][i], number_of_values(temp));
     }
-    
+    /* End of the CORE */
+
 
     if(t > 0)
       if(start_timeslice_message_pass(model, BACKWARD, 
@@ -896,271 +880,6 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	free_uncertainseries(results);
-	for(i = 0; i <= ts->length; i++)
-	  free_potential(timeslice_sepsets[i]);
-	free(timeslice_sepsets);
-	return NULL;
-      }
-
-    /* forget old evidence */
-    reset_model(model);
-  }
-
-  /* free the intermediate potentials */
-  for(t = 0; t <= ts->length; t++)
-    free_potential(timeslice_sepsets[t]);
-  free(timeslice_sepsets);
-
-  return results;
-}
-
-
-/* My apologies: this function is probably the worst copy-paste case ever. */
-FamilySeries family_inference(TimeSeries ts){
-  int i, j, k, t, size;
-  int *cardinalities = NULL;
-  Variable temp;
-  potential *timeslice_sepsets = NULL;
-  Clique clique_of_interest;
-  FamilySeries results = NULL;
-  Nip model = ts->model;
-
-  /* Allocate some space for the results */
-  results = (FamilySeries) malloc(sizeof(family_series_type));
-  if(!results){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-  
-  results->model = ts->model; /* Some shared properties... */
-  results->length = ts->length;
-
-  results->families = (potential**) calloc(ts->length, sizeof(potential*));
-  if(!results->families){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(results);
-    return NULL;
-  }
-  
-  for(t = 0; t < results->length; t++){
-    results->families[t] = 
-      (potential*) calloc(results->model->num_of_children, sizeof(potential));
-    if(!results->families[t]){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      while(t > 0)
-	free(results->families[--t]);
-      free(results->families);
-      free(results);
-      return NULL;
-    }
-  }
-
-  for(i = 0; i < results->model->num_of_children; i++){
-    temp = results->model->children[i];
-    k = temp->num_of_parents + 1;
-    cardinalities = (int *) calloc(k, sizeof(int));
-    if(!cardinalities){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      while(i > 0){
-	i--;
-	for(t = 0; t < results->length; t++)
-	  free_potential(results->families[t][i]); /* Not quite sure... */
-      }
-      for(t = 0; t < results->length; t++)
-	free(results->families[t]);
-      free(results->families);
-      free(results);
-      return NULL;
-    }
-
-    cardinalities[0] = temp->cardinality;
-    for(t = 1; t < k; t++){
-      cardinalities[t] = temp->parents[t]->cardinality;
-    }
-
-    for(t = 0; t < results->length; t++){
-      results->families[t][i] = make_potential(cardinalities, k, NULL);
-      if(!results->families[t][i]){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	while(t > 0)
-	  free_potential(results->families[--t][i]);
-	while(i > 0){
-	  for(t = 0; t < results->length; t++)
-	    free(results->families[t][i]); /* Not quite sure this works... */
-	  i--;
-	}
-	for(t = 0; t < results->length; t++)
-	  free(results->families[t]);
-	free(results->families);
-	free(results);
-	free(cardinalities);
-	return NULL;
-      }
-    }
-    free(cardinalities);
-  }
-
-
-  /* Allocate some space for the intermediate potentials */
-  timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
-
-  /* Allocate an array for describing the dimensions of timeslice sepsets */
-  if(model->num_of_nexts > 0){
-    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
-    if(!cardinalities){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      free_familyseries(results);
-      free(timeslice_sepsets);
-      return NULL;
-    }
-  }
-  k = 0;
-  for(i = 0; i < ts->num_of_hidden; i++){
-    temp = ts->hidden[i];
-    if(temp->next)
-      cardinalities[k++] = number_of_values(temp);
-  }
-
-  /* Initialise intermediate potentials */
-  for(t = 0; t <= ts->length; t++){
-    timeslice_sepsets[t] = make_potential(cardinalities, model->num_of_nexts, 
-					  NULL);
-  }
-  free(cardinalities);
-
-
-  /*****************/
-  /* Forward phase */
-  /*****************/
-  for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
-    
-    /* Put some data in */
-    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-      if(ts->data[t][i] >= 0)
-	enter_i_observation(model->variables, model->num_of_vars, 
-			    model->cliques, model->num_of_cliques, 
-			    ts->observed[i], ts->data[t][i]);
-    
-    
-    if(t > 0)
-      if(finish_timeslice_message_pass(model, FORWARD, 
-				       timeslice_sepsets[t-1], 
-				       NULL)                   != NO_ERROR){
-
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_familyseries(results);
-	for(i = 0; i <= ts->length; i++)
-	  free_potential(timeslice_sepsets[i]);
-	free(timeslice_sepsets);
-	return NULL;
-      }
-    
-    /* Do the inference */
-    make_consistent(model);
-    
-    /* Start a message pass between timeslices */
-    if(start_timeslice_message_pass(model, FORWARD,
-				    timeslice_sepsets[t]) != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      free_familyseries(results);
-      for(i = 0; i <= ts->length; i++)
-	free_potential(timeslice_sepsets[i]);
-      free(timeslice_sepsets);
-      return NULL;
-    }
-
-    /* Forget old evidence */
-    reset_model(model);
-  }
-  
-  /******************/
-  /* Backward phase */
-  /******************/
-  
-  /* forget old evidence */
-  reset_model(model);
-  
-  for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
-    
-    /* Put some evidence in */
-    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-      if(ts->data[t][i] >= 0)
-	enter_i_observation(model->variables, model->num_of_vars, 
-			    model->cliques, model->num_of_cliques, 
-			      ts->observed[i], ts->data[t][i]);
-
-    /* Pass the message from the past */
-    if(t > 0)
-      if(finish_timeslice_message_pass(model, FORWARD, 
-				       timeslice_sepsets[t-1], 
-				       NULL)                   != NO_ERROR){
-
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_familyseries(results);
-	for(i = 0; i <= ts->length; i++)
-	  free_potential(timeslice_sepsets[i]);
-	free(timeslice_sepsets);
-	return NULL;
-      }
-    
-    /* Pass the message from the future */
-    if(t < ts->length - 1)
-      if(finish_timeslice_message_pass(model, BACKWARD, 
-				       timeslice_sepsets[t+1], 
-				       timeslice_sepsets[t]) != NO_ERROR){
-
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_familyseries(results);
-	for(i = 0; i <= ts->length; i++)
-	  free_potential(timeslice_sepsets[i]);
-	free(timeslice_sepsets);
-	return NULL;
-      }
-
-    /* Do the inference */
-    make_consistent(model);
-    
-
-    /* THE CORE: Write the results of inference */
-    for(i = 0; i < results->model->num_of_children; i++){
-
-      /* NOTE: this would be a proper place for the rest of the EM-algorithm
-       * in case we need to limit the memory consumption... */
-      
-      /* 1. Decide which Variable you are interested in */
-      temp = results->model->children[i];
-      
-      /* 2. Find the Clique that contains the family of 
-       *    the interesting Variable */
-      clique_of_interest = find_family(results->model->cliques, 
-				       results->model->num_of_cliques, 
-				       temp);
-      assert(clique_of_interest != NULL);
-      
-      /* 3. General Marginalisation */
-      general_marginalise(clique_of_interest->p, 
-			  results->families[t][i],
-			  find_family_mapping(clique_of_interest, temp));
-      
-      /* 4. Normalisation ??? */
-      size = results->families[t][i]->size_of_data;
-      k = temp->cardinality;
-      for(j = 0; j < size; j = j + k)
-	normalise(results->families[t][i]->data + j, number_of_values(temp));
-      /* Not so sure whether this works correctly or not... 
-       * I assume that the child variable is the least significant 
-       * w.r.t. the address in the potential data. (as is the case in Hugin) 
-       */
-    }
-    /* Finished writing results for this t */
-
-
-    if(t > 0)
-      if(start_timeslice_message_pass(model, BACKWARD, 
-				      timeslice_sepsets[t]) != NO_ERROR){
-
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_familyseries(results);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(timeslice_sepsets[i]);
 	free(timeslice_sepsets);
@@ -1309,16 +1028,263 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
 }
 
 
+/* My apologies: this function is probably the worst copy-paste case ever. 
+ * Any ideas how to avoid repeating the same parts of code?
+ * - function pointers are pretty much out of the question in this case, 
+ *   because they can't deliver the results without global variables
+ * - some parts of the code could be transformed into separate procedures */
+static int e_step(TimeSeries ts, potential* parameters){
+  int i, j, k, t, size;
+  int *cardinalities = NULL;
+  Variable temp;
+  potential *timeslice_sepsets = NULL;
+  potential *results = NULL;
+  potential p;
+  Clique clique_of_interest = NULL;
+  Nip model = ts->model;
+
+  /* Reserve some memory for calculation */
+  results = (potential*) calloc(model->num_of_children, sizeof(potential));
+  if(!results){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+  for(i = 0; i < model->num_of_children; i++){
+    k = model->children[i]->num_of_parents + 1;
+    p = parameters[i];
+    results[i] = make_potential(p->cardinality, k, NULL);
+    /* Initialise the sum by setting to zero */
+    memset(p->data, 0, p->size_of_data * sizeof(double));
+  }  
+
+  /* Allocate some space for the intermediate potentials between timeslices */
+  timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
+
+  /* Allocate an array for describing the dimensions of timeslice sepsets */
+  if(model->num_of_nexts > 0){
+    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+    if(!cardinalities){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      for(i = 0; i < model->num_of_children; i++)
+	free_potential(results[i]);
+      free(results);
+      free(timeslice_sepsets);
+      return ERROR_OUTOFMEMORY;
+    }
+  }
+  k = 0;
+  for(i = 0; i < ts->num_of_hidden; i++){
+    temp = ts->hidden[i];
+    if(temp->next)
+      cardinalities[k++] = number_of_values(temp);
+  }
+
+  /* Initialise intermediate potentials */
+  for(t = 0; t <= ts->length; t++){
+    timeslice_sepsets[t] = make_potential(cardinalities, model->num_of_nexts, 
+					  NULL);
+  }
+  free(cardinalities);
+
+
+  /*****************/
+  /* Forward phase */
+  /*****************/
+  for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
+    
+    /* Put some data in */
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			    ts->observed[i], ts->data[t][i]);
+    
+    
+    if(t > 0)
+      if(finish_timeslice_message_pass(model, FORWARD, 
+				       timeslice_sepsets[t-1], 
+				       NULL)                   != NO_ERROR){
+
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	/* i is useless at this point */
+	for(i = 0; i < model->num_of_children; i++)
+	  free_potential(results[i]);
+	free(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return ERROR_GENERAL;
+      }
+    
+    /* Do the inference */
+    make_consistent(model);
+    
+    /* Start a message pass between timeslices */
+    if(start_timeslice_message_pass(model, FORWARD,
+				    timeslice_sepsets[t]) != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      for(i = 0; i < model->num_of_children; i++)
+	free_potential(results[i]);
+      free(results);
+      for(i = 0; i <= ts->length; i++)
+	free_potential(timeslice_sepsets[i]);
+      free(timeslice_sepsets);
+      return ERROR_GENERAL;
+    }
+
+    /* Forget old evidence */
+    reset_model(model);
+  }
+  
+  /******************/
+  /* Backward phase */
+  /******************/
+  
+  /* forget old evidence */
+  reset_model(model);
+  
+  for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
+    
+    /* Put some evidence in */
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			      ts->observed[i], ts->data[t][i]);
+
+    /* Pass the message from the past */
+    if(t > 0)
+      if(finish_timeslice_message_pass(model, FORWARD, 
+				       timeslice_sepsets[t-1], 
+				       NULL)                   != NO_ERROR){
+
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	for(i = 0; i < model->num_of_children; i++)
+	  free_potential(results[i]);
+	free(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return ERROR_GENERAL;
+      }
+    
+    /* Pass the message from the future */
+    if(t < ts->length - 1)
+      if(finish_timeslice_message_pass(model, BACKWARD, 
+				       timeslice_sepsets[t+1], 
+				       timeslice_sepsets[t]) != NO_ERROR){
+
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	for(i = 0; i < model->num_of_children; i++)
+	  free_potential(results[i]);
+	free(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return ERROR_GENERAL;
+      }
+
+    /* Do the inference */
+    make_consistent(model);
+    
+
+    /* THE CORE: Write the results of inference */
+    for(i = 0; i < model->num_of_children; i++){
+      p = results[i];
+
+      /* 1. Decide which Variable you are interested in */
+      temp = model->children[i];
+      
+      /* 2. Find the Clique that contains the family of 
+       *    the interesting Variable */
+      clique_of_interest = find_family(model->cliques, 
+				       model->num_of_cliques, 
+				       temp);
+      assert(clique_of_interest != NULL);
+      
+      /* 3. General Marginalisation from the timeslice */
+      general_marginalise(clique_of_interest->p, p,
+			  find_family_mapping(clique_of_interest, temp));
+      
+      /* 4. Normalisation ??? */
+      size = p->size_of_data;
+      k = temp->cardinality;
+      for(j = 0; j < size; j = j + k)
+	normalise(p->data + j, k);
+      /* Not so sure whether this works correctly or not... 
+       * I assume that the child variable is the least significant 
+       * w.r.t. the address in the potential data. 
+       * (as is the case in Hugin net files) 
+       */
+
+      /* 5. THE SUM of conditional probabilities over time */
+      for(j = 0; j < size; j++){
+	parameters[i]->data[j] += p->data[j];
+      }
+    }
+    /* Finished writing results for this timestep */
+
+
+    if(t > 0)
+      if(start_timeslice_message_pass(model, BACKWARD, 
+				      timeslice_sepsets[t]) != NO_ERROR){
+
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	for(i = 0; i < model->num_of_children; i++)
+	  free_potential(results[i]);
+	free(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(timeslice_sepsets[i]);
+	free(timeslice_sepsets);
+	return ERROR_GENERAL;
+      }
+
+    /* forget old evidence */
+    reset_model(model);
+  }
+
+  /* free the space for calculations */
+  for(i = 0; i < model->num_of_children; i++)
+    free_potential(results[i]);
+  free(results);
+
+  /* free the intermediate potentials */
+  for(t = 0; t <= ts->length; t++)
+    free_potential(timeslice_sepsets[t]);
+  free(timeslice_sepsets);
+
+  return NO_ERROR;
+}
+
+
+static int m_step(potential* parameters, Nip model){
+  int i, j, k;
+  
+  /* 1. Normalise parameters by dividing with the sums over child variables */
+  for(i = 0; i < model->num_of_children; i++){
+    k = number_of_values(model->children[i]);
+    for(j = 0; j < parameters[i]->size_of_data; j = j + k)
+      normalise(parameters[i]->data + j, k);
+    /* Maybe this works, maybe not... */
+  }
+
+  /* 2. Initialise the model with the new parameters */
+  return ERROR_GENERAL; /* Unfinished... */
+  
+  /********************************************************************
+   * NOTE: What about independent variables? Should their probabilities 
+   * be uniform or do they have a prior? */
+
+  //return NO_ERROR;
+}
+
+
 /* Teaches the given model (ts->model) according to the given time series 
  * (ts) with EM-algorithm. Returns an error code as an integer. */
 int em_learn(TimeSeries ts){
-  int i, n;
-  int v;
-  int t = 0;
+  int i, n, v;
   int *card;
-  FamilySeries fs = NULL;
   potential *parameters;
-  Variable c;
 
   /* Reserve some memory for calculation */
   parameters = (potential*) calloc(ts->model->num_of_children, 
@@ -1345,37 +1311,23 @@ int em_learn(TimeSeries ts){
 
   while(0){ /* When should we stop? */
 
-    /* E-Step: Now this is the heavy stuff..! 
-     * (May God have mercy on the memory chips :O) */
-    fs = family_inference(ts);
-    /* Reminder: We might actually want to include this algorithm into the 
-     * family_inference-function in order to save the X GB of memory 
-     * taken by fs. 
-     * X in O(T * C^N), where T is the length of the time series, 
-     * C is the biggest cardinality and N is size of the largest family. 
-     * The factor T could perhaps be avoidable... */
-
-    /* M-Step: First the parameter estimation... */
-    for(v = 0; v < ts->model->num_of_children; v++){
-      c = ts->model->children[v];
-      n = c->num_of_parents + 1;
-
-      /* Traverse through the potentials with a flat index 
-       * (+ flat->multidimensional conversion) */
-      
-      /* A special case can be found at HMModel.java lines 290-314 */
-      
-      for(t = 0; t < ts->length; t++){
-	; /* unfinished... */
-      }
-      
-      /* Normalisation of potentials? */
-      ;
+    /* E-Step: Now this is the heavy stuff..! */
+    n = e_step(ts, parameters);
+    if(n != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
     }
 
-    /* ... then the model modification */
+    /********************************/
+    /* TODO: Check for the progress */
+    /********************************/
 
-    free_familyseries(fs);
+    /* M-Step: First the parameter estimation... */
+    n = m_step(parameters, ts->model);
+    if(n != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
   }
 
   for(v = 0; v < ts->model->num_of_children; v++){
@@ -1383,9 +1335,7 @@ int em_learn(TimeSeries ts){
   }
   free(parameters);
   
-  /* NOT IMPLEMENTED YET! */
-  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-  return ERROR_GENERAL;
+  return NO_ERROR;
 }
 
 
