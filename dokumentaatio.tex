@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.3 2004-08-20 13:13:37 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.4 2004-08-20 14:32:40 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 %\bibliographystyle{unsrt}
@@ -91,6 +91,17 @@ Date: \today
 %
 %\listoffigures
 
+
+% Reminder about the style so far: 
+% - C data types     {\it unsigned long}
+% - code examples    \verb+this = is_an(example);+
+% - file names       \verb+filename.txt+
+% - defined stuff    \textbf{A_DEFINED_VALUE}
+% - parameter names  \textbf{parameter}
+% ...
+% Try to keep it consistent...
+
+
 \newpage
 \chapter{General description}
 
@@ -132,7 +143,7 @@ cardinality field described below.
 
 \item[cardinality] is a positive integer which tells how many states
 the variable can have. It plays an important role in all calculations
-to it better be correct.
+so it better be correct: the value is not meant to be altered.
 
 \item[id] is an {\it unsigned long} used for identification inside the
 system. It is set automatically by the \verb+new_variable+ function
@@ -155,18 +166,32 @@ The \textbf{previous} and \textbf{next} pointers should be symmetrical
 i.e. if \verb+a->next == b+ then \verb+b->previous == a+.
 \end{description}
 
-% FIXME: add the description of variable list structure here
-
+\verb+Variable.h+ provides also data types for implementing lists of
+variables. Both \verb+varlink+ and \verb+Variable_iterator+ are
+pointers to structs which contain following fields:
 \begin{description}
+\item[data] is the variable (i.e. pointer to a variable struct) 
+contained by the list element.
 
+\item[fwd] is a pointer to the next element in the list or {\it NULL}
+at the end of the list.
+
+\item[bwd] is a pointer to the previous element in the list or 
+{\it NULL} at the beginning of the list.
 \end{description}
+Variable iterators are meant to be used the same way as list iterators
+in Java: you can get the next element contained by the list by just 
+calling \verb+next_Variable(iterator)+. On the other hand, iterators
+are NOT meant to be the only reference to a list because it will
+advance in the list, pointing always to the next element and eventually
+be a null pointer.
 
 
 \subsubsection{The functions}
 The functions provided in \verb+Variable.c+ are
 %The interface + how the stuff works...
 \begin{description}
-\item[new_variable(symbol, name, states, cardinality)] creates a
+\item[new\_variable(symbol, name, states, cardinality)] creates a
 variable identified with the \textbf{symbol} string. The \textbf{name} 
 string will be copied as the name field of the new variable. Both the 
 \textbf{symbol} and \textbf{name} strings may be truncated to the 
@@ -174,72 +199,72 @@ allowed length. The states of the new variable will be named according
 to the given string array \textbf{states}. All the given strings are 
 copied, so remember to free them after they become useless.
 
-\item[copy_variable(v)] returns an exact copy of the
+\item[copy\_variable(v)] returns an exact copy of the
 variable~\textbf{v}. Note that also the id~field is copied and 
 consequently there may not be two copies of the same variable in the 
 same model.
 
-\item[free_variable(v)] frees the memory allocated for the
+\item[free\_variable(v)] frees the memory allocated for the
 variable~\textbf{v}. 
 
-\item[equal_variables(v1, v2)] returns 0 if either of the variables
+\item[equal\_variables(v1, v2)] returns 0 if either of the variables
 are null. Otherwise it will tell if the variables have equal id fields
 or not.
 
-\item[get_id(v)] will return the unsigned long id field of the 
+\item[get\_id(v)] will return the unsigned long id field of the 
 variable~\textbf{v}.
 
-\item[get_symbol(v)] returns the symbol of the variable~\textbf{v}. It
+\item[get\_symbol(v)] returns the symbol of the variable~\textbf{v}. It
 will not make a copy of the string so don't mess with it.
 
-\item[get_stateindex(v, state)] tells the place of the string
+\item[get\_stateindex(v, state)] tells the place of the string
 \textbf{state} in the state name array of the
 variable~\textbf{v}. This index can be used to interpret various
 arrays describing probability distributions. 
 
-\item[total_num_of_vars()] is used only to aid the Hugin net file
+\item[total\_num\_of\_vars()] is used only to aid the Hugin net file
 parser to return the total number of newly created variables. All 
-the variables created with \textbf{new_variable} are accumulated 
+the variables created with \textbf{new\_variable} are accumulated 
 in a list and this function can tell the size of that list.
 
-\item[get_first_variable()] gives the first element in the list
+\item[get\_first\_variable()] gives the first element in the list
 of newly created variables mentioned above.
 
-\item[get_last_variable()] gives the last element in the list
+\item[get\_last\_variable()] gives the last element in the list
 of newly created variables mentioned above.
 
-\item[reset_Variable_list()] will replace the list of recently created
+\item[reset\_Variable\_list()] will replace the list of recently created
 variables with {\it NULL} and set the size of the list to zero. This
 is used only for resetting the list after copying the list pointer
 to a new model. Otherwise all the models would share the same list of
 parsed variables.
 
-\item[next_Variable(it)] will give the next variable pointed by the
+\item[next\_Variable(it)] will give the next variable pointed by the
 variable iterator~\textbf{it} and advance the pointer to the next
 variable in the list. The function returns {\it NULL} if the iterator
 runs out of variables.
 
-\item[get_parser_variable(symbol)] aids the net file parser to find a
+\item[get\_parser\_variable(symbol)] aids the net file parser to find a
 variable, identified by the \textbf{symbol} string, in the list of newly
 created variables.
 
-\item[get_variable(it, symbol)] searches the
+\item[get\_variable(it, symbol)] searches the
 variable iterator~\textbf{it} for a variable identified by the string
 \textbf{symbol}. The iterator will be used by the function, so it will
 not be pointing to the beginning of any lists anymore.
 
-\item[update_likelihood(v, likelihood)] will set the likelihood array
-of variable according to the given double array \textbf{likelihood}.
-Size of the given array should be the same (or more) than the
-cardinality of the variable.
+\item[update\_likelihood(v, likelihood)] will set the likelihood array
+of variable~\textbf{v} according to the given double array 
+\textbf{likelihood}. Size of the given array should be the same 
+(or more) than the cardinality of the variable.
 
-\item[reset_likelihood(v)] fills the likelihood array of the
+\item[reset\_likelihood(v)] fills the likelihood array of the
 variable~\textbf{v} with ones. This means that the likelihood of the
 variable states will be uniform.
 
-\item[number_of_values(v)] returns the cardinality of the
-variable~\textbf{v}. It is the exact number of states the variable can
-have.
+\item[number\_of\_values(v)] returns the cardinality of the
+variable~\textbf{v}. It is the exact number of states the variable has
+and will always have.
 \end{description}
 
 
