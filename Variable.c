@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.39 2004-08-12 14:13:28 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.40 2004-08-13 14:38:11 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -40,6 +40,7 @@ Variable new_variable(const char* symbol, const char* name,
 
   if(!(v && new)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(v);
     return NULL;
   }
 

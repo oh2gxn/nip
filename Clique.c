@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.77 2004-08-13 07:15:50 mvkorpel Exp $
+ * Clique.c $Id: Clique.c,v 1.78 2004-08-13 14:38:11 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -82,15 +82,16 @@ Clique make_Clique(Variable vars[], int num_of_vars){
     cardinality[i] = vars[reorder[i]]->cardinality;
     c->variables[i] = vars[reorder[i]];
   }
-
+  
   c->p = make_potential(cardinality, num_of_vars, NULL);
   c->original_p = make_potential(cardinality, num_of_vars, NULL);
-
+  
   free(cardinality);
   free(indices);
   free(reorder);
   c->sepsets = NULL;
   c->mark = 0;
+
   return c;
 }
 

@@ -2,29 +2,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "potential.h"
 #include "Clique.h"
 #include "Graph.h"
 #include "Variable.h"
+#include "potential.h"
+#include "parser.h"
 #include "nip.h"
 
+/*
 #define FOO
+*/
 
 int main(int argc, char *argv[]){
   
-  int i, j;
+  int i;
   int n = atoi(argv[2]);
-  int num_of_cliques;
 
   Nip model;
 
 #ifdef FOO
+  int j;
+  int cardinality[] = {3, 2, 3};
+  int num_of_vars = 3;
+  int num_of_cliques;
   double data[] = {
     0.5, 0.3, 0.1, 0.6, 0.9, 31, 235, 3523.24, 7657,
     0.2, 3.7, 9.8, 1.4, 5.5, 17, 918, 4798.28, 1111
   };
-  int cardinality[] = {3, 2, 3};
-  int num_of_vars = 3;
   Variable vars[3];
   varlink first, last;
   char **symbols;
@@ -168,6 +172,10 @@ int main(int argc, char *argv[]){
   free(names);
 
 #endif
+
+
+  /* TODO: Test open_datafile() */
+
 
   printf("\nParsing and freeing models:\n");
   for(i = 0; i < n; i++){

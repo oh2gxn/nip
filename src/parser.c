@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.63 2004-08-12 10:59:32 mvkorpel Exp $
+ * $Id: parser.c,v 1.64 2004-08-13 14:38:11 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -92,14 +92,13 @@ datafile *open_datafile(char *filename, char separator,
   char last_line[MAX_LINELENGTH];
   char *token;
   int length_of_name = 0;
-  int num_of_tokens;
+  int num_of_tokens = 0;
   int *token_bounds;
   int linecounter = 0;
   int dividend;
   int i, j;
-  stringlink *statenames = NULL;
-  stringlink temp;
-
+  stringlink *statenames = NULL; /* FIXME: Are these lists freed? */
+  stringlink temp, temp2;
   datafile *f = (datafile *) malloc(sizeof(datafile));
 
   if(!f){
@@ -107,9 +106,6 @@ datafile *open_datafile(char *filename, char separator,
     return NULL;
   }
 
-#ifdef DEBUG_DATAFILE
-  printf("Now in open_datafile (1)\n");
-#endif
 
   if(write)
     f->file = fopen(filename,"w");
@@ -144,10 +140,6 @@ datafile *open_datafile(char *filename, char separator,
    * This includes names of nodes and their states.
    */
   if(!write){
-
-#ifdef DEBUG_DATAFILE
-    printf("Now in open_datafile (2)\n");
-#endif
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
       num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
@@ -198,9 +190,6 @@ datafile *open_datafile(char *filename, char separator,
 	if(nodenames){
 	  f->firstline_labels = 1;
 
-#ifdef DEBUG_DATAFILE
-	  printf("Now in open_datafile (3)\n");
-#endif
 	  for(i = 0; i < num_of_tokens; i++){
 
 	    f->node_symbols[i] =
@@ -251,9 +240,6 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(num_of_tokens > 0)
 	  f->datarows++;
-#ifdef DEBUG_DATAFILE
-	printf("Now in open_datafile (4), linecounter == %d\n", linecounter);
-#endif
 
 	for(i = 0;
 	    i < (f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens);
@@ -270,37 +256,16 @@ datafile *open_datafile(char *filename, char separator,
 	    return NULL;
 	  }
 
-#ifdef DEBUG_DATAFILE
-	  printf("Now in open_datafile (5), linecounter == %d\n", linecounter);
-#endif
-
 	  strncpy(token, &(last_line[token_bounds[2*i]]),
 		  token_bounds[2*i+1] - token_bounds[2*i]);
 
-#ifdef DEBUG_DATAFILE
-	  printf("Now in open_datafile (6), linecounter == %d\n", linecounter);
-#endif
-
 	  token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
-
-#ifdef DEBUG_DATAFILE
-	  printf("Now in open_datafile (7), linecounter == %d, token == %s\n", linecounter, token);
-#endif
 
 	  if(!(search_stringlinks(statenames[i], token) ||
 	       nullobservation(token))){
-#ifdef DEBUG_DATAFILE
-	    printf("Now in open_datafile (8), linecounter == %d, token == %s\n", linecounter, token);
-#endif
 	    add_to_stringlink(&(statenames[i]), token);
-#ifdef DEBUG_DATAFILE
-	    printf("Now in open_datafile (9), linecounter == %d, token == %s\n", linecounter, token);
-#endif
 	  }
 	  else{
-#ifdef DEBUG_DATAFILE
-	    printf("Now in open_datafile (8), linecounter == %d, token == %s, else\n", linecounter, token);
-#endif
 	    free(token);
 	  }
 	}
@@ -310,6 +275,7 @@ datafile *open_datafile(char *filename, char separator,
       linecounter++;
     }
 
+    /* Count number of states in each variable. */
     for(i = 0; i < f->num_of_nodes; i++){
       j = 0;
       temp = statenames[i];
@@ -341,6 +307,17 @@ datafile *open_datafile(char *filename, char separator,
 
   }
 
+  /* JJT: Added 13.8. because of possible memory leaks. */
+  for(i = 0; i < num_of_tokens; i++){
+    temp = statenames[i];
+    while(temp != NULL){
+      temp2 = temp->fwd;
+      free(temp);
+      temp = temp2;
+    }
+  }
+  free(statenames);
+
   rewind(f->file);
   f->line_now = 0;
 
@@ -366,16 +343,10 @@ static int nullobservation(char *token){
   else if((strcmp("N/A", token) == 0) ||
 	  (strcmp("null", token) == 0) ||
 	  (strcmp("<null>", token) == 0)){
-#ifdef DEBUG_DATAFILE
-    printf("in nullobservation: WAS a null observation\n");
-#endif
     return 1;
   }
-
   else{
-#ifdef DEBUG_DATAFILE
-    printf("in nullobservation: was NOT a null observation\n");
-#endif
+
     return 0;
   }
 }
@@ -395,6 +366,28 @@ void close_datafile(datafile *file){
 
   /* Release the memory of file struct. */
   free_datafile(file);
+}
+
+
+/* Frees the memory used by (possibly partially allocated) datafile f. */
+static void free_datafile(datafile *f){
+  
+  int j;
+  if(!f)
+    return;
+  free(f->name);
+  if(f->node_symbols){
+    for(j = 0; j < f->num_of_nodes; j++)
+      free(f->node_symbols[j]);
+    free(f->node_symbols);
+  }
+  free(f->num_of_states);
+  if(f->node_states){
+    for(j = 0; j < f->num_of_nodes; j++)
+      free(f->node_states[j]);
+    free(f->node_states);
+  }
+  free(f);
 }
 
 
@@ -478,28 +471,6 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
   /* Return the number of acquired tokens. */
   return f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens;
 
-}
-
-
-/* Frees the memory used by (possibly partially allocated) datafile f. */
-static void free_datafile(datafile *f){
-  
-  int j;
-  if(!f)
-    return;
-  free(f->name);
-  if(f->node_symbols){
-    for(j = 0; j < f->num_of_nodes; j++)
-      free(f->node_symbols[j]);
-    free(f->node_symbols);
-  }
-  free(f->num_of_states);
-  if(f->node_states){
-    for(j = 0; j < f->num_of_nodes; j++)
-      free(f->node_states[j]);
-    free(f->node_states);
-  }
-  free(f);
 }
 
 
@@ -755,24 +726,12 @@ static int add_to_stringlink(stringlink *s, char* string){
  */
 static int search_stringlinks(stringlink s, char* string){
 
-#ifdef DEBUG_DATAFILE
-  printf("search_stringlinks called\n");
-  printf("string == %s\n", string);
-#endif
-
   while(s != NULL){
     if(strcmp(string, s->data) == 0){
-#ifdef DEBUG_DATAFILE
-      printf("search_stringlinks finished OK (found)\n");
-#endif
       return 1;
     }
     s = s->fwd;
   }
-
-#ifdef DEBUG_DATAFILE
-  printf("search_stringlinks finished OK (not found)\n");
-#endif
 
   return 0;
 }
