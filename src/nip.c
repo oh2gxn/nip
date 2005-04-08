@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.58 2005-04-05 14:02:45 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.59 2005-04-08 20:56:03 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -41,11 +41,10 @@
 
  
  * - EM algorithm for estimating parameters of the model
- *   - Invent a concise and efficient way of computing each of the parameters.
- *     - in which order? ("Time-First" or "Family-First")
- *     - one kind of solution:
- *       - build it around the forward-backward inference... (E-step)
- *       - due to the fact that the child is always the first variable in 
+ *   + Invent a concise and efficient way of computing each of the parameters.
+ *     + one kind of solution:
+ *       + build it around the forward-backward inference... (E-step)
+ *       + due to the fact that the child is always the first variable in 
  *         the potentials defining the model, the M-step is quite trivial
  *
  *   - Find a neat way to replace the original parameters of the model.
