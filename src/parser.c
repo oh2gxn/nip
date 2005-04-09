@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.92 2005-04-05 14:02:45 jatoivol Exp $
+ * $Id: parser.c,v 1.93 2005-04-09 01:28:45 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -109,28 +109,17 @@ datafile *open_datafile(char *filename, char separator,
   stringlink temp, temp2;
   datafile *f = NULL;
 
-  /* WTF? This causes a segmentation fault on 32-bit linux machines, 
-   * but only with certain data files. Note that this piece of code 
-   * DOES NOT depend on the parameters... So how can this fail? */
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   f = (datafile *) malloc(sizeof(datafile));
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
 
   if(f == NULL){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
-
-  /* WTF? This causes a segmentation fault on 64-bit Linux. 
-   * (not on 32-bit Linux, Irix or Mac OS X) */
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   if(write)
     f->file = fopen(filename,"w");
   else
     f->file = fopen(filename,"r");
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
-
 
   if (!f->file){
     report_error(__FILE__, __LINE__, ERROR_IO, 1);
@@ -950,8 +939,7 @@ void reset_symbols(){
 }
 
 
-/* Frees some memory after parsing. 
- * JJT: DO NOT TOUCH THE ACTUAL DATA, OR IT WILL BE LOST. */
+/* Frees some memory after parsing. */
 void reset_initData(){
   initDataLink ln = nip_last_initData;
   initDataLink temp;
@@ -1113,7 +1101,8 @@ int parsedPots2JTree(){
 
     if(fam_clique != NULL){
       if(initlist->data->num_of_vars > 1){
-	/* Conditional probability distributions are initialised */
+	/* Conditional probability distributions are initialised into
+	 * the jointree potentials */
 	retval = initialise(fam_clique, initlist->child, initlist->parents, 
 			    initlist->data, 0); /* THE job */
 	if(retval != NO_ERROR){
@@ -1122,16 +1111,13 @@ int parsedPots2JTree(){
 	  return ERROR_GENERAL;
 	}
       }
-      else{ /* Priors of the independent variables are entered as evidence. */
-
-	/***************************************************************
-	 * NOTE: I believe this is somehow wrong, because all parameters
-	 * of the model (including priors) should be remembered. - JJT
-	 */
-
-	retval = enter_evidence(vars, nvars, nip_cliques, 
-				nip_num_of_cliques, initlist->child, 
-				initlist->data->data);
+      else{ 
+	/* Priors of the independent variables are stored into the variable 
+	 * itself, but NOT entered into the model YET. */
+	//retval = enter_evidence(vars, nvars, nip_cliques, 
+	//			nip_num_of_cliques, initlist->child, 
+	//			initlist->data->data);
+	retval = set_prior(initlist->child, initlist->data->data);
 	if(retval != NO_ERROR){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	  free(vars);

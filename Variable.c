@@ -1,5 +1,5 @@
 /*
- * Variable.c $Id: Variable.c,v 1.52 2005-03-17 10:10:57 jatoivol Exp $
+ * Variable.c $Id: Variable.c,v 1.53 2005-04-09 01:28:45 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -57,6 +57,7 @@ Variable new_variable(const char* symbol, const char* name,
   v->next = NULL;
 
   v->parents = NULL;
+  v->prior = NULL; /* Usually prior == NULL  =>  num_of_parents > 0 */
   v->num_of_parents = 0;
   v->family_clique = NULL;
   v->family_mapping = NULL;
@@ -342,6 +343,8 @@ int set_parents(Variable v, Variable *parents, int nparents){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
   }
+
+  free(v->parents); /* in case it previously had parents */
   
   if(nparents > 0){
     v->parents = (Variable *) calloc(nparents, sizeof(Variable));
@@ -365,6 +368,33 @@ Variable* get_parents(Variable v){
     return NULL;
   }
   return v->parents;
+}
+
+
+int set_prior(Variable v, double* prior){
+  int i;
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return ERROR_NULLPOINTER;
+  }
+  if(!prior)
+    return NO_ERROR;
+
+  free(v->prior);
+  v->prior = (double*) calloc(v->cardinality, sizeof(double));
+  for(i = 0; i < v->cardinality; i++)
+    v->prior[i] = prior[i]; /* makes a copy of the array */
+
+  return NO_ERROR;
+}
+
+
+double* get_prior(Variable v){
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return NULL;
+  }
+  return v->prior;
 }
 
 

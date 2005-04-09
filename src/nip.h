@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.23 2005-03-21 15:40:10 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.24 2005-04-09 01:28:45 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -29,7 +29,8 @@ typedef struct{
 		       * arrays*/
 
   /* Undocumented features: */
-  Variable *children;  /* All the variables which have parents */
+  Variable *children;    /* All the variables which have parents */
+  Variable *independent; /* ...and those who dont. (Redundant?)  */
   int num_of_children;
 
   Clique front_clique; /* A memoization reference to the clique which mediates
@@ -66,7 +67,10 @@ typedef struct{
 typedef uncertain_series_type *UncertainSeries;
 
 
-/* Makes the model forget all the given evidence. */
+/* Makes the model forget all the given evidence.
+ * NOTE: also the priors specified in the NET file are cleared
+ * (but remain intact in the Variables) so you'll have to re-enter them
+ * as soft evidence. */
 void reset_model(Nip model);
 
 

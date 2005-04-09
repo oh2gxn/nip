@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.59 2005-04-08 20:56:03 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.60 2005-04-09 01:28:45 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -23,16 +23,27 @@
  *   + NOTE: this turned out to need linear space requirement w.r.t. time 
  *           (assuming sepsets between timeslices have a constant size)
 
- * TODO: 
-
- * - There's a bug in the memory allocation! (Segmentation fault...)
- *   - The segmentation faults do not occur on: 
+ * + There's a bug in the memory allocation! (Segmentation fault...)
+ *   + The segmentation faults do not occur on: 
  *      IRIX, Solaris, Mac OS X or FreeBSD !
- *   - But it crashes on Linux: 32- and 64-bit Suse, Debian, Fedora Core 2
- *     - The fault occurs in the same spot on 32-bit systems
+ *   + But it crashes on Linux: 32- and 64-bit Suse, Debian, Fedora Core 2
+ *     + The fault occurs in the same spot on 32-bit systems
  *       and some other spot on 64-bit systems
  *   - Malloc gives null with non-timeslice models on OSF1 (kosh.hut.fi)
+ *   + Some systems check the array bounds but not Linux!
 
+ * TODO: 
+
+ * - What about independent variables? Should their probabilities 
+ *   be uniform or do they have a prior? If they have a prior, where it 
+ *   should be stored? 
+ *   - Solutions:
+ *     - initialise(x,y,..., 1)  (i.e. transient initialisation)
+ *       to the reset_model-procedure?
+ *     - enter_evidence()
+ *     - take "next" and "num_of_parents" fields into consideration
+ *     + include the prior into the independent variables
+ 
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *   - another forward-like algorithm with elements of dynamic programming
@@ -54,6 +65,7 @@
  *   - Determine the parameters of the algorithm
  *     - when to stop?
  *       - difference in the negative loglikelihood of the timeseries...
+ *       - loglikelihood should be calculated during E-step
  *****/
 
 extern int yyparse();
@@ -79,7 +91,7 @@ void reset_model(Nip model){
 
 
 Nip parse_model(char* file){
-  int i, j, retval;
+  int i, j, k, retval;
   Variable temp;
   Variable_iterator it;
   Nip new = (Nip) malloc(sizeof(nip_type));
@@ -95,7 +107,7 @@ Nip parse_model(char* file){
     return NULL;
   }
 
-  retval = yyparse();
+  retval = yyparse(); /* Reminder: priors not entered yet! */
 
   close_yyparse_infile();
 
@@ -134,7 +146,10 @@ Nip parse_model(char* file){
   new->next = (Variable*) calloc(new->num_of_nexts, sizeof(Variable));
   new->previous = (Variable*) calloc(new->num_of_nexts, sizeof(Variable));
   new->children = (Variable*) calloc(new->num_of_children, sizeof(Variable));
-  if(!(new->children && new->previous && new->next)){
+  new->independent = 
+    (Variable*) calloc(new->num_of_vars - new->num_of_children, 
+		       sizeof(Variable));
+  if(!(new->independent && new->children && new->previous && new->next)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(new->variables);
     free(new->next);
@@ -144,31 +159,34 @@ Nip parse_model(char* file){
   }
 
   j = 0;
-  for(i = 0; i < new->num_of_vars; i++)  
+  for(i = 0; i < new->num_of_vars; i++)
     if(new->variables[i]->next){
       new->next[j] = new->variables[i];
       new->previous[j] = new->variables[i]->next;
       j++;
     }
 
+  /* Reminder: (Before I indexed the children with j, the program had 
+   * funny crashes on Linux systems :) */
+  j = 0; k = 0;
   for(i = 0; i < new->num_of_vars; i++)
     if(new->variables[i]->parents)
-      new->children[i] = new->variables[i]; /* set the children */
+      new->children[j++] = new->variables[i]; /* set the children */
+    else
+      new->independent[k++] = new->variables[i];
   
   new->front_clique = NULL;
   new->tail_clique = NULL;
+
+  /* Let's check one detail */
+  for(i = 0; i < new->num_of_vars - new->num_of_children; i++)  
+    assert(new->independent[i]->num_of_parents == 0);
 
   /* 4. Reset parser globals */
   it = get_last_variable(); /* free the list structure */
   while(it->bwd){
     it = it->bwd;
-
-    /* WTF? This causes a segmentation fault on 64-bit Linux. 
-     * I have tested that the parameter is correct and existent! */
-    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
     free(it->fwd);
-    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
-
   }
   free(it);
   reset_Variable_list();
@@ -191,6 +209,7 @@ void free_model(Nip model){
     free_variable(model->variables[i]);
   free(model->variables);
   free(model->children);
+  free(model->independent);
   free(model->next);
   free(model->previous);
   free(model);
@@ -210,9 +229,7 @@ TimeSeries read_timeseries(Nip model, char* filename){
   }
   ts->model = model;
 
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   df = open_datafile(filename, ',', 0, 1);
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
 
   if(df == NULL){
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
@@ -646,10 +663,7 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
     reset_model(model);
   }
 
-  /* FIXME: this one crashes on 32-bit Linux */
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   free_potential(timeslice_sepset); 
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
 
   return results;
 }
@@ -1096,7 +1110,13 @@ static int e_step(TimeSeries ts, potential* parameters){
   /* Forward phase */
   /*****************/
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
+
+
+    /**********************************************************************
+     * TODO: This is the place for calculating the log likelihood of the ts
+     **********************************************************************/
     
+
     /* Put some data in */
     for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
       if(ts->data[t][i] >= 0)
@@ -1294,17 +1314,6 @@ static int m_step(potential* parameters, Nip model){
     }
   }
   
-  /********************************************************************
-   * NOTE: What about independent variables? Should their probabilities 
-   * be uniform or do they have a prior? If they have a prior, where it 
-   * should be stored? 
-
-   * Solutions:
-   * - initialise(x,y,..., 1)  (i.e. transient initialisation)
-   * - enter_evidence()
-   * - take "next" and "num_of_parents" fields into consideration
-   * - include the prior into the independent variables
-   */
 
   return NO_ERROR;
 }

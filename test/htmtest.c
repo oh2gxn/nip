@@ -51,11 +51,7 @@ int main(int argc, char *argv[]){
     return 0;
   }
   else{
-
-    /* FIXME: this fails on 64-bit Linux */
-    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
     model = parse_model(argv[1]);
-    printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   }
 
   if(model == NULL)
@@ -67,9 +63,7 @@ int main(int argc, char *argv[]){
   /* read the data from a file */
   /*****************************/
 
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
   ts = read_timeseries(model, argv[2]);
-  printf("DEBUG: %s line %d\n", __FILE__, __LINE__);
 
   if(ts == NULL){
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);

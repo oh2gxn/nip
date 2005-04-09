@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.43 2005-03-16 12:14:17 jatoivol Exp $
+ * Variable.h $Id: Variable.h,v 1.44 2005-04-09 01:28:45 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -17,13 +17,16 @@
 
 struct nip_var {
   char symbol[VAR_SYMBOL_LENGTH + 1]; /* short symbol for the node */
-  char name[VAR_NAME_LENGTH + 1]; /* label in the Net language*/
-  char **statenames; /* a string array with <cardinality> strings */
-  int cardinality;   /* number of possible values */
-  unsigned long id; /* unique id for every variable */
+  char name[VAR_NAME_LENGTH + 1];     /* label in the Net language*/
+  char **statenames;  /* a string array with <cardinality> strings */
+  int cardinality;    /* number of possible values */
+  unsigned long id;   /* unique id for every variable */
   double *likelihood; /* likelihood of each value */
-  struct nip_var *previous;
-  struct nip_var *next;
+  double *prior;      /* prior prob. of each value for an indep. variable */
+  struct nip_var *previous; /* pointer to the variable which corresponds to
+			     * this one in the previous timeslice */
+  struct nip_var *next;     /* pointer to the variable which corresponds to
+			     * this one in the next timeslice */
   struct nip_var **parents; /* array of pointers to the parents */
   int num_of_parents;       /* number of parents */
   void *family_clique;      /* possible reference to the family clique */
@@ -140,6 +143,16 @@ int set_parents(Variable v, Variable *parents, int nparents);
 
 /* Tells which Variables (*p) are the parents of the Variable v. */
 Variable* get_parents(Variable v);
+
+
+/* Sets the prior for an (independent) Variable v. You SHOULD not 
+ * set a prior for a variable which has parents. */
+int set_prior(Variable v, double* prior);
+
+
+/* Tells the prior distribution of a variable. 
+ * (NULL if v depends on others) */
+double* get_prior(Variable v);
 
 
 /* Returns a new array (allocates memory!) that contains the given Variables
