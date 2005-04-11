@@ -37,10 +37,12 @@ int main(int argc, char *argv[]){
   }
   else
     model = parse_model(argv[1]);
-
+    
   if(model == NULL)
     return -1;
   /* The input file has been parsed. -- */
+
+  use_priors(model, 0);
 
   /*****************************/
   /* read the data from a file */
@@ -145,6 +147,7 @@ int main(int argc, char *argv[]){
     if(t < ts->length){
       /* forget old evidence */
       reset_model(model);
+      use_priors(model, 1);
 
       for(i = 0; i < ts->num_of_hidden; i++){
 	/* old posteriors become new priors */
@@ -175,6 +178,7 @@ int main(int argc, char *argv[]){
 
   /* forget old evidence */
   reset_model(model);
+  use_priors(model, 1); /* JJT: Not sure... */
 
   for(t = ts->length; t >= 0; t--){ /* FOR EVERY TIMESLICE */
 
@@ -262,7 +266,7 @@ int main(int argc, char *argv[]){
     
     /* forget old evidence */
     reset_model(model);
-    
+    use_priors(model, 1);
   }
   
   for(t = 0; t < ts->length + 1; t++){

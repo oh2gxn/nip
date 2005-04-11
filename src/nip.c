@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.60 2005-04-09 01:28:45 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.61 2005-04-11 14:42:50 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 
 /*
 #define DEBUG_NIP
@@ -29,21 +30,21 @@
  *   + But it crashes on Linux: 32- and 64-bit Suse, Debian, Fedora Core 2
  *     + The fault occurs in the same spot on 32-bit systems
  *       and some other spot on 64-bit systems
- *   - Malloc gives null with non-timeslice models on OSF1 (kosh.hut.fi)
+ *   + Malloc gives null with non-timeslice models on OSF1 (kosh.hut.fi)
  *   + Some systems check the array bounds but not Linux!
 
- * TODO: 
-
- * - What about independent variables? Should their probabilities 
+ * + What about independent variables? Should their probabilities 
  *   be uniform or do they have a prior? If they have a prior, where it 
  *   should be stored? 
- *   - Solutions:
+ *   + Solutions:
  *     - initialise(x,y,..., 1)  (i.e. transient initialisation)
- *       to the reset_model-procedure?
- *     - enter_evidence()
- *     - take "next" and "num_of_parents" fields into consideration
+ *       to the reset_model-procedure? ...no, let's enter_evidence instead
+ *     + enter_evidence()
+ *     + take "previous" and "num_of_parents" fields into consideration
  *     + include the prior into the independent variables
  
+
+ * TODO: 
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *   - another forward-like algorithm with elements of dynamic programming
@@ -58,9 +59,9 @@
  *       + due to the fact that the child is always the first variable in 
  *         the potentials defining the model, the M-step is quite trivial
  *
- *   - Find a neat way to replace the original parameters of the model.
- *     - gather a potential for each family of variables
- *     - initialise with saved potentials? (see parser.c line 1115)
+ *   + Find a neat way to replace the original parameters of the model.
+ *     + gather a potential for each family of variables
+ *     + initialise with saved potentials? (see parser.c line 1115)
  *
  *   - Determine the parameters of the algorithm
  *     - when to stop?
@@ -75,7 +76,7 @@ static int start_timeslice_message_pass(Nip model, int direction,
 static int finish_timeslice_message_pass(Nip model, int direction,
 					 potential num, potential den);
 
-static int e_step(TimeSeries ts, potential* results);
+static int e_step(TimeSeries ts, potential* results, double* loglikelihood);
 static int m_step(potential* results, Nip model);
 
 void reset_model(Nip model){
@@ -87,6 +88,35 @@ void reset_model(Nip model){
 			     model->cliques, model->num_of_cliques);
   if(retval != NO_ERROR)
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+}
+
+
+void total_reset(Nip model){
+  int i, j;
+  Clique c;
+  for(i = 0; i < model->num_of_cliques; i++){
+    c = model->cliques[i];
+    for(j = 0; j < c->p->size_of_data; j++){
+      c->original_p->data[j] = 1;
+    }
+  }
+  reset_model(model); /* Could that be enough? */
+}
+
+
+void use_priors(Nip model, int has_history){
+  int i, retval;
+  Variable v;
+  for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
+    v = model->independent[i];
+    if(!has_history || v->previous == NULL){
+      retval = enter_evidence(model->variables, model->num_of_vars, 
+			      model->cliques, model->num_of_cliques, 
+			      v, v->prior);
+      if(retval != NO_ERROR)
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    }
+  }
 }
 
 
@@ -610,6 +640,9 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
   /*****************/
   /* Forward phase */
   /*****************/
+  reset_model(model);
+  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     /* Put some data in */
@@ -783,6 +816,9 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
   /*****************/
   /* Forward phase */
   /*****************/
+  reset_model(model);
+  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     /* Put some data in */
@@ -822,6 +858,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
 
     /* Forget old evidence */
     reset_model(model);
+    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
   }
   
   /******************/
@@ -830,6 +867,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
   
   /* forget old evidence */
   reset_model(model);
+  use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
   
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
@@ -907,6 +945,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
 
     /* forget old evidence */
     reset_model(model);
+    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
   }
 
   /* free the intermediate potentials */
@@ -1052,7 +1091,7 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
  * - function pointers are pretty much out of the question in this case, 
  *   because they can't deliver the results without global variables
  * - some parts of the code could be transformed into separate procedures */
-static int e_step(TimeSeries ts, potential* parameters){
+static int e_step(TimeSeries ts, potential* parameters, double* loglikelihood){
   int i, j, k, t, size;
   int *cardinalities = NULL;
   Variable temp;
@@ -1063,13 +1102,13 @@ static int e_step(TimeSeries ts, potential* parameters){
   Nip model = ts->model;
 
   /* Reserve some memory for calculation */
-  results = (potential*) calloc(model->num_of_children, sizeof(potential));
+  results = (potential*) calloc(model->num_of_vars, sizeof(potential));
   if(!results){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
-  for(i = 0; i < model->num_of_children; i++){
-    k = model->children[i]->num_of_parents + 1;
+  for(i = 0; i < model->num_of_vars; i++){
+    k = model->variables[i]->num_of_parents + 1;
     p = parameters[i];
     results[i] = make_potential(p->cardinality, k, NULL);
     /* Initialise the sum by setting to zero */
@@ -1084,7 +1123,7 @@ static int e_step(TimeSeries ts, potential* parameters){
     cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      for(i = 0; i < model->num_of_children; i++)
+      for(i = 0; i < model->num_of_vars; i++)
 	free_potential(results[i]);
       free(results);
       free(timeslice_sepsets);
@@ -1109,13 +1148,19 @@ static int e_step(TimeSeries ts, potential* parameters){
   /*****************/
   /* Forward phase */
   /*****************/
+  reset_model(model);
+  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
+
 
 
     /**********************************************************************
      * TODO: This is the place for calculating the log likelihood of the ts
      **********************************************************************/
-    
+    *loglikelihood = 0; /* Unfinished... */
+
+
 
     /* Put some data in */
     for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
@@ -1132,7 +1177,7 @@ static int e_step(TimeSeries ts, potential* parameters){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	/* i is useless at this point */
-	for(i = 0; i < model->num_of_children; i++)
+	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
 	for(i = 0; i <= ts->length; i++)
@@ -1148,7 +1193,7 @@ static int e_step(TimeSeries ts, potential* parameters){
     if(start_timeslice_message_pass(model, FORWARD,
 				    timeslice_sepsets[t]) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      for(i = 0; i < model->num_of_children; i++)
+      for(i = 0; i < model->num_of_vars; i++)
 	free_potential(results[i]);
       free(results);
       for(i = 0; i <= ts->length; i++)
@@ -1159,6 +1204,7 @@ static int e_step(TimeSeries ts, potential* parameters){
 
     /* Forget old evidence */
     reset_model(model);
+    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
   }
   
   /******************/
@@ -1167,6 +1213,7 @@ static int e_step(TimeSeries ts, potential* parameters){
   
   /* forget old evidence */
   reset_model(model);
+  use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
   
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
@@ -1184,7 +1231,7 @@ static int e_step(TimeSeries ts, potential* parameters){
 				       NULL)                   != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	for(i = 0; i < model->num_of_children; i++)
+	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
 	for(i = 0; i <= ts->length; i++)
@@ -1200,7 +1247,7 @@ static int e_step(TimeSeries ts, potential* parameters){
 				       timeslice_sepsets[t]) != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	for(i = 0; i < model->num_of_children; i++)
+	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
 	for(i = 0; i <= ts->length; i++)
@@ -1214,11 +1261,11 @@ static int e_step(TimeSeries ts, potential* parameters){
     
 
     /*** THE CORE: Write the results of inference ***/
-    for(i = 0; i < model->num_of_children; i++){
+    for(i = 0; i < model->num_of_vars; i++){
       p = results[i];
 
       /* 1. Decide which Variable you are interested in */
-      temp = model->children[i];
+      temp = model->variables[i];
       
       /* 2. Find the Clique that contains the family of 
        *    the interesting Variable */
@@ -1255,7 +1302,7 @@ static int e_step(TimeSeries ts, potential* parameters){
 				      timeslice_sepsets[t]) != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	for(i = 0; i < model->num_of_children; i++)
+	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
 	for(i = 0; i <= ts->length; i++)
@@ -1266,10 +1313,11 @@ static int e_step(TimeSeries ts, potential* parameters){
 
     /* forget old evidence */
     reset_model(model);
+    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
   }
 
   /* free the space for calculations */
-  for(i = 0; i < model->num_of_children; i++)
+  for(i = 0; i < model->num_of_vars; i++)
     free_potential(results[i]);
   free(results);
 
@@ -1288,26 +1336,39 @@ static int m_step(potential* parameters, Nip model){
   Variable child = NULL;
   
   /* 1. Normalise parameters by dividing with the sums over child variables */
-  for(i = 0; i < model->num_of_children; i++){
-    k = number_of_values(model->children[i]);
+  for(i = 0; i < model->num_of_vars; i++){
+    k = number_of_values(model->variables[i]);
     for(j = 0; j < parameters[i]->size_of_data; j = j + k)
       normalise(parameters[i]->data + j, k);
     /* Maybe this works, maybe not... */
   }
 
-  /* 2. Initialise the model with the new parameters */
-  for(i = 0; i < model->num_of_children; i++){
-    child = model->children[i];
-    fam_clique = find_family(model->cliques, model->num_of_cliques, child);
+  /* Q: Should the clique potential be initially uniform? */
+  /* A: Doesn't seem to make sense otherwise... */
+  
+  /* 2. Reset the clique potentials and everything */
+  total_reset(model);
 
-    /* Q: Should the clique potential be initially uniform? */
+  /* 3. Initialise the model with the new parameters */
+  for(i = 0; i < model->num_of_vars; i++){
+    child = model->variables[i];
+    fam_clique = find_family(model->cliques, model->num_of_cliques, child);
 
     /***************************************************************/
     /* HEY! parents[] NOT assumed to be in any particular order!   */
     /* But the variables of parameters[i] are assumed to be in the */
     /* same order as in the clique!                                */
     /***************************************************************/
-    k = initialise(fam_clique, child, child->parents, parameters[i], 0);
+
+    if(child->num_of_parents > 0)
+      /* Update the conditional probability distributions (dependencies) */
+      k = initialise(fam_clique, child, child->parents, parameters[i], 0);
+    else{
+      /* Update the priors of independent variables */
+      for(j = 0; j < number_of_values(child); j++)
+	child->prior[j] = parameters[i]->data[j];
+      k = 0;
+    }
     if(k != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
@@ -1321,32 +1382,37 @@ static int m_step(potential* parameters, Nip model){
 
 /* Teaches the given model (ts->model) according to the given time series 
  * (ts) with EM-algorithm. Returns an error code as an integer. */
-int em_learn(TimeSeries ts){
+int em_learn(TimeSeries ts, double threshold){
   int i, n, v;
   int *card;
+  double old_loglikelihood, loglikelihood = DBL_MIN;
   potential *parameters;
 
   /* Reserve some memory for calculation */
-  parameters = (potential*) calloc(ts->model->num_of_children, 
+  parameters = (potential*) calloc(ts->model->num_of_vars, 
 				   sizeof(potential));
   if(!parameters){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
-  for(v = 0; v < ts->model->num_of_children; v++){
-    n = ts->model->children[v]->num_of_parents + 1;
+  for(v = 0; v < ts->model->num_of_vars; v++){
+    n = ts->model->variables[v]->num_of_parents + 1;
     card = (int*) calloc(n, sizeof(int));
     if(!card){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      while(v > 0)
+	free_potential(parameters[--v]);
       free(parameters);
       return ERROR_OUTOFMEMORY;
     }
-    card[0] = ts->model->children[v]->cardinality;
+    card[0] = ts->model->variables[v]->cardinality;
     for(i = 1; i < n; i++)
-      card[i] = ts->model->children[v]->parents[i]->cardinality;
+      card[i] = ts->model->variables[v]->parents[i]->cardinality;
+    /* Variable->parents should be null only if n==1 
+     * => no for-loop => no null dereference */
 
     /************************************************************
-     * NOTE: The order of variables (i.e. their cardinalities) in 
+     * FIXME: The order of variables (i.e. their cardinalities) in 
      * the parameter potentials should be investigated. I suspect that 
      * the order should be the same as in the family cliques. 
      * Remember, that there already exists a function called 
@@ -1357,18 +1423,26 @@ int em_learn(TimeSeries ts){
     free(card);
   }
 
-  while(0){ /* When should we stop? */
+  /************/
+  /* THE Loop */
+  /************/
+  i = 0;
+  do{
+    old_loglikelihood = loglikelihood;
 
     /* E-Step: Now this is the heavy stuff..! */
-    n = e_step(ts, parameters);
+    n = e_step(ts, parameters, &loglikelihood);
     if(n != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }
 
-    /********************************/
-    /* TODO: Check for the progress */
-    /********************************/
+    /* DEBUG */
+    printf("Iteration %d: \t average loglikelihood = %lf\r", i, loglikelihood);
+
+    /* NOTE: I'm afraid there's a large possibility to overflow */
+    if(loglikelihood - old_loglikelihood == 0)
+      break;
 
     /* M-Step: First the parameter estimation... */
     n = m_step(parameters, ts->model);
@@ -1376,7 +1450,9 @@ int em_learn(TimeSeries ts){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }
-  }
+  }while(((loglikelihood - old_loglikelihood)/ts->length) > threshold);
+  /* When should we stop? */
+
 
   for(v = 0; v < ts->model->num_of_children; v++){
     free_potential(parameters[v]);

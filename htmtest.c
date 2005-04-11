@@ -58,6 +58,7 @@ int main(int argc, char *argv[]){
     return -1;
   /* The input file has been parsed. -- */
 
+  use_priors(model, 0); /* Only to be sure... */
 
   /*****************************/
   /* read the data from a file */
@@ -115,6 +116,7 @@ int main(int argc, char *argv[]){
 
   /* forget old evidence */
   reset_model(model);
+  use_priors(model, 0);
  
   for(t = 0; t < ucs->length; t++){ /* FOR EVERY TIMESLICE */
     

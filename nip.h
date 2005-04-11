@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.24 2005-04-09 01:28:45 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.25 2005-04-11 14:42:50 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -12,6 +12,7 @@
 
 # define FORWARD  1
 # define BACKWARD 0
+# define HAD_A_PREVIOUS_TIMESLICE 1
 
 typedef struct{
   int num_of_cliques;
@@ -72,6 +73,23 @@ typedef uncertain_series_type *UncertainSeries;
  * (but remain intact in the Variables) so you'll have to re-enter them
  * as soft evidence. */
 void reset_model(Nip model);
+
+
+/* Makes all the conditional probabilities uniform and forgets all evidence.
+ * In other words, the model will be as if it was never initialised with 
+ * any parameters at all. 
+ * (All the variables and the join tree will be there, of course) */
+void total_reset(Nip model);
+
+
+/* Enters the priors of independent variables into the model as evidence.
+ * This has to be done after reset_model and parse_model if you have any
+ * other kind of priors than uniform ones. If you need to suppress the 
+ * initialisation of the variables representing another one from the 
+ * previous timeslice, use 'has_history == 0'. 
+ * (Usually has_history == 1 only for the first timeslice)
+ */
+void use_priors(Nip model, int has_history);
 
 
 /* Creates a model according to the net file. 
@@ -162,7 +180,7 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts);
  * EM-algorithm. Returns an error code as an integer. 
  * NOTE:  this is not implemented yet! 
  * NOTE2: the model is included in the TimeSeries */
-int em_learn(TimeSeries ts);
+int em_learn(TimeSeries ts, double threshold);
 
 
 /********************************************************************

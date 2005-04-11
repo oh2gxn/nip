@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.112 2005-03-21 12:45:59 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.113 2005-04-11 14:42:49 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -879,6 +879,7 @@ int initialise(Clique c, Variable child, Variable parents[], potential p,
   retval = init_potential(p, c->p, mapping);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free(mapping);
     return ERROR_GENERAL;
   }
 
@@ -888,6 +889,7 @@ int initialise(Clique c, Variable child, Variable parents[], potential p,
     retval = init_potential(p, c->original_p, mapping);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      free(mapping);
       return ERROR_GENERAL;
     }
   }
@@ -1086,8 +1088,9 @@ Clique find_family(Clique *cliques, int num_of_cliques, Variable var){
     return NULL;
   }
 
-  for(i = 0; i < n; i++)
-    family[i] = var->parents[i];
+  if(n > 0) /* A useful check or not? */
+    for(i = 0; i < n; i++)
+      family[i] = var->parents[i];
   family[n] = var;
 
   found = find_clique(cliques, num_of_cliques, family, n+1);
@@ -1115,16 +1118,18 @@ int* find_family_mapping(Clique family, Variable child){
 	break;
       }
 
-    p = 0;
-    n--;
-    for(i=0; i < family->p->num_of_vars; i++){
-      if(p == n)
-	break; /* all pointers found */
-      for(j=0; j < n; j++)
-	if(equal_variables((family->variables)[i], child->parents[j])){
-	  result[j+1] = i;
-	  p++;
-	}
+    if(n > 1){ /* if child actually has any parents */
+      p = 0;
+      n--;
+      for(i=0; i < family->p->num_of_vars; i++){
+	if(p == n)
+	  break; /* all pointers found */
+	for(j=0; j < n; j++)
+	  if(equal_variables((family->variables)[i], child->parents[j])){
+	    result[j+1] = i;
+	    p++;
+	  }
+      }
     }
     child->family_mapping = result; /* MEMOIZE */
   }

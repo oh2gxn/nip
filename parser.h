@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser and for other parsers.
- * $Id: parser.h,v 1.37 2004-08-30 11:48:55 jatoivol Exp $
+ * $Id: parser.h,v 1.38 2005-04-11 14:42:50 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -211,6 +211,8 @@ int Graph2JTree();
 
 
 /* Initialises the join tree (Clique array) with parsed potentials. 
+ * NOTE: the priors of independent variables are not entered into the 
+ * join tree (as evidence), but are stored into the variable though.
  * Returns an error code. (0 is O.K.) */
 int parsedPots2JTree();
 
