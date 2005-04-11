@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.61 2005-04-11 14:42:50 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.62 2005-04-11 20:43:51 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -67,6 +67,10 @@
  *     - when to stop?
  *       - difference in the negative loglikelihood of the timeseries...
  *       - loglikelihood should be calculated during E-step
+
+ * - Function for generating artificial data according to the model
+
+ * - Function for writing the parameters into a file
  *****/
 
 extern int yyparse();
