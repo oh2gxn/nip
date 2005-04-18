@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.62 2005-04-11 20:43:51 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.63 2005-04-18 15:37:27 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -69,6 +69,9 @@
  *       - loglikelihood should be calculated during E-step
 
  * - Function for generating artificial data according to the model
+ *   - something like forward_inference and a little loop where you
+ *     set values for variables and infer the probabilities for the next 
+ *     ones to be set
 
  * - Function for writing the parameters into a file
  *****/
