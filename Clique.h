@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.56 2005-03-16 12:14:17 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.57 2005-04-28 10:36:22 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -100,16 +100,16 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2);
 
 
 /*
- * Initialises the clique c with the potential p. This is basically a 
- * potential multiplication so that the clique keeps the parameters 
- * even when retraction is used. If transient==1, the potential can 
- * be "wiped" with retraction...
- * !!! p->num_of_vars equals "length of parents + 1" !!! 
+ * Initialises the clique c with the potential p, which describes the 
+ * conditional probability of the child variable given its parents. 
+ * This is basically a potential multiplication so that the clique keeps 
+ * the parameters even when retraction is used. If transient==1, the 
+ * potential can be "wiped" with retraction...
+ * !!! p->num_of_vars equals "number of parents + 1" !!! 
  * Sum of the elements in the potential is assumed to be 1. 
  * The "ownership" of the potential changes.
  */
-int initialise(Clique c, Variable child, Variable parents[], potential p, 
-	       int transient);
+int initialise(Clique c, Variable child, potential p, int transient);
 
 
 /*

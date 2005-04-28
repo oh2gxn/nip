@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.25 2005-04-11 14:42:50 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.26 2005-04-28 10:36:22 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -187,6 +187,10 @@ int em_learn(TimeSeries ts, double threshold);
  * TODO: a set of functions for reading the results of inference from 
  *       the model 
  */
+
+/* Computes the logaritmic likelihood of the obseravations. */
+double momentary_loglikelihood(Nip model, Variable* observed, 
+			       int* indexed_data, int n_observed);
 
 /*
  * Calculates the probability distribution of a Variable.

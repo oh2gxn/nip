@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.113 2005-04-11 14:42:49 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.114 2005-04-28 10:36:22 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -839,12 +839,12 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
 }
 
 
-int initialise(Clique c, Variable child, Variable parents[], potential p,
-	       int transient){
+int initialise(Clique c, Variable child, potential p, int transient){
   int i, j = 0, k = 0;
   int *mapping = NULL;
   int retval;
   Variable var = NULL;
+  Variable* parents = get_parents(child);
 
   if(p->num_of_vars < c->p->num_of_vars){
     mapping = (int *) calloc(p->num_of_vars, sizeof(int));

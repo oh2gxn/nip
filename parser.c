@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.93 2005-04-09 01:28:45 jatoivol Exp $
+ * $Id: parser.c,v 1.94 2005-04-28 10:36:22 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1103,7 +1103,7 @@ int parsedPots2JTree(){
       if(initlist->data->num_of_vars > 1){
 	/* Conditional probability distributions are initialised into
 	 * the jointree potentials */
-	retval = initialise(fam_clique, initlist->child, initlist->parents, 
+	retval = initialise(fam_clique, initlist->child, 
 			    initlist->data, 0); /* THE job */
 	if(retval != NO_ERROR){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);

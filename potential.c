@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.56 2005-04-09 01:28:45 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.57 2005-04-28 10:36:22 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -278,8 +278,8 @@ int update_potential(potential numerator, potential denominator,
 
   if(!numerator || 
      (denominator && (numerator->num_of_vars != denominator->num_of_vars))){
-    /* I hope the logic is "fail fast" and the above evaluation stops if 
-     * denominator == NULL ! */
+    /* I hope the logic is "fail fast" and the above evaluation stops 
+     * in time if denominator == NULL ! */
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
   }
@@ -324,7 +324,7 @@ int update_potential(potential numerator, potential denominator,
 
     if(denominator){
       potvalue = get_ppointer(denominator, source_indices);
-      if(*potvalue)
+      if(*potvalue != 0)
 	target->data[i] /= *potvalue;  /* THE division */
       else
 	target->data[i] = 0;  /* see Procedural Guide p. 20 */

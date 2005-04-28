@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.63 2005-04-18 15:37:27 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.64 2005-04-28 10:36:22 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -21,7 +21,8 @@
  * + some sort of a function for the forward-backward algorithm
  *   + a data type that can be returned by the algorithm (how to index?)
  *   + some abstraction for a time series (structure and access to data..?)
- *   + NOTE: this turned out to need linear space requirement w.r.t. time 
+ *   + NOTE: this turned out to need linear space requirement w.r.t. 
+ *           the length of the time series
  *           (assuming sepsets between timeslices have a constant size)
 
  * + There's a bug in the memory allocation! (Segmentation fault...)
@@ -1160,15 +1161,11 @@ static int e_step(TimeSeries ts, potential* parameters, double* loglikelihood){
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
 
-
-
-    /**********************************************************************
-     * TODO: This is the place for calculating the log likelihood of the ts
-     **********************************************************************/
-    *loglikelihood = 0; /* Unfinished... */
-
-
-
+    /* This computes the log likelihood of the ts */
+    *loglikelihood = *loglikelihood + 
+      momentary_loglikelihood(model, ts->observed, ts->data[t], 
+			      model->num_of_vars - ts->num_of_hidden); 
+    
     /* Put some data in */
     for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
       if(ts->data[t][i] >= 0)
@@ -1339,6 +1336,7 @@ static int e_step(TimeSeries ts, potential* parameters, double* loglikelihood){
 
 static int m_step(potential* parameters, Nip model){
   int i, j, k;
+  int* fam_map;
   Clique fam_clique = NULL;
   Variable child = NULL;
   
@@ -1360,29 +1358,25 @@ static int m_step(potential* parameters, Nip model){
   for(i = 0; i < model->num_of_vars; i++){
     child = model->variables[i];
     fam_clique = find_family(model->cliques, model->num_of_cliques, child);
+    fam_map = find_family_mapping(fam_clique, child);
 
-    /***************************************************************/
-    /* HEY! parents[] NOT assumed to be in any particular order!   */
-    /* But the variables of parameters[i] are assumed to be in the */
-    /* same order as in the clique!                                */
-    /***************************************************************/
-
-    if(child->num_of_parents > 0)
+    if(child->num_of_parents > 0){
       /* Update the conditional probability distributions (dependencies) */
-      k = initialise(fam_clique, child, child->parents, parameters[i], 0);
+      j = init_potential(parameters[i], fam_clique->p, fam_map);
+      k = init_potential(parameters[i], fam_clique->original_p, fam_map);
+      if(j != NO_ERROR || k != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
+      // couldn't use initialise() here because of the messy order of
+      // parameter potentials
+    }
     else{
       /* Update the priors of independent variables */
       for(j = 0; j < number_of_values(child); j++)
 	child->prior[j] = parameters[i]->data[j];
-      k = 0;
-    }
-    if(k != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      return ERROR_GENERAL;
     }
   }
-  
-
   return NO_ERROR;
 }
 
@@ -1467,6 +1461,19 @@ int em_learn(TimeSeries ts, double threshold){
   free(parameters);
   
   return NO_ERROR;
+}
+
+
+/* TODO: how are joint probabilities computed? */
+double momentary_loglikelihood(Nip model, Variable* observed, 
+			       int* indexed_data, int n_observed){
+
+  /* Use jtree_dfs to compute probabilities according to cliques and 
+   * sepsets... We will probably need static or global variables...
+   * P(x) = (prod(p(x_c)) / prod(p(x_s)))
+   */
+
+  return 0;
 }
 
 
