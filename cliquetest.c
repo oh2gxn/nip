@@ -121,9 +121,12 @@ int main(){
   parentsA[0] = variables[1]; parentsA[1] = variables[2];
   parentsC[0] = variables[1]; parentsC[1] = variables[3];
   parentsE[0] = variables[3];
-  initialise(clique_pile[0], variables[0], parentsA, model[0], 0);
-  initialise(clique_pile[1], variables[2], parentsC, model[1], 0);
-  initialise(clique_pile[2], variables[4], parentsE, model[2], 0);
+  set_parents(variables[0], parentsA, 2);
+  set_parents(variables[2], parentsC, 2);
+  set_parents(variables[4], parentsE, 1);
+  initialise(clique_pile[0], variables[0], model[0], 0);
+  initialise(clique_pile[1], variables[2], model[1], 0);
+  initialise(clique_pile[2], variables[4], model[2], 0);
 
   /* DEBUG */
   /* printf("BCD before evidence:\n"); */
