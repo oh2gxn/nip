@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.64 2005-04-28 10:36:22 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.65 2005-05-02 15:05:35 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
+#include <math.h>
 
 /*
 #define DEBUG_NIP
@@ -69,10 +70,12 @@
  *       - difference in the negative loglikelihood of the timeseries...
  *       - loglikelihood should be calculated during E-step
 
+
  * - Function for generating artificial data according to the model
  *   - something like forward_inference and a little loop where you
  *     set values for variables and infer the probabilities for the next 
  *     ones to be set
+
 
  * - Function for writing the parameters into a file
  *****/
@@ -86,6 +89,9 @@ static int finish_timeslice_message_pass(Nip model, int direction,
 
 static int e_step(TimeSeries ts, potential* results, double* loglikelihood);
 static int m_step(potential* results, Nip model);
+static int gather_joint_probability(Clique c, 
+				    potential target, 
+				    Variable *vars);
 
 void reset_model(Nip model){
   int i, retval;
@@ -1349,7 +1355,7 @@ static int m_step(potential* parameters, Nip model){
   }
 
   /* Q: Should the clique potential be initially uniform? */
-  /* A: Doesn't seem to make sense otherwise... */
+  /* A: Doesn't seem to make sense otherwise...           */
   
   /* 2. Reset the clique potentials and everything */
   total_reset(model);
@@ -1406,19 +1412,13 @@ int em_learn(TimeSeries ts, double threshold){
       free(parameters);
       return ERROR_OUTOFMEMORY;
     }
+    // The child MUST be the first variable in order to normalize
+    // potentials reasonably
     card[0] = ts->model->variables[v]->cardinality;
     for(i = 1; i < n; i++)
       card[i] = ts->model->variables[v]->parents[i]->cardinality;
     /* Variable->parents should be null only if n==1 
      * => no for-loop => no null dereference */
-
-    /************************************************************
-     * FIXME: The order of variables (i.e. their cardinalities) in 
-     * the parameter potentials should be investigated. I suspect that 
-     * the order should be the same as in the family cliques. 
-     * Remember, that there already exists a function called 
-     * find_family_mapping... 
-     */
 
     parameters[v] = make_potential(card, n, NULL);
     free(card);
@@ -1452,8 +1452,7 @@ int em_learn(TimeSeries ts, double threshold){
       return ERROR_GENERAL;
     }
   }while(((loglikelihood - old_loglikelihood)/ts->length) > threshold);
-  /* When should we stop? */
-
+  /*** When should we stop? ***/
 
   for(v = 0; v < ts->model->num_of_children; v++){
     free_potential(parameters[v]);
@@ -1467,13 +1466,18 @@ int em_learn(TimeSeries ts, double threshold){
 /* TODO: how are joint probabilities computed? */
 double momentary_loglikelihood(Nip model, Variable* observed, 
 			       int* indexed_data, int n_observed){
+  potential p;
+  double likelihood;
 
-  /* Use jtree_dfs to compute probabilities according to cliques and 
-   * sepsets... We will probably need static or global variables...
-   * P(x) = (prod(p(x_c)) / prod(p(x_s)))
-   */
+  p = get_joint_probability(model, observed, n_observed); /* expensive */
 
-  return 0;
+  /* FIXME: watch out for missing data etc. */
+  likelihood = get_pvalue(p, indexed_data);
+
+  if(likelihood > 0)
+    return log(likelihood);
+  else
+    return -DBL_MAX;
 }
 
 
@@ -1518,131 +1522,52 @@ double *get_probability(Nip model, Variable v){
 }
 
 
-/* TODO: Figure out if we need the stuff below this comment. (Probably in 
- *       some form yes, but...) */
-double *get_joint_probability(Nip model, Variable *vars, int num_of_vars){
-  Clique clique_of_interest;
-  potential source, destination;
+/* TODO: compute a potential describing joint probability distribution of 
+ * given variables */
+potential get_joint_probability(Nip model, Variable *vars, int num_of_vars){
+  Clique c;
+  potential p;
+  int i;
   int *cardinality;
-  int *source_vars;
-  int *indices = NULL;
-  int i, j = 0, k = 0;
   int retval;
-  int extra_vars;
-  double *result;
 
-  Variable *vars_sorted;
-
-#ifdef DEBUG_NIP
-  printf("In get_joint_probability()\n");
-#endif
-
-  /* Find the Clique that contains the interesting Variables */
-  clique_of_interest = find_clique(model->cliques, model->num_of_cliques, 
-				   vars, num_of_vars);
-  if(!clique_of_interest){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    return NULL;
-  }
-
-  /* Sort the Variables to program order (ascending ID) */
-  vars_sorted = sort_variables(vars, num_of_vars);
-  if(!vars_sorted){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    return NULL;
-  }
-
-#ifdef DEBUG_NIP
-  printf("Variables in given order:\n");
-  for(i = 0; i < num_of_vars; i++)
-    printf("Symbol: %s\tId: %ld\n", vars[i]->symbol, vars[i]->id);
-
-  printf("\n");
-
-  printf("Variables in sorted order:\n");
-  for(i = 0; i < num_of_vars; i++)
-    printf("Symbol: %s\tId: %ld\n", 
-	   vars_sorted[i]->symbol, vars_sorted[i]->id);
-#endif
-
-  cardinality = (int *) calloc(num_of_vars, sizeof(int));
+  cardinality = (int*) calloc(num_of_vars, sizeof(int));
   if(!cardinality){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(vars_sorted);
     return NULL;
   }
 
   for(i = 0; i < num_of_vars; i++)
-    cardinality[i] = vars_sorted[i]->cardinality;
+    cardinality[i] = number_of_values(vars[i]);
 
-  source = clique_of_interest->p;
+  p = make_potential(cardinality, num_of_vars, NULL); /* possibly HUGE ! */
+  free(cardinality);
 
-  destination = make_potential(cardinality, num_of_vars, NULL);
-  if(!destination){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    free(vars_sorted);
-    free(cardinality);
-    return NULL;
-  }
+  /* Unmark all cliques */
+  for (i = 0; i < model->num_of_cliques; i++)
+    unmark_Clique(model->cliques[i]);
 
-  extra_vars = clique_of_interest->p->num_of_vars - num_of_vars;
-
-  source_vars = (int *) calloc(extra_vars, sizeof(int));
-  if(!source_vars){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(vars_sorted);
-    free(cardinality);
-    free_potential(destination);
-    return NULL;
-  }
-
-  /* Select the variables that are in the Clique but not in the set of
-   * Variables given to this function.
-   * This relies on the order of variables. */
-  for(i=0; i < clique_of_interest->p->num_of_vars; i++){
-    if(j < num_of_vars &&
-       equal_variables((clique_of_interest->variables)[i], vars_sorted[j]))
-      j++;
-    else {
-      source_vars[k] = i;
-      k++;
-    }
-  }
-
-  retval = general_marginalise(source, destination, source_vars);
+  /* Make a DFS in the tree... */
+  retval = gather_joint_probability(c, p, vars);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    free(vars_sorted);
-    free(cardinality);
-    free(source_vars);
+    free_potential(p);
     return NULL;
   }
 
-#ifdef DEBUG_NIP
-  for(i = 0; i < destination->size_of_data; i++)
-    printf("in get_joint_probability(): destination->data[%d] = %f\n",
-	   i, destination->data[i]);
-#endif
+  return p;
+}
 
-  result = reorder_potential(vars, destination);
 
-#ifdef DEBUG_NIP
-  for(i = 0; i < destination->size_of_data; i++)
-    printf("in get_joint_probability(): result[%d] = %f\n",
-	   i, result[i]);
-#endif
+/* TODO: a recursive "gather_probability" of some sort */
+static int gather_joint_probability(Clique c, 
+				    potential target, 
+				    Variable *vars){
 
-  /* NORMALISE? */
-
-  /* FREE THE MEMORY!!! */
-  free_potential(destination);
-  free(vars_sorted);
-  free(cardinality);
-  free(source_vars);
-  free(indices);
-
-  return result;
-
+  //int i, j = 0, k = 0;
+  //int *mapping;
+  
+  return ERROR_GENERAL; // NOT IMPLEMENTED YET
 }
 
 

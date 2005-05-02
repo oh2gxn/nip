@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.56 2004-08-25 11:14:41 mvkorpel Exp $
+ * huginnet.y $Id: huginnet.y,v 1.57 2005-05-02 15:05:34 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -227,10 +227,10 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   for(i = 0; i < get_nip_symbols_parsed(); i++)
     vars[i + 1] = parents[i];
 
-  retval = add_initData(create_Potential(vars, get_nip_symbols_parsed() + 1,
+  retval = add_initData(create_potential(vars, get_nip_symbols_parsed() + 1,
 					 doubles),
 			vars[0], parents);
-  free(doubles); /* the data was copied at create_Potential */
+  free(doubles); /* the data was copied at create_potential */
   reset_doubles();
   reset_symbols();
   free(vars);
@@ -244,8 +244,8 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   Variable vars[1];
   double *doubles = $6;
   vars[0] = $3;
-  retval = add_initData(create_Potential(vars, 1, doubles), vars[0], NULL); 
-  free(doubles); /* the data was copied at create_Potential */
+  retval = add_initData(create_potential(vars, 1, doubles), vars[0], NULL); 
+  free(doubles); /* the data was copied at create_potential */
   reset_doubles();
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -256,7 +256,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   int retval;
   Variable vars[1];
   vars[0] = $3;
-  retval = add_initData(create_Potential(vars, 1, NULL), vars[0], NULL); 
+  retval = add_initData(create_potential(vars, 1, NULL), vars[0], NULL); 
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;

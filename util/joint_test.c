@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.3 2004-11-09 14:18:44 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.4 2005-05-02 15:05:34 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) clique number (0 ... N - 1)
  * where N is the number of cliques.
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
   int i;
   int num_of_vars;
   int selected_Clique = -1;
-  double *result;
+  potential result;
 
   Nip model = NULL;
   Clique clique_of_interest = NULL;

@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.114 2005-04-28 10:36:22 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.115 2005-05-02 15:05:34 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -368,7 +368,7 @@ void free_Sepset(Sepset s){
 }
 
 
-potential create_Potential(Variable variables[], int num_of_vars, 
+potential create_potential(Variable variables[], int num_of_vars, 
 			   double data[]){
   /*
    * Suppose we get an array of Variables with IDs {5, 2, 3, 4, 0, 1}.
@@ -798,6 +798,7 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
       if(equal_variables((c1->variables)[i], (s->variables)[j])){
 	mapping[j] = i;
 	k++;
+	break;
       }
   }
 
@@ -813,7 +814,6 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
 
   /*
    * Update (absorption).
-   * First: select the variables. This relies on the order of variables.
    */
   for(i=0; i < c2->p->num_of_vars; i++){
     if(k == s->new->num_of_vars)
@@ -822,6 +822,7 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
       if(equal_variables((c2->variables)[i], (s->variables)[j])){
 	mapping[j] = i;
 	k++;
+	break;
       }
   }
 

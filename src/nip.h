@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.26 2005-04-28 10:36:22 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.27 2005-05-02 15:05:35 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -207,21 +207,17 @@ double *get_probability(Nip model, Variable v);
 
 /*
  * Calculates the joint probability distribution of a set of Variables.
- * The Variables MUST be in the SAME CLIQUE.
  * The join tree MUST be consistent before calling this.
  * Parameters:
- * - model: the model that contains the Variable
+ * - model: the model that contains the Variables
  * - vars: the Variables whose distribution we want
  * - num_of_vars: the number of Variables (size of "vars")
- * Returns an array of doubles (remember to free the result when not needed).
- * The returned array is of size
- *   vars[0]->cardinality * ... * vars[num_of_vars - 1]->cardinality.
- * The array can be addressed with multiple indices,
- *   i.e. array[i0][i1][i2], where the indices are in the same order as
- *   the array "vars".
+ * Returns the result as a potential 
+ * (remember to free the result when not needed).
+ * The variables of the potential are in the same order as they were given.
  * In case of problems, NULL is returned.
  */
-double *get_joint_probability(Nip model, Variable *vars, int num_of_vars);
+potential get_joint_probability(Nip model, Variable *vars, int num_of_vars);
 
 
 /*

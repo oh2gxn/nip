@@ -1,5 +1,5 @@
 /*
- * Clique.h $Id: Clique.h,v 1.57 2005-04-28 10:36:22 jatoivol Exp $
+ * Clique.h $Id: Clique.h,v 1.58 2005-05-02 15:05:34 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -64,7 +64,7 @@ void free_Sepset(Sepset s);
  * - variables[] is an array of the Variables in a suitable order
  * - num_of_vars tells how many variables there are
  * - data[] is the data array in the order according to variables */
-potential create_Potential(Variable variables[], int num_of_vars, 
+potential create_potential(Variable variables[], int num_of_vars, 
 			   double data[]);
 
 

@@ -112,7 +112,7 @@ int main(){
   set_of_variables[0] = variables[2];
   set_of_variables[1] = variables[1];
   set_of_variables[2] = variables[3];
-  model[3] = create_Potential(set_of_variables, 3, potentialC2);
+  model[3] = create_potential(set_of_variables, 3, potentialC2);
 
   /* A test */
   for(i = 0; i < 24; i++)
