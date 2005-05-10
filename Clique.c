@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.115 2005-05-02 15:05:34 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.116 2005-05-10 12:09:06 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1367,8 +1367,8 @@ static void retract_Sepset(Sepset s){
  */
 static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 		      void (*sFuncPointer)(Sepset)){
-  /* a lot of copy-paste from collect/distribute_evidence and clique_search */
 
+  /* a lot of copy-paste from collect/distribute_evidence and clique_search */
   Sepset_link l = start->sepsets;
   Sepset s;
   
@@ -1396,6 +1396,50 @@ static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
     }
     l = l->fwd;
   }
+}
+
+
+/* a recursive dfs of some sort */
+int gather_joint_probability(Clique start, potential target, Variable *vars){
+  
+  /* a lot of copy-paste from jtree_dfs */
+  int i; 
+  //int j = 0, k = 0;
+  //int retval = 0;
+  int *mapping = NULL;
+  //potential temp = NULL;
+  Sepset_link l;
+  Sepset s;
+  
+  if(start == NULL) /* error? */
+    return ERROR_NULLPOINTER;
+
+  l = start->sepsets;
+
+  /* Mark the clique */
+  start->mark = 1;
+
+  /* NOTE: You could do something with the clique here */
+
+  /* Traverse to the neighboring cliques */
+  while (l != NULL){
+    s = (Sepset)(l->data);
+
+    /* try both directions in a neighboring sepset */
+    for(i = 0; i < 2; i++){ 
+      if(!clique_marked(s->cliques[i])){
+	
+	/* NOTE: This is the place for the calculations. */
+	/* Needs a generalised potential multiplication! */
+
+      }
+    }
+
+    l = l->fwd;
+  }
+
+  free(mapping);
+  return NO_ERROR;
 }
 
 

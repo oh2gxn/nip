@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.65 2005-05-02 15:05:35 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.66 2005-05-10 12:09:06 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -89,9 +89,6 @@ static int finish_timeslice_message_pass(Nip model, int direction,
 
 static int e_step(TimeSeries ts, potential* results, double* loglikelihood);
 static int m_step(potential* results, Nip model);
-static int gather_joint_probability(Clique c, 
-				    potential target, 
-				    Variable *vars);
 
 void reset_model(Nip model){
   int i, retval;
@@ -1556,18 +1553,6 @@ potential get_joint_probability(Nip model, Variable *vars, int num_of_vars){
   }
 
   return p;
-}
-
-
-/* TODO: a recursive "gather_probability" of some sort */
-static int gather_joint_probability(Clique c, 
-				    potential target, 
-				    Variable *vars){
-
-  //int i, j = 0, k = 0;
-  //int *mapping;
-  
-  return ERROR_GENERAL; // NOT IMPLEMENTED YET
 }
 
 

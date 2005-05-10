@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.29 2005-03-18 15:40:49 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.30 2005-05-10 12:09:06 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -39,8 +39,7 @@ void inverse_mapping(potential p, int flat_index, int indices[]);
  * from clique to sepset.
  * TAKE CARE OF THE ORDER OF VARIABLES! 
  * -source: the potential to be marginalised
- * -destination: the potential to put the answer into, variables will be 
- *               in the same order
+ * -destination: the potential to put the answer into
  * -mapping: placement of the destination variables in the source potential 
  *           in the same order they appear in the destination potential
  * EXAMPLE: If sepset variables are the second (i.e. 1) and third (i.e. 2) 
@@ -76,7 +75,8 @@ int total_marginalise(potential source, double destination[], int variable);
  * -Returns an error code.
  * 
  * JJT: If denominator is NULL, only the multiplication is done.
- *      If numerator is NULL, and error is reported.
+ *      If numerator is NULL, only the division is done.
+ *      If both are NULL or have different geometry, an error is reported.
  */
 int update_potential(potential numerator, potential denominator, 
 		      potential target, int mapping[]);

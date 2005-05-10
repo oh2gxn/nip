@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.57 2005-04-28 10:36:22 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.58 2005-05-10 12:09:06 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -274,19 +274,25 @@ int update_potential(potential numerator, potential denominator,
   int i;
   int *source_indices = NULL; 
   int *target_indices = NULL;
+  int nvars = 0;
   double *potvalue;
 
-  if(!numerator || 
-     (denominator && (numerator->num_of_vars != denominator->num_of_vars))){
-    /* I hope the logic is "fail fast" and the above evaluation stops 
-     * in time if denominator == NULL ! */
+  if((numerator && denominator && 
+      (numerator->num_of_vars != denominator->num_of_vars)) || 
+     (numerator == NULL && denominator == NULL)){
+    /* I hope the logic behind &&-evaluation is "fail fast" */
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
   }
-  
-  if(numerator->num_of_vars){
-    source_indices = (int *) calloc(numerator->num_of_vars, sizeof(int));
 
+  if(numerator)
+    nvars = numerator->num_of_vars;
+  else
+    nvars = denominator->num_of_vars;
+
+  if(nvars){
+    source_indices = (int *) calloc(nvars, sizeof(int));
+    
     if(!source_indices){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return ERROR_OUTOFMEMORY;
@@ -294,7 +300,9 @@ int update_potential(potential numerator, potential denominator,
   }
   else{ /* when numerator & denominator are scalar */
     for(i = 0; i < target->size_of_data; i++){
-      target->data[i] *= numerator->data[0];
+      if(numerator)
+	target->data[i] *= numerator->data[0];
+
       if(denominator){
 	if(denominator->data[0])
 	  target->data[i] /= denominator->data[0];
@@ -316,16 +324,17 @@ int update_potential(potential numerator, potential denominator,
   /* The general idea is the same as in marginalise */
   for(i = 0; i < target->size_of_data; i++){
     inverse_mapping(target, i, target_indices);
-    choose_indices(target_indices, source_indices, 
-		   mapping, numerator->num_of_vars);
+    choose_indices(target_indices, source_indices, mapping, nvars);
 
-    potvalue = get_ppointer(numerator, source_indices);
-    target->data[i] *= *potvalue;  /* THE multiplication */
+    if(numerator){ /* THE multiplication */
+      potvalue = get_ppointer(numerator, source_indices);
+      target->data[i] *= *potvalue;
+    }
 
-    if(denominator){
+    if(denominator){ /* THE division */
       potvalue = get_ppointer(denominator, source_indices);
       if(*potvalue != 0)
-	target->data[i] /= *potvalue;  /* THE division */
+	target->data[i] /= *potvalue;
       else
 	target->data[i] = 0;  /* see Procedural Guide p. 20 */
     }
