@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.66 2005-05-10 12:09:06 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.67 2005-05-17 11:36:19 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1522,7 +1522,6 @@ double *get_probability(Nip model, Variable v){
 /* TODO: compute a potential describing joint probability distribution of 
  * given variables */
 potential get_joint_probability(Nip model, Variable *vars, int num_of_vars){
-  Clique c;
   potential p;
   int i;
   int *cardinality;
@@ -1545,7 +1544,7 @@ potential get_joint_probability(Nip model, Variable *vars, int num_of_vars){
     unmark_Clique(model->cliques[i]);
 
   /* Make a DFS in the tree... */
-  retval = gather_joint_probability(c, p, vars);
+  retval = gather_joint_probability(model->cliques[0], p, vars);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free_potential(p);
@@ -1557,7 +1556,6 @@ potential get_joint_probability(Nip model, Variable *vars, int num_of_vars){
 
 
 void print_Cliques(Nip model){
-
   int i;
   int num_of_cliques;
   Clique clique_of_interest;

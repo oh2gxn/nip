@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.116 2005-05-10 12:09:06 jatoivol Exp $
+ * Clique.c $Id: Clique.c,v 1.117 2005-05-17 11:36:19 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1431,7 +1431,7 @@ int gather_joint_probability(Clique start, potential target, Variable *vars){
 	
 	/* NOTE: This is the place for the calculations. */
 	/* Needs a generalised potential multiplication! */
-
+	
       }
     }
 
