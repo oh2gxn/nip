@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.1 2005-05-27 13:18:03 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.2 2005-05-27 13:24:16 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1419,7 +1419,7 @@ int gather_joint_probability(clique start, potential target, variable *vars){
   /* Mark the clique */
   start->mark = 1;
 
-  /* NOTE: You could do something with the clique here */
+  /* NOTE: You _could_ do something with the clique here */
 
   /* Traverse to the neighboring cliques */
   while (l != NULL){
@@ -1431,6 +1431,10 @@ int gather_joint_probability(clique start, potential target, variable *vars){
 	
 	/* NOTE: This is the place for the calculations. */
 	/* Needs a generalised potential multiplication! */
+	
+	/* How about a specialized function for this: 
+	 * - calculate mappings here
+	 * - make the operation in potential.c        */
 	
       }
     }
