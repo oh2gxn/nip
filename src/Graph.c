@@ -1,13 +1,13 @@
 /*
- * Graph.c $Id: Graph.c,v 1.45 2005-03-21 12:45:59 jatoivol Exp $
+ * Graph.c $Id: Graph.c,v 1.46 2005-05-27 13:18:03 jatoivol Exp $
  */
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "Graph.h"
-#include "Variable.h"
-#include "Clique.h"
+#include "variable.h"
+#include "clique.h"
 #include "Heap.h"
 #include "cls2clq.h"
 #include "errorhandler.h"
@@ -32,7 +32,7 @@ Graph* new_graph(unsigned n)
 
     memset(newgraph->adj_matrix, 0, n*n*sizeof(int));
 
-    newgraph->variables = (Variable*) calloc(n, sizeof(Variable));
+    newgraph->variables = (variable*) calloc(n, sizeof(variable));
     if(!(newgraph->variables)){
       free(newgraph->adj_matrix);
       free(newgraph);
@@ -53,7 +53,7 @@ Graph* copy_graph(Graph* G)
     G_copy = new_graph(n);
 
     memcpy(G_copy->adj_matrix, G->adj_matrix, n*n*sizeof(int));
-    memcpy(G_copy->variables, G->variables, n*sizeof(Variable));
+    memcpy(G_copy->variables, G->variables, n*sizeof(variable));
     if (G->var_ind == NULL)
         G_copy->var_ind = NULL;
     else
@@ -92,12 +92,12 @@ int get_size(Graph* G)
     return G->size;
 }
 
-Variable* get_variables(Graph* G)
+variable* get_variables(Graph* G)
 {
     return G->variables;
 }
 
-int get_graph_index(Graph* G, Variable v)
+int get_graph_index(Graph* G, variable v)
 {
     int i;
 
@@ -121,7 +121,7 @@ int get_graph_index(Graph* G, Variable v)
     return -1;
 } 
 
-int get_neighbours(Graph* G, Variable* neighbours, Variable V)
+int get_neighbours(Graph* G, variable* neighbours, variable V)
 {
     int i, j;
     int n = get_size(G);
@@ -135,7 +135,7 @@ int get_neighbours(Graph* G, Variable* neighbours, Variable V)
     return j; /* # of neighbours */
 }
 
-int is_child(Graph* G, Variable parent, Variable child)
+int is_child(Graph* G, variable parent, variable child)
 {
     int i,j;
     i = get_graph_index(G, parent); /* XX kts. refaktorointi ylhäältä */
@@ -145,7 +145,7 @@ int is_child(Graph* G, Variable parent, Variable child)
 
 /*** SETTERS ***/
 
-int add_variable(Graph* G, Variable v)
+int add_variable(Graph* G, variable v)
 {
     if (G->top == G->size)
 	   return ERROR_GENERAL; /* Cannot add more items. */
@@ -159,7 +159,7 @@ int add_variable(Graph* G, Variable v)
     return NO_ERROR;
 }
 
-int add_child(Graph* G, Variable parent, Variable child)
+int add_child(Graph* G, variable parent, variable child)
 {
     int parent_i, child_i;
 
@@ -176,7 +176,7 @@ int add_child(Graph* G, Variable parent, Variable child)
 
 /*** OPERATIONS (methods) ***/
 
-/*int varcomp(Variable v1, Variable v2) {
+/*int varcomp(variable v1, variable v2) {
     return get_id(v1) - get_id(v2);
 }*/
 
@@ -247,12 +247,12 @@ Graph* moralise(Graph* G)
 }
 
 /* Not specified in Graph.h -- internal helper function */
-int triangulate(Graph* Gm, Clique** clique_p)
+int triangulate(Graph* Gm, clique** clique_p)
 {
     int i, j, j_index, k, k_index, n;
     int clique_count = 0;
     int cluster_size;
-    Variable* min_cluster;
+    variable* min_cluster;
     Heap* H;
     Cluster_list *cl_head = NULL;
     int* variable_set; /* [i] true, if variable[i] is in the cluster */
@@ -310,7 +310,7 @@ int triangulate(Graph* Gm, Clique** clique_p)
 }
 
 
-int find_cliques(Graph* G, Clique** cliques_p)
+int find_cliques(Graph* G, clique** cliques_p)
 {
     Graph *Gu, *Gm;
     int n_cliques = 0;

@@ -1,11 +1,11 @@
 /*
- * cls2clq.c $Id: cls2clq.c,v 1.1 2005-03-21 12:45:59 jatoivol Exp $
+ * cls2clq.c $Id: cls2clq.c,v 1.2 2005-05-27 13:18:03 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <string.h>
 #include "cls2clq.h"
-#include "Clique.h"
+#include "clique.h"
 
 Cluster_list* new_cl_item(int array_size, Cluster_list* next, int* var_set)
 {
@@ -63,19 +63,19 @@ int is_subset(Cluster_list* cl_head, int* var_set, int size)
     return 0;
 }
 
-Clique* cl2cliques(Variable* vars, Cluster_list* cl_head, int n_cliques, int n)
+clique* cl2cliques(variable* vars, Cluster_list* cl_head, int n_cliques, int n)
 {
     int n_vars, i, j;
     int orig_n_cliques = n_cliques;
     Cluster_list* cl_i;
-    Clique* cliques;
-    Variable* clique_vars;
+    clique* cliques;
+    variable* clique_vars;
 
-    cliques = (Clique*) calloc(n_cliques, sizeof(Clique));
+    cliques = (clique*) calloc(n_cliques, sizeof(clique));
     if(!cliques)
       return NULL;
 
-    clique_vars = (Variable*) calloc(n, sizeof(Variable));
+    clique_vars = (variable*) calloc(n, sizeof(variable));
     if(!clique_vars){
       free(cliques);
       return NULL;
@@ -88,12 +88,12 @@ Clique* cl2cliques(Variable* vars, Cluster_list* cl_head, int n_cliques, int n)
             if (cl_i->variable_set[i])
                 clique_vars[n_vars++] = vars[i];
 
-	   cliques[--n_cliques] = make_Clique(clique_vars, n_vars);
+	   cliques[--n_cliques] = make_clique(clique_vars, n_vars);
 	   /* This ^^^^^^^^^^^ is sort of dangerous. */
 
 	   if(cliques[n_cliques] == NULL){
 	     for(j = n_cliques + 1; j < orig_n_cliques; j++)
-	       free_Clique(cliques[j]);
+	       free_clique(cliques[j]);
 	     free(clique_vars);
 	     free(cliques);
 	     return NULL;

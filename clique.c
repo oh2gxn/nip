@@ -1,5 +1,5 @@
 /*
- * Clique.c $Id: Clique.c,v 1.117 2005-05-17 11:36:19 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.1 2005-05-27 13:18:03 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -8,8 +8,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "Clique.h"
-#include "Variable.h"
+#include "clique.h"
+#include "variable.h"
 #include "potential.h"
 #include "errorhandler.h"
 #include "Heap.h"
@@ -22,32 +22,32 @@
 #define DEBUG_RETRACTION
 */
 
-static int message_pass(Clique c1, Sepset s, Clique c2);
+static int message_pass(clique c1, sepset s, clique c2);
 
-static int var_index(Clique c, Variable v);
+static int var_index(clique c, variable v);
 
-static int clique_search(Clique one, Clique two);
+static int clique_search(clique one, clique two);
 
-static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
-		      void (*sFuncPointer)(Sepset));
+static void jtree_dfs(clique start, void (*cFuncPointer)(clique),
+		      void (*sFuncPointer)(sepset));
 
-static int clique_marked(Clique c);
+static int clique_marked(clique c);
 
-static void retract_Clique(Clique c);
+static void retract_clique(clique c);
 
-static void retract_Sepset(Sepset s);
+static void retract_sepset(sepset s);
 
-static void remove_Sepset(Clique c, Sepset s);
+static void remove_sepset(clique c, sepset s);
 
-Clique make_Clique(Variable vars[], int num_of_vars){
-  Clique c;
+clique make_clique(variable vars[], int num_of_vars){
+  clique c;
   int *cardinality;
   int *reorder;
   int *indices;
   int i, j;
   unsigned long temp;
 
-  c = (Clique) malloc(sizeof(cliquetype));
+  c = (clique) malloc(sizeof(cliquetype));
   if(!c){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -99,7 +99,7 @@ Clique make_Clique(Variable vars[], int num_of_vars){
   for(i = 0; i < num_of_vars; i++)
     reorder[indices[i]] = i; /* fill the reordering */
 
-  c->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
+  c->variables = (variable *) calloc(num_of_vars, sizeof(variable));
   if(!(c->variables)){
     free(c);
     free(cardinality);
@@ -141,10 +141,10 @@ Clique make_Clique(Variable vars[], int num_of_vars){
 }
 
 
-void free_Clique(Clique c){
-  Sepset_link l1, l2;
-  Clique cl1, cl2;
-  Sepset s;
+void free_clique(clique c){
+  sepset_link l1, l2;
+  clique cl1, cl2;
+  sepset s;
 
   if(c == NULL)
     return;
@@ -153,16 +153,16 @@ void free_Clique(Clique c){
   l1 = c->sepsets;
   while(l1 != NULL){
     l2 = l1->fwd;
-    cl1 = ((Sepset)l1->data)->cliques[0];
-    cl2 = ((Sepset)l1->data)->cliques[1];
-    s = (Sepset)l1->data;
+    cl1 = ((sepset)l1->data)->cliques[0];
+    cl2 = ((sepset)l1->data)->cliques[1];
+    s = (sepset)l1->data;
 
-    /* Removes Sepsets from the Cliques. */
-    remove_Sepset(cl1, s);
-    remove_Sepset(cl2, s);
+    /* Removes sepsets from the cliques. */
+    remove_sepset(cl1, s);
+    remove_sepset(cl2, s);
 
-    /* Destroy the Sepset. */
-    free_Sepset(s);
+    /* Destroy the sepset. */
+    free_sepset(s);
 
     l1=l2;
   }
@@ -175,9 +175,9 @@ void free_Clique(Clique c){
 }
 
 
-int add_Sepset(Clique c, Sepset s){
+int add_sepset(clique c, sepset s){
 
-  Sepset_link new = (Sepset_link) malloc(sizeof(element));
+  sepset_link new = (sepset_link) malloc(sizeof(element));
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
@@ -194,8 +194,8 @@ int add_Sepset(Clique c, Sepset s){
 }
 
 
-static void remove_Sepset(Clique c, Sepset s){
-  Sepset_link l;
+static void remove_sepset(clique c, sepset s){
+  sepset_link l;
 
   if(!(c && s)){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -203,7 +203,7 @@ static void remove_Sepset(Clique c, Sepset s){
   }
   l = c->sepsets;
   while(l != NULL){
-    if(((Sepset)l->data) == s){
+    if(((sepset)l->data) == s){
 
       if(l->bwd == NULL)
 	c->sepsets = l->fwd;
@@ -225,16 +225,16 @@ static void remove_Sepset(Clique c, Sepset s){
 /*
  * ATTENTION! Check what this does when num_of_vars == 0.
  */
-Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
+sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
 
-  Sepset s;
+  sepset s;
   int *cardinality = NULL;
   int *reorder = NULL;
   int *indices = NULL;
   int i, j;
   unsigned long temp;
 
-  s = (Sepset) malloc(sizeof(sepsettype));
+  s = (sepset) malloc(sizeof(sepsettype));
 
   if(!s){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -272,7 +272,7 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
     indices = NULL;
   }
 
-  s->cliques = (Clique *) calloc(2, sizeof(Clique));
+  s->cliques = (clique *) calloc(2, sizeof(clique));
 
   if(!s->cliques){
     free(s);
@@ -284,7 +284,7 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
   }
 
   if(num_of_vars){
-    s->variables = (Variable *) calloc(num_of_vars, sizeof(Variable));
+    s->variables = (variable *) calloc(num_of_vars, sizeof(variable));
     if(!s->variables){
       free(cardinality);
       free(reorder);
@@ -352,7 +352,7 @@ Sepset make_Sepset(Variable vars[], int num_of_vars, Clique cliques[]){
 }
 
 
-void free_Sepset(Sepset s){
+void free_sepset(sepset s){
 
   if(s){
     if(s->old->num_of_vars)
@@ -368,14 +368,14 @@ void free_Sepset(Sepset s){
 }
 
 
-potential create_potential(Variable variables[], int num_of_vars, 
+potential create_potential(variable variables[], int num_of_vars, 
 			   double data[]){
   /*
-   * Suppose we get an array of Variables with IDs {5, 2, 3, 4, 0, 1}.
+   * Suppose we get an array of variables with IDs {5, 2, 3, 4, 0, 1}.
    * In this case, temp_array will be              {5, 2, 3, 4, 0, 1},
    * and reorder will be                           {4, 5, 1, 2, 3, 0}.
    *
-   * If we get Variables with IDs                  {6, 9, 3, 1, 5, 8},
+   * If we get variables with IDs                  {6, 9, 3, 1, 5, 8},
    * temp_array will be                            {3, 5, 1, 0, 2, 4},
    * and reorder will be                           {3, 2, 4, 0, 5, 1}.
    *
@@ -384,9 +384,9 @@ potential create_potential(Variable variables[], int num_of_vars,
    * the variables[] array than the ID of variables[i]
    *
    * reorder is an array {x_0, x_1, ..., x_N-1}, where x_i is
-   * the index in variables[] of the Variable with the (i+1) -smallest ID.
+   * the index in variables[] of the variable with the (i+1) -smallest ID.
    * For example, x_0 tells us where in the original array we can find
-   * the Variable with the smallest ID.
+   * the variable with the smallest ID.
    */
 
   int i, j, card_temp, index, size_of_data = 1;
@@ -479,7 +479,7 @@ potential create_potential(Variable variables[], int num_of_vars,
       /*
        * Now this is the trickiest part.
        * Find out indices (in the internal order of the program,
-       * determined by the Variable IDs).
+       * determined by the variable IDs).
        */
       inverse_mapping(p, i, indices); 
 
@@ -507,7 +507,7 @@ potential create_potential(Variable variables[], int num_of_vars,
 }
 
 
-double *reorder_potential(Variable vars[], potential p){
+double *reorder_potential(variable vars[], potential p){
 
   int old_flat_index, new_flat_index;
   int i, j;
@@ -634,7 +634,7 @@ double *reorder_potential(Variable vars[], potential p){
 }
 
 
-void unmark_Clique(Clique c){
+void unmark_clique(clique c){
   if(c != NULL)
     c->mark = 0;
   return;
@@ -644,30 +644,30 @@ void unmark_Clique(Clique c){
 /*
  * Returns 0 if clique is not marked, 1 if it is. (This could be a macro...)
  */
-static int clique_marked(Clique c){
+static int clique_marked(clique c){
   return c->mark;
 }
 
 
-int clique_num_of_vars(Clique c){
+int clique_num_of_vars(clique c){
   return c->p->num_of_vars; /* macro? */
 }
 
 
-int sepset_num_of_vars(Sepset s){
+int sepset_num_of_vars(sepset s){
   return s->old->num_of_vars; /* macro? */
 }
 
 
-int distribute_evidence(Clique c){
+int distribute_evidence(clique c){
 
   int retval;
-  Sepset_link l;
-  Sepset s;
+  sepset_link l;
+  sepset s;
 
 #ifdef DEBUG_CLIQUE
   printf("Distributing evidence in ");
-  print_Clique(c);
+  print_clique(c);
 #endif
 
   /* mark */
@@ -716,11 +716,11 @@ int distribute_evidence(Clique c){
 }
 
 
-int collect_evidence(Clique c1, Sepset s12, Clique c2){
+int collect_evidence(clique c1, sepset s12, clique c2){
 
   int retval;
-  Sepset_link l;
-  Sepset s;
+  sepset_link l;
+  sepset s;
 
   /* mark */
   c2->mark = 1;
@@ -755,9 +755,9 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
 #ifdef DEBUG_CLIQUE
   if(c1 != NULL && c2 != NULL){
     printf("Collecting evidence from ");
-    print_Clique(c2);
+    print_clique(c2);
     printf(" to ");
-    print_Clique(c1);
+    print_clique(c1);
   }
 #endif
 
@@ -767,10 +767,10 @@ int collect_evidence(Clique c1, Sepset s12, Clique c2){
 
 /*
  * Method for passing messages between cliques.
- * The message goes from Clique c1 through Sepset s to Clique c2.
+ * The message goes from clique c1 through sepset s to clique c2.
  * Returns an error code.
  */
-static int message_pass(Clique c1, Sepset s, Clique c2){
+static int message_pass(clique c1, sepset s, clique c2){
   int i, j = 0, k = 0;
   int retval;
   int *mapping;
@@ -802,7 +802,7 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
       }
   }
 
-  /* Information flows from Clique c1 to Sepset s. */
+  /* Information flows from clique c1 to sepset s. */
   retval = general_marginalise(c1->p, s->new, mapping);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -826,7 +826,7 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
       }
   }
 
-  /* Information flows from Sepset s to Clique c2. */
+  /* Information flows from sepset s to clique c2. */
   retval = update_potential(s->new, s->old, c2->p, mapping);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -840,12 +840,12 @@ static int message_pass(Clique c1, Sepset s, Clique c2){
 }
 
 
-int initialise(Clique c, Variable child, potential p, int transient){
+int initialise(clique c, variable child, potential p, int transient){
   int i, j = 0, k = 0;
   int *mapping = NULL;
   int retval;
-  Variable var = NULL;
-  Variable* parents = get_parents(child);
+  variable var = NULL;
+  variable* parents = get_parents(child);
 
   if(p->num_of_vars < c->p->num_of_vars){
     mapping = (int *) calloc(p->num_of_vars, sizeof(int));
@@ -903,11 +903,11 @@ int initialise(Clique c, Variable child, potential p, int transient){
 }
 
 
-int marginalise(Clique c, Variable v, double r[]){
+int marginalise(clique c, variable v, double r[]){
   int index = var_index(c, v);
   int retval;
 
-  /* Variable not in this Clique => ERROR */
+  /* variable not in this clique => ERROR */
   if(index == -1){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
@@ -934,19 +934,19 @@ void normalise(double result[], int array_size){
 }
 
 
-int global_retraction(Variable* vars, int nvars, Clique* cliques, 
+int global_retraction(variable* vars, int nvars, clique* cliques, 
 		      int ncliques){
 
   int i, index;
   int retval;
-  Variable v;
-  Clique c;
+  variable v;
+  clique c;
 
   for(index = 0; index < ncliques; index++)
-    unmark_Clique(cliques[index]);
+    unmark_clique(cliques[index]);
 
   /* Reset all the potentials back to original. */
-  jtree_dfs(cliques[0], retract_Clique, retract_Sepset);
+  jtree_dfs(cliques[0], retract_clique, retract_sepset);
 
   /* Enter evidence back to the join tree. */
   for(i = 0; i < nvars; i++){
@@ -965,16 +965,16 @@ int global_retraction(Variable* vars, int nvars, Clique* cliques,
 }
 
 
-int enter_observation(Variable* vars, int nvars, Clique* cliques, 
-		      int ncliques, Variable v, char *state){
+int enter_observation(variable* vars, int nvars, clique* cliques, 
+		      int ncliques, variable v, char *state){
   int index = get_stateindex(v, state);
 
   return enter_i_observation(vars, nvars, cliques, ncliques, v, index);
 }
 
 
-int enter_i_observation(Variable* vars, int nvars, Clique* cliques, 
-			int ncliques, Variable v, int index){
+int enter_i_observation(variable* vars, int nvars, clique* cliques, 
+			int ncliques, variable v, int index){
   int i, retval;
   double *evidence = (double *) calloc(v->cardinality, sizeof(double));
 
@@ -996,12 +996,12 @@ int enter_i_observation(Variable* vars, int nvars, Clique* cliques,
 }
 
 
-int enter_evidence(Variable* vars, int nvars, Clique* cliques, 
-		   int ncliques, Variable v, double evidence[]){
+int enter_evidence(variable* vars, int nvars, clique* cliques, 
+		   int ncliques, variable v, double evidence[]){
   int index, i;
   int retraction = 0;
   int retval;
-  Clique c;
+  clique c;
 
   if(v == NULL || evidence == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -1052,10 +1052,10 @@ int enter_evidence(Variable* vars, int nvars, Clique* cliques,
 
 
 /*
- * Method for checking if Variable v is part of Clique c.
- * Returns -1 if not, else the index of v among the Variables in c.
+ * Method for checking if variable v is part of clique c.
+ * Returns -1 if not, else the index of v among the variables in c.
  */
-static int var_index(Clique c, Variable v){
+static int var_index(clique c, variable v){
   int var = 0;
 
   if(!(c && v)){
@@ -1066,24 +1066,24 @@ static int var_index(Clique c, Variable v){
   while(!equal_variables(v, c->variables[var])){
     var++;
     if(var == c->p->num_of_vars)
-      /* Variable not in this Clique => -1 */
+      /* variable not in this clique => -1 */
       return -1;
   }
   return var;
 }
 
 
-Clique find_family(Clique *cliques, int num_of_cliques, Variable var){
+clique find_family(clique *cliques, int num_of_cliques, variable var){
   int i, n;
-  Variable *family = NULL;
-  Clique found;
+  variable *family = NULL;
+  clique found;
 
   /* NOTE: uses memoization for finding families */
   if(var->family_clique != NULL)
-    return (Clique)(var->family_clique);
+    return (clique)(var->family_clique);
 
   n = number_of_parents(var);
-  family = (Variable*) calloc(n + 1, sizeof(Variable));
+  family = (variable*) calloc(n + 1, sizeof(variable));
   if(!family){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -1100,7 +1100,7 @@ Clique find_family(Clique *cliques, int num_of_cliques, Variable var){
 }
 
 
-int* find_family_mapping(Clique family, Variable child){
+int* find_family_mapping(clique family, variable child){
   int i, j, n, p;
   int *result = NULL;
 
@@ -1138,8 +1138,8 @@ int* find_family_mapping(Clique family, Variable child){
 }
 
 
-Clique find_clique(Clique *cliques, int num_of_cliques, 
-		   Variable *variables, int num_of_vars){
+clique find_clique(clique *cliques, int num_of_cliques, 
+		   variable *variables, int num_of_vars){
   int i, j, k;
   int ok;
 
@@ -1162,12 +1162,12 @@ Clique find_clique(Clique *cliques, int num_of_cliques,
 }
 
 
-int find_sepsets(Clique *cliques, int num_of_cliques){
+int find_sepsets(clique *cliques, int num_of_cliques){
 
   int inserted = 0;
   int i;
-  Sepset s;
-  Clique one, two;
+  sepset s;
+  clique one, two;
 
 #ifdef DEBUG_CLIQUE
   int j, k;
@@ -1197,32 +1197,32 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 
     /* Unmark MUST be done before searching (clique_search). */
     for(i = 0; i < num_of_cliques; i++)
-      unmark_Clique(cliques[i]);
+      unmark_clique(cliques[i]);
 
-    /* Prevent loops by checking if the Cliques
+    /* Prevent loops by checking if the cliques
      * are already in the same tree. */
     if(!clique_search(one, two)){
 
-      mark_useful_Sepset(H, s); /* MVK */
+      mark_useful_sepset(H, s); /* MVK */
 
 #ifdef DEBUG_CLIQUE
-      printf("In Clique.c: Trying to add ");
-      print_Sepset(s);
+      printf("In clique.c: Trying to add ");
+      print_sepset(s);
 
       printf(" to ");
-      print_Clique(one);
+      print_clique(one);
 
       printf(" and ");
-      print_Clique(two);
+      print_clique(two);
 #endif
 
-      if(add_Sepset(one, s) != NO_ERROR){
+      if(add_sepset(one, s) != NO_ERROR){
 	free_heap(H);
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
       }
 	
-      if(add_Sepset(two, s) != NO_ERROR){
+      if(add_sepset(two, s) != NO_ERROR){
 	free_heap(H);
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
@@ -1241,19 +1241,19 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 
       /* Unmark MUST be done before searching (clique_search). */
       for(k = 0; k < num_of_cliques; k++)
-	unmark_Clique(cliques[k]);
+	unmark_clique(cliques[k]);
 
       if(!clique_search(cliques[i], cliques[j])){
 	ok = 0;
 	printf("No connection between ");
-	print_Clique(cliques[i]);
+	print_clique(cliques[i]);
 
 	printf(" and ");
-	print_Clique(cliques[j]);
+	print_clique(cliques[j]);
       }
     }
   if(ok)
-    printf("All connections between Cliques are OK!\n");
+    printf("All connections between cliques are OK!\n");
 #endif
 
   return NO_ERROR;
@@ -1262,17 +1262,17 @@ int find_sepsets(Clique *cliques, int num_of_cliques){
 
 
 /*
- * Finds out if two Cliques are in the same tree.
+ * Finds out if two cliques are in the same tree.
  * Returns 1 if they are, 0 if not.
- * Cliques must be unmarked before calling this.
+ * cliques must be unmarked before calling this.
  */
-static int clique_search(Clique one, Clique two){
-  Sepset_link l = one->sepsets;
-  Sepset s;
+static int clique_search(clique one, clique two){
+  sepset_link l = one->sepsets;
+  sepset s;
 
 #ifdef DEBUG_CLIQUE
   printf("clique_search in ");
-  print_Clique(one);
+  print_clique(one);
 #endif
 
   if(one == NULL || two == NULL) /* normal situation or an error? */
@@ -1287,14 +1287,14 @@ static int clique_search(Clique one, Clique two){
 
 #ifdef DEBUG_CLIQUE
   if(l == NULL){
-    printf("In Clique.c: No Sepsets attached to ");
-    print_Clique(one);
+    printf("In clique.c: No sepsets attached to ");
+    print_clique(one);
   }
 #endif
 
   /* call neighboring cliques */
   while (l != NULL){
-    s = (Sepset)(l->data);
+    s = (sepset)(l->data);
     if(!clique_marked(s->cliques[0])){
 #ifdef DEBUG_CLIQUE
       printf("In clique_search: s->cliques[0] not marked.\n");
@@ -1316,11 +1316,11 @@ static int clique_search(Clique one, Clique two){
 }
 
 
-void print_Clique(Clique c){
+void print_clique(clique c){
 
   int i;
 
-  printf("Clique ");
+  printf("clique ");
   for(i = 0; i < c->p->num_of_vars; i++)
     printf("%s ", c->variables[i]->symbol);
   printf("\n");
@@ -1328,10 +1328,10 @@ void print_Clique(Clique c){
 }
 
 
-void print_Sepset(Sepset s){
+void print_sepset(sepset s){
   int i;
 
-  printf("Sepset ");
+  printf("sepset ");
   for(i = 0; i < s->old->num_of_vars; i++)
     printf("%s ", s->variables[i]->symbol);
   printf("\n");
@@ -1339,7 +1339,7 @@ void print_Sepset(Sepset s){
 }
 
 
-static void retract_Clique(Clique c){
+static void retract_clique(clique c){
   int i;
 
   for(i = 0; i < c->p->size_of_data; i++)
@@ -1347,7 +1347,7 @@ static void retract_Clique(Clique c){
 }
 
 
-static void retract_Sepset(Sepset s){
+static void retract_sepset(sepset s){
   int i;
 
   for(i = 0; i < s->old->size_of_data; i++){
@@ -1359,18 +1359,18 @@ static void retract_Sepset(Sepset s){
 
 /*
  * A generic function for traversing the join tree. 
- * Cliques must be unmarked before calling this.
+ * cliques must be unmarked before calling this.
  * Parameters:
  * - a clique where the DFS starts
- * - a function pointer to the function to be used for every Clique on the way
- * - a function pointer to the function to be used for every Sepset on the way
+ * - a function pointer to the function to be used for every clique on the way
+ * - a function pointer to the function to be used for every sepset on the way
  */
-static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
-		      void (*sFuncPointer)(Sepset)){
+static void jtree_dfs(clique start, void (*cFuncPointer)(clique),
+		      void (*sFuncPointer)(sepset)){
 
   /* a lot of copy-paste from collect/distribute_evidence and clique_search */
-  Sepset_link l = start->sepsets;
-  Sepset s;
+  sepset_link l = start->sepsets;
+  sepset s;
   
   if(start == NULL) /* error? */
     return;
@@ -1383,7 +1383,7 @@ static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 
   /* call neighboring cliques */
   while (l != NULL){
-    s = (Sepset)(l->data);
+    s = (sepset)(l->data);
     if(!clique_marked(s->cliques[0])){
       if(sFuncPointer)
 	sFuncPointer(s);
@@ -1400,7 +1400,7 @@ static void jtree_dfs(Clique start, void (*cFuncPointer)(Clique),
 
 
 /* a recursive dfs of some sort */
-int gather_joint_probability(Clique start, potential target, Variable *vars){
+int gather_joint_probability(clique start, potential target, variable *vars){
   
   /* a lot of copy-paste from jtree_dfs */
   int i; 
@@ -1408,8 +1408,8 @@ int gather_joint_probability(Clique start, potential target, Variable *vars){
   //int retval = 0;
   int *mapping = NULL;
   //potential temp = NULL;
-  Sepset_link l;
-  Sepset s;
+  sepset_link l;
+  sepset s;
   
   if(start == NULL) /* error? */
     return ERROR_NULLPOINTER;
@@ -1423,7 +1423,7 @@ int gather_joint_probability(Clique start, potential target, Variable *vars){
 
   /* Traverse to the neighboring cliques */
   while (l != NULL){
-    s = (Sepset)(l->data);
+    s = (sepset)(l->data);
 
     /* try both directions in a neighboring sepset */
     for(i = 0; i < 2; i++){ 
@@ -1443,18 +1443,18 @@ int gather_joint_probability(Clique start, potential target, Variable *vars){
 }
 
 
-int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
+int clique_intersection(clique cl1, clique cl2, variable **vars, int *n){
 
   int i, j;
   int max_vars = cl2->p->num_of_vars;
   int realsize = 0;
-  Variable *isect;
-  Variable *shaved_isect;
+  variable *isect;
+  variable *shaved_isect;
 
   if(cl1->p->num_of_vars < max_vars)
     max_vars = cl1->p->num_of_vars;
 
-  isect = (Variable *) calloc(max_vars, sizeof(Variable));
+  isect = (variable *) calloc(max_vars, sizeof(variable));
 
   if(!isect){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -1478,7 +1478,7 @@ int clique_intersection(Clique cl1, Clique cl2, Variable **vars, int *n){
 
   /* Intersection is non-empty, realsize > 0 */
 
-  shaved_isect = (Variable *) calloc(realsize, sizeof(Variable));
+  shaved_isect = (variable *) calloc(realsize, sizeof(variable));
 
   if(!shaved_isect){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);

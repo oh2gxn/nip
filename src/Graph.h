@@ -1,12 +1,12 @@
 /*
- * Graph.h $Id: Graph.h,v 1.20 2004-08-12 10:49:00 jatoivol Exp $
+ * Graph.h $Id: Graph.h,v 1.21 2005-05-27 13:18:03 jatoivol Exp $
  */
 
 #ifndef __GRAPH_H__
 #define __GRAPH_H__
 
-#include "Variable.h"
-#include "Clique.h"
+#include "variable.h"
+#include "clique.h"
 
 #define ADJM(G, i, j) ( (G)->adj_matrix[(i)*(G)->size + (j)] )
 
@@ -15,7 +15,7 @@ typedef struct {
     unsigned long* var_ind;
     unsigned long min_id;
     unsigned long max_id;
-    Variable* variables;
+    variable* variables;
     unsigned size;
     int top;
 } Graph; 
@@ -40,18 +40,18 @@ int get_size(Graph* G);
  * Parameter G: the graph
  */
 
-Variable* get_variables(Graph* G);
+variable* get_variables(Graph* G);
 /* Returns the variables used in Graph G;
  * Parameter G: the graph
  */
 
-int get_graph_index(Graph* G, Variable v);
+int get_graph_index(Graph* G, variable v);
 /* Returns the index of v in the variable-array 
  * Parameter G: the graph
  * Parameter v: the variable
  */
 
-int get_neighbours(Graph* G, Variable* neighbours, Variable v);
+int get_neighbours(Graph* G, variable* neighbours, variable v);
 /* Returns the number of neighbours of v.
  * Parameter G: the graph
  * Parameter neighbours: a pointer to a variable array
@@ -59,20 +59,20 @@ int get_neighbours(Graph* G, Variable* neighbours, Variable v);
  * Parameter v: the variable 
  */
 
-int is_child(Graph* G, Variable parent, Variable child);
+int is_child(Graph* G, variable parent, variable child);
 /* Returns true, if there is a link from parent to child
  * Parameter G: the graph
  * Parameter parent: the suspected parent
  * Parameter child: the suspected child
  */
 
-int add_variable(Graph* G, Variable v);
+int add_variable(Graph* G, variable v);
 /* Adds a new variable (ie. a node) to the graph. 
  * Parameter G: the graph
  * Parameter v: the variable to be added
  */
 
-int add_child(Graph* G, Variable parent, Variable child);
+int add_child(Graph* G, variable parent, variable child);
 /* Adds a child to a parent, ie. a dependence.
  * Parameter G: the graph
  * Parameter parent: the parent-variable
@@ -86,7 +86,7 @@ Graph* moralise(Graph* G);
  * Does not modify G.
  */
 
-int find_cliques(Graph* G, Clique** cliques_p);
+int find_cliques(Graph* G, clique** cliques_p);
 /* Triangulates G and finds the cliques.
  * Parameter G: moralised undirected graph
  * Parameter cliques_p: pointer to a clique array
@@ -96,5 +96,5 @@ int find_cliques(Graph* G, Clique** cliques_p);
 
 /* Internal helper */
 Graph* make_undirected(Graph* G);
-int triangulate(Graph* Gm, Clique** clique_p);
+int triangulate(Graph* Gm, clique** clique_p);
 #endif /* __GRAPH_H__ */

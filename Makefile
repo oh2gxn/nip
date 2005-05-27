@@ -1,10 +1,10 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.39 2005-05-02 15:05:34 jatoivol Exp $
+# $Id: Makefile,v 1.40 2005-05-27 13:18:03 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
 POT_SRCS=potential.c errorhandler.c
-CLI_SRCS=$(POT_SRCS) Variable.c Clique.c
+CLI_SRCS=$(POT_SRCS) variable.c clique.c
 GRPH_SRCS=$(CLI_SRCS) cls2clq.c Heap.c Graph.c
 PAR_SRCS=$(GRPH_SRCS) fileio.c parser.c
 HUG_DEFS=huginnet.y

@@ -1,11 +1,11 @@
 /*
- * Variable.c $Id: Variable.c,v 1.53 2005-04-09 01:28:45 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.1 2005-05-27 13:18:04 jatoivol Exp $
  */
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "Variable.h"
+#include "variable.h"
 #include "potential.h"
 #include "errorhandler.h"
 
@@ -13,13 +13,13 @@ static varlink nip_first_var = NULL;
 static varlink nip_last_var = NULL;
 static int nip_vars_parsed = 0;
 
-static int variable_name(Variable v, const char *name);
+static int variable_name(variable v, const char *name);
 
 
 /*
- * Gives the Variable a verbose name.
+ * Gives the variable a verbose name.
  */
-static int variable_name(Variable v, const char *name){
+static int variable_name(variable v, const char *name){
   if(!name)
     return ERROR_NULLPOINTER; /* possibly a normal situation */
   strncpy(v->name, name, VAR_NAME_LENGTH);
@@ -28,17 +28,17 @@ static int variable_name(Variable v, const char *name){
 }
 
 
-Variable new_variable(const char* symbol, const char* name, 
+variable new_variable(const char* symbol, const char* name, 
 		      char** states, int cardinality){
   /* NOTE: This id-stuff may overflow if variables are created and 
    * freed over and over again. */
   static long id = VAR_MIN_ID;
   int i, j;
   double *dpointer;
-  Variable v;
+  variable v;
   varlink new;
 
-  v = (Variable) malloc(sizeof(vtype));
+  v = (variable) malloc(sizeof(vtype));
   if(!v){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -125,14 +125,14 @@ Variable new_variable(const char* symbol, const char* name,
 }
 
 
-Variable copy_variable(Variable v){
+variable copy_variable(variable v){
   int i;
-  Variable copy;
+  variable copy;
 
   if(v == NULL)
     return NULL;
 
-  copy = (Variable) malloc(sizeof(vtype));
+  copy = (variable) malloc(sizeof(vtype));
   if(!copy){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -146,7 +146,7 @@ Variable copy_variable(Variable v){
 
   copy->num_of_parents = v->num_of_parents;
   if(v->parents){
-    copy->parents = (Variable*) calloc(v->num_of_parents, sizeof(Variable));
+    copy->parents = (variable*) calloc(v->num_of_parents, sizeof(variable));
     if(!(copy->parents)){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free(copy);
@@ -174,7 +174,7 @@ Variable copy_variable(Variable v){
 }
 
 
-void free_variable(Variable v){
+void free_variable(variable v){
   int i;
   if(v == NULL)
     return;
@@ -189,28 +189,28 @@ void free_variable(Variable v){
 }
 
 
-int equal_variables(Variable v1, Variable v2){
+int equal_variables(variable v1, variable v2){
   if(v1 && v2)
     return (v1->id == v2->id);
   return 0; /* FALSE if nullpointers */
 }
 
 
-unsigned long get_id(Variable v){
+unsigned long get_id(variable v){
   if(v)
     return v->id;
   return 0;
 }
 
 
-char *get_symbol(Variable v){
+char *get_symbol(variable v){
   if(v)
     return v->symbol;
   return NULL;
 }
 
 
-int get_stateindex(Variable v, char *state){
+int get_stateindex(variable v, char *state){
   int i;
   if(!v->statenames)
     return -1;
@@ -236,15 +236,15 @@ varlink get_last_variable(){
 }
 
 
-void reset_Variable_list(){
+void reset_variable_list(){
   nip_first_var = NULL;
   nip_last_var = NULL;
   nip_vars_parsed = 0;
 }
 
 
-Variable next_Variable(Variable_iterator* it){
-  Variable v;
+variable next_variable(variable_iterator* it){
+  variable v;
   if(*it){
     v = (*it)->data;
     *it = (*it)->fwd;
@@ -255,18 +255,18 @@ Variable next_Variable(Variable_iterator* it){
 }
 
 
-Variable get_parser_variable(char *symbol){
+variable get_parser_variable(char *symbol){
 
-  Variable v; 
-  Variable_iterator it = nip_first_var; /* a private copy */
-  v = next_Variable(&it);
+  variable v; 
+  variable_iterator it = nip_first_var; /* a private copy */
+  v = next_variable(&it);
 
   if(v == NULL)
     return NULL; /* didn't find the variable (possibly normal) */
   
   /* search for the variable reference */
   while(strcmp(symbol, v->symbol) != 0){
-    v = next_Variable(&it);
+    v = next_variable(&it);
     if(v == NULL){
       return NULL; /* didn't find the variable (a normal situation) */
     }
@@ -276,10 +276,10 @@ Variable get_parser_variable(char *symbol){
 
 }
 
-Variable get_variable(Variable* vars, int nvars, char *symbol){
+variable get_variable(variable* vars, int nvars, char *symbol){
 
   int i;
-  Variable v; 
+  variable v; 
   
   /* search for the variable reference */
   for(i = 0; i < nvars; i++){
@@ -292,7 +292,7 @@ Variable get_variable(Variable* vars, int nvars, char *symbol){
 }
 
 
-int update_likelihood(Variable v, double likelihood[]){
+int update_likelihood(variable v, double likelihood[]){
 
   int i;
   if(v == NULL){
@@ -307,7 +307,7 @@ int update_likelihood(Variable v, double likelihood[]){
 }
 
 
-void reset_likelihood(Variable v){
+void reset_likelihood(variable v){
   int i;
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -319,7 +319,7 @@ void reset_likelihood(Variable v){
 }
 
 
-int number_of_values(Variable v){
+int number_of_values(variable v){
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return -1;
@@ -328,7 +328,7 @@ int number_of_values(Variable v){
 }
 
 
-int number_of_parents(Variable v){
+int number_of_parents(variable v){
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return -1;
@@ -337,7 +337,7 @@ int number_of_parents(Variable v){
 }
 
 
-int set_parents(Variable v, Variable *parents, int nparents){
+int set_parents(variable v, variable *parents, int nparents){
   int i;
   if(v == NULL || (nparents > 0 && parents == NULL)){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -347,7 +347,7 @@ int set_parents(Variable v, Variable *parents, int nparents){
   free(v->parents); /* in case it previously had parents */
   
   if(nparents > 0){
-    v->parents = (Variable *) calloc(nparents, sizeof(Variable));
+    v->parents = (variable *) calloc(nparents, sizeof(variable));
     if(!(v->parents)){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return ERROR_OUTOFMEMORY;
@@ -362,7 +362,7 @@ int set_parents(Variable v, Variable *parents, int nparents){
 }
 
 
-Variable* get_parents(Variable v){
+variable* get_parents(variable v){
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return NULL;
@@ -371,7 +371,7 @@ Variable* get_parents(Variable v){
 }
 
 
-int set_prior(Variable v, double* prior){
+int set_prior(variable v, double* prior){
   int i;
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -389,7 +389,7 @@ int set_prior(Variable v, double* prior){
 }
 
 
-double* get_prior(Variable v){
+double* get_prior(variable v){
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return NULL;
@@ -398,20 +398,20 @@ double* get_prior(Variable v){
 }
 
 
-Variable *sort_variables(Variable *vars, int num_of_vars){
+variable *sort_variables(variable *vars, int num_of_vars){
 
   /* Selection sort (simple, fast enough) */
 
   int i, j;
-  Variable *sorted;
-  Variable temp;
+  variable *sorted;
+  variable temp;
 
   if(num_of_vars < 1){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
-  sorted = (Variable *) calloc(num_of_vars, sizeof(Variable));
+  sorted = (variable *) calloc(num_of_vars, sizeof(variable));
 
   if(!sorted){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);

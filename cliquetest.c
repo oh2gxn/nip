@@ -1,4 +1,4 @@
-#include "Clique.h"
+#include "clique.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -8,10 +8,10 @@ int main(){
 
   /* create the variables 
    * normally this information would be found in a file and parsed */
-  Variable variables[5];
-  Variable parentsA[2];
-  Variable parentsC[2];
-  Variable parentsE[1];
+  variable variables[5];
+  variable parentsA[2];
+  variable parentsC[2];
+  variable parentsE[1];
   char nameA[] = "einari";
   char nameB[] = "jalmari";
   char nameC[] = "jokke";
@@ -52,13 +52,13 @@ int main(){
 
   /* create some cliques and sepsets (with too many shortcuts...) 
    * This is normally the job of the graph implementation. */
-  Clique clique_pile[3];
-  Sepset sepset_pile[2];
+  clique clique_pile[3];
+  sepset sepset_pile[2];
 
   /* initialization: This information is usually parsed from a file. */
   potential model[4]; /* the fourth potential is extra */
 
-  Variable set_of_variables[3];
+  variable set_of_variables[3];
 
   statesA[0] = "a1";
   statesA[1] = "a2";
@@ -82,16 +82,16 @@ int main(){
   variables[3] = new_variable("D", nameD, statesD, 3);
   variables[4] = new_variable("E", nameE, statesE, 2);
 
-  clique_pile[0] = make_Clique(variables, 3);
-  clique_pile[1] = make_Clique(&(variables[1]), 3);
-  clique_pile[2] = make_Clique(&(variables[3]), 2);
+  clique_pile[0] = make_clique(variables, 3);
+  clique_pile[1] = make_clique(&(variables[1]), 3);
+  clique_pile[2] = make_clique(&(variables[3]), 2);
 
-  sepset_pile[0] = make_Sepset(&(variables[1]), 2, &(clique_pile[0]));
-  sepset_pile[1] = make_Sepset(&(variables[3]), 1, &(clique_pile[1]));
-  add_Sepset(clique_pile[0], sepset_pile[0]);
-  add_Sepset(clique_pile[1], sepset_pile[0]);
-  add_Sepset(clique_pile[1], sepset_pile[1]);
-  add_Sepset(clique_pile[2], sepset_pile[1]);
+  sepset_pile[0] = make_sepset(&(variables[1]), 2, &(clique_pile[0]));
+  sepset_pile[1] = make_sepset(&(variables[3]), 1, &(clique_pile[1]));
+  add_sepset(clique_pile[0], sepset_pile[0]);
+  add_sepset(clique_pile[1], sepset_pile[0]);
+  add_sepset(clique_pile[1], sepset_pile[1]);
+  add_sepset(clique_pile[2], sepset_pile[1]);
 
   cardinality[0] = 3;
   cardinality[1] = 4;
@@ -145,11 +145,11 @@ int main(){
 
   /* propagation: some action */
   for(i = 0; i < 3; i++)
-    unmark_Clique(clique_pile[i]);
+    unmark_clique(clique_pile[i]);
   collect_evidence(NULL, NULL, clique_pile[1]);
 
   for(i = 0; i < 3; i++)
-    unmark_Clique(clique_pile[i]);
+    unmark_clique(clique_pile[i]);
   distribute_evidence(clique_pile[1]);
 
   /* DEBUG */

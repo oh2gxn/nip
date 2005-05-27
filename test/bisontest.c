@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "parser.h"
-#include "Clique.h"
-#include "Variable.h"
+#include "clique.h"
+#include "variable.h"
 #include "potential.h"
 #include "errorhandler.h"
 
@@ -32,18 +32,18 @@
 extern int yyparse();
 
 /*
- * Calculate the probability distribution of Variable "var".
- * The family of var must be among the Cliques in cliques[]
+ * Calculate the probability distribution of variable "var".
+ * The family of var must be among the cliques in cliques[]
  * (the size of which is num_of_cliques).
  * This function allocates memory for the array "result". The size of
  * the array is returned in "size_of_result".
  */
 static void test_probability(double **result, int *size_of_result,
-			     Variable var, Clique cliques[],
+			     variable var, clique cliques[],
 			     int num_of_cliques){
 
-  /* Find the Clique that contains the family of the interesting Variable. */
-  Clique clique_of_interest = find_family(cliques, num_of_cliques, var);
+  /* Find the clique that contains the family of the interesting variable. */
+  clique clique_of_interest = find_family(cliques, num_of_cliques, var);
   if(!clique_of_interest){
     printf("In bisontest.c : No clique found! Sorry.\n");
     *size_of_result = 0;
@@ -70,10 +70,10 @@ static void test_probability(double **result, int *size_of_result,
 
 #ifdef EVIDENCE
 /*
- * Enter some evidence of Variable "observed".
+ * Enter some evidence of variable "observed".
  */
-static void test_evidence(Variable* vars, int nvars, Clique* cliques, 
-			  int num_of_cliques, Variable observed, 
+static void test_evidence(variable* vars, int nvars, clique* cliques, 
+			  int num_of_cliques, variable observed, 
 			  double data[]){
 
 #ifdef DEBUG_BISONTEST
@@ -91,7 +91,7 @@ static void test_evidence(Variable* vars, int nvars, Clique* cliques,
   evidence_retval = enter_evidence(vars, nvars, cliques, num_of_cliques, 
 				   observed, data);
   printf("\n\nEntered evidence into ");
-  print_Clique(clique_of_interest);
+  print_clique(clique_of_interest);
   printf("enter_evidence returned %d.\n", evidence_retval);
 #endif /* DEBUG_BISONTEST */
 
@@ -108,11 +108,11 @@ int main(int argc, char *argv[]){
   
   double* result;
 
-  Clique *nip_cliques;
+  clique *nip_cliques;
 
-  Variable interesting;
-  Variable* vars;
-  Variable_iterator nip_first_var;
+  variable interesting;
+  variable* vars;
+  variable_iterator nip_first_var;
 
 #ifdef PRINT_POTENTIALS
   int j;
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]){
 
 #endif /* EVIDENCE_SOTKU */
 
-  Variable observed[3];
+  variable observed[3];
   double *probs[3];
 #endif /* EVIDENCE */
 
@@ -184,23 +184,23 @@ int main(int argc, char *argv[]){
   nip_num_of_cliques = get_num_of_cliques();
   nip_first_var = get_first_variable();
   nvars = total_num_of_vars();
-  vars = (Variable*) calloc(nvars, sizeof(Variable));
+  vars = (variable*) calloc(nvars, sizeof(variable));
   
   for(i = 0; i < nvars; i++)
-    vars[i] = next_Variable(&nip_first_var);
+    vars[i] = next_variable(&nip_first_var);
 
 #ifdef PRINT_JOINTREE
-  jtree_dfs(nip_cliques[0], print_Clique, print_Sepset);
+  jtree_dfs(nip_cliques[0], print_clique, print_Sepset);
 #endif
 
 
   /* *********************************************************** */
 #ifdef PRINT_POTENTIALS
   for(i = 0; i < nip_num_of_cliques; i++){
-    printf("In bisontest.c : Clique of ");
+    printf("In bisontest.c : clique of ");
     for(j = 0; j < clique_num_of_vars(nip_cliques[i]) - 1; j++)
-      printf("%s ", get_symbol(clique_get_Variable(nip_cliques[i], j)));
-    printf("and %s.\n", get_symbol(clique_get_Variable(nip_cliques[i], j)));
+      printf("%s ", get_symbol(clique_get_variable(nip_cliques[i], j)));
+    printf("and %s.\n", get_symbol(clique_get_variable(nip_cliques[i], j)));
     
     print_potential(nip_cliques[i]->p);
   }
@@ -241,11 +241,11 @@ int main(int argc, char *argv[]){
 
   /* a propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
+    unmark_clique(nip_cliques[i]);
   collect_evidence(NULL, NULL, nip_cliques[0]);
 
   for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
+    unmark_clique(nip_cliques[i]);
   distribute_evidence(nip_cliques[0]);
 
 
@@ -259,7 +259,7 @@ int main(int argc, char *argv[]){
   interesting = get_variable(vars, nvars, var_name);
 
   if(!interesting){
-    printf("In bisontest.c : Variable %s not found.\n", var_name);
+    printf("In bisontest.c : variable %s not found.\n", var_name);
     return 1;
   }
 
@@ -298,11 +298,11 @@ int main(int argc, char *argv[]){
 
   /* a propagation */
   for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
+    unmark_clique(nip_cliques[i]);
   collect_evidence(NULL, NULL, nip_cliques[0]);
 
   for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_Clique(nip_cliques[i]);
+    unmark_clique(nip_cliques[i]);
   distribute_evidence(nip_cliques[0]);
 
   if(argc > 2)
@@ -313,7 +313,7 @@ int main(int argc, char *argv[]){
   interesting = get_variable(vars, nvars, var_name);
     
   if(!interesting){
-    printf("In bisontest.c : Variable %s not found.\n", var_name);
+    printf("In bisontest.c : variable %s not found.\n", var_name);
     return 1;
   }
 

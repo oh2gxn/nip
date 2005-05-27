@@ -3,13 +3,13 @@
 #include <assert.h>
 #include <string.h>
 #include "Graph.h"
-#include "Variable.h"
-#include "Clique.h"
+#include "variable.h"
+#include "clique.h"
 #include "potential.h"
 
 void print_adjm(Graph* G)
 {
-	Variable* v;
+	variable* v;
 	int i,j,n;
 
 	v = get_variables(G);
@@ -28,8 +28,8 @@ void print_adjm(Graph* G)
 Graph* test1(void)
 {
     Graph *G;
-    Variable v[4];
-    Variable *w;
+    variable v[4];
+    variable *w;
     char symbol[VAR_SYMBOL_LENGTH]; /* MVK: Must reserve some memory (?)*/
     char name[VAR_NAME_LENGTH];     /* AR: True. IRIX has a black magic sprintf. */
     /* char *symbol, *name; */
@@ -44,7 +44,7 @@ Graph* test1(void)
     for (i = 0; i < 5; i++)
     {
         sprintf(symbol, "var%d", i);
-        sprintf(name, "Variable %d", i);
+        sprintf(name, "variable %d", i);
         v[i] = new_variable(symbol, name, NULL, 2);
         assert(add_variable(G, v[i])==0);
     }
@@ -65,7 +65,7 @@ Graph* test1(void)
 
 void test2(Graph* G)
 {
-    Variable* v = get_variables(G);
+    variable* v = get_variables(G);
     
     printf("\tTest 2... add_child, is_child\n");
 
@@ -92,7 +92,7 @@ void test2(Graph* G)
 void test3(Graph* G)
 {
     Graph* Gc;
-    Variable *v, *w;
+    variable *v, *w;
     int i,j;
     
     printf("\tTest 3... copy_graph\n");
@@ -113,7 +113,7 @@ void test3(Graph* G)
 void test4(Graph* G)
 {
     Graph *Gu;
-    Variable *v;
+    variable *v;
     int i,j,n;
     
     printf("\tTest 4... make_undirected\n");
@@ -141,7 +141,7 @@ void test4(Graph* G)
 void test5(Graph* G)
 {
     Graph *Gm;
-    Variable *v;
+    variable *v;
     int i,j,n;
     printf("\tTest 5... moralise\n");
     Gm = moralise(G);
@@ -161,8 +161,8 @@ Graph* test6()
 {
 	Graph *G, *Gu, *Gm;
 	int i,n=8;
-	Clique* cliques;
-	Variable v[8];
+	clique* cliques;
+	variable v[8];
 	
 	printf("\tTest 6... triangulation\n");
 	G = new_graph(n);
@@ -200,15 +200,15 @@ Graph* test6()
 
 void test7(Graph* G)
 {
-	Clique* cliques;
-	Clique ci;
+	clique* cliques;
+	clique ci;
 	int i, j, n_cliques, n_vars;
 	
 	printf("\tTest 7... find_cliques\n");
 	n_cliques = find_cliques(G, &cliques);
 	for (i = 0; i < n_cliques; i++)
 	{
-		printf("\t\tClique %i: ", i);
+		printf("\t\tclique %i: ", i);
 		ci = cliques[i];
 		n_vars = ci->p->num_of_vars;
 		for (j = 0; j < n_vars; j++)

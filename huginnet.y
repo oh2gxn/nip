@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.57 2005-05-02 15:05:34 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.58 2005-05-27 13:18:04 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Clique.h"
-#include "Variable.h"
+#include "clique.h"
+#include "variable.h"
 #include "parser.h"
 #include "errorhandler.h"
 
@@ -27,7 +27,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
   double *doublearray;
   char *name;
   char **stringarray;
-  Variable variable;
+  variable variable;
 }
 
 /******************************************************************/
@@ -135,7 +135,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   char *nip_next;
   char *label = get_nip_label();
   char **states = get_nip_statenames();
-  Variable v = new_variable($2, label, states, get_nip_strings_parsed());
+  variable v = new_variable($2, label, states, get_nip_strings_parsed());
 
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -209,9 +209,9 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' { free($1); }
 potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}' { 
   int i;
   int retval;
-  Variable *vars = (Variable*) calloc(get_nip_symbols_parsed() + 1,
-				      sizeof(Variable));
-  Variable *parents = make_variable_array();
+  variable *vars = (variable*) calloc(get_nip_symbols_parsed() + 1,
+				      sizeof(variable));
+  variable *parents = make_variable_array();
   double *doubles = $8;
 
   if(!(parents && vars)){
@@ -241,7 +241,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 }
 |                     token_potential '(' child ')' '{' dataList '}' {
   int retval;
-  Variable vars[1];
+  variable vars[1];
   double *doubles = $6;
   vars[0] = $3;
   retval = add_initData(create_potential(vars, 1, doubles), vars[0], NULL); 
@@ -254,7 +254,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 }
 |                     token_potential '(' child ')' '{' '}' {
   int retval;
-  Variable vars[1];
+  variable vars[1];
   vars[0] = $3;
   retval = add_initData(create_potential(vars, 1, NULL), vars[0], NULL); 
   if(retval != NO_ERROR){

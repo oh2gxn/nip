@@ -1,5 +1,5 @@
 /*
- * Variable.h $Id: Variable.h,v 1.44 2005-04-09 01:28:45 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.1 2005-05-27 13:18:04 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -35,64 +35,64 @@ struct nip_var {
 };
 
 typedef struct nip_var vtype;
-typedef vtype *Variable;
+typedef vtype *variable;
 
 
 struct varlist {
-  Variable data;
+  variable data;
   struct varlist *fwd;
   struct varlist *bwd;
 };
 
 typedef struct varlist varelement;
 typedef varelement *varlink;
-typedef varlink Variable_iterator;
+typedef varlink variable_iterator;
 
-/* Creates a new Variable:
+/* Creates a new variable:
  * - symbol is a short name e.g. A (= array [A, \0])
  * - name is a more verbose name e.g. "rain" or NULL 
  * - states is an array of strings containing the state names or NULL
  * - cardinality is the number of states/values the variable has */
-Variable new_variable(const char* symbol, const char* name, 
+variable new_variable(const char* symbol, const char* name, 
 		      char** states, int cardinality);
 
 
-/* Function for copying a Variable (if needed). Handle with care.
- * v: the Variable to be copied
+/* Function for copying a variable (if needed). Handle with care.
+ * v: the variable to be copied
  * Returns the copy.
  */
-Variable copy_variable(Variable v);
+variable copy_variable(variable v);
 
 
-/* Frees the memory used by the Variable v. NOTE: REMEMBER TO REMOVE 
+/* Frees the memory used by the variable v. NOTE: REMEMBER TO REMOVE 
  * THE VARIABLE FROM ALL POSSIBLE LISTS TOO. */
-void free_variable(Variable v);
+void free_variable(variable v);
 
 
 /* Method for testing variable equality. 
  * This may be needed to keep potentials in order. INEQUALITIES ???
  */
-int equal_variables(Variable v1, Variable v2);
+int equal_variables(variable v1, variable v2);
 
 
 /* An alternative interface for keeping variables 
  * and thus the potentials in order.
  */
-unsigned long get_id(Variable v);
+unsigned long get_id(variable v);
 
 
-/* Returns the symbol of the Variable (a reference). It is a string 
+/* Returns the symbol of the variable (a reference). It is a string 
  * (or NULL if nullpointer given). */
-char *get_symbol(Variable v);
+char *get_symbol(variable v);
 
 
 /* Gives the numerical representation of the variable state. 
- * Numbers are [0 ... <cardinality-1>] or -1 if the Variable doesn't have
+ * Numbers are [0 ... <cardinality-1>] or -1 if the variable doesn't have
  * such a state. This function is needed when parsing data. */
-int get_stateindex(Variable v, char *state);
+int get_stateindex(variable v, char *state);
 
 
-/* Tells the length of the list of Variables. */
+/* Tells the length of the list of variables. */
 int total_num_of_vars();
 
 
@@ -104,60 +104,60 @@ varlink get_last_variable();
 
 
 /* Call this after a model is parsed from a file and is ready. */
-void reset_Variable_list();
+void reset_variable_list();
 
 
-/* Gives the next Variable in the list of Variables. Returns NULL when 
+/* Gives the next variable in the list of variables. Returns NULL when 
  * the end of list is reached. */
-Variable next_Variable(Variable_iterator *it);
+variable next_variable(variable_iterator *it);
 
 
 /* Gets the parsed variable according to the symbol. */
-Variable get_variable(Variable* vars, int nvars, char *symbol);
+variable get_variable(variable* vars, int nvars, char *symbol);
 
 /* Gets the variable according to the symbol (when parsing). */
-Variable get_parser_variable(char *symbol);
+variable get_parser_variable(char *symbol);
 
 /* Gives v a new likelihood array. The size of the array
  * must match v->cardinality. Returns an error code.
  */
-int update_likelihood(Variable v, double likelihood[]);
+int update_likelihood(variable v, double likelihood[]);
 
 
 /* Sets a uniform likelihood for v. */
-void reset_likelihood(Variable v);
+void reset_likelihood(variable v);
 
 
-/* Returns the number of possible values in the Variable v. (-1 if v == NULL)
+/* Returns the number of possible values in the variable v. (-1 if v == NULL)
  */
-int number_of_values(Variable v);
+int number_of_values(variable v);
 
 
-/* Tells how many parents the Variable has. */
-int number_of_parents(Variable v);
+/* Tells how many parents the variable has. */
+int number_of_parents(variable v);
 
 
-/* Sets the parents for the Variable v. */
-int set_parents(Variable v, Variable *parents, int nparents);
+/* Sets the parents for the variable v. */
+int set_parents(variable v, variable *parents, int nparents);
 
 
-/* Tells which Variables (*p) are the parents of the Variable v. */
-Variable* get_parents(Variable v);
+/* Tells which variables (*p) are the parents of the variable v. */
+variable* get_parents(variable v);
 
 
-/* Sets the prior for an (independent) Variable v. You SHOULD not 
+/* Sets the prior for an (independent) variable v. You SHOULD not 
  * set a prior for a variable which has parents. */
-int set_prior(Variable v, double* prior);
+int set_prior(variable v, double* prior);
 
 
 /* Tells the prior distribution of a variable. 
  * (NULL if v depends on others) */
-double* get_prior(Variable v);
+double* get_prior(variable v);
 
 
-/* Returns a new array (allocates memory!) that contains the given Variables
+/* Returns a new array (allocates memory!) that contains the given variables
  * in ascending order according to their ID number.
  */
-Variable *sort_variables(Variable *vars, int num_of_vars);
+variable *sort_variables(variable *vars, int num_of_vars);
 
 #endif /* __VARIABLE_H__ */

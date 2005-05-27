@@ -1,21 +1,21 @@
 /*
- * Heap.h $Id: Heap.h,v 1.6 2005-03-21 12:45:59 jatoivol Exp $
+ * Heap.h $Id: Heap.h,v 1.7 2005-05-27 13:18:03 jatoivol Exp $
  */
 
 #ifndef __HEAP_H__
 #define __HEAP_H__
 
-#include "Variable.h"
+#include "variable.h"
 #include "Graph.h"
-#include "Clique.h"
+#include "clique.h"
 
 #define PARENT(i) ((i-1)/2)
 #define LEFT(i) (2*i+1)
 #define RIGHT(i) (2*(i+1))
 
 typedef struct {
-    Variable* Vs; /* Vs[0] is the variable in the array, rest are neighbours*/
-    Sepset s;
+    variable* Vs; /* Vs[0] is the variable in the array, rest are neighbours*/
+    sepset s;
     int n; /* size (always at least 1) */
 
     int primary_key;
@@ -29,19 +29,19 @@ typedef struct {
     /* AR: S'on heapin käyttämän taulukon koko. Ei liene tarpeellinen,
      * ellei sitten heappia tuhottaessa. */
     int orig_size;
-    Sepset *useless_sepsets; /* MVK */
+    sepset *useless_sepsets; /* MVK */
 } Heap;
 
 Heap* build_heap(Graph* Gm);
 
-Heap* build_sepset_heap(Clique* cliques, int num_of_cliques);
+Heap* build_sepset_heap(clique* cliques, int num_of_cliques);
 
-int extract_min(Heap* H, Graph* G, Variable** cluster_vars);
+int extract_min(Heap* H, Graph* G, variable** cluster_vars);
 
-int extract_min_sepset(Heap* H, Sepset* sepset);
+int extract_min_sepset(Heap* H, sepset* sepset);
 
 void free_heap(Heap* H);
 
-void mark_useful_Sepset(Heap* H, Sepset s);
+void mark_useful_sepset(Heap* H, sepset s);
 
 #endif /* __HEAP_H__ */

@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Clique.h"
+#include "clique.h"
 #include "Graph.h"
-#include "Variable.h"
+#include "variable.h"
 #include "potential.h"
 #include "parser.h"
 #include "nip.h"
@@ -23,19 +23,19 @@ int main(int argc, char *argv[]){
     0.5, 0.3, 0.1, 0.6, 0.9, 31, 235, 3523.24, 7657,
     0.2, 3.7, 9.8, 1.4, 5.5, 17, 918, 4798.28, 1111
   };
-  Variable vars[3];
+  variable vars[3];
   varlink first, last;
   char **symbols;
   char **names;
   char ***states;
   potential p;
-  Clique cl[2];
-  Clique *cl2 = NULL;
-  Sepset s;
+  clique cl[2];
+  clique *cl2 = NULL;
+  sepset s;
   Graph *g;
 
 #ifdef LOPUT
-  Nip model;
+  nip model;
   datafile* dataf;
 #endif
 
@@ -101,15 +101,15 @@ int main(int argc, char *argv[]){
 
   printf("\nAllocating and freeing variables:\n");
   for(i = 0; i < n; i++){
-    /* Create Variables */
+    /* Create variables */
     new_variable(symbols[0], names[0], states[0], cardinality[0]);
     new_variable(symbols[1], names[1], states[1], cardinality[1]);
     new_variable(symbols[2], names[2], states[2], cardinality[2]);
     printf("\rIteration %d of %d                               ", i + 1, n);
-    /* Free Variables */
+    /* Free variables */
     first = get_first_variable();
     last = get_last_variable();
-    reset_Variable_list();
+    reset_variable_list();
     while(first != NULL){
       free_variable(first->data);
       first = first->fwd;
@@ -124,18 +124,18 @@ int main(int argc, char *argv[]){
   vars[1] = new_variable(symbols[1], names[1], states[1], cardinality[1]);
   vars[2] = new_variable(symbols[2], names[2], states[2], cardinality[2]);
 
-  printf("\nAllocating and freeing Cliques:\n");
+  printf("\nAllocating and freeing cliques:\n");
   for(i = 0; i < n; i++){
     /* Create two cliques and a sepset */
-    cl[0] = make_Clique(vars, 2);
-    cl[1] = make_Clique(vars+1, 2);
-    s = make_Sepset(vars+1, 1, cl);
-    add_Sepset(cl[0], s);
-    add_Sepset(cl[1], s);
+    cl[0] = make_clique(vars, 2);
+    cl[1] = make_clique(vars+1, 2);
+    s = make_sepset(vars+1, 1, cl);
+    add_sepset(cl[0], s);
+    add_sepset(cl[1], s);
     printf("\rIteration %d of %d                               ", i + 1, n);
     /* Free the cliques (and the sepset, automatically) */
-    free_Clique(cl[0]);
-    free_Clique(cl[1]);
+    free_clique(cl[0]);
+    free_clique(cl[1]);
   }
   printf("\rDone.                                             \n");
 
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]){
     printf("\rIteration %d of %d                               ", i + 1, n);
     free_graph(g);
     for(j = 0; j < num_of_cliques; j++)
-      free_Clique(cl2[j]);
+      free_clique(cl2[j]);
     free(cl2);
   }
   printf("\rDone.                                             \n");
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]){
   /* Free some memory */
   first = get_first_variable();
   last = get_last_variable();
-  reset_Variable_list();
+  reset_variable_list();
   while(first != NULL){
     free_variable(first->data);
     first = first->fwd;

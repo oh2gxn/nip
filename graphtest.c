@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Graph.h"
-#include "Variable.h"
+#include "variable.h"
 
 int main(){
   
@@ -28,7 +28,7 @@ int main(){
   char *states_c[] = {"h", "i"};
   char *states_d[] = {"j", "k", "l"};
   char *states_e[] = {"m", "n"};
-  Variable *variables = (Variable *) calloc(5, sizeof(Variable));
+  variable *variables = (variable *) calloc(5, sizeof(variable));
 
   /* Nyt on meillä verkko... Koko? */
   printf("Size of graph is %d.\n", get_size(gr));

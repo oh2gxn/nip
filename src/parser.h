@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser and for other parsers.
- * $Id: parser.h,v 1.38 2005-04-11 14:42:50 jatoivol Exp $
+ * $Id: parser.h,v 1.39 2005-05-27 13:18:04 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -13,8 +13,8 @@
  */
 #define COMMENT_CHAR '%'
 
-#include "Clique.h"
-#include "Variable.h"
+#include "clique.h"
+#include "variable.h"
 #include "potential.h"
 #include "Graph.h"
 #include <stdio.h>
@@ -39,8 +39,8 @@ typedef stringelement *stringlink;
 
 struct initDataList {
   potential data;
-  Variable child;
-  Variable* parents;
+  variable child;
+  variable* parents;
   struct initDataList *fwd;
   struct initDataList *bwd;
 };
@@ -49,7 +49,7 @@ typedef struct initDataList initDataElement;
 typedef initDataElement *initDataLink;
 
 struct time_init_list {
-  Variable var;
+  variable var;
   char* next;
   struct time_init_list *fwd;
 };
@@ -133,17 +133,17 @@ char *next_token(int *token_length);
 
 /* Adds a variable into a list for creating an array. The variable is 
  * chosen from THE list of variables according to the given symbol. */
-int add_symbol(Variable v);
+int add_symbol(variable v);
 
 
 /* Adds a potential and the correspondent variable references into a list.
  * The "ownership" of the vars[] array changes! */
-int add_initData(potential p, Variable child, Variable* parents);
+int add_initData(potential p, variable child, variable* parents);
 
 
 /* Adds information about the time relations between "time slices".
  */
-int add_time_init(Variable var, char* next);
+int add_time_init(variable var, char* next);
 
 
 /* Adds a number into the list of parsed numbers. */
@@ -156,7 +156,7 @@ int add_string(char* string);
 
 /* Creates an array from the variable references in the temp list. 
  * The size will be symbols_parsed. */
-Variable* make_variable_array();
+variable* make_variable_array();
 
 
 /* Creates an array from the double values in the list. 
@@ -200,7 +200,7 @@ void init_new_Graph();
 int parsedVars2Graph();
 
 
-/* Adds time relations to Variables.
+/* Adds time relations to variables.
  */
 int time2Vars();
 
@@ -210,7 +210,7 @@ int time2Vars();
 int Graph2JTree();
 
 
-/* Initialises the join tree (Clique array) with parsed potentials. 
+/* Initialises the join tree (clique array) with parsed potentials. 
  * NOTE: the priors of independent variables are not entered into the 
  * join tree (as evidence), but are stored into the variable though.
  * Returns an error code. (0 is O.K.) */
@@ -239,8 +239,8 @@ int get_nip_strings_parsed();
 
 int get_num_of_cliques();
 
-Clique **get_cliques_pointer();
+clique **get_cliques_pointer();
 
-void reset_Clique_array();
+void reset_clique_array();
 
 #endif /* __PARSER_H__ */

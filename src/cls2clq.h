@@ -1,11 +1,11 @@
 /*
- * cls2clq.h $Id: cls2clq.h,v 1.1 2005-03-21 12:45:59 jatoivol Exp $
+ * cls2clq.h $Id: cls2clq.h,v 1.2 2005-05-27 13:18:03 jatoivol Exp $
  */
 
 #ifndef __CLS2CLQ_H__
 #define __CLS2CLQ_H__
 
-#include "Clique.h"
+#include "clique.h"
 
 struct clustlist {
     struct clustlist* next;
@@ -27,7 +27,7 @@ int is_subset(Cluster_list* cl_head, int* var_set, int size);
 /*
  */
 
-Clique* cl2cliques(Variable* vars, Cluster_list* cl_head, int n_cliques,int n);
+clique* cl2cliques(variable* vars, Cluster_list* cl_head, int n_cliques,int n);
 /*
  */
 

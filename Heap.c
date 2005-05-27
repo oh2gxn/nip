@@ -1,9 +1,9 @@
 /*
- * Heap.c $Id: Heap.c,v 1.10 2005-03-21 12:45:59 jatoivol Exp $
+ * Heap.c $Id: Heap.c,v 1.11 2005-05-27 13:18:03 jatoivol Exp $
  */
 
 #include <stdlib.h>
-#include "Variable.h"
+#include "variable.h"
 #include "Graph.h"
 #include "Heap.h"
 #include "errorhandler.h"
@@ -11,15 +11,15 @@
 #include <stdio.h>
 #include <string.h>
 
-static void free_useless_Sepsets(Heap *H);
+static void free_useless_sepsets(Heap *H);
 static int lessthan(Heap_item h1, Heap_item h2);
 static void heapify(Heap* H, int i);
-static int get_heap_index(Heap* H, Variable v);
+static int get_heap_index(Heap* H, variable v);
 static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G);
-static int edges_added(Graph* G, Variable* vs, int n);
-static int cluster_weight(Variable* vs, int n);
+static int edges_added(Graph* G, variable* vs, int n);
+static int cluster_weight(variable* vs, int n);
 
-static int edges_added(Graph* G, Variable* vs, int n)
+static int edges_added(Graph* G, variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
 
@@ -37,7 +37,7 @@ static int edges_added(Graph* G, Variable* vs, int n)
     return sum; /* Number of links to add */
 }
 
-static int cluster_weight(Variable* vs, int n)
+static int cluster_weight(variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
     int i, prod = 1;
@@ -55,7 +55,7 @@ Heap* build_heap(Graph* Gm)
     int i,j, n;
 
     Heap_item* hi;
-    Variable* Vs_temp;
+    variable* Vs_temp;
 
     Heap* H = (Heap*) malloc(sizeof(Heap));
     if(!H)
@@ -63,7 +63,7 @@ Heap* build_heap(Graph* Gm)
 
     n = get_size(Gm);
 
-    Vs_temp = (Variable*) calloc(n, sizeof(Variable));
+    Vs_temp = (variable*) calloc(n, sizeof(variable));
     if(!Vs_temp){
       free(H);
       return NULL;
@@ -88,7 +88,7 @@ Heap* build_heap(Graph* Gm)
            get_size(G) units of memory.
         */
 
-	hi->Vs = (Variable *) calloc(hi->n, sizeof(Variable));
+	hi->Vs = (variable *) calloc(hi->n, sizeof(variable));
 	if(!(hi->Vs)){
 	  free(Vs_temp);
 	  for(j = 0; j < i; j++)
@@ -115,15 +115,15 @@ Heap* build_heap(Graph* Gm)
     return H;
 }
 
-Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
+Heap* build_sepset_heap(clique* cliques, int num_of_cliques)
 {
     int i,j, k = 0;
     int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
     int hi_index = 0;
     int isect_size;
     int retval;
-    Clique neighbours[2];
-    Variable *isect;
+    clique neighbours[2];
+    variable *isect;
 
     Heap_item* hi;
 
@@ -140,14 +140,14 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
     H->heap_size = n;
     H->orig_size = n;
 
-    H->useless_sepsets = (Sepset *) calloc(n, sizeof(Sepset));
+    H->useless_sepsets = (sepset *) calloc(n, sizeof(sepset));
     if(!H->useless_sepsets){
       free(H->heap_items);
       free(H);
       return NULL;
     }
     
-    /* Go through each pair of Cliques. Create candidate Sepsets. */
+    /* Go through each pair of cliques. Create candidate sepsets. */
     for(i = 0; i < num_of_cliques - 1; i++)
 
       for(j = i + 1; j < num_of_cliques; j++){
@@ -156,21 +156,21 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
 	neighbours[0] = cliques[i];
 	neighbours[1] = cliques[j];
 
-	/* Take the intersection of two Cliques. */
+	/* Take the intersection of two cliques. */
 	retval = clique_intersection(cliques[i], cliques[j],
 				     &isect, &isect_size);
 
 	if(retval != 0)
 	  return NULL;
 
-	hi->s = make_Sepset(isect, isect_size, neighbours);
+	hi->s = make_sepset(isect, isect_size, neighbours);
 
-	/* In case of failure, free all Sepsets and the Heap. */
+	/* In case of failure, free all sepsets and the Heap. */
 	if(!(hi->s)){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	  for(k = 0; k < hi_index - 1; k++){
 	    hi = &(H->heap_items[k]);
-	    free_Sepset(hi->s);
+	    free_sepset(hi->s);
 	    hi->s = NULL;
 	  }
 	  for(k = 0; k < n; k++)
@@ -180,7 +180,7 @@ Heap* build_sepset_heap(Clique* cliques, int num_of_cliques)
 	  return NULL;
 	}
 
-	/* Initially, all Sepsets are marked as useless (to be freed later) */
+	/* Initially, all sepsets are marked as useless (to be freed later) */
 	H->useless_sepsets[k++] = hi->s;
 
 	free(isect);
@@ -237,7 +237,7 @@ static void heapify(Heap* H, int i)
     } while (flag);
 }
 
-int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
+int extract_min(Heap* H, Graph* G, variable** cluster_vars)
 {
     Heap_item min;	/* Cluster with smallest weight */
     int i, heap_i;
@@ -275,7 +275,7 @@ int extract_min(Heap* H, Graph* G, Variable** cluster_vars)
     return min.n; /* Cluster size*/
 }
 
-int extract_min_sepset(Heap* H, Sepset* sepset)
+int extract_min_sepset(Heap* H, sepset* sepset)
 {
     Heap_item min;	/* Cluster with smallest weight */
 
@@ -301,8 +301,8 @@ int extract_min_sepset(Heap* H, Sepset* sepset)
     return 0;
 }
 
-/* Called by find_sepsets when a Sepset is accepted to the join tree. */
-void mark_useful_Sepset(Heap* H, Sepset s){
+/* Called by find_sepsets when a sepset is accepted to the join tree. */
+void mark_useful_sepset(Heap* H, sepset s){
 
   int i, n;
 
@@ -320,10 +320,10 @@ void mark_useful_Sepset(Heap* H, Sepset s){
   return;
 }
 
-static void free_useless_Sepsets(Heap *H){
+static void free_useless_sepsets(Heap *H){
 
   int i, n;
-  Sepset s;
+  sepset s;
 
   if(!H || !(H->useless_sepsets))
     return;
@@ -333,11 +333,11 @@ static void free_useless_Sepsets(Heap *H){
   for(i = 0; i < n; i++){
     s = H->useless_sepsets[i];
     if(s != NULL)
-      free_Sepset(s);
+      free_sepset(s);
   }
 }
 
-static int get_heap_index(Heap* H, Variable v)
+static int get_heap_index(Heap* H, variable v)
 {
     /* Finds the heap element that contains the variable v */
     /* Linear search, but at the moment the only option */
@@ -355,13 +355,13 @@ static int get_heap_index(Heap* H, Variable v)
 static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 {
     int i, j, n_vars = 0, n_total;
-    Variable v_i, V_removed = min_cluster->Vs[0];
-    Variable* cluster_vars;
+    variable v_i, V_removed = min_cluster->Vs[0];
+    variable* cluster_vars;
 
     /* Copy all variables in hi and min_cluster together.
        Copy hi first, because Vs[0] must be the generating node */
     n_total = hi->n + min_cluster->n;
-    cluster_vars = (Variable*) calloc(n_total, sizeof(Variable));
+    cluster_vars = (variable*) calloc(n_total, sizeof(variable));
     if(!cluster_vars)
       return;
 
@@ -370,9 +370,9 @@ static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
       for (i = 0; i < min_cluster->n; i++)
       cluster_vars[hi->n +i] = min_cluster[i];*/
 
-    memcpy(cluster_vars, hi->Vs, hi->n*sizeof(Variable));
+    memcpy(cluster_vars, hi->Vs, hi->n*sizeof(variable));
     memcpy(cluster_vars+hi->n, min_cluster->Vs, 
-	   min_cluster->n*sizeof(Variable));
+	   min_cluster->n*sizeof(variable));
 		
     /* Remove duplicates and min_vs[0] */
     for (i = 0; i < n_total; i++)
@@ -393,13 +393,13 @@ static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 
     free(hi->Vs);
 
-    hi->Vs = (Variable*) calloc(n_vars, sizeof(Variable));
+    hi->Vs = (variable*) calloc(n_vars, sizeof(variable));
     if(!(hi->Vs)){
       free(cluster_vars);
       return;
     }
 
-    memcpy(hi->Vs, cluster_vars, n_vars*sizeof(Variable));
+    memcpy(hi->Vs, cluster_vars, n_vars*sizeof(variable));
 
     free(cluster_vars);
 
@@ -426,7 +426,7 @@ void free_heap(Heap* H){
     hi->Vs = NULL;
   }
 
-  free_useless_Sepsets(H);
+  free_useless_sepsets(H);
   
   free(H->heap_items);
   free(H->useless_sepsets);

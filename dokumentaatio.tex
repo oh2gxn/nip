@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: dokumentaatio.tex,v 1.46 2005-05-02 15:05:34 jatoivol Exp $
+% $Id: dokumentaatio.tex,v 1.47 2005-05-27 13:18:03 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -154,19 +154,19 @@ the quantitative relationship in the following sections.
 \subsection{The functionality description}
 
 \subsubsection{The data structure}
-The data type \cdatatype{Variable} defined in \cfilename{Variable.h} 
+The data type \cdatatype{variable} defined in \cfilename{variable.h} 
 is a pointer to a struct which has the following fields: 
 \begin{description}
 \item[symbol] is a short string used for identifying the variable. Maximum
   length is defined as \cdefine{VAR\_SYMBOL\_LENGTH} in 
-  \cfilename{Variable.h}. To ensure the correct operation of the system, the 
+  \cfilename{variable.h}. To ensure the correct operation of the system, the 
   symbol should be unique.
 
 \item[name] is usually a longer name to describe the variable: it is
   called {\it label} in the Hugin net language files. This is NOT used for 
   identification of the variables and it doesn't need to be unique. 
   The maximum length is defined as \cdefine{VAR\_NAME\_LENGTH} in 
-  \cfilename{Variable.h}.
+  \cfilename{variable.h}.
 
 \item[statenames] is an array of strings containing names for all
   possible states of the variable. The identification of data relies on
@@ -200,7 +200,7 @@ is a pointer to a struct which has the following fields:
   \examplecode{b->previous == a}.
 
 \item[parents] is an array of references to the parent variables 
-  (\examplecode{Variable[]}) or a null pointer if there are no parents.
+  (\examplecode{variable[]}) or a null pointer if there are no parents.
 
 \item[num\_of\_parents] is a positive \cdatatype{integer} which tells the 
   number of parents and thus the size of the \cstructfield{parents} array.
@@ -211,8 +211,8 @@ is a pointer to a struct which has the following fields:
 
 \end{description}
 
-\cfilename{Variable.h} provides also data types for implementing lists of
-variables. Both \cdatatype{varlink} and \cdatatype{Variable\_iterator} are
+\cfilename{variable.h} provides also data types for implementing lists of
+variables. Both \cdatatype{varlink} and \cdatatype{variable\_iterator} are
 pointers to structs which contain following fields:
 \begin{description}
 \item[data] is the variable (i.e. pointer to a variable struct) 
@@ -226,14 +226,14 @@ at the end of the list.
 \end{description}
 Variable iterators are meant to be used the same way as list iterators
 in Java: you can get the next element contained by the list by just 
-calling \examplecode{next\_Variable(iterator)}. On the other hand, iterators
+calling \examplecode{next\_variable(iterator)}. On the other hand, iterators
 are NOT meant to be the only reference to a list because it will
 advance in the list, pointing always to the next element and eventually
 be a null pointer.
 
 
 \subsubsection{The functions}
-The functions provided in \cfilename{Variable.c} are
+The functions provided in \cfilename{variable.c} are
 %The interface + how the stuff works...
 \begin{description}
 \item[new\_variable(symbol, name, states, cardinality)] creates a variable
@@ -280,13 +280,13 @@ The functions provided in \cfilename{Variable.c} are
 \item[get\_last\_variable()] gives the last element in the list of newly
   created variables mentioned above.
 
-\item[reset\_Variable\_list()] will replace the list of recently created
+\item[reset\_variable\_list()] will replace the list of recently created
   variables with \cdatatype{NULL} and set the size of the list to zero. This
   is used only for resetting the list after copying the list pointer to a new
   model. Otherwise all the models would share the same list of parsed
   variables.
 
-\item[next\_Variable(it)] will give the next variable pointed by the
+\item[next\_variable(it)] will give the next variable pointed by the
   variable iterator~\cparameter{it} and advance the pointer to the next
   variable in the list. The function returns \cdatatype{NULL} if the iterator
   runs out of variables.
@@ -295,7 +295,7 @@ The functions provided in \cfilename{Variable.c} are
   variable, identified by the \cparameter{symbol} string, in the list of
   newly created variables.
 
-\item[get\_variable(vars, nvars, symbol)] searches the \cdatatype{Variable
+\item[get\_variable(vars, nvars, symbol)] searches the \cdatatype{variable
   array}~\cparameter{vars} for a variable identified by the string
   \cparameter{symbol}. Also the size of the array has to be specified as the
   \cdatatype{integer}~\cparameter{nvars}.
@@ -318,7 +318,7 @@ The functions provided in \cfilename{Variable.c} are
   
 \item[set\_parents(v, parents, nparents)] sets the parents for the
   variable~\cparameter{v} by copying the references from the
-  \cparameter{parents}, which is an \cdatatype{array of Variables}. 
+  \cparameter{parents}, which is an \cdatatype{array of variables}. 
   Size of the array must be specified by the \cparameter{nparents} 
   \cdatatype{integer}.
 
@@ -334,7 +334,7 @@ The Hugin net language parser is made with Bison and consequently the
 \cfunction{yyparse} function is not able to return a list of variables
 etc. This makes it awkward to pass the results of parsing to the rest of
 the program. Our solution is to create a list of parsed variables in
-\cfilename{Variable.c} by appending every newly created variable to it. The
+\cfilename{variable.c} by appending every newly created variable to it. The
 list could also be at \cfilename{parser.c} in order to avoid having weird
 functions like \cfunction{get\_parser\_variable}.
 
@@ -439,7 +439,7 @@ from variable \examplecode{v1} to variable \examplecode{v2}, ie. makes
 \examplecode{v2} a child of \examplecode{v1}.
 \item[find\_cliques(G, cp)] finds cliques in \examplecode{G} and
 stores them in the clique-array \examplecode{*cp}\footnote{Type of
-\examplecode{cp} is \cdatatype{Clique**}, ie. it is a pointer to such
+\examplecode{cp} is \cdatatype{clique**}, ie. it is a pointer to such
 an array. It need not be initialized.}. Returns the number of elements
 in the array.
 \item[make\_undirected(G)] returns an undirected copy of Graph
@@ -744,7 +744,7 @@ and use was therefore less intuitive. Note that the join tree
 implementation still requires a static and total order among variables.
 
 \newpage
-\section{Join trees} % Cliques and sepsets
+\section{Join trees} % cliques and sepsets
 \subsection{General}
 The inference engine of the system uses join trees for practically all of
 its calculations. A good introduction on inference in belief networks can
@@ -870,15 +870,15 @@ The consistency is achieved by a two-phase procedure, where...
 
 
 \subsection{The functionality description}
-The files \cfilename{Clique.h} and \cfilename{Clique.c} provide data 
+The files \cfilename{clique.h} and \cfilename{clique.c} provide data 
 types and functions for operating with sepsets and cliques. Together 
 these form the concept known as join tree. In the NIP system, a join 
 tree is merely an array of cliques which in turn have references to
 all the necessary sepsets.
 
 \subsubsection{The data structures}
-\cfilename{Clique.h} provides data types \cdatatype{Sepset}, 
-\cdatatype{Sepset\_link}, and \cdatatype{Clique}. \cdatatype{Sepset}
+\cfilename{clique.h} provides data types \cdatatype{sepset}, 
+\cdatatype{sepset\_link}, and \cdatatype{clique}. \cdatatype{sepset}
 is a pointer to a struct which has the following fields:
 \begin{description}
 \item[old] is older of the two last \cdatatype{potentials} passed via
@@ -886,37 +886,37 @@ the sepset.
 
 \item[new] is the last \cdatatype{potential} passed via the sepset.
 
-\item[variables] is an \cdatatype{array of Variables}. These are the 
+\item[variables] is an \cdatatype{array of variables}. These are the 
 variables associated with the sepset. They are in the same order as
 their cardinalities in the \cdatatype{potentials} \cstructfield{old} and 
 \cstructfield{new}. The number of the variables can be found in either 
 of the \cdatatype{potentials} \cstructfield{old} and \cstructfield{new}.
 
-\item[cliques] is an \cdatatype{array of Cliques}. The references to the
+\item[cliques] is an \cdatatype{array of cliques}. The references to the
 adjacent cliques are there. The size of the array is always two
 because of the nature of sepsets.
 \end{description}
 
 
-The data type \cdatatype{Sepset\_link} provides an implementation for lists
-of \cdatatype{Sepsets}. It is a pointer to a struct containing
+The data type \cdatatype{sepset\_link} provides an implementation for lists
+of \cdatatype{sepsets}. It is a pointer to a struct containing
 \begin{description}
 \item[data] is a so-called \cdatatype{void pointer} because of the order of
   definitions. (You can't really define a list of sepsets before you
-  have defined sepsets. Sepsets can't be defined before cliques and
+  have defined sepsets. sepsets can't be defined before cliques and
   cliques can't be defined before lists of sepsets.) When the list of
   sepsets is used, the \cstructfield{data} field has to be cast to the 
-  \cdatatype{Sepset} type. 
+  \cdatatype{sepset} type. 
 
-\item[fwd] is the next \cdatatype{Sepset\_link} in the list or 
+\item[fwd] is the next \cdatatype{sepset\_link} in the list or 
   \cdatatype{NULL} at the end of the list.
 
-\item[bwd] is the previous \cdatatype{Sepset\_link} in the list or 
+\item[bwd] is the previous \cdatatype{sepset\_link} in the list or 
   \cdatatype{NULL} at the beginning of the list.
 
 \end{description}
 
-The data type \cdatatype{Clique} is a pointer to a struct containing all the
+The data type \cdatatype{clique} is a pointer to a struct containing all the
 necessary for working with cliques. The fields are
 \begin{description}
 \item[p] is the clique \cdatatype{potential}
@@ -924,13 +924,13 @@ necessary for working with cliques. The fields are
 \item[original\_p] is the original clique \cdatatype{potential} initialised
   according to the parameters of the model
 
-\item[variables] is an \cdatatype{array of Variables}. These are the
+\item[variables] is an \cdatatype{array of variables}. These are the
   references to the variables associated with the clique. They are in
   the same order as their cardinalities in the 
   \cdatatype{potential}~\cstructfield{p}. The number of variables can be 
   found in the potential~\cstructfield{p}.
 
-\item[sepsets] is a \cdatatype{Sepset\_link} i.e. either
+\item[sepsets] is a \cdatatype{sepset\_link} i.e. either
   \cdatatype{NULL} or a list of sepsets. The list contains the
   references to the adjacent sepsets.
 
@@ -944,39 +944,39 @@ necessary for working with cliques. The fields are
 
 
 \subsubsection{The functions}
-The file \cfilename{Clique.c} provides the following functions
+The file \cfilename{clique.c} provides the following functions
 \begin{description}
-\item[make\_Clique(vars, num\_of\_vars)] creates a \cdatatype{Clique}. The
-  associated variables are given as the \cdatatype{Variable array}
+\item[make\_clique(vars, num\_of\_vars)] creates a \cdatatype{clique}. The
+  associated variables are given as the \cdatatype{variable array}
   \cparameter{vars} and the number of the variables as the \cdatatype{integer} 
   \cparameter{num\_of\_vars}. A shallow copy of the array is made, so
   remember to free it (but not the contents). The clique will not have 
-  any adjacent sepsets initially. Sepsets must be added separately.
+  any adjacent sepsets initially. sepsets must be added separately.
 
-\item[free\_Clique(c)] frees the memory allocated by the 
-  \cdatatype{Clique}~\cparameter{c}. It will not free the memory allocated for 
-  the corresponding \cdatatype{Variables}, but all the adjacent 
-  \cdatatype{Sepsets} are freed and removed automatically so that rest
+\item[free\_clique(c)] frees the memory allocated by the 
+  \cdatatype{clique}~\cparameter{c}. It will not free the memory allocated for 
+  the corresponding \cdatatype{variables}, but all the adjacent 
+  \cdatatype{sepsets} are freed and removed automatically so that rest
   of the join tree remains valid. Note that freeing an entire join tree
   can be done by calling this function for every clique.
 
-\item[add\_Sepset(c, s)] adds the \cdatatype{Sepset} \cparameter{s} to the 
-  \cdatatype{Clique}~\cparameter{c}. Remember to add the sepset to both
+\item[add\_sepset(c, s)] adds the \cdatatype{sepset} \cparameter{s} to the 
+  \cdatatype{clique}~\cparameter{c}. Remember to add the sepset to both
   adjacent cliques and never add a sepset to the same clique twice.
 
-\item[make\_Sepset(variables, num\_of\_vars, cliques)] creates a {\it
-  Sepset}. The associated variables are given as the \cdatatype{Variable
+\item[make\_sepset(variables, num\_of\_vars, cliques)] creates a {\it
+  sepset}. The associated variables are given as the \cdatatype{variable
   array} \cparameter{variables} and the size of the array as the {\it
   integer} \cparameter{num\_of\_vars}. Both adjacent cliques must be given
-  as an \cdatatype{array of Cliques} (\cparameter{cliques}). This
-  usually means that the \cdatatype{Cliques} must be created before the
-  \cdatatype{Sepsets}. Note that a shallow copy of the parameter arrays
+  as an \cdatatype{array of cliques} (\cparameter{cliques}). This
+  usually means that the \cdatatype{cliques} must be created before the
+  \cdatatype{sepsets}. Note that a shallow copy of the parameter arrays
   is made, so freeing the arrays after calling the function is up to the user.
   
-\item[free\_Sepset(s)] just frees the memory allocated for the
-  \cdatatype{Sepset} \cparameter{s}. This is called automatically by 
-  \cfunction{free\_Clique} so usually this function is needed only for
-  freeing possible useless \cdatatype{Sepsets} which are not included in the 
+\item[free\_sepset(s)] just frees the memory allocated for the
+  \cdatatype{sepset} \cparameter{s}. This is called automatically by 
+  \cfunction{free\_clique} so usually this function is needed only for
+  freeing possible useless \cdatatype{sepsets} which are not included in the 
   join tree.
 
 \item[create\_potential(variables, num\_of\_vars, data)] can help if
@@ -985,10 +985,10 @@ The file \cfilename{Clique.c} provides the following functions
   which has its data arranged correcty in order to work with the
   system. To rearrange the data correctly, the function needs to know 
   the order of the corresponding variables. This is achieved by 
-  specifying the \cdatatype{Variable array} \cparameter{variables} and the size
+  specifying the \cdatatype{variable array} \cparameter{variables} and the size
   of it as the \cdatatype{integer} \cparameter{num\_of\_vars}. 
 
-  The most important thing is to have the \cdatatype{Variables} array in the 
+  The most important thing is to have the \cdatatype{variables} array in the 
   same order as the \cparameter{data} array is sorted. For example, the 
   potentials specified in the Hugin net language have the child variable
   as the least significant one: the value of the variable has the least 
@@ -998,36 +998,36 @@ The file \cfilename{Clique.c} provides the following functions
   the \cparameter{variables} array, and the last parent should be the 
   second right after the child variable.
 
-\item[unmark\_Clique(c)] resets the mark in the 
-  \cdatatype{Clique}~\cparameter{c}. Note that this has to be done for 
+\item[unmark\_clique(c)] resets the mark in the 
+  \cdatatype{clique}~\cparameter{c}. Note that this has to be done for 
   every clique before calling \cfunction{distribute\_evidence} or 
   \cfunction{collect\_evidence}.
 
 \item[clique\_num\_of\_vars(c)] tells how many associated variables the 
-  \cdatatype{Clique}~\cparameter{c} has.
+  \cdatatype{clique}~\cparameter{c} has.
 
 \item[sepset\_num\_of\_vars(s)] tells how many associated variables the 
-  \cdatatype{Sepset}~\cparameter{s} has.
+  \cdatatype{sepset}~\cparameter{s} has.
 
 \item[distribute\_evidence(c)] implements the algorithm which spreads 
   the evidence entered in to the cliques away from the given 
-  \cdatatype{Clique}~\cparameter{c}. See \cite{huang1994} page 21 for
+  \cdatatype{clique}~\cparameter{c}. See \cite{huang1994} page 21 for
   details. 
 
 \item[collect\_evidence(c1, s12, c2)] implements the algorithm which 
   collects evidence from the subtree rooted in the given 
-  \cdatatype{Clique}~\cparameter{c2} and passes the evidence to the 
-  \cdatatype{Clique}~\cparameter{c1}. The
-  \cdatatype{Sepset}~\cparameter{s12} is the sepset between the two 
+  \cdatatype{clique}~\cparameter{c2} and passes the evidence to the 
+  \cdatatype{clique}~\cparameter{c1}. The
+  \cdatatype{sepset}~\cparameter{s12} is the sepset between the two 
   cliques. The function is recursive and is usually used like this: 
   \examplecode{collect\_evidence(NULL, NULL, c);} 
-  where \examplecode{c} is some \cdatatype{Clique}. This causes the 
+  where \examplecode{c} is some \cdatatype{clique}. This causes the 
   evidence to be collected from the entire join tree.
 
 % !!! NOTE !!! This requires variables to have a certain order in clique c!
 \item[initialise(c, child, parents, p)] is used for entering the
   quantitative parameters of the model into the join tree. This function
-  initialises the \cdatatype{Clique}~\cparameter{c} with the given 
+  initialises the \cdatatype{clique}~\cparameter{c} with the given 
   \cdatatype{potential}~\cparameter{p}. The initialisation ensures that 
   the parameters are not reset by the \cfunction{global\_retraction} 
   function. Note that~\cparameter{p} should be a valid 
@@ -1037,7 +1037,7 @@ The file \cfilename{Clique.c} provides the following functions
   
   Since the clique to be initialised can be associated with more
   variables than are associated with the potential, the user must
-  specify the \cparameter{child} \cdatatype{Variable} and the 
+  specify the \cparameter{child} \cdatatype{variable} and the 
   \cdatatype{array of variables} which contain the
   \cparameter{parents}. The order of the variables in the
   \cparameter{parents} array is not relevant and the array is not needed 
@@ -1045,8 +1045,8 @@ The file \cfilename{Clique.c} provides the following functions
 
 \item[marginalise(c, v, r)] is one of the most useful functions
   because it finds out the probability distribution of the 
-  \cdatatype{Variable}~\cparameter{v} according to the 
-  \cdatatype{Clique}~\cparameter{c} and writes it into the 
+  \cdatatype{variable}~\cparameter{v} according to the 
+  \cdatatype{clique}~\cparameter{c} and writes it into the 
   \cdatatype{double array}~\cparameter{r} (as in \textbf{r}esult). 
   The array must be allocated before the function is called and the size 
   must be at least \examplecode{v->cardinality}. Note that the result is 
@@ -1069,18 +1069,18 @@ The file \cfilename{Clique.c} provides the following functions
   This function is needed for retracting evidence in some cases. To
   achieve this, the user must enter the wanted evidence into the
   variables and run \cfunction{global\_retraction}. The 
-  \cdatatype{Variable array} \cparameter{vars} (containing all the 
-  variables) and a \cdatatype{Clique array} \cparameter{cliques} must be 
+  \cdatatype{variable array} \cparameter{vars} (containing all the 
+  variables) and a \cdatatype{clique array} \cparameter{cliques} must be 
   specified. Also the number of the variables and cliques has to be given 
   to the function as the \cdatatype{integers} \cparameter{nvars}
   and \cparameter{ncliques}.
 
 \item[enter\_observation(vars, nvars, cliques, ncliques, v, state)] 
   is made for incorporating hard evidence into a join tree. The observed
-  state of the \cdatatype{Variable}~\cparameter{v} is given as a 
+  state of the \cdatatype{variable}~\cparameter{v} is given as a 
   \cdatatype{string} named \cparameter{state}. The function needs also 
-  the \cdatatype{Variable array} \cparameter{vars}, 
-  \cdatatype{Clique array} \cparameter{cliques} and the size of them
+  the \cdatatype{variable array} \cparameter{vars}, 
+  \cdatatype{clique array} \cparameter{cliques} and the size of them
   as the \cdatatype{integers} \cparameter{nvars} and \cparameter{ncliques}. 
   The reference \cparameter{vars} to the array of all variables is needed 
   because of the possible global retraction. The function 
@@ -1106,38 +1106,38 @@ The file \cfilename{Clique.c} provides the following functions
 \item[find\_family(cliques, num\_of\_cliques, var)] finds a clique which
   contains the given variable \cparameter{var} and all of its parents. The
   set of cliques and size of the set must be specified as the parameters
-  \cparameter{cliques} (\cdatatype{Clique} array) and 
+  \cparameter{cliques} (\cdatatype{clique} array) and 
   \cparameter{num\_of\_cliques} (\cdatatype{integer}).
 
 \item[find\_clique(cliques, num\_of\_cliques, variables, num\_of\_vars)]
-  tries to find a \cdatatype{Clique} which contains all the variables (or
-  more) specified in the \cdatatype{Variable array}
+  tries to find a \cdatatype{clique} which contains all the variables (or
+  more) specified in the \cdatatype{variable array}
   \cparameter{variables}. The number of variables has to be given as the 
   fourth parameter \cparameter{num\_of\_vars}. The function returns 
   \cdatatype{NULL} if there are no suitable cliques in the specified 
-  \cdatatype{array of Cliques} (\cparameter{cliques}) within the given 
+  \cdatatype{array of cliques} (\cparameter{cliques}) within the given 
   size \cparameter{num\_of\_cliques}.
 
 \item[find\_sepsets(cliques, num\_of\_cliques)] creates and inserts 
-  the sepsets between the \cdatatype{Cliques} specified in the array 
+  the sepsets between the \cdatatype{cliques} specified in the array 
   \cparameter{cliques}. The size of the array must be given as the 
   \cdatatype{integer} \cparameter{num\_of\_cliques}. This function is 
   meant to be used only once after all of the cliques have been created. 
   Consequently, it is not intended for repairing partially created 
   join trees.
   
-\item[print\_Clique(c)] is meant for debugging purposes. It prints the
+\item[print\_clique(c)] is meant for debugging purposes. It prints the
   symbols of the variables associated with the
-  \cdatatype{Clique}~\cparameter{c} to the standard output.
+  \cdatatype{clique}~\cparameter{c} to the standard output.
   
-\item[print\_Sepset(s)] is meant for debugging purposes. It prints the
+\item[print\_sepset(s)] is meant for debugging purposes. It prints the
   symbols of the variables associated with the
-  \cdatatype{Sepset}~\cparameter{s} to the standard output.
+  \cdatatype{sepset}~\cparameter{s} to the standard output.
   
 \item[clique\_intersection(cl1, cl2, vars, n)] finds out which
-  variables are common to the specified \cdatatype{Cliques}~\cparameter{cl1}
+  variables are common to the specified \cdatatype{cliques}~\cparameter{cl1}
   and~\cparameter{cl2}. The parameter \cparameter{vars} is a 
-  \cdatatype{pointer to an array of Variables} and the array will 
+  \cdatatype{pointer to an array of variables} and the array will 
   contain the found variables  after the execution. The size of the
   array is written to the place pointed by the 
   \cdatatype{integer pointer}~\cparameter{n}. The resulting array
@@ -1204,10 +1204,10 @@ a struct which holds the following fields
 \begin{description}
 \item[data] is the \cdatatype{potential} stored by the list element.
 
-\item[child] is the \cdatatype{Variable} which was defined to depend on
+\item[child] is the \cdatatype{variable} which was defined to depend on
 other variables in the potential declaration of the net language.
 
-\item[parents] is an \cdatatype{array of Variables} which contains the
+\item[parents] is an \cdatatype{array of variables} which contains the
 parent variables of the \cstructfield{child}. Instead of an array it 
 may be \cdatatype{NULL} if the \cstructfield{child} was an independent
 variable and had no parents.
@@ -1221,8 +1221,8 @@ variable and had no parents.
 
 A same kind of problem arises with the \examplecode{node} declarations 
 of the Hugin net language when timeslices are defined. The parser 
-can't assign the pointer from a \cdatatype{Variable} to the 
-corresponding \cdatatype{Variable} in the next timeslice before both
+can't assign the pointer from a \cdatatype{variable} to the 
+corresponding \cdatatype{variable} in the next timeslice before both
 of the variables have been parsed. This is solved by collecting the 
 information about timeslice dependencies into a list until all the 
 variables have been read from the net file. The file
@@ -1230,7 +1230,7 @@ variables have been read from the net file. The file
 \cdatatype{time\_init\_link} is a pointer to a struct which can be
 used as an element in a linked list and holds the following fields
 \begin{description}
-\item[var] is the \cdatatype{Variable} which corresponds
+\item[var] is the \cdatatype{variable} which corresponds
 to another one in the next timeslice.
 
 \item[next] is the symbol \cdatatype{string} which identifies the
@@ -1422,23 +1422,23 @@ in the file. After the token string has been used, please free the
 memory allocated for it.
 
 \item[add\_symbol(v)] is used only by the net language parser. The
-function adds the \cdatatype{Variable}~\cparameter{v} into a temporary 
+function adds the \cdatatype{variable}~\cparameter{v} into a temporary 
 list of parent variables. The list is needed for parsing the parent 
 variables according to the potential declarations of the net
 language. (See also the \cfunction{make\_variable\_array} function)
 
 \item[add\_initData(p, child, parents)] is used only by the net
 language parser. This function adds the parsed 
-\cdatatype{potential}~\cparameter{p}, the \cdatatype{Variable} 
+\cdatatype{potential}~\cparameter{p}, the \cdatatype{variable} 
 \cparameter{child} and its \cparameter{parents} in an 
-\cdatatype{array of Variables} to the list of parsed potentials. 
+\cdatatype{array of variables} to the list of parsed potentials. 
 The potentials are collected into the list until the join tree has
 been created and it can be initialised with the potentials.
 
 \item[add\_time\_init(var, next)] is used only by the net language
 parser. It adds information about the correspondence of nodes between
-timeslices into a temporary list. The \cdatatype{Variable}
-\cparameter{var} will correspond to the \cdatatype{Variable}
+timeslices into a temporary list. The \cdatatype{variable}
+\cparameter{var} will correspond to the \cdatatype{variable}
 identified by the symbol \cdatatype{string} \cparameter{next} in the 
 next timeslice. The information has to be collected into a list,
 because the another variable may haven't been created yet at the
@@ -1459,7 +1459,7 @@ of the net language. The list can be turned into an array by using the
 \cfunction{make\_string\_array} function.
 
 \item[make\_variable\_array()] is used only by the net language
-parser. The function creates an array containing the \cdatatype{Variables}
+parser. The function creates an array containing the \cdatatype{variables}
 accumulated in the temporary list by \cfunction{add\_symbol}
 function. The resulting array is usually used as the array of parent 
 variables.
@@ -1485,12 +1485,12 @@ used only by the net language parser.
 
 \item[reset\_symbols()] cleans the temporary list of variables made by
 the \cfunction{add\_symbol} function. The function does NOT free the
-actual \cdatatype{Variables}, only the list structure itself. It is meant to
+actual \cdatatype{variables}, only the list structure itself. It is meant to
 be used only by the net language parser.
 
 \item[reset\_initData()] cleans the data used for initialising the
 join tree. The function also frees the \cdatatype{potentials} and the arrays of
-parent \cdatatype{Variables} gathered in the list. (The variables themselves
+parent \cdatatype{variables} gathered in the list. (The variables themselves
 are not freed, of course.) The function is meant to be used only by
 the net language parser.
 
@@ -1505,7 +1505,7 @@ parser. The function initialises a new \cdatatype{Graph} which can hold as
 many variables than is parsed from the file so far.
 
 \item[parsedVars2Graph()] executes one stage in the net language
-parser. It inserts the \cdatatype{Variables} into the initialised
+parser. It inserts the \cdatatype{variables} into the initialised
 \cdatatype{Graph} after all of the variables have been created. The
 function adds also the child-parent relation to the
 \cdatatype{Graph}. Therefore it must be called after all of the
@@ -1515,15 +1515,15 @@ the \cfunction{add\_initData} function.
 
 \item[time2Vars()] is used only by the net language parser. The
 function adds the information about the correspondence of variables
-between timeslices to the \cdatatype{Variables}. The procedure must be
+between timeslices to the \cdatatype{variables}. The procedure must be
 executed after all of the \examplecode{node} declarations of the net 
 language file have been parsed. It uses the information gathered into the
 temporary list created by the \cfunction{add\_time\_init} function.
 
 \item[Graph2JTree()] creates a join tree from the \cdatatype{Graph} made by
 the previous functions. This function is to be executed only by the
-net language parser. After the \cdatatype{Cliques} (and 
-\cdatatype{Sepsets}) have been created, the procedure frees the memory 
+net language parser. After the \cdatatype{cliques} (and 
+\cdatatype{sepsets}) have been created, the procedure frees the memory 
 used by the graph.
 
 \item[parsedPots2JTree()] is meant to be used only by the net language
@@ -1573,17 +1573,17 @@ meant to be used by the net langugage parser only.
 cliques created by the parser. This is one of the functions for
 finding out the results of parsing a net language file. (See also the
 other functions: \cfunction{get\_cliques\_pointer} and
-\cfunction{reset\_Clique\_array}) 
+\cfunction{reset\_clique\_array}) 
 
 \item[get\_cliques\_pointer()] gets you a pointer to the \cdatatype{array of
 cliques} created by the net language parser. (I.e. the returned value
-is a \cdatatype{Clique**})
+is a \cdatatype{clique**})
 
-\item[reset\_Clique\_array()] resets the net language parser so that
+\item[reset\_clique\_array()] resets the net language parser so that
 it can read more net language files. Call this function after you have
 discovered the number and location of cliques. Freeing the memory
 allocated by the join tree created by the parser is up to the user: 
-just use the \cfunction{free\_Clique} function for every clique in the array
+just use the \cfunction{free\_clique} function for every clique in the array
 when the join tree becomes useless.
 
 \end{description}
@@ -1609,7 +1609,7 @@ The interface + how the stuff works...
 \subsection{Other possibilities}
 
 How the stuff could work also...
-% a tree of Variables instead of an array?
+% a tree of variables instead of an array?
 
 
 \newpage

@@ -1,11 +1,11 @@
 /*
- * nip.c $Id: nip.c,v 1.67 2005-05-17 11:36:19 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.68 2005-05-27 13:18:04 jatoivol Exp $
  */
 
 #include "nip.h"
 #include "parser.h"
-#include "Clique.h"
-#include "Variable.h"
+#include "clique.h"
+#include "variable.h"
 #include "errorhandler.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -82,15 +82,15 @@
 
 extern int yyparse();
 
-static int start_timeslice_message_pass(Nip model, int direction, 
+static int start_timeslice_message_pass(nip model, int direction, 
 					potential sepset);
-static int finish_timeslice_message_pass(Nip model, int direction,
+static int finish_timeslice_message_pass(nip model, int direction,
 					 potential num, potential den);
 
-static int e_step(TimeSeries ts, potential* results, double* loglikelihood);
-static int m_step(potential* results, Nip model);
+static int e_step(time_series ts, potential* results, double* loglikelihood);
+static int m_step(potential* results, nip model);
 
-void reset_model(Nip model){
+void reset_model(nip model){
   int i, retval;
 
   for(i = 0; i < model->num_of_vars; i++)
@@ -102,9 +102,9 @@ void reset_model(Nip model){
 }
 
 
-void total_reset(Nip model){
+void total_reset(nip model){
   int i, j;
-  Clique c;
+  clique c;
   for(i = 0; i < model->num_of_cliques; i++){
     c = model->cliques[i];
     for(j = 0; j < c->p->size_of_data; j++){
@@ -115,9 +115,9 @@ void total_reset(Nip model){
 }
 
 
-void use_priors(Nip model, int has_history){
+void use_priors(nip model, int has_history){
   int i, retval;
-  Variable v;
+  variable v;
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
     if(!has_history || v->previous == NULL){
@@ -131,11 +131,11 @@ void use_priors(Nip model, int has_history){
 }
 
 
-Nip parse_model(char* file){
+nip parse_model(char* file){
   int i, j, k, retval;
-  Variable temp;
-  Variable_iterator it;
-  Nip new = (Nip) malloc(sizeof(nip_type));
+  variable temp;
+  variable_iterator it;
+  nip new = (nip) malloc(sizeof(nip_type));
 
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -160,7 +160,7 @@ Nip parse_model(char* file){
   new->num_of_vars = total_num_of_vars();
   new->cliques = *get_cliques_pointer();
 
-  new->variables = (Variable*) calloc(new->num_of_vars, sizeof(Variable));
+  new->variables = (variable*) calloc(new->num_of_vars, sizeof(variable));
   if(!(new->variables)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(new);
@@ -168,11 +168,11 @@ Nip parse_model(char* file){
   }
     
   it = get_first_variable();
-  temp = next_Variable(&it);
+  temp = next_variable(&it);
   i = 0;
   while(temp != NULL){
     new->variables[i++] = temp;
-    temp = next_Variable(&it);
+    temp = next_variable(&it);
   }
   
   /* count the number of nexts and children */
@@ -184,12 +184,12 @@ Nip parse_model(char* file){
       new->num_of_children++;
   }
 
-  new->next = (Variable*) calloc(new->num_of_nexts, sizeof(Variable));
-  new->previous = (Variable*) calloc(new->num_of_nexts, sizeof(Variable));
-  new->children = (Variable*) calloc(new->num_of_children, sizeof(Variable));
+  new->next = (variable*) calloc(new->num_of_nexts, sizeof(variable));
+  new->previous = (variable*) calloc(new->num_of_nexts, sizeof(variable));
+  new->children = (variable*) calloc(new->num_of_children, sizeof(variable));
   new->independent = 
-    (Variable*) calloc(new->num_of_vars - new->num_of_children, 
-		       sizeof(Variable));
+    (variable*) calloc(new->num_of_vars - new->num_of_children, 
+		       sizeof(variable));
   if(!(new->independent && new->children && new->previous && new->next)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(new->variables);
@@ -230,22 +230,22 @@ Nip parse_model(char* file){
     free(it->fwd);
   }
   free(it);
-  reset_Variable_list();
-  reset_Clique_array();
+  reset_variable_list();
+  reset_clique_array();
 
   return new;
 }
 
 
-void free_model(Nip model){
+void free_model(nip model){
   int i;
 
-  /* 1. Free Cliques and adjacent Sepsets */
+  /* 1. Free cliques and adjacent sepsets */
   for(i = 0; i < model->num_of_cliques; i++)
-    free_Clique(model->cliques[i]);
+    free_clique(model->cliques[i]);
   free(model->cliques);
 
-  /* 2. Free the Variables */
+  /* 2. Free the variables */
   for(i = 0; i < model->num_of_vars; i++)
     free_variable(model->variables[i]);
   free(model->variables);
@@ -257,13 +257,13 @@ void free_model(Nip model){
 }
 
 
-TimeSeries read_timeseries(Nip model, char* filename){
+time_series read_timeseries(nip model, char* filename){
   int i, j, k, m;
   char** tokens = NULL;
-  TimeSeries ts = NULL;
+  time_series ts = NULL;
   datafile* df = NULL;
   
-  ts = (TimeSeries) malloc(sizeof(time_series_type));
+  ts = (time_series) malloc(sizeof(time_series_type));
   if(!ts){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -284,8 +284,8 @@ TimeSeries read_timeseries(Nip model, char* filename){
   ts->num_of_hidden = model->num_of_vars - df->num_of_nodes;
 
   /* Allocate the array for the hidden variables. */
-  ts->hidden = (Variable *) calloc(ts->num_of_hidden, sizeof(Variable));
-  ts->observed = (Variable *) calloc(df->num_of_nodes, sizeof(Variable));
+  ts->hidden = (variable *) calloc(ts->num_of_hidden, sizeof(variable));
+  ts->observed = (variable *) calloc(df->num_of_nodes, sizeof(variable));
   if(!(ts->hidden && ts->observed)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(ts->hidden);
@@ -300,14 +300,14 @@ TimeSeries read_timeseries(Nip model, char* filename){
     j = 1;
     for(i = 0; i < df->num_of_nodes; i++)
       if(equal_variables(model->variables[k], 
-			 get_Variable(model, df->node_symbols[i])))
+			 get_variable(model, df->node_symbols[i])))
 	j = 0;
     if(j)
       ts->hidden[m++] = model->variables[k];
   }
 
   for(i = 0; i < df->num_of_nodes; i++)
-    ts->observed[i] = get_Variable(model, df->node_symbols[i]);
+    ts->observed[i] = get_variable(model, df->node_symbols[i]);
 
   /* Allocate some space for data */
   ts->data = (int**) calloc(ts->length, sizeof(int*));
@@ -341,7 +341,7 @@ TimeSeries read_timeseries(Nip model, char* filename){
 
     /* 3. Put into the data array */
     for(i = 0; i < m; i++){
-      ts->data[j][i] = get_stateindex(get_Variable(model, 
+      ts->data[j][i] = get_stateindex(get_variable(model, 
 						   df->node_symbols[i]), 
 				      tokens[i]);
 
@@ -359,7 +359,7 @@ TimeSeries read_timeseries(Nip model, char* filename){
 }
 
 
-void free_timeseries(TimeSeries ts){
+void free_timeseries(time_series ts){
   int t;
   if(ts){
     for(t = 0; t < ts->length; t++)
@@ -372,12 +372,12 @@ void free_timeseries(TimeSeries ts){
 }
 
 
-int timeseries_length(TimeSeries ts){
+int timeseries_length(time_series ts){
   return ts->length;
 }
 
 
-void free_uncertainseries(UncertainSeries ucs){
+void free_uncertainseries(uncertain_series ucs){
   int i, t;
   if(ucs){
     for(t = 0; t < ucs->length; t++){
@@ -391,12 +391,12 @@ void free_uncertainseries(UncertainSeries ucs){
 }
 
 
-int uncertainseries_length(UncertainSeries ucs){
+int uncertainseries_length(uncertain_series ucs){
   return ucs->length;
 }
 
 
-char* get_observation(TimeSeries ts, Variable v, int time){
+char* get_observation(time_series ts, variable v, int time){
   int i, j = -1;
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
     if(equal_variables(v, ts->observed[i]))
@@ -409,7 +409,7 @@ char* get_observation(TimeSeries ts, Variable v, int time){
 }
 
 
-int set_observation(TimeSeries ts, Variable v, int time, char* observation){
+int set_observation(time_series ts, variable v, int time, char* observation){
   int i, j = -1;
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
     if(equal_variables(v, ts->observed[i]))
@@ -425,9 +425,9 @@ int set_observation(TimeSeries ts, Variable v, int time, char* observation){
 }
 
 
-int insert_hard_evidence(Nip model, char* variable, char* observation){
+int insert_hard_evidence(nip model, char* varname, char* observation){
   int ret;
-  Variable v = get_Variable(model, variable);
+  variable v = get_variable(model, varname);
   if(v == NULL)
     return ERROR_INVALID_ARGUMENT;
   ret = enter_observation(model->variables, model->num_of_vars, 
@@ -442,12 +442,12 @@ int insert_hard_evidence(Nip model, char* variable, char* observation){
 
 
 /* Starts a message pass between timeslices */
-static int start_timeslice_message_pass(Nip model, int direction,
+static int start_timeslice_message_pass(nip model, int direction,
 					potential sepset){
   int i, j, k;
   int *mapping;
-  Clique c;
-  Variable *vars;
+  clique c;
+  variable *vars;
   int nvars = model->num_of_nexts;
 
   if(direction == FORWARD){
@@ -496,15 +496,15 @@ static int start_timeslice_message_pass(Nip model, int direction,
 
 
 /* Finishes the message pass between timeslices */
-static int finish_timeslice_message_pass(Nip model, int direction,
+static int finish_timeslice_message_pass(nip model, int direction,
 					 potential num, potential den){
   int i, j, k;
   int *mapping;
-  Clique c;
-  Variable *vars;
+  clique c;
+  variable *vars;
   int nvars = model->num_of_nexts;
 
-  /* This uses memoization for finding a suitable Clique c */
+  /* This uses memoization for finding a suitable clique c */
   if(direction == FORWARD){
     vars = model->previous;
     c = model->tail_clique;
@@ -548,14 +548,14 @@ static int finish_timeslice_message_pass(Nip model, int direction,
 
 /* forward-only inference consumes constant (1 time slice) amount of memory 
  * + the results (which is linear) */
-UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
+uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   int i, k, t;
   int *cardinalities = NULL;
-  Variable temp;
+  variable temp;
   potential timeslice_sepset = NULL;
-  Clique clique_of_interest;
-  UncertainSeries results = NULL;
-  Nip model = ts->model;
+  clique clique_of_interest;
+  uncertain_series results = NULL;
+  nip model = ts->model;
   
   /* Allocate an array */
   if(model->num_of_nexts > 0){
@@ -575,14 +575,14 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
   }
 
   /* Allocate some space for the results */
-  results = (UncertainSeries) malloc(sizeof(uncertain_series_type));
+  results = (uncertain_series) malloc(sizeof(uncertain_series_type));
   if(!results){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(cardinalities);
     return NULL;
   }
   
-  results->variables = (Variable*) calloc(nvars, sizeof(Variable));
+  results->variables = (variable*) calloc(nvars, sizeof(variable));
   if(!results->variables){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(results);
@@ -591,7 +591,7 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
   }
 
   /* Copy the references to the variables of interest */
-  memcpy(results->variables, vars, nvars*sizeof(Variable));
+  memcpy(results->variables, vars, nvars*sizeof(variable));
   results->num_of_vars = nvars;
   results->length = ts->length;
 
@@ -678,11 +678,11 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
     /* Write the results */
     for(i = 0; i < results->num_of_vars; i++){
       
-      /* 1. Decide which Variable you are interested in */
+      /* 1. Decide which variable you are interested in */
       temp = results->variables[i];
       
-      /* 2. Find the Clique that contains the family of 
-       *    the interesting Variable */
+      /* 2. Find the clique that contains the family of 
+       *    the interesting variable */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       temp);
       assert(clique_of_interest != NULL);
@@ -715,15 +715,15 @@ UncertainSeries forward_inference(TimeSeries ts, Variable vars[], int nvars){
 
 /* This consumes much more memory depending on the size of the 
  * sepsets between time slices. */
-UncertainSeries forward_backward_inference(TimeSeries ts,
-					   Variable vars[], int nvars){
+uncertain_series forward_backward_inference(time_series ts,
+					   variable vars[], int nvars){
   int i, k, t;
   int *cardinalities = NULL;
-  Variable temp;
+  variable temp;
   potential *timeslice_sepsets = NULL;
-  Clique clique_of_interest;
-  UncertainSeries results = NULL;
-  Nip model = ts->model;
+  clique clique_of_interest;
+  uncertain_series results = NULL;
+  nip model = ts->model;
 
   /* Allocate an array for describing the dimensions of timeslice sepsets */
   if(model->num_of_nexts > 0){
@@ -743,14 +743,14 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
   }
 
   /* Allocate some space for the results */
-  results = (UncertainSeries) malloc(sizeof(uncertain_series_type));
+  results = (uncertain_series) malloc(sizeof(uncertain_series_type));
   if(!results){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(cardinalities);
     return NULL;
   }
   
-  results->variables = (Variable*) calloc(nvars, sizeof(Variable));
+  results->variables = (variable*) calloc(nvars, sizeof(variable));
   if(!results->variables){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(results);
@@ -759,7 +759,7 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
   }
 
   /* Copy the references to the variables of interest */
-  memcpy(results->variables, vars, nvars*sizeof(Variable));
+  memcpy(results->variables, vars, nvars*sizeof(variable));
   results->num_of_vars = nvars;
   results->length = ts->length;
 
@@ -924,11 +924,11 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
     /* THE CORE: Write the results */
     for(i = 0; i < results->num_of_vars; i++){
       
-      /* 1. Decide which Variable you are interested in */
+      /* 1. Decide which variable you are interested in */
       temp = results->variables[i];
       
-      /* 2. Find the Clique that contains the family of 
-       *    the interesting Variable */
+      /* 2. Find the clique that contains the family of 
+       *    the interesting variable */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       temp);
       assert(clique_of_interest != NULL);
@@ -968,9 +968,9 @@ UncertainSeries forward_backward_inference(TimeSeries ts,
 }
 
 
-int insert_soft_evidence(Nip model, char* variable, double* distribution){
+int insert_soft_evidence(nip model, char* varname, double* distribution){
   int ret;
-  Variable v = get_Variable(model, variable);
+  variable v = get_variable(model, varname);
   if(v == NULL)
     return ERROR_INVALID_ARGUMENT;
   ret =  enter_evidence(model->variables, model->num_of_vars, 
@@ -981,7 +981,7 @@ int insert_soft_evidence(Nip model, char* variable, double* distribution){
 }
 
 
-Variable get_Variable(Nip model, char* symbol){
+variable get_variable(nip model, char* symbol){
   int i;
 
   if(!model){
@@ -997,10 +997,10 @@ Variable get_Variable(Nip model, char* symbol){
 }
 
 
-void make_consistent(Nip model){
+void make_consistent(nip model){
   int i;
   for (i = 0; i < model->num_of_cliques; i++)
-    unmark_Clique(model->cliques[i]);
+    unmark_clique(model->cliques[i]);
 
   if(collect_evidence(NULL, NULL, model->cliques[0]) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1008,7 +1008,7 @@ void make_consistent(Nip model){
   }
 
   for (i = 0; i < model->num_of_cliques; i++)
-    unmark_Clique(model->cliques[i]);
+    unmark_clique(model->cliques[i]);
 
   if(distribute_evidence(model->cliques[0]) != NO_ERROR)
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1018,12 +1018,12 @@ void make_consistent(Nip model){
 
 
 /* Most likely state sequence of the variables given the timeseries. */
-TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
+time_series mlss(variable vars[], int nvars, time_series ts){
   int i, j, k, l, t;
-  TimeSeries mlss;
+  time_series mlss;
 
   /* Allocate some space for the results */
-  mlss = (TimeSeries)malloc(sizeof(time_series_type));
+  mlss = (time_series)malloc(sizeof(time_series_type));
   if(!mlss){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -1031,8 +1031,8 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
 
   mlss->model = ts->model;
   mlss->num_of_hidden = ts->model->num_of_vars - nvars;
-  mlss->hidden = (Variable*) calloc(mlss->num_of_hidden, sizeof(Variable));
-  mlss->observed = (Variable*) calloc(nvars, sizeof(Variable));
+  mlss->hidden = (variable*) calloc(mlss->num_of_hidden, sizeof(variable));
+  mlss->observed = (variable*) calloc(nvars, sizeof(variable));
   mlss->length = ts->length;
   mlss->data = (int**) calloc(mlss->length, sizeof(int*));
   if(!(mlss->data && mlss->observed && mlss->hidden)){
@@ -1059,7 +1059,7 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
   }
 
   /* Copy the variable references */
-  memcpy(mlss->observed, vars, nvars*sizeof(Variable));
+  memcpy(mlss->observed, vars, nvars*sizeof(variable));
 
   /* Find out the "hidden", or more like uninteresting, variables */
   l = 0;
@@ -1102,15 +1102,15 @@ TimeSeries mlss(Variable vars[], int nvars, TimeSeries ts){
  * - function pointers are pretty much out of the question in this case, 
  *   because they can't deliver the results without global variables
  * - some parts of the code could be transformed into separate procedures */
-static int e_step(TimeSeries ts, potential* parameters, double* loglikelihood){
+static int e_step(time_series ts, potential* parameters, double* loglikelihood){
   int i, j, k, t, size;
   int *cardinalities = NULL;
-  Variable temp;
+  variable temp;
   potential *timeslice_sepsets = NULL;
   potential *results = NULL;
   potential p;
-  Clique clique_of_interest = NULL;
-  Nip model = ts->model;
+  clique clique_of_interest = NULL;
+  nip model = ts->model;
 
   /* Reserve some memory for calculation */
   results = (potential*) calloc(model->num_of_vars, sizeof(potential));
@@ -1165,9 +1165,12 @@ static int e_step(TimeSeries ts, potential* parameters, double* loglikelihood){
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
 
     /* This computes the log likelihood of the ts */
+
+    /*** FIXME: watch out for missing data etc. ***/
     *loglikelihood = *loglikelihood + 
       momentary_loglikelihood(model, ts->observed, ts->data[t], 
 			      model->num_of_vars - ts->num_of_hidden); 
+    /* NOTE: independence assumptions between time steps ??? */
     
     /* Put some data in */
     for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
@@ -1271,11 +1274,11 @@ static int e_step(TimeSeries ts, potential* parameters, double* loglikelihood){
     for(i = 0; i < model->num_of_vars; i++){
       p = results[i];
 
-      /* 1. Decide which Variable you are interested in */
+      /* 1. Decide which variable you are interested in */
       temp = model->variables[i];
       
-      /* 2. Find the Clique that contains the family of 
-       *    the interesting Variable */
+      /* 2. Find the clique that contains the family of 
+       *    the interesting variable */
       clique_of_interest = find_family(model->cliques, 
 				       model->num_of_cliques, 
 				       temp);
@@ -1337,11 +1340,11 @@ static int e_step(TimeSeries ts, potential* parameters, double* loglikelihood){
 }
 
 
-static int m_step(potential* parameters, Nip model){
+static int m_step(potential* parameters, nip model){
   int i, j, k;
   int* fam_map;
-  Clique fam_clique = NULL;
-  Variable child = NULL;
+  clique fam_clique = NULL;
+  variable child = NULL;
   
   /* 1. Normalise parameters by dividing with the sums over child variables */
   for(i = 0; i < model->num_of_vars; i++){
@@ -1386,7 +1389,7 @@ static int m_step(potential* parameters, Nip model){
 
 /* Teaches the given model (ts->model) according to the given time series 
  * (ts) with EM-algorithm. Returns an error code as an integer. */
-int em_learn(TimeSeries ts, double threshold){
+int em_learn(time_series ts, double threshold){
   int i, n, v;
   int *card;
   double old_loglikelihood, loglikelihood = DBL_MIN;
@@ -1414,7 +1417,7 @@ int em_learn(TimeSeries ts, double threshold){
     card[0] = ts->model->variables[v]->cardinality;
     for(i = 1; i < n; i++)
       card[i] = ts->model->variables[v]->parents[i]->cardinality;
-    /* Variable->parents should be null only if n==1 
+    /* variable->parents should be null only if n==1 
      * => no for-loop => no null dereference */
 
     parameters[v] = make_potential(card, n, NULL);
@@ -1461,14 +1464,15 @@ int em_learn(TimeSeries ts, double threshold){
 
 
 /* TODO: how are joint probabilities computed? */
-double momentary_loglikelihood(Nip model, Variable* observed, 
+double momentary_loglikelihood(nip model, variable* observed, 
 			       int* indexed_data, int n_observed){
   potential p;
   double likelihood;
 
+  /* NOTE: the potential array will be ordered according to the 
+   * given variable-array, not the same way as clique potentials */
   p = get_joint_probability(model, observed, n_observed); /* expensive */
 
-  /* FIXME: watch out for missing data etc. */
   likelihood = get_pvalue(p, indexed_data);
 
   if(likelihood > 0)
@@ -1478,8 +1482,8 @@ double momentary_loglikelihood(Nip model, Variable* observed,
 }
 
 
-double *get_probability(Nip model, Variable v){
-  Clique clique_of_interest;
+double *get_probability(nip model, variable v){
+  clique clique_of_interest;
   double *result;
   int cardinality;
 
@@ -1500,7 +1504,7 @@ double *get_probability(Nip model, Variable v){
     return NULL;
   }
 
-  /* 1. Find the Clique that contains the interesting Variable */
+  /* 1. Find the clique that contains the interesting variable */
   clique_of_interest = find_family(model->cliques, model->num_of_cliques, v);
   if(!clique_of_interest){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1521,7 +1525,7 @@ double *get_probability(Nip model, Variable v){
 
 /* TODO: compute a potential describing joint probability distribution of 
  * given variables */
-potential get_joint_probability(Nip model, Variable *vars, int num_of_vars){
+potential get_joint_probability(nip model, variable *vars, int num_of_vars){
   potential p;
   int i;
   int *cardinality;
@@ -1541,7 +1545,7 @@ potential get_joint_probability(Nip model, Variable *vars, int num_of_vars){
 
   /* Unmark all cliques */
   for (i = 0; i < model->num_of_cliques; i++)
-    unmark_Clique(model->cliques[i]);
+    unmark_clique(model->cliques[i]);
 
   /* Make a DFS in the tree... */
   retval = gather_joint_probability(model->cliques[0], p, vars);
@@ -1555,12 +1559,12 @@ potential get_joint_probability(Nip model, Variable *vars, int num_of_vars){
 }
 
 
-void print_Cliques(Nip model){
+void print_cliques(nip model){
   int i;
   int num_of_cliques;
-  Clique clique_of_interest;
-  Sepset_link sepsetlist;
-  Clique *cliques;
+  clique clique_of_interest;
+  sepset_link sepsetlist;
+  clique *cliques;
 
   if(!model){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -1570,13 +1574,13 @@ void print_Cliques(Nip model){
   cliques = model->cliques;
   num_of_cliques = model->num_of_cliques;
 
-  printf("Found Cliques:\n");
+  printf("Found cliques:\n");
   for(i = 0; i < num_of_cliques; i++){
     clique_of_interest = cliques[i];
-    print_Clique(clique_of_interest);
+    print_clique(clique_of_interest);
     sepsetlist = clique_of_interest->sepsets;
     while(sepsetlist){
-      print_Sepset((Sepset)sepsetlist->data);
+      print_sepset((sepset)sepsetlist->data);
       sepsetlist = sepsetlist->fwd;
     }
     printf("\n");

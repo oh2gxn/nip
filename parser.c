@@ -1,15 +1,15 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.94 2005-04-28 10:36:22 jatoivol Exp $
+ * $Id: parser.c,v 1.95 2005-05-27 13:18:04 jatoivol Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "Graph.h"
-#include "Clique.h"
-#include "Variable.h"
+#include "clique.h"
+#include "variable.h"
 #include "parser.h"
 #include "fileio.h"
 #include "errorhandler.h"
@@ -59,7 +59,7 @@ static FILE *nip_yyparse_infile = NULL;
 /* Is there a hugin net file open? 0 if no, 1 if yes. */
 static int nip_yyparse_infile_open = 0;
 
-static Clique *nip_cliques = NULL;
+static clique *nip_cliques = NULL;
 static int nip_num_of_cliques = 0;
 
 static int add_to_stringlink(stringlink *s, char* string);
@@ -643,7 +643,7 @@ char *next_token(int *token_length){
 /* Adds a variable into a temporary list for creating an array. 
  * The variable is chosen from THE list of variables 
  * according to the given symbol. */
-int add_symbol(Variable v){
+int add_symbol(variable v){
   varlink new;
 
   if(v == NULL){
@@ -674,7 +674,7 @@ int add_symbol(Variable v){
 
 
 /* correctness? */
-int add_initData(potential p, Variable child, Variable* parents){
+int add_initData(potential p, variable child, variable* parents){
   initDataLink new = (initDataLink) malloc(sizeof(initDataElement));
 
   if(!new){
@@ -699,7 +699,7 @@ int add_initData(potential p, Variable child, Variable* parents){
 }
 
 
-int add_time_init(Variable var, char* next){
+int add_time_init(variable var, char* next){
   time_init_link new = (time_init_link) malloc(sizeof(time_init_element));
 
   if(!new){
@@ -825,9 +825,9 @@ static int search_stringlinks(stringlink s, char* string){
 /* Creates an array from the variable in the list. 
  * NOTE: because of misunderstanding, the list is backwards. 
  * (Can't understand Hugin fellows...) */
-Variable* make_variable_array(){
+variable* make_variable_array(){
   int i;
-  Variable* vars1 = (Variable*) calloc(nip_symbols_parsed, sizeof(Variable));
+  variable* vars1 = (variable*) calloc(nip_symbols_parsed, sizeof(variable));
   varlink pointer = nip_last_temp_var;
 
   if(!vars1){
@@ -979,12 +979,12 @@ void init_new_Graph(){
 
 int parsedVars2Graph(){
   int i, retval;
-  Variable v;
-  Variable_iterator it;
+  variable v;
+  variable_iterator it;
   initDataLink initlist = nip_first_initData;
 
   it = get_first_variable();
-  v = next_Variable(&it);
+  v = next_variable(&it);
   
   /* Add parsed variables to the graph. */
   while(v != NULL){
@@ -995,7 +995,7 @@ int parsedVars2Graph(){
       return ERROR_GENERAL;
     }
 
-    v = next_Variable(&it);
+    v = next_variable(&it);
   }
 
   /* Add child - parent relations to the graph. */
@@ -1020,10 +1020,10 @@ int parsedVars2Graph(){
 
 
 int time2Vars(){
-  Variable v1, v2;
+  variable v1, v2;
   time_init_link initlist = nip_first_timeinit;
 
-  /* Add time relations to Variables. */
+  /* Add time relations to variables. */
   while(initlist != NULL){
     
     v1 = initlist->var;
@@ -1047,9 +1047,9 @@ int time2Vars(){
 int Graph2JTree(){
 
   int num_of_cliques;
-  Clique **cliques = &nip_cliques;
+  clique **cliques = &nip_cliques;
 
-  /* Construct the Cliques. */
+  /* Construct the cliques. */
   num_of_cliques = find_cliques(nip_graph, cliques);
 
   /* Error check */
@@ -1073,14 +1073,14 @@ int parsedPots2JTree(){
   int i, nvars; 
   int retval;
   initDataLink initlist = nip_first_initData;
-  Variable* vars;
-  Variable var;
-  Variable_iterator it;
-  Clique fam_clique = NULL;;
+  variable* vars;
+  variable var;
+  variable_iterator it;
+  clique fam_clique = NULL;;
 
   /* <ugly patch> */
   nvars = total_num_of_vars();
-  vars = (Variable*) calloc(nvars, sizeof(Variable));
+  vars = (variable*) calloc(nvars, sizeof(variable));
   if(!vars){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
@@ -1088,10 +1088,10 @@ int parsedPots2JTree(){
 
   i = 0;
   it = get_first_variable();
-  var = next_Variable(&it);
+  var = next_variable(&it);
   while(var){
     vars[i++] = var;
-    var = next_Variable(&it);
+    var = next_variable(&it);
   }
   /* <\ugly patch> */
 
@@ -1145,7 +1145,7 @@ void print_parsed_stuff(){
   while(list != NULL){
     int *indices; 
     int *temp_array;
-    Variable *variables;
+    variable *variables;
 
     if((indices = (int *) calloc(list->data->num_of_vars,
 				 sizeof(int))) == NULL){
@@ -1160,8 +1160,8 @@ void print_parsed_stuff(){
       return;
     }
 
-    if((variables = (Variable *) calloc(list->data->num_of_vars,
-					sizeof(Variable))) == NULL){
+    if((variables = (variable *) calloc(list->data->num_of_vars,
+					sizeof(variable))) == NULL){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free(indices);
       free(temp_array);
@@ -1260,11 +1260,11 @@ int get_num_of_cliques(){
 }
 
 
-Clique **get_cliques_pointer(){
+clique **get_cliques_pointer(){
   return &nip_cliques;
 }
 
-void reset_Clique_array(){
+void reset_clique_array(){
   nip_cliques = NULL;
   nip_num_of_cliques = 0;
 }
