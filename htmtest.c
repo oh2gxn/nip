@@ -2,8 +2,8 @@
 #include <assert.h>
 #include <string.h>
 #include "parser.h"
-#include "Clique.h"
-#include "Variable.h"
+#include "clique.h"
+#include "variable.h"
 #include "potential.h"
 #include "errorhandler.h"
 #include "nip.h"
@@ -32,11 +32,11 @@ int main(int argc, char *argv[]){
 
   int i, j, t = 0;
 
-  Nip model = NULL;
-  Variable temp = NULL;
+  nip model = NULL;
+  variable temp = NULL;
 
-  TimeSeries ts = NULL;
-  UncertainSeries ucs = NULL;
+  time_series ts = NULL;
+  uncertain_series ucs = NULL;
 
   /*************************************/
   /* Some experimental timeslice stuff */

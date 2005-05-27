@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.28 2005-05-27 13:18:04 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.29 2005-05-27 13:36:37 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -163,7 +163,7 @@ int insert_hard_evidence(nip model, char* varname, char* observation);
 int insert_soft_evidence(nip model, char* varname, double* distribution);
 
 
-variable get_variable(nip model, char* symbol);
+variable model_variable(nip model, char* symbol);
 
 
 void make_consistent(nip model);

@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "parser.h"
-#include "Clique.h"
-#include "Variable.h"
+#include "clique.h"
+#include "variable.h"
 #include "potential.h"
 #include "errorhandler.h"
 #include "nip.h"
@@ -14,13 +14,13 @@ int main(int argc, char *argv[]){
   double** quotient = NULL;
   double*** result = NULL; /* probs of the hidden variables */
 
-  Nip model = NULL;
-  Clique clique_of_interest = NULL;
+  nip model = NULL;
+  clique clique_of_interest = NULL;
 
-  Variable temp = NULL;
-  Variable interesting = NULL;
+  variable temp = NULL;
+  variable interesting = NULL;
 
-  TimeSeries ts = NULL;
+  time_series ts = NULL;
 
   /*************************************/
   /* Some experimental timeslice stuff */
@@ -117,11 +117,11 @@ int main(int argc, char *argv[]){
       /* Check the result of inference */
       /*********************************/
       
-      /* 1. Decide which Variable you are interested in */
+      /* 1. Decide which variable you are interested in */
       interesting = ts->hidden[i];
       
-      /* 2. Find the Clique that contains the family of 
-       *    the interesting Variable */
+      /* 2. Find the clique that contains the family of 
+       *    the interesting variable */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       interesting);
       if(!clique_of_interest){
@@ -237,11 +237,11 @@ int main(int argc, char *argv[]){
     /*********************************/
     for(i = 0; i < ts->num_of_hidden; i++){
       
-      /* 1. Decide which Variable you are interested in */
+      /* 1. Decide which variable you are interested in */
       interesting = ts->hidden[i];
       
-      /* 2. Find the Clique that contains the family of 
-       *    the interesting Variable */
+      /* 2. Find the clique that contains the family of 
+       *    the interesting variable */
       clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
 				       interesting);
       if(!clique_of_interest){

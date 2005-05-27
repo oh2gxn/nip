@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.4 2005-05-02 15:05:34 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.5 2005-05-27 13:36:37 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) clique number (0 ... N - 1)
  * where N is the number of cliques.
@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "parser.h"
-#include "Clique.h"
-#include "Variable.h"
+#include "clique.h"
+#include "variable.h"
 #include "potential.h"
 #include "errorhandler.h"
 #include "nip.h"
@@ -19,12 +19,12 @@ int main(int argc, char *argv[]){
 
   int i;
   int num_of_vars;
-  int selected_Clique = -1;
+  int selected_clique = -1;
   potential result;
 
-  Nip model = NULL;
-  Clique clique_of_interest = NULL;
-  Variable *vars = NULL;
+  nip model = NULL;
+  clique clique_of_interest = NULL;
+  variable *vars = NULL;
 
   /*****************************************/
   /* Parse the model from a Hugin NET file */
@@ -37,11 +37,11 @@ int main(int argc, char *argv[]){
   }
   else{
 
-    /* It's possible to select a Clique (0 -- num_of_cliques - 1) as
+    /* It's possible to select a clique (0 -- num_of_cliques - 1) as
      * the second command line parameter.
      */
     if(argc >= 3)
-      selected_Clique = atoi(argv[2]);
+      selected_clique = atoi(argv[2]);
     model = parse_model(argv[1]);
   }
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
     return -1;
   /* The input file has been parsed. -- */
 
-  print_Cliques(model);
+  print_cliques(model);
 
   /********************/
   /* Do the inference */
@@ -61,12 +61,12 @@ int main(int argc, char *argv[]){
   /* Check the result of inference */
   /*********************************/
     
-  /* Let's take the third Clique and check something */
-  if(selected_Clique >= 0 && model->num_of_cliques > selected_Clique){
-    clique_of_interest = model->cliques[selected_Clique];
+  /* Let's take the third clique and check something */
+  if(selected_clique >= 0 && model->num_of_cliques > selected_clique){
+    clique_of_interest = model->cliques[selected_clique];
     num_of_vars = clique_of_interest->p->num_of_vars;
 
-    vars = (Variable *) calloc(num_of_vars, sizeof(Variable));
+    vars = (variable *) calloc(num_of_vars, sizeof(variable));
     if(!vars){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free_model(model);

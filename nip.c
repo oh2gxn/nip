@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.68 2005-05-27 13:18:04 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.69 2005-05-27 13:36:37 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -300,14 +300,14 @@ time_series read_timeseries(nip model, char* filename){
     j = 1;
     for(i = 0; i < df->num_of_nodes; i++)
       if(equal_variables(model->variables[k], 
-			 get_variable(model, df->node_symbols[i])))
+			 model_variable(model, df->node_symbols[i])))
 	j = 0;
     if(j)
       ts->hidden[m++] = model->variables[k];
   }
 
   for(i = 0; i < df->num_of_nodes; i++)
-    ts->observed[i] = get_variable(model, df->node_symbols[i]);
+    ts->observed[i] = model_variable(model, df->node_symbols[i]);
 
   /* Allocate some space for data */
   ts->data = (int**) calloc(ts->length, sizeof(int*));
@@ -341,7 +341,7 @@ time_series read_timeseries(nip model, char* filename){
 
     /* 3. Put into the data array */
     for(i = 0; i < m; i++){
-      ts->data[j][i] = get_stateindex(get_variable(model, 
+      ts->data[j][i] = get_stateindex(model_variable(model, 
 						   df->node_symbols[i]), 
 				      tokens[i]);
 
@@ -427,7 +427,7 @@ int set_observation(time_series ts, variable v, int time, char* observation){
 
 int insert_hard_evidence(nip model, char* varname, char* observation){
   int ret;
-  variable v = get_variable(model, varname);
+  variable v = model_variable(model, varname);
   if(v == NULL)
     return ERROR_INVALID_ARGUMENT;
   ret = enter_observation(model->variables, model->num_of_vars, 
@@ -970,7 +970,7 @@ uncertain_series forward_backward_inference(time_series ts,
 
 int insert_soft_evidence(nip model, char* varname, double* distribution){
   int ret;
-  variable v = get_variable(model, varname);
+  variable v = model_variable(model, varname);
   if(v == NULL)
     return ERROR_INVALID_ARGUMENT;
   ret =  enter_evidence(model->variables, model->num_of_vars, 
@@ -981,7 +981,7 @@ int insert_soft_evidence(nip model, char* varname, double* distribution){
 }
 
 
-variable get_variable(nip model, char* symbol){
+variable model_variable(nip model, char* symbol){
   int i;
 
   if(!model){
