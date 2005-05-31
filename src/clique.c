@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.2 2005-05-27 13:24:16 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.3 2005-05-31 13:04:43 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -470,10 +470,12 @@ potential create_potential(variable variables[], int num_of_vars,
    */
   if(data != NULL)
 
-    /* Copy the contents to their correct places 
-     * JJT: In principle it is a bit ugly to do this 
-     * at this level. If potential.c changes, this has to 
-     * be revised too!!! */
+    /* Copy the contents to their correct places */
+    /******************************************************* 
+	  JJT: In principle it is a bit ugly to do this 
+	  at this level. If potential.c changes, this has to 
+	  be revised too!!! 
+    ********************************************************/
     for(i = 0; i < size_of_data; i++){
 
       /*
@@ -507,6 +509,7 @@ potential create_potential(variable variables[], int num_of_vars,
 }
 
 
+/* NOTE: don't use this. This is just a bad idea we had... */
 double *reorder_potential(variable vars[], potential p){
 
   int old_flat_index, new_flat_index;
@@ -621,7 +624,6 @@ double *reorder_potential(variable vars[], potential p){
 
     /* 4. */
     new_data[new_flat_index] = p->data[old_flat_index];
-
   }
 
   free(old_indices);
@@ -960,7 +962,6 @@ int global_retraction(variable* vars, int nvars, clique* cliques,
       return ERROR_GENERAL;
     }
   }
-
   return NO_ERROR;
 }
 
@@ -1400,27 +1401,46 @@ static void jtree_dfs(clique start, void (*cFuncPointer)(clique),
 
 
 /* a recursive dfs of some sort */
-int gather_joint_probability(clique start, potential target, variable *vars){
+potential gather_joint_probability(clique start, variable *vars, 
+				   int num_of_vars){
   
   /* a lot of copy-paste from jtree_dfs */
   int i; 
   //int j = 0, k = 0;
   //int retval = 0;
   int *mapping = NULL;
-  //potential temp = NULL;
+  int *cardinality = NULL;
+  potential target = NULL;
+  //variable *remaining_vars = NULL; /* for recursion */
   sepset_link l;
   sepset s;
   
   if(start == NULL) /* error? */
-    return ERROR_NULLPOINTER;
+    return NULL;
 
+  /* List of neigboring sepsets */
   l = start->sepsets;
 
   /* Mark the clique */
   start->mark = 1;
 
-  /* NOTE: You _could_ do something with the clique here */
 
+  /* NOTE: You _could_ do something with the clique here (pre-order) */
+
+  /*** 1. Reserve space ***/
+
+  /* FIXME: Union of wanted and clique variables */
+  cardinality = (int*) calloc(num_of_vars, sizeof(int));
+  if(!cardinality){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+  for(i = 0; i < num_of_vars; i++)
+    cardinality[i] = number_of_values(vars[i]);
+  /* possibly HUGE potential array ! */
+  target = make_potential(cardinality, num_of_vars, NULL); 
+  free(cardinality);
+  
   /* Traverse to the neighboring cliques */
   while (l != NULL){
     s = (sepset)(l->data);
@@ -1429,12 +1449,11 @@ int gather_joint_probability(clique start, potential target, variable *vars){
     for(i = 0; i < 2; i++){ 
       if(!clique_marked(s->cliques[i])){
 	
-	/* NOTE: This is the place for the calculations. */
-	/* Needs a generalised potential multiplication! */
-	
-	/* How about a specialized function for this: 
-	 * - calculate mappings here
-	 * - make the operation in potential.c        */
+	/*** 2. Potential operations ***/
+
+	/* - Multiplication and division (s->cliques[i] / s) */
+
+	/* - Multiplication with the recursive results */
 	
       }
     }
@@ -1442,8 +1461,12 @@ int gather_joint_probability(clique start, potential target, variable *vars){
     l = l->fwd;
   }
 
+  /* NOTE: You _could_ do something with the clique here (post-order) */
+
+  /*** 3. Marginalisation (if any?) ***/
+
   free(mapping);
-  return NO_ERROR;
+  return target;
 }
 
 

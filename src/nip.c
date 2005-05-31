@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.69 2005-05-27 13:36:37 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.70 2005-05-31 13:04:43 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1528,33 +1528,17 @@ double *get_probability(nip model, variable v){
 potential get_joint_probability(nip model, variable *vars, int num_of_vars){
   potential p;
   int i;
-  int *cardinality;
-  int retval;
-
-  cardinality = (int*) calloc(num_of_vars, sizeof(int));
-  if(!cardinality){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-
-  for(i = 0; i < num_of_vars; i++)
-    cardinality[i] = number_of_values(vars[i]);
-
-  p = make_potential(cardinality, num_of_vars, NULL); /* possibly HUGE ! */
-  free(cardinality);
 
   /* Unmark all cliques */
   for (i = 0; i < model->num_of_cliques; i++)
     unmark_clique(model->cliques[i]);
 
   /* Make a DFS in the tree... */
-  retval = gather_joint_probability(model->cliques[0], p, vars);
-  if(retval != NO_ERROR){
+  p = gather_joint_probability(model->cliques[0], vars, num_of_vars);
+  if(p == NULL){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    free_potential(p);
     return NULL;
   }
-
   return p;
 }
 

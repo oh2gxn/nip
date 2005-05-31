@@ -1,5 +1,5 @@
 /*
- * clique.h $Id: clique.h,v 1.1 2005-05-27 13:18:03 jatoivol Exp $
+ * clique.h $Id: clique.h,v 1.2 2005-05-31 13:04:43 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -68,7 +68,9 @@ potential create_potential(variable variables[], int num_of_vars,
 			   double data[]);
 
 
-/* double *reorder_potential(variable vars[], potential p); */
+/* Something very dangerous...
+double *reorder_potential(variable vars[], potential p); 
+*/
 
 /* Method for unmarking a clique: call this to every clique before 
    collecting or distributing evidence. */
@@ -102,14 +104,14 @@ int collect_evidence(clique c1, sepset s12, clique c2);
 /*
  * Method for finding out the joint probability distribution of arbitrary
  * variables by making a DFS in the join tree. "start" is the starting 
- * point for the recursion. The "target" parameter specifies the (already 
- * allocated) potential in which the results are accumulated. The variable 
- * array "vars" specifies the variables of interest. The array also specifies 
- * the order of variables in the given potential. The return value is 
- * an error code.
+ * point for the recursion. The variable array "vars" specifies the 
+ * variables of interest. The array also specifies the order of variables in 
+ * the resulting potential and the size of the array must be specified as 
+ * the third parameter.
  * NOTE: Remember to unmark all cliques before calling this.
  */
-int gather_joint_probability(clique start, potential target, variable *vars);
+potential gather_joint_probability(clique start, variable *vars, 
+				   int num_of_vars);
 
 
 /*
