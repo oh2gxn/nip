@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.70 2005-05-31 13:04:43 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.71 2005-06-01 12:59:10 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -656,7 +656,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
-    /* Put some data in */
+    /* Put some data in (Q: should this be AFTER message passing) */
     for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
       if(ts->data[t][i] >= 0)
 	enter_i_observation(model->variables, model->num_of_vars, 
@@ -832,7 +832,7 @@ uncertain_series forward_backward_inference(time_series ts,
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
-    /* Put some data in */
+    /* Put some data in (Q: should this be AFTER message passing?) */
     for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
       if(ts->data[t][i] >= 0)
 	enter_i_observation(model->variables, model->num_of_vars, 
@@ -844,7 +844,6 @@ uncertain_series forward_backward_inference(time_series ts,
       if(finish_timeslice_message_pass(model, FORWARD, 
 				       timeslice_sepsets[t-1], 
 				       NULL)                   != NO_ERROR){
-
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
@@ -1102,7 +1101,8 @@ time_series mlss(variable vars[], int nvars, time_series ts){
  * - function pointers are pretty much out of the question in this case, 
  *   because they can't deliver the results without global variables
  * - some parts of the code could be transformed into separate procedures */
-static int e_step(time_series ts, potential* parameters, double* loglikelihood){
+static int e_step(time_series ts, potential* parameters, 
+		  double* loglikelihood){
   int i, j, k, t, size;
   int *cardinalities = NULL;
   variable temp;
@@ -1163,28 +1163,11 @@ static int e_step(time_series ts, potential* parameters, double* loglikelihood){
   use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
-
-    /* This computes the log likelihood of the ts */
-
-    /*** FIXME: watch out for missing data etc. ***/
-    *loglikelihood = *loglikelihood + 
-      momentary_loglikelihood(model, ts->observed, ts->data[t], 
-			      model->num_of_vars - ts->num_of_hidden); 
-    /* NOTE: independence assumptions between time steps ??? */
-    
-    /* Put some data in */
-    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-      if(ts->data[t][i] >= 0)
-	enter_i_observation(model->variables, model->num_of_vars, 
-			    model->cliques, model->num_of_cliques, 
-			    ts->observed[i], ts->data[t][i]);
-    
     
     if(t > 0)
       if(finish_timeslice_message_pass(model, FORWARD, 
 				       timeslice_sepsets[t-1], 
 				       NULL)                   != NO_ERROR){
-
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	/* i is useless at this point */
 	for(i = 0; i < model->num_of_vars; i++)
@@ -1195,6 +1178,20 @@ static int e_step(time_series ts, potential* parameters, double* loglikelihood){
 	free(timeslice_sepsets);
 	return ERROR_GENERAL;
       }
+
+    /* This computes the log likelihood of the ts */
+    /*** FIXME: watch out for missing data etc. ***/
+    *loglikelihood = *loglikelihood + 
+      momentary_loglikelihood(model, ts->observed, ts->data[t], 
+			      model->num_of_vars - ts->num_of_hidden);
+    /* Q: old data automagically taken into consideration? */
+    
+    /* Put some data in */
+    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			    ts->observed[i], ts->data[t][i]);
     
     /* Do the inference */
     make_consistent(model);
@@ -1463,7 +1460,6 @@ int em_learn(time_series ts, double threshold){
 }
 
 
-/* TODO: how are joint probabilities computed? */
 double momentary_loglikelihood(nip model, variable* observed, 
 			       int* indexed_data, int n_observed){
   potential p;
@@ -1471,10 +1467,11 @@ double momentary_loglikelihood(nip model, variable* observed,
 
   /* NOTE: the potential array will be ordered according to the 
    * given variable-array, not the same way as clique potentials */
-  p = get_joint_probability(model, observed, n_observed); /* expensive */
+  p = get_joint_probability(model, observed, n_observed); /* EXPENSIVE */
+  if(!p)
+    return -DBL_MAX;
 
   likelihood = get_pvalue(p, indexed_data);
-
   if(likelihood > 0)
     return log(likelihood);
   else

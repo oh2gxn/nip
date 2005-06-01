@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.58 2005-05-10 12:09:06 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.59 2005-06-01 12:59:10 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -228,6 +228,7 @@ int general_marginalise(potential source, potential destination,
   return NO_ERROR;
 }
 
+
 int total_marginalise(potential source, double destination[], int variable){
   int i, j, x, index = 0, flat_index;
   int *source_indices;
@@ -268,9 +269,9 @@ int total_marginalise(potential source, double destination[], int variable){
   return NO_ERROR;
 }
 
+
 int update_potential(potential numerator, potential denominator, 
 		     potential target, int mapping[]){
-
   int i;
   int *source_indices = NULL; 
   int *target_indices = NULL;
