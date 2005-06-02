@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.5 2005-06-02 08:00:53 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.6 2005-06-02 11:43:01 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1596,6 +1596,10 @@ potential gather_joint_probability(clique start, variable *vars,
     free_potential(sum);
     return NULL;
   }
+
+  /* 4.4 Normalise (?) */
+  /* Q: is this a good idea at this point? */
+  normalise(sum->data, sum->size_of_data);
 
   /* The gain of having a join tree in the first place: */
   free_potential(product); 

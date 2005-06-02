@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.29 2005-05-27 13:36:37 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.30 2005-06-02 11:43:01 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -134,6 +134,26 @@ char* get_observation(time_series ts, variable v, int time);
 int set_observation(time_series ts, variable v, int time, char* observation);
 
 
+/* This is a function for telling the model about observations. 
+ * In case of an error, a non-zero value is returned. */
+int insert_hard_evidence(nip model, char* varname, char* observation);
+
+
+/* If an observation has some uncertainty, the evidence can be inserted 
+ * with this procedure. The returned value is 0 if everything went well. */
+int insert_soft_evidence(nip model, char* varname, double* distribution);
+
+
+/* Method for inserting all the evidence at a specified step <t> in 
+ * a time series <ts> into the (time slice) model <ts->model>. */
+int insert_ts_step(time_series ts, int t, nip model);
+
+
+/* Method for inserting all the evidence at a specified step <t> in 
+ * an uncertain time series <ucs> into the model <ucs->model>. */
+int insert_ucs_step(uncertain_series ucs, int t, nip model);
+
+
 /* This algorithm computes the probability distributions for every 
  * hidden variable and for every time step according to the timeseries.
  * It uses only forward propagation, so the result of time step t 
@@ -153,19 +173,12 @@ uncertain_series forward_backward_inference(time_series ts,
 					   variable vars[], int nvars);
 
 
-/* This is a function for telling the model about observations. 
- * In case of an error, a non-zero value is returned. */
-int insert_hard_evidence(nip model, char* varname, char* observation);
-
-
-/* If an observation has some uncertainty, the evidence can be inserted 
- * with this procedure. The returned value is 0 if everything went well. */
-int insert_soft_evidence(nip model, char* varname, double* distribution);
-
-
+/* Fetches you the variable with a given name. */
 variable model_variable(nip model, char* symbol);
 
 
+/* Makes the join tree consistent i.e. does the inference on a single 
+ * timeslice (useful after inserting evidence). */
 void make_consistent(nip model);
 
 

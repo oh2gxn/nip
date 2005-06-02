@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.72 2005-06-02 08:00:53 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.73 2005-06-02 11:43:01 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -441,6 +441,50 @@ int insert_hard_evidence(nip model, char* varname, char* observation){
 }
 
 
+int insert_soft_evidence(nip model, char* varname, double* distribution){
+  int ret;
+  variable v = model_variable(model, varname);
+  if(v == NULL)
+    return ERROR_INVALID_ARGUMENT;
+  ret =  enter_evidence(model->variables, model->num_of_vars, 
+			model->cliques, model->num_of_cliques, 
+			v, distribution);
+  make_consistent(model);
+  return ret;
+}
+
+
+int insert_ts_step(time_series ts, int t, nip model){
+  int i;
+  /* note how <model> may be different from ts->model */
+
+  for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++){
+    if(ts->data[t][i] >= 0)
+      enter_i_observation(model->variables, model->num_of_vars, 
+			  model->cliques, model->num_of_cliques, 
+			  ts->observed[i], ts->data[t][i]);
+  }
+  return NO_ERROR;
+}
+
+
+int insert_ucs_step(uncertain_series ucs, int t, nip model){
+  int i, e;
+  /* note how <model> may be different from ucs->model */
+
+  for(i = 0; i < ucs->num_of_vars; i++){
+    e = enter_evidence(model->variables, model->num_of_vars, 
+		       model->cliques, model->num_of_cliques, 
+		       ucs->variables[i], ucs->data[t][i]);
+    if(e != NO_ERROR){
+      report_error(__FILE__, __LINE__, e, 1);  
+      return e;
+    }
+  }
+  return NO_ERROR;
+}
+
+
 /* Starts a message pass between timeslices */
 static int start_timeslice_message_pass(nip model, int direction,
 					potential sepset){
@@ -657,11 +701,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     /* Put some data in (Q: should this be AFTER message passing) */
-    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-      if(ts->data[t][i] >= 0)
-	enter_i_observation(model->variables, model->num_of_vars, 
-			    model->cliques, model->num_of_cliques, 
-			    ts->observed[i], ts->data[t][i]);
+    insert_ts_step(ts, t, model);
     
     if(t > 0)
       if(finish_timeslice_message_pass(model, FORWARD, 
@@ -833,12 +873,7 @@ uncertain_series forward_backward_inference(time_series ts,
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     /* Put some data in (Q: should this be AFTER message passing?) */
-    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-      if(ts->data[t][i] >= 0)
-	enter_i_observation(model->variables, model->num_of_vars, 
-			    model->cliques, model->num_of_cliques, 
-			    ts->observed[i], ts->data[t][i]);
-    
+    insert_ts_step(ts, t, model);
     
     if(t > 0)
       if(finish_timeslice_message_pass(model, FORWARD, 
@@ -882,11 +917,7 @@ uncertain_series forward_backward_inference(time_series ts,
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
     /* Put some evidence in */
-    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-      if(ts->data[t][i] >= 0)
-	enter_i_observation(model->variables, model->num_of_vars, 
-			    model->cliques, model->num_of_cliques, 
-			      ts->observed[i], ts->data[t][i]);
+    insert_ts_step(ts, t, model);
 
     /* Pass the message from the past */
     if(t > 0)
@@ -964,19 +995,6 @@ uncertain_series forward_backward_inference(time_series ts,
   free(timeslice_sepsets);
 
   return results;
-}
-
-
-int insert_soft_evidence(nip model, char* varname, double* distribution){
-  int ret;
-  variable v = model_variable(model, varname);
-  if(v == NULL)
-    return ERROR_INVALID_ARGUMENT;
-  ret =  enter_evidence(model->variables, model->num_of_vars, 
-			model->cliques, model->num_of_cliques, 
-			v, distribution);
-  make_consistent(model);
-  return ret;
 }
 
 
@@ -1187,11 +1205,7 @@ static int e_step(time_series ts, potential* parameters,
     /* Q: old data automagically taken into consideration? */
     
     /* Put some data in */
-    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-      if(ts->data[t][i] >= 0)
-	enter_i_observation(model->variables, model->num_of_vars, 
-			    model->cliques, model->num_of_cliques, 
-			    ts->observed[i], ts->data[t][i]);
+    insert_ts_step(ts, t, model);
     
     /* Do the inference */
     make_consistent(model);
@@ -1225,11 +1239,7 @@ static int e_step(time_series ts, potential* parameters,
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
     /* Put some evidence in */
-    for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-      if(ts->data[t][i] >= 0)
-	enter_i_observation(model->variables, model->num_of_vars, 
-			    model->cliques, model->num_of_cliques, 
-			      ts->observed[i], ts->data[t][i]);
+    insert_ts_step(ts, t, model);
 
     /* Pass the message from the past */
     if(t > 0)
@@ -1522,8 +1532,6 @@ double *get_probability(nip model, variable v){
 }
 
 
-/* TODO: compute a potential describing joint probability distribution of 
- * given variables */
 potential get_joint_probability(nip model, variable *vars, int num_of_vars){
   potential p;
   int i;

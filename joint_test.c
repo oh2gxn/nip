@@ -1,8 +1,8 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.5 2005-05-27 13:36:37 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.6 2005-06-02 11:43:01 jatoivol Exp $
  * Testing the calculation of joint probabilities.
- * Command line parameters: 1) a .net file, 2) clique number (0 ... N - 1)
- * where N is the number of cliques.
+ * Command line parameters: 1) a .net file, 2) data file with one step,
+ * 3) names of wanted variables
  */
 
 #include <stdlib.h>
@@ -18,12 +18,12 @@
 int main(int argc, char *argv[]){
 
   int i;
-  int num_of_vars;
-  int selected_clique = -1;
-  potential result;
+  int num_of_vars = 0;
+  potential result = NULL;
 
   nip model = NULL;
-  clique clique_of_interest = NULL;
+  time_series ts = NULL;
+  variable v = NULL;
   variable *vars = NULL;
 
   /*****************************************/
@@ -31,68 +31,64 @@ int main(int argc, char *argv[]){
   /*****************************************/
 
   /* -- Start parsing the network definition file */
-  if(argc < 2){
-    printf("Give the name of the net-file, please!\n");
+  if(argc < 3){
+    printf("Give the names of the net-file and data file please!\n");
     return 0;
   }
-  else{
-
-    /* It's possible to select a clique (0 -- num_of_cliques - 1) as
-     * the second command line parameter.
-     */
-    if(argc >= 3)
-      selected_clique = atoi(argv[2]);
-    model = parse_model(argv[1]);
-  }
-
-  if(model == NULL)
+  
+  /* read the model */
+  model = parse_model(argv[1]);
+  if(!model)
     return -1;
-  /* The input file has been parsed. -- */
-
-  print_cliques(model);
-
-  /********************/
-  /* Do the inference */
-  /********************/
-    
+  use_priors(model, 1);
+  
+  /* read the data */
+  ts = read_timeseries(model, argv[2]);
+  if(!ts)
+    return -1;
+  
+  /* enter the evidence and make the inference */
+  i = insert_ts_step(ts, 0, model);
+  if(i != NO_ERROR)
+    return -1;
   make_consistent(model);
-    
-  /*********************************/
-  /* Check the result of inference */
-  /*********************************/
-    
-  /* Let's take the third clique and check something */
-  if(selected_clique >= 0 && model->num_of_cliques > selected_clique){
-    clique_of_interest = model->cliques[selected_clique];
-    num_of_vars = clique_of_interest->p->num_of_vars;
-
+  
+  /* It's possible to select the variables as
+   * the third...N'th command line parameters.
+   */
+  if(argc > 3){
+    num_of_vars = argc - 3;
     vars = (variable *) calloc(num_of_vars, sizeof(variable));
-    if(!vars){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      free_model(model);
-      return 1;
+    for(i = 0; i < num_of_vars; i++){
+      v = model_variable(model, argv[3 + i]);
+      if(!v)
+	return -1;
+      vars[i] = v;
     }
-
-    /*
-    for(i = 0; i < num_of_vars; i++)
-      vars[i] = clique_of_interest->variables[num_of_vars - 1 - i];
-    */
-
-    /*
-     * FIXME: Muuttujien järjestys vaikuttaa hommaan.
-     * Ylempi (pois kommentoitu) toimii, tämä ei.
-     * Koodasin kyllä siinä uskossa, että mikä tahansa muuttujien järjestys
-     * tulisi toimimaan...
-     */
-    for(i = 0; i < num_of_vars; i++)
-      vars[i] = clique_of_interest->variables[i];
-
-    result = get_joint_probability(model, vars, num_of_vars);
-
-    free(vars);
-    free(result);
   }
+  else{ /* argc == 3 */
+    /* else we just take the hidden variables */
+    num_of_vars = ts->num_of_hidden;
+    vars = ts->hidden;
+  }
+  /* The inputs have been parsed. -- */
+  
+  /*****************************/
+  /* The function to be tested */
+  /*****************************/  
+  result = get_joint_probability(model, vars, num_of_vars);
 
+  /* Print stuff */
+  printf("P(");
+  for(i = 0; i < num_of_vars-1; i++){
+    printf("%s, ", get_symbol(vars[i]));
+  }
+  printf("%s) equals: \n", get_symbol(vars[num_of_vars-1]));
+  print_potential(result);
+  
+  free(vars);
+  free_potential(result);
+  free_timeseries(ts);
   free_model(model);
 
   return 0;
