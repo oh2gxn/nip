@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.4 2005-06-01 12:59:10 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.5 2005-06-02 08:00:53 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1485,7 +1485,6 @@ potential gather_joint_probability(clique start, variable *vars,
     free(cardinality);
     free(remaining_vars);
     free_potential(product);
-    free_potential(sum);
     return NULL;
   }
   /* perhaps this could have beed done earlier... */
@@ -1505,7 +1504,6 @@ potential gather_joint_probability(clique start, variable *vars,
     free(cardinality);
     free(remaining_vars);
     free_potential(product);
-    free_potential(sum);
     return NULL;
   }
   /* free(mapping);
@@ -1521,9 +1519,16 @@ potential gather_joint_probability(clique start, variable *vars,
       if(!clique_marked(c)){
 	
 	/*** N x 3. Potential operations ***/
-
+	
 	/* 3.1 Mapping between sepset and product potentials */
-	// TODO...
+	for(j = 0; j < s->new->num_of_vars; j++){
+	  for(k = 0; k < nrv; k++){ /* linear search */
+	    if(equal_variables(s->variables[j], remaining_vars[k])){
+	      mapping[j] = k;
+	      break;
+	    }
+	  }
+	}
 
 	/* 3.2 Division with sepset potential */
 	retval = update_potential(NULL, s->new, product, mapping);
@@ -1533,20 +1538,35 @@ potential gather_joint_probability(clique start, variable *vars,
 	  free(remaining_vars);
 	  free(mapping);
 	  free_potential(product);
-	  free_potential(sum);
 	  return NULL;
 	}
 	
-	/* 3.3 Continue DFS */
+	/* 3.3 Decide what kind of potential you need 
+	 *     from the rest of the tree */
+	
+	/* The same as <product> potential, although it's too large. 
+	 * NOTE: I guess there is a better way... */
+	
+	/* 3.4 Continue DFS */
 	rest = gather_joint_probability(c, remaining_vars, nrv);
 	
-	/* 3.4 Mapping between product potential and recursive result */
-	// TODO...
+	/* 3.5 Mapping between product potential and recursive result */
+	/* NOTE: this is the version 0.1 */
+	for(j = 0; j < nrv; j++)
+	  mapping[j] = j; /* trivial mapping */
 
-	/* 3.5 Multiplication with the recursive results */
-	// TODO...
-	
-
+	/* 3.6 Multiplication with the recursive results */
+	retval = update_potential(rest, NULL, product, mapping);
+	if(retval != NO_ERROR){
+	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	  free(cardinality);
+	  free(remaining_vars);
+	  free(mapping);
+	  free_potential(product);
+	  free_potential(rest);
+	  return NULL;
+	}
+	free_potential(rest);
       }
     }
 
@@ -1563,13 +1583,23 @@ potential gather_joint_probability(clique start, variable *vars,
   free(cardinality);
 
   /* 4.2 Form the mapping between product and sum potentials */
-  // TODO...
+  for(i = 0; i < num_of_vars; i++)
+    mapping[i] = i; /* Trivial because of the union operation above */
 
   /* 4.3 Marginalise */
   retval = general_marginalise(product, sum, mapping);
-  // TODO...
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free(remaining_vars);
+    free(mapping);
+    free_potential(product);
+    free_potential(sum);
+    return NULL;
+  }
 
-  free(product); /* <= the gain of having a join tree in the first place */
+  /* The gain of having a join tree in the first place: */
+  free_potential(product); 
+  free(remaining_vars);
   free(mapping);
   return sum;
 }

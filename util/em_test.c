@@ -1,13 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "Graph.h"
-#include "Variable.h"
+#include "nip.h"
+#include "variable.h"
 
-void main() {
-
-    Graph *G;
-    Variable v1, v2, v3;
+int main(int argc, char *argv[]) {
 
     /* XX fundeeraa detaileja */
 
+  return 0;
 }
