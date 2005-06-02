@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.6 2005-06-02 11:43:01 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.7 2005-06-02 13:07:41 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) data file with one step,
  * 3) names of wanted variables
@@ -46,6 +46,13 @@ int main(int argc, char *argv[]){
   ts = read_timeseries(model, argv[2]);
   if(!ts)
     return -1;
+
+  /**********************/
+  /* Compute likelihood */
+  /**********************/
+  printf("Log. likelihood: %f \n", 
+	 momentary_loglikelihood(model, ts->observed, ts->data[0], 
+				 model->num_of_vars - ts->num_of_hidden));
   
   /* enter the evidence and make the inference */
   i = insert_ts_step(ts, 0, model);
@@ -73,9 +80,9 @@ int main(int argc, char *argv[]){
   }
   /* The inputs have been parsed. -- */
   
-  /*****************************/
-  /* The function to be tested */
-  /*****************************/  
+  /**************************************************/
+  /* The joint probability computation to be tested */
+  /**************************************************/
   result = get_joint_probability(model, vars, num_of_vars);
 
   /* Print stuff */

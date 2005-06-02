@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.6 2005-06-02 11:43:01 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.7 2005-06-02 13:07:41 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1401,6 +1401,12 @@ static void jtree_dfs(clique start, void (*cFuncPointer)(clique),
 
 
 /* a recursive dfs of some sort */
+
+/** TODO: Investigate whether this can be done with smaller 
+ ** potential arrays. Ideas:
+ ** - two sets of variables: given remaining_vars and the union
+ ** - prevent the dimensions from accumulating down the tree
+ **/
 potential gather_joint_probability(clique start, variable *vars, 
 				   int num_of_vars){  
   /* a lot of copy-paste from jtree_dfs */
@@ -1425,6 +1431,13 @@ potential gather_joint_probability(clique start, variable *vars,
 
   /* Mark the clique */
   start->mark = 1;
+
+  /*** 0. DEBUG ***/
+  printf("Computing P(");
+  for(i = 0; i < num_of_vars-1; i++){
+    printf("%s, ", get_symbol(vars[i]));
+  }
+  printf("%s)\n", get_symbol(vars[num_of_vars-1]));
 
   /*** 1. Reserve space ***/
 

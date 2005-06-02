@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.73 2005-06-02 11:43:01 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.74 2005-06-02 13:07:41 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1485,7 +1485,7 @@ double momentary_loglikelihood(nip model, variable* observed,
   free_potential(p); /* Remember to free some memory */
 
   if(likelihood > 0)
-    return log(likelihood);
+    return log(likelihood); /* natural logarithm (a.k.a. ln) */
   else
     return -DBL_MAX;
 }
