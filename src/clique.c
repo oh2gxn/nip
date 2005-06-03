@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.7 2005-06-02 13:07:41 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.8 2005-06-03 15:00:12 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -38,6 +38,7 @@ static void retract_clique(clique c);
 static void retract_sepset(sepset s);
 
 static void remove_sepset(clique c, sepset s);
+
 
 clique make_clique(variable vars[], int num_of_vars){
   clique c;
@@ -1402,29 +1403,35 @@ static void jtree_dfs(clique start, void (*cFuncPointer)(clique),
 
 /* a recursive dfs of some sort */
 
-/** TODO: Investigate whether this can be done with smaller 
- ** potential arrays. Ideas:
- ** - two sets of variables: given remaining_vars and the union
- ** - prevent the dimensions from accumulating down the tree
+/** TODO: Currently this computes potentials in EVERY node of join tree 
+ ** even if the answer can be found in a single node. It could try to 
+ ** remember the found variables and prune the DFS after all necessary 
+ ** variables have been encountered.
  **/
-potential gather_joint_probability(clique start, variable *vars, 
-				   int num_of_vars){  
+potential gather_joint_probability(clique start, variable *vars, int n_vars,
+				   variable *isect, int n_isect){  
   /* a lot of copy-paste from jtree_dfs */
-  int i, j, k, m;
+  int i, j, k, m, n;
   int retval;
   int *mapping = NULL;
   int *cardinality = NULL;
   potential product = NULL;
   potential sum = NULL;
   potential rest = NULL;
-  variable *remaining_vars = NULL; /* for recursion */
+  variable *union_vars = NULL; 
+  int nuv;
+  variable *rest_vars = NULL; /* for recursion */
   int nrv;
+  variable *temp = NULL;
+  int nt;
   sepset_link l;
   sepset s;
   clique c;
   
-  if(start == NULL) /* error? */
+  if(start == NULL || vars == NULL || n_vars < 1){ 
+    /* error? */
     return NULL;
+  }
 
   /* List of neigboring sepsets */
   l = start->sepsets;
@@ -1432,78 +1439,90 @@ potential gather_joint_probability(clique start, variable *vars,
   /* Mark the clique */
   start->mark = 1;
 
+
   /*** 0. DEBUG ***/
-  printf("Computing P(");
-  for(i = 0; i < num_of_vars-1; i++){
-    printf("%s, ", get_symbol(vars[i]));
-  }
-  printf("%s)\n", get_symbol(vars[num_of_vars-1]));
+  printf("Computing P( ");
+  for(i = 0; i < n_vars; i++)
+    printf("%s ", get_symbol(vars[i]));
+  for(i = 0; i < n_isect; i++)
+    printf("%s ", get_symbol(isect[i]));  
+  printf(")\n");
+
 
   /*** 1. Reserve space ***/
 
   /* 1.1 Form the union of given variables and clique variables */
-  nrv = 0; /* size of intersection */
-  for(i = 0; i < num_of_vars; i++){
+  nuv = 0; /* size of intersection */
+  for(i = 0; i < n_vars; i++){
     for(j = 0; j < start->p->num_of_vars; j++){
+      /* (variables in isect are a subset of clique variables) */
       if(equal_variables(vars[i], start->variables[j])){
-	nrv++;
+	nuv++;
 	break;
       }
     }
   }
-  nrv = num_of_vars + start->p->num_of_vars - nrv; /* size of union */
-  remaining_vars = (variable*) calloc(nrv, sizeof(variable));
-  if(!remaining_vars){
+  nuv = n_vars + start->p->num_of_vars - nuv; /* size of union */
+  union_vars = (variable*) calloc(nuv, sizeof(variable));
+  if(!union_vars){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
   /* A certain kind of union */
-  for(i = 0; i < num_of_vars; i++){
-    remaining_vars[i] = vars[i]; /* first the given variables... */
-  }
-  k = num_of_vars; /* ...then rest of the clique variables */
+  for(i = 0; i < n_vars; i++)
+    union_vars[i] = vars[i]; /* first the given variables... */
+  for(i = 0; i < n_isect; i++)
+    union_vars[n_vars + i] = isect[i];
+  k = n_vars + n_isect; /* ...then rest of the clique variables */
   for(i = 0; i < start->p->num_of_vars; i++){
     m = 1;
-    for(j = 0; j < num_of_vars; j++){
+    for(j = 0; j < n_vars; j++){
       if(equal_variables(vars[j], start->variables[i])){
 	m = 0; /* don't add duplicates */
 	break;
       }
     }
+    for(j = 0; j < n_isect; j++){
+      if(equal_variables(isect[j], start->variables[i])){
+	m = 0; /* don't add duplicates */
+	break;
+      }
+    }
     if(m)
-      remaining_vars[k++] = start->variables[i];
+      union_vars[k++] = start->variables[i];
   }
 
   /* 1.2 Potential for the union of variables */
-  cardinality = (int*) calloc(nrv, sizeof(int));
+  cardinality = (int*) calloc(nuv, sizeof(int));
   if(!cardinality){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(remaining_vars);
+    free(union_vars);
     return NULL;
   }
-  for(i = 0; i < nrv; i++)
-    cardinality[i] = number_of_values(remaining_vars[i]);
+  for(i = 0; i < nuv; i++)
+    cardinality[i] = number_of_values(union_vars[i]);
   /* possibly HUGE potential array ! */
-  product = make_potential(cardinality, nrv, NULL); 
+  product = make_potential(cardinality, nuv, NULL); 
   /* free(cardinality);
-   * reuse the larger cardinality array: nrv >= num_of_vars */
+   * reuse the larger cardinality array: nrv >= n_vars */
+
 
   /*** 2. Multiply (<start> clique) ***/
   
   /* 2.1 Form the mapping between potentials */
   /* NOTE: a slightly bigger array allocated for future purposes also. */
-  mapping = (int*) calloc(nrv, sizeof(int));
+  mapping = (int*) calloc(nuv, sizeof(int));
   if(!mapping){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(cardinality);
-    free(remaining_vars);
+    free(union_vars);
     free_potential(product);
     return NULL;
   }
   /* perhaps this could have beed done earlier... */
   for(i = 0; i < start->p->num_of_vars; i++){
-    for(j = 0; j < nrv; j++){ /* linear search */
-      if(equal_variables(start->variables[i], remaining_vars[j])){
+    for(j = 0; j < nuv; j++){ /* linear search */
+      if(equal_variables(start->variables[i], union_vars[j])){
 	mapping[i] = j;
 	break;
       }
@@ -1515,7 +1534,7 @@ potential gather_joint_probability(clique start, variable *vars,
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free(cardinality);
-    free(remaining_vars);
+    free(union_vars);
     free_potential(product);
     return NULL;
   }
@@ -1535,8 +1554,8 @@ potential gather_joint_probability(clique start, variable *vars,
 	
 	/* 3.1 Mapping between sepset and product potentials */
 	for(j = 0; j < s->new->num_of_vars; j++){
-	  for(k = 0; k < nrv; k++){ /* linear search */
-	    if(equal_variables(s->variables[j], remaining_vars[k])){
+	  for(k = 0; k < nuv; k++){ /* linear search */
+	    if(equal_variables(s->variables[j], union_vars[k])){
 	      mapping[j] = k;
 	      break;
 	    }
@@ -1548,7 +1567,7 @@ potential gather_joint_probability(clique start, variable *vars,
 	if(retval != NO_ERROR){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	  free(cardinality);
-	  free(remaining_vars);
+	  free(union_vars);
 	  free(mapping);
 	  free_potential(product);
 	  return NULL;
@@ -1556,54 +1575,95 @@ potential gather_joint_probability(clique start, variable *vars,
 	
 	/* 3.3 Decide what kind of potential you need 
 	 *     from the rest of the tree */
-	
-	/* The same as <product> potential, although it's too large. 
-	 * NOTE: I guess there is a better way... */
-	
+
+	/* original <vars> and intersection of cliques */
+	clique_intersection(start, c, &temp, &nt);	
+	/* unfortunately we have to remove duplicates */
+	nrv = nt;
+	for(j = 0; j < nt; j++){
+	  for(k = 0; k < n_vars; k++){
+	    if(equal_variables(temp[j], vars[k])){
+	      nrv--;
+	      break;
+	    }
+	  }
+	}
+	rest_vars = (variable*) calloc(nrv, sizeof(variable));
+	if(!rest_vars){
+	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  free(cardinality);
+	  free(union_vars);
+	  free(mapping);
+	  free_potential(product);
+	  return NULL;
+	}
+	n = 0;
+	for(j = 0; j < nt; j++){
+	  m = 1;
+	  for(k = 0; k < n_vars; k++){
+	    if(equal_variables(temp[j], vars[k])){
+	      m = 0; /* don't add duplicates */
+	      break;
+	    }
+	  }
+	  if(m)
+	    rest_vars[n++] = temp[j];
+	}
+	free(temp); /* Remember to free the damn array */
+
 	/* 3.4 Continue DFS */
-	rest = gather_joint_probability(c, remaining_vars, nrv);
+	rest = gather_joint_probability(c, vars, n_vars, rest_vars, nrv);
 	
 	/* 3.5 Mapping between product potential and recursive result */
-	/* NOTE: this is the version 0.1 */
-	for(j = 0; j < nrv; j++)
-	  mapping[j] = j; /* trivial mapping */
+	for(j = 0; j < n_vars; j++)
+	  mapping[j] = j; /* the first part is trivial */
+	for(j = 0; j < nrv; j++){
+	  for(k = n_vars; k < nuv; k++){
+	    if(equal_variables(rest_vars[j], union_vars[k]))
+	      mapping[n_vars + j] = k;
+	    break;
+	  }
+	}
 
 	/* 3.6 Multiplication with the recursive results */
 	retval = update_potential(rest, NULL, product, mapping);
 	if(retval != NO_ERROR){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	  free(cardinality);
-	  free(remaining_vars);
+	  free(union_vars);
 	  free(mapping);
 	  free_potential(product);
 	  free_potential(rest);
 	  return NULL;
 	}
+	free(rest_vars);
 	free_potential(rest);
       }
     }
 
-    l = l->fwd;
+    l = l->fwd; /* next neigboring sepset */
   }
+  free(union_vars);
 
   /*** 4. Marginalisation (if any?) ***/
 
   /* 4.1 Reserve space for the result */
-  for(i = 0; i < num_of_vars; i++) /* NOTE: array was already allocated */
+  for(i = 0; i < n_vars; i++)
     cardinality[i] = number_of_values(vars[i]);
-  /* possibly HUGE potential array ! */
-  sum = make_potential(cardinality, num_of_vars, NULL); 
+  for(i = 0; i < n_isect; i++)
+    cardinality[n_vars + i] = number_of_values(isect[i]);
+  /* possibly LARGE potential array ! */
+  sum = make_potential(cardinality, n_vars + n_isect, NULL); 
   free(cardinality);
 
   /* 4.2 Form the mapping between product and sum potentials */
-  for(i = 0; i < num_of_vars; i++)
+  for(i = 0; i < n_vars + n_isect; i++)
     mapping[i] = i; /* Trivial because of the union operation above */
 
   /* 4.3 Marginalise */
   retval = general_marginalise(product, sum, mapping);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    free(remaining_vars);
     free(mapping);
     free_potential(product);
     free_potential(sum);
@@ -1616,7 +1676,6 @@ potential gather_joint_probability(clique start, variable *vars,
 
   /* The gain of having a join tree in the first place: */
   free_potential(product); 
-  free(remaining_vars);
   free(mapping);
   return sum;
 }
@@ -1641,7 +1700,6 @@ int clique_intersection(clique cl1, clique cl2, variable **vars, int *n){
   }
 
   for(i = 0; i < cl1->p->num_of_vars; i++)
-
     for(j = 0; j < cl2->p->num_of_vars; j++){
 
       if(equal_variables(cl1->variables[i], cl2->variables[j]))

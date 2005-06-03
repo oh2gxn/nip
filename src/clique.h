@@ -1,5 +1,5 @@
 /*
- * clique.h $Id: clique.h,v 1.2 2005-05-31 13:04:43 jatoivol Exp $
+ * clique.h $Id: clique.h,v 1.3 2005-06-03 15:00:12 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -103,15 +103,17 @@ int collect_evidence(clique c1, sepset s12, clique c2);
 
 /*
  * Method for finding out the joint probability distribution of arbitrary
- * variables by making a DFS in the join tree. "start" is the starting 
- * point for the recursion. The variable array "vars" specifies the 
+ * variables by making a DFS in the join tree. <start> is the starting 
+ * point for the recursion. The variable array <vars> specifies the 
  * variables of interest. The array also specifies the order of variables in 
  * the resulting potential and the size of the array must be specified as 
- * the third parameter.
+ * the third parameter <n_vars>. <isect> and <n_isect> are for the recursion 
+ * and should be NULL and 0 respectively when used from other functions.
+ * (<isect> MAY NOT contain any of the variables in <vars>)
  * NOTE: Remember to unmark all cliques before calling this.
  */
-potential gather_joint_probability(clique start, variable *vars, 
-				   int num_of_vars);
+potential gather_joint_probability(clique start, variable *vars, int n_vars,
+				   variable *isect, int n_isect);
 
 
 /*

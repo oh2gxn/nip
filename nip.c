@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.74 2005-06-02 13:07:41 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.75 2005-06-03 15:00:13 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -257,6 +257,9 @@ void free_model(nip model){
 }
 
 
+/************************************************/
+/*** FIXME: What if timeseries is empty!?!?!? ***/
+/************************************************/
 time_series read_timeseries(nip model, char* filename){
   int i, j, k, m;
   char** tokens = NULL;
@@ -269,6 +272,9 @@ time_series read_timeseries(nip model, char* filename){
     return NULL;
   }
   ts->model = model;
+  ts->hidden = NULL;
+  ts->observed = NULL;
+  ts->data = NULL;
 
   df = open_datafile(filename, ',', 0, 1);
 
@@ -285,8 +291,9 @@ time_series read_timeseries(nip model, char* filename){
 
   /* Allocate the array for the hidden variables. */
   ts->hidden = (variable *) calloc(ts->num_of_hidden, sizeof(variable));
-  ts->observed = (variable *) calloc(df->num_of_nodes, sizeof(variable));
-  if(!(ts->hidden && ts->observed)){
+  if(df->num_of_nodes > 0)
+    ts->observed = (variable *) calloc(df->num_of_nodes, sizeof(variable));
+  if(!(ts->hidden && (ts->observed || df->num_of_nodes == 0))){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(ts->hidden);
     free(ts);
@@ -306,54 +313,55 @@ time_series read_timeseries(nip model, char* filename){
       ts->hidden[m++] = model->variables[k];
   }
 
-  for(i = 0; i < df->num_of_nodes; i++)
-    ts->observed[i] = model_variable(model, df->node_symbols[i]);
+  if(df->num_of_nodes > 0){
+    for(i = 0; i < df->num_of_nodes; i++)
+      ts->observed[i] = model_variable(model, df->node_symbols[i]);
 
-  /* Allocate some space for data */
-  ts->data = (int**) calloc(ts->length, sizeof(int*));
-  if(!(ts->data)){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(ts->hidden);
-    free(ts->observed);
-    free(ts);
-    close_datafile(df);
-    return NULL;
-  }
-  for(i = 0; i < ts->length; i++){
-    ts->data[i] = (int*) calloc(df->num_of_nodes, sizeof(int));
-    if(!(ts->data[i])){
+    /* Allocate some space for data */
+    ts->data = (int**) calloc(ts->length, sizeof(int*));
+    if(!(ts->data)){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      for(j = 0; j < i; j++)
-	free(ts->data[j]);
-      free(ts->data);
       free(ts->hidden);
       free(ts->observed);
       free(ts);
       close_datafile(df);
       return NULL;
     }
-  }
-
-  /* Get the data */
-  for(j = 0; j < ts->length; j++){
-    m = nextline_tokens(df, ',', &tokens); /* 2. Read */
-    assert(m == df->num_of_nodes);
-
-    /* 3. Put into the data array */
-    for(i = 0; i < m; i++){
-      ts->data[j][i] = get_stateindex(model_variable(model, 
-						   df->node_symbols[i]), 
-				      tokens[i]);
-
-      /* Q: Should missing data be allowed?   A: Yes. */
-      /* assert(data[j][i] >= 0); */
+    for(i = 0; i < ts->length; i++){
+      ts->data[i] = (int*) calloc(df->num_of_nodes, sizeof(int));
+      if(!(ts->data[i])){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	for(j = 0; j < i; j++)
+	  free(ts->data[j]);
+	free(ts->data);
+	free(ts->hidden);
+	free(ts->observed);
+	free(ts);
+	close_datafile(df);
+	return NULL;
+      }
     }
-
-    for(i = 0; i < m; i++) /* 4. Dump away */
-      free(tokens[i]);
-    free(tokens);
+    
+    /* Get the data */
+    for(j = 0; j < ts->length; j++){
+      m = nextline_tokens(df, ',', &tokens); /* 2. Read */
+      assert(m == df->num_of_nodes);
+      
+      /* 3. Put into the data array */
+      for(i = 0; i < m; i++){
+	ts->data[j][i] = get_stateindex(model_variable(model, 
+						       df->node_symbols[i]), 
+					tokens[i]);
+	
+	/* Q: Should missing data be allowed?   A: Yes. */
+	/* assert(data[j][i] >= 0); */
+      }
+      
+      for(i = 0; i < m; i++) /* 4. Dump away */
+	free(tokens[i]);
+      free(tokens);
+    }
   }
-
   close_datafile(df);
   return ts;
 }
@@ -1541,7 +1549,7 @@ potential get_joint_probability(nip model, variable *vars, int num_of_vars){
     unmark_clique(model->cliques[i]);
 
   /* Make a DFS in the tree... */
-  p = gather_joint_probability(model->cliques[0], vars, num_of_vars);
+  p = gather_joint_probability(model->cliques[0], vars, num_of_vars, NULL, 0);
   if(p == NULL){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return NULL;

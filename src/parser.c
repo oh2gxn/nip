@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.95 2005-05-27 13:18:04 jatoivol Exp $
+ * $Id: parser.c,v 1.96 2005-06-03 15:00:13 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -94,6 +94,9 @@ void close_yyparse_infile(){
 }
 
 
+/******************************************/
+/*** FIXME: What if data file is empty? ***/
+/******************************************/
 datafile *open_datafile(char *filename, char separator,
 			int write, int nodenames){
 
