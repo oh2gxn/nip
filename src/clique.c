@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.10 2005-06-06 12:32:56 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.11 2005-06-06 14:05:23 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1612,6 +1612,8 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 	    if(equal_variables(rest_vars[j], union_vars[k])){
 	      mapping[n_vars + j] = k;
 	      break;
+	      /* (Reminder: once this block missed braces...
+	       * Had a lot of fun while hunting for the bug... :)*/
 	    }
 	  }
 	}
