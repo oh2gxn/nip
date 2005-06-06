@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.76 2005-06-06 06:59:17 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.77 2005-06-06 12:32:56 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -18,34 +18,6 @@
 */
 
 /***** 
- * DONE:
- * + some sort of a function for the forward-backward algorithm
- *   + a data type that can be returned by the algorithm (how to index?)
- *   + some abstraction for a time series (structure and access to data..?)
- *   + NOTE: this turned out to need linear space requirement w.r.t. 
- *           the length of the time series
- *           (assuming sepsets between timeslices have a constant size)
-
- * + There's a bug in the memory allocation! (Segmentation fault...)
- *   + The segmentation faults do not occur on: 
- *      IRIX, Solaris, Mac OS X or FreeBSD !
- *   + But it crashes on Linux: 32- and 64-bit Suse, Debian, Fedora Core 2
- *     + The fault occurs in the same spot on 32-bit systems
- *       and some other spot on 64-bit systems
- *   + Malloc gives null with non-timeslice models on OSF1 (kosh.hut.fi)
- *   + Some systems check the array bounds but not Linux!
-
- * + What about independent variables? Should their probabilities 
- *   be uniform or do they have a prior? If they have a prior, where it 
- *   should be stored? 
- *   + Solutions:
- *     - initialise(x,y,..., 1)  (i.e. transient initialisation)
- *       to the reset_model-procedure? ...no, let's enter_evidence instead
- *     + enter_evidence()
- *     + take "previous" and "num_of_parents" fields into consideration
- *     + include the prior into the independent variables
- 
-
  * TODO: 
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
@@ -77,7 +49,7 @@
  *     ones to be set
 
 
- * - Function for writing the parameters into a file
+ * - Function for writing the model parameters into a file
  *****/
 
 extern int yyparse();
@@ -257,14 +229,12 @@ void free_model(nip model){
 }
 
 
-/************************************************/
-/*** FIXME: What if timeseries is empty!?!?!? ***/
-/************************************************/
 time_series read_timeseries(nip model, char* filename){
   int i, j, k, m;
   char** tokens = NULL;
   time_series ts = NULL;
   datafile* df = NULL;
+  variable v =NULL;
   
   ts = (time_series) malloc(sizeof(time_series_type));
   if(!ts){
@@ -284,7 +254,19 @@ time_series read_timeseries(nip model, char* filename){
     free(ts);
     return NULL;
   }  
+
   ts->length = df->datarows;
+
+  /* Check the contents of data file */
+  for(i = 0; i < df->num_of_nodes; i++){
+    v = model_variable(model, df->node_symbols[i]);
+    if(v == NULL){
+      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+      free(ts);
+      close_datafile(df);
+      return NULL;
+    }
+  }
 
   /* Find out how many (totally) latent variables there are. */
   ts->num_of_hidden = model->num_of_vars - df->num_of_nodes;
@@ -370,11 +352,13 @@ time_series read_timeseries(nip model, char* filename){
 void free_timeseries(time_series ts){
   int t;
   if(ts){
-    for(t = 0; t < ts->length; t++)
-      free(ts->data[t]);
-    free(ts->data);
-    free(ts->hidden);
-    free(ts->observed);
+    if(ts->data){
+      for(t = 0; t < ts->length; t++)
+	free(ts->data[t]);
+      free(ts->data);
+      free(ts->hidden);
+      free(ts->observed);
+    }
     free(ts);
   }
 }
@@ -465,7 +449,9 @@ int insert_soft_evidence(nip model, char* varname, double* distribution){
 int insert_ts_step(time_series ts, int t, nip model){
   int i;
   /* note how <model> may be different from ts->model */
-
+  if(t > timeseries_length(ts))
+    return ERROR_INVALID_ARGUMENT;
+    
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++){
     if(ts->data[t][i] >= 0)
       enter_i_observation(model->variables, model->num_of_vars, 
@@ -827,7 +813,7 @@ uncertain_series forward_backward_inference(time_series ts,
       while(t > 0){
 	t--;
 	for(i = 0; i < nvars; i++)
-	  free(results->data[t][i]); /* Fixed 15.3.2005. Did it help? */
+	  free(results->data[t][i]);
 	free(results->data[t]);
       }
       free(results->data); /* t == 0 */
@@ -1427,8 +1413,8 @@ int em_learn(time_series ts, double threshold){
       free(parameters);
       return ERROR_OUTOFMEMORY;
     }
-    // The child MUST be the first variable in order to normalize
-    // potentials reasonably
+    /* The child MUST be the first variable in order to normalize
+     * potentials reasonably */
     card[0] = ts->model->variables[v]->cardinality;
     for(i = 1; i < n; i++)
       card[i] = ts->model->variables[v]->parents[i]->cardinality;
@@ -1483,6 +1469,9 @@ double momentary_loglikelihood(nip model, variable* observed,
   potential p;
   double likelihood;
 
+  if(!observed || !n_observed)
+    return -DBL_MAX;
+
   /* NOTE: the potential array will be ordered according to the 
    * given variable-array, not the same way as clique potentials */
   p = get_joint_probability(model, observed, n_observed); /* EXPENSIVE */
@@ -1491,10 +1480,6 @@ double momentary_loglikelihood(nip model, variable* observed,
 
   likelihood = get_pvalue(p, indexed_data);
   free_potential(p); /* Remember to free some memory */
-
-  /* DEBUG */
-  printf("Likelihood of data = %f\n", likelihood);
-
   if(likelihood > 0)
     return log(likelihood); /* natural logarithm (a.k.a. ln) */
   else
@@ -1557,6 +1542,9 @@ potential get_joint_probability(nip model, variable *vars, int num_of_vars){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return NULL;
   }
+  
+  /* Normalisation (???) */
+  normalise(p->data, p->size_of_data);
   return p;
 }
 

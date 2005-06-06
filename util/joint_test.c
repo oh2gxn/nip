@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.8 2005-06-03 15:00:13 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.9 2005-06-06 12:32:56 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) data file with one step,
  * 3) names of wanted variables
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
   if(!model)
     return -1;
   use_priors(model, 1);
-  
+
   /* read the data */
   ts = read_timeseries(model, argv[2]);
   if(!ts)
@@ -50,14 +50,13 @@ int main(int argc, char *argv[]){
   /**********************/
   /* Compute likelihood */
   /**********************/
-  printf("Log. likelihood: %f \n", 
-  	 momentary_loglikelihood(model, ts->observed, ts->data[0], 
-  				 model->num_of_vars - ts->num_of_hidden));
+  if(timeseries_length(ts) > 0)
+    printf("Log. likelihood: %f \n", 
+	   momentary_loglikelihood(model, ts->observed, ts->data[0], 
+				   model->num_of_vars - ts->num_of_hidden));
   
-  /* enter the evidence and make the inference */
+  /* enter the evidence and distribute it */
   i = insert_ts_step(ts, 0, model);
-  if(i != NO_ERROR)
-    return -1;
   make_consistent(model);
   
   /* It's possible to select the variables as
@@ -68,8 +67,11 @@ int main(int argc, char *argv[]){
     vars = (variable *) calloc(num_of_vars, sizeof(variable));
     for(i = 0; i < num_of_vars; i++){
       v = model_variable(model, argv[3 + i]);
-      if(!v)
+      if(!v){
+	report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+	fprintf(stderr, "  Variable %s unknown\n", argv[3 + i]);
 	return -1;
+      }
       vars[i] = v;
     }
   }

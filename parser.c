@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.96 2005-06-03 15:00:13 jatoivol Exp $
+ * $Id: parser.c,v 1.97 2005-06-06 12:32:56 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -94,9 +94,6 @@ void close_yyparse_infile(){
 }
 
 
-/******************************************/
-/*** FIXME: What if data file is empty? ***/
-/******************************************/
 datafile *open_datafile(char *filename, char separator,
 			int write, int nodenames){
 
@@ -118,6 +115,18 @@ datafile *open_datafile(char *filename, char separator,
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
+
+  f->name = NULL;
+  f->separator = separator;
+  f->file = NULL;
+  f->is_open = 0;
+  f->firstline_labels = 0;
+  f->line_now = 0;
+  f->datarows = 0;
+  f->node_symbols = NULL;
+  f->num_of_nodes = 0;
+  f->node_states = NULL;
+  f->num_of_states = NULL;
 
   if(write)
     f->file = fopen(filename,"w");
@@ -143,9 +152,6 @@ datafile *open_datafile(char *filename, char separator,
   }
 
   strcpy(f->name, filename);
-
-  f->separator = separator;
-  f->datarows = 0;
 
   /*
    * If file is opened in read mode, check the contents.

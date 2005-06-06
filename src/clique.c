@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.9 2005-06-06 06:59:17 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.10 2005-06-06 12:32:56 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1440,15 +1440,6 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   start->mark = 1;
 
 
-  /*** 0. DEBUG ***/
-  printf("Computing P( ");
-  for(i = 0; i < n_vars; i++)
-    printf("%s ", get_symbol(vars[i]));
-  for(i = 0; i < n_isect; i++)
-    printf("%s ", get_symbol(isect[i]));  
-  printf(")\n");
-
-
   /*** 1. Reserve space ***/
 
   /* 1.1 Form the union of given variables and clique variables */
@@ -1506,7 +1497,6 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   /* free(cardinality);
    * reuse the larger cardinality array: nuv >= n_vars */
 
-
   /*** 2. Multiply (<start> clique) ***/
   
   /* 2.1 Form the mapping between potentials */
@@ -1551,7 +1541,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
       if(!clique_marked(c)){
 	
 	/*** 3. Operations on potentials ***/
-	
+
 	/* 3.1 Mapping between sepset and product potentials */
 	for(j = 0; j < s->new->num_of_vars; j++){
 	  for(k = 0; k < nuv; k++){ /* linear search */
@@ -1572,13 +1562,14 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 	  free_potential(product);
 	  return NULL;
 	}
-	
+
 	/* 3.3 Decide what kind of potential you need 
 	 *     from the rest of the tree */
 
 	/* original <vars> and intersection of cliques */
-	clique_intersection(start, c, &temp, &nt);	
 	/* unfortunately we have to remove duplicates */
+	temp = s->variables;
+	nt = s->new->num_of_vars;
 	nrv = nt;
 	for(j = 0; j < nt; j++){
 	  for(k = 0; k < n_vars; k++){
@@ -1609,7 +1600,6 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 	  if(m)
 	    rest_vars[n++] = temp[j];
 	}
-	free(temp); /* Remember to free the damn array */
 
 	/* 3.4 Continue DFS */
 	rest = gather_joint_probability(c, vars, n_vars, rest_vars, nrv);
@@ -1619,9 +1609,10 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 	  mapping[j] = j; /* the first part is trivial */
 	for(j = 0; j < nrv; j++){
 	  for(k = n_vars; k < nuv; k++){
-	    if(equal_variables(rest_vars[j], union_vars[k]))
+	    if(equal_variables(rest_vars[j], union_vars[k])){
 	      mapping[n_vars + j] = k;
-	    break;
+	      break;
+	    }
 	  }
 	}
 
@@ -1643,39 +1634,55 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 
     l = l->fwd; /* next neigboring sepset */
   }
+
+  /*** DEBUG ***/
+  printf("Product potential P( ");
+  for(i = 0; i < nuv; i++)
+    printf("%s ", get_symbol(union_vars[i]));
+  printf(")\n");
+  //print_potential(product);
+
   free(union_vars);
 
   /*** 4. Marginalisation (if any?) ***/
 
-  /* 4.1 Reserve space for the result */
-  for(i = 0; i < n_vars; i++)
-    cardinality[i] = number_of_values(vars[i]);
-  for(i = 0; i < n_isect; i++)
-    cardinality[n_vars + i] = number_of_values(isect[i]);
-  /* possibly LARGE potential array ! */
-  sum = make_potential(cardinality, n_vars + n_isect, NULL); 
-  free(cardinality);
-
-  /* 4.2 Form the mapping between product and sum potentials */
-  for(i = 0; i < n_vars + n_isect; i++)
-    mapping[i] = i; /* Trivial because of the union operation above */
-
-  /* 4.3 Marginalise */
-  retval = general_marginalise(product, sum, mapping);
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    free(mapping);
-    free_potential(product);
-    free_potential(sum);
-    return NULL;
+  /* If we already have what we need, no marginalisation needed... */
+  if(nuv == n_vars + n_isect){
+    free(cardinality);
+    sum = product;
   }
-
+  else{
+    
+    /* 4.1 Reserve space for the result */
+    for(i = 0; i < n_vars; i++)
+      cardinality[i] = number_of_values(vars[i]);
+    for(i = 0; i < n_isect; i++)
+      cardinality[n_vars + i] = number_of_values(isect[i]);
+    /* possibly LARGE potential array ! */
+    sum = make_potential(cardinality, n_vars + n_isect, NULL); 
+    free(cardinality);
+    
+    /* 4.2 Form the mapping between product and sum potentials */
+    for(i = 0; i < n_vars + n_isect; i++)
+      mapping[i] = i; /* Trivial because of the union operation above */
+    
+    /* 4.3 Marginalise */
+    retval = general_marginalise(product, sum, mapping);
+    if(retval != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      free(mapping);
+      free_potential(product);
+      free_potential(sum);
+      return NULL;
+    }
+    /* The gain of having a join tree in the first place: */
+    free_potential(product);
+  }
+  
   /* 4.4 Normalise (?) */
   /* Q: is this a good idea at this point? */
-  normalise(sum->data, sum->size_of_data);
+  //normalise(sum->data, sum->size_of_data);
 
-  /* The gain of having a join tree in the first place: */
-  free_potential(product); 
   free(mapping);
   return sum;
 }
