@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.75 2005-06-03 15:00:13 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.76 2005-06-06 06:59:17 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1491,6 +1491,9 @@ double momentary_loglikelihood(nip model, variable* observed,
 
   likelihood = get_pvalue(p, indexed_data);
   free_potential(p); /* Remember to free some memory */
+
+  /* DEBUG */
+  printf("Likelihood of data = %f\n", likelihood);
 
   if(likelihood > 0)
     return log(likelihood); /* natural logarithm (a.k.a. ln) */
