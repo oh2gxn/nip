@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.77 2005-06-06 12:32:56 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.78 2005-06-07 12:57:46 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -446,9 +446,9 @@ int insert_soft_evidence(nip model, char* varname, double* distribution){
 }
 
 
+/* note that <model> may be different from ts->model */
 int insert_ts_step(time_series ts, int t, nip model){
   int i;
-  /* note how <model> may be different from ts->model */
   if(t > timeseries_length(ts))
     return ERROR_INVALID_ARGUMENT;
     
@@ -462,10 +462,9 @@ int insert_ts_step(time_series ts, int t, nip model){
 }
 
 
+/* note that <model> may be different from ucs->model */
 int insert_ucs_step(uncertain_series ucs, int t, nip model){
   int i, e;
-  /* note how <model> may be different from ucs->model */
-
   for(i = 0; i < ucs->num_of_vars; i++){
     e = enter_evidence(model->variables, model->num_of_vars, 
 		       model->cliques, model->num_of_cliques, 
@@ -1173,7 +1172,8 @@ static int e_step(time_series ts, potential* parameters,
   /*****************/
   reset_model(model);
   use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
-
+  *loglikelihood = 0; /* init */
+  
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     if(t > 0)
@@ -1196,8 +1196,7 @@ static int e_step(time_series ts, potential* parameters,
     *loglikelihood = *loglikelihood + 
       momentary_loglikelihood(model, ts->observed, ts->data[t], 
 			      model->num_of_vars - ts->num_of_hidden);
-    /* Q: old data automagically taken into consideration? */
-    
+
     /* Put some data in */
     insert_ts_step(ts, t, model);
     
@@ -1393,7 +1392,8 @@ static int m_step(potential* parameters, nip model){
 int em_learn(time_series ts, double threshold){
   int i, n, v;
   int *card;
-  double old_loglikelihood, loglikelihood = DBL_MIN;
+  double old_loglikelihood; 
+  double loglikelihood = -DBL_MAX;
   potential *parameters;
 
   /* Reserve some memory for calculation */
@@ -1403,6 +1403,7 @@ int em_learn(time_series ts, double threshold){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
+
   for(v = 0; v < ts->model->num_of_vars; v++){
     n = ts->model->variables[v]->num_of_parents + 1;
     card = (int*) calloc(n, sizeof(int));
@@ -1417,10 +1418,10 @@ int em_learn(time_series ts, double threshold){
      * potentials reasonably */
     card[0] = ts->model->variables[v]->cardinality;
     for(i = 1; i < n; i++)
-      card[i] = ts->model->variables[v]->parents[i]->cardinality;
+      card[i] = ts->model->variables[v]->parents[i-1]->cardinality;
+
     /* variable->parents should be null only if n==1 
      * => no for-loop => no null dereference */
-
     parameters[v] = make_potential(card, n, NULL);
     free(card);
   }
@@ -1440,13 +1441,14 @@ int em_learn(time_series ts, double threshold){
     }
 
     /* DEBUG */
-    printf("Iteration %d: \t average loglikelihood = %lf\r", i, loglikelihood);
+    printf("Iteration %d: \t average loglikelihood = %lf\n", i++, 
+	   loglikelihood);
 
     /* NOTE: I'm afraid there's a large possibility to overflow */
     if(loglikelihood - old_loglikelihood == 0)
       break;
 
-    /* M-Step: First the parameter estimation... */
+    /* M-Step: The parameter estimation... */
     n = m_step(parameters, ts->model);
     if(n != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1454,6 +1456,8 @@ int em_learn(time_series ts, double threshold){
     }
   }while(((loglikelihood - old_loglikelihood)/ts->length) > threshold);
   /*** When should we stop? ***/
+
+  /** <a splendid opportunity to write the parameters to a file> **/
 
   for(v = 0; v < ts->model->num_of_children; v++){
     free_potential(parameters[v]);
@@ -1475,9 +1479,12 @@ double momentary_loglikelihood(nip model, variable* observed,
   /* NOTE: the potential array will be ordered according to the 
    * given variable-array, not the same way as clique potentials */
   p = get_joint_probability(model, observed, n_observed); /* EXPENSIVE */
-  if(!p)
+  if(!p){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return -DBL_MAX;
-
+  }
+  
+  /* we needed only one of the computed values */
   likelihood = get_pvalue(p, indexed_data);
   free_potential(p); /* Remember to free some memory */
   if(likelihood > 0)

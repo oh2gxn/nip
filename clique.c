@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.11 2005-06-06 14:05:23 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.12 2005-06-07 12:57:46 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -970,7 +970,8 @@ int global_retraction(variable* vars, int nvars, clique* cliques,
 int enter_observation(variable* vars, int nvars, clique* cliques, 
 		      int ncliques, variable v, char *state){
   int index = get_stateindex(v, state);
-
+  if(index < 0)
+    return NO_ERROR;
   return enter_i_observation(vars, nvars, cliques, ncliques, v, index);
 }
 
@@ -978,8 +979,12 @@ int enter_observation(variable* vars, int nvars, clique* cliques,
 int enter_i_observation(variable* vars, int nvars, clique* cliques, 
 			int ncliques, variable v, int index){
   int i, retval;
-  double *evidence = (double *) calloc(v->cardinality, sizeof(double));
+  double *evidence;
 
+  if(index < 0)
+    return NO_ERROR;
+
+  evidence = (double *) calloc(v->cardinality, sizeof(double));
   if(!evidence){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
@@ -1636,14 +1641,6 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 
     l = l->fwd; /* next neigboring sepset */
   }
-
-  /*** DEBUG ***/
-  printf("Product potential P( ");
-  for(i = 0; i < nuv; i++)
-    printf("%s ", get_symbol(union_vars[i]));
-  printf(")\n");
-  //print_potential(product);
-
   free(union_vars);
 
   /*** 4. Marginalisation (if any?) ***/
