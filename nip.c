@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.79 2005-06-08 10:48:33 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.80 2005-06-08 13:07:58 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -253,7 +253,7 @@ int write_model(nip model, char* name){
   fputs("{ \n", f);
   fputs("    inputs = (); \n", f);
   fputs("    outputs = (); \n", f);
-  fputs("    node_size = (40 40); \n", f);
+  fputs("    node_size = (60 60); \n", f);
 
   /** the variables **/
   for(i = 0; i < model->num_of_vars; i++){
@@ -296,9 +296,9 @@ int write_model(nip model, char* name){
     fputs("\n", f);
     /* child variables have conditional distributions */
     fprintf(f, "    potential (%s | ", get_symbol(v));
-    for(j = 0; j < n; j++)
+    for(j = n; j > 0; j--) /* Hugin fellas put parents in reverse order */
       fprintf(f, "%s ", get_symbol(v->parents[j]));
-    fprintf(f, "%s)\n", get_symbol(v->parents[n]));
+    fprintf(f, "%s)\n", get_symbol(v->parents[0]));
     fputs("    { \n", f);
     fputs("        data = (", f);
 
@@ -313,21 +313,24 @@ int write_model(nip model, char* name){
 
     /* form the potential */
     temp[0] = v->cardinality; /* child must be the first... */
-    /* ...then the parents in reverse order */
-    for(j = 1; j <= n; j++)
-      temp[j] = v->parents[n-j]->cardinality;
+    /* ...then the parents */
+    for(j = 0; j < n; j++)
+      temp[j+1] = v->parents[j]->cardinality;
     p = make_potential(temp, n+1, NULL);
 
     /* compute the distribution */
     c = find_family(model->cliques, model->num_of_cliques, v);
     map = find_family_mapping(c, v);
-    temp[0] = map[0]; /* reuse the temp array for mapping */
-    for(j = 1; j <= n; j++)
-      temp[j] = map[1+n-j];
-    general_marginalise(c->p, p, temp);
+    general_marginalise(c->p, p, map);
+
+    /************************/
+    /* FIXME: normalisation */
+    /************************/
+    n = number_of_values(v);    
+    for(j = 0; j < p->size_of_data; j += n)
+      normalise(p->data + j, n);
 
     /* print the stuff */
-    n = number_of_values(v);
     for(j = 0; j < p->size_of_data; j++){
       if(j > 0 && j % n == 0)
 	fputs("\n                ", f);
