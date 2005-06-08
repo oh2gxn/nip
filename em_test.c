@@ -16,7 +16,10 @@ int write_model(nip model, char* name){
   FILE *f = NULL;
   char *filename = NULL;
   variable v = NULL;
-  //potential p = NULL;
+  int *temp = NULL;
+  int *map = NULL;
+  clique c = NULL;
+  potential p = NULL;
 
   /* form the filename */
   filename = (char*) calloc(strlen(name) + 5, sizeof(char));
@@ -40,18 +43,20 @@ int write_model(nip model, char* name){
 
   /* Reminder:
    * fputs("some text", f);
-   * fprintf(f, "value = %d", 10); */
+   * fprintf(f, "value = %g", 1.23400000); */
+  /*******************************************************/
+  /* Replace %f with %g if you don't like trailing zeros */
 
   /** Lets print the NET file **/
 
-  /* standard stuff in the beginning */
+  /** standard stuff in the beginning **/
   fprintf(f, "class %s \n", name);
   fputs("{ \n", f);
   fputs("    inputs = (); \n", f);
   fputs("    outputs = (); \n", f);
-  fputs("    node_size = (80 40); \n", f);
+  fputs("    node_size = (40 40); \n", f);
 
-  /* the variables */
+  /** the variables **/
   for(i = 0; i < model->num_of_vars; i++){
     v = model->variables[i];
     n = number_of_values(v)-1;
@@ -65,10 +70,12 @@ int write_model(nip model, char* name){
     for(j = 0; j < n; j++)
       fprintf(f, "\"%s\" ", v->statenames[j]);
     fprintf(f, "\"%s\"); \n", v->statenames[n]);
+    if(v->next)
+      fprintf(f, "        NIP_next = \"%s\"; \n", get_symbol(v->next));
     fputs("    } \n", f);    
   }
 
-  /* the priors */
+  /** the priors **/
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
     n = number_of_values(v) - 1;
@@ -83,7 +90,7 @@ int write_model(nip model, char* name){
     fputs("    } \n", f);
   }
 
-  /* the potentials */
+  /** the potentials **/
   for(i = 0; i < model->num_of_children; i++){
     v = model->children[i];
     n = number_of_parents(v) - 1;
@@ -96,10 +103,41 @@ int write_model(nip model, char* name){
     fputs("    { \n", f);
     fputs("        data = (", f);
 
-    /* TODO */
+    n++; /* number of parents */
+    temp = (int*) calloc(n+1, sizeof(int));
+    if(!temp){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      fclose(f);
+      free(filename);
+      return ERROR_OUTOFMEMORY;
+    }
 
+    /* form the potential */
+    temp[0] = v->cardinality; /* child must be the first... */
+    /* ...then the parents in reverse order */
+    for(j = 1; j <= n; j++)
+      temp[j] = v->parents[n-j]->cardinality;
+    p = make_potential(temp, n+1, NULL);
+
+    /* compute the distribution */
+    c = find_family(model->cliques, model->num_of_cliques, v);
+    map = find_family_mapping(c, v);
+    temp[0] = map[0]; /* reuse the temp array for mapping */
+    for(j = 1; j <= n; j++)
+      temp[j] = map[1+n-j];
+    general_marginalise(c->p, p, temp);
+
+    /* print the stuff */
+    n = number_of_values(v);
+    for(j = 0; j < p->size_of_data; j++){
+      if(j > 0 && j % n == 0)
+	fputs("\n                ", f);
+      fprintf(f, " %f ", p->data[j]);
+    }
     fputs("); \n", f);
     fputs("    } \n", f);
+    free(temp);
+    free_potential(p);
   }
 
   fputs("} \n", f); /* the last brace */
@@ -156,12 +194,12 @@ int main(int argc, char *argv[]) {
 
   /* THE algorithm (may take a while) */
   printf("Computing... \n");
-  i = em_learn(ts, threshold);
-  if(i != NO_ERROR){
-    fprintf(stderr, "There were errors during learning:\n");
-    report_error(__FILE__, __LINE__, i, 1);
-    return -1;
-  }
+/*   i = em_learn(ts, threshold); */
+/*   if(i != NO_ERROR){ */
+/*     fprintf(stderr, "There were errors during learning:\n"); */
+/*     report_error(__FILE__, __LINE__, i, 1); */
+/*     return -1; */
+/*   } */
   printf("...done.\n");
 
   /* Write the results to a NET file */
