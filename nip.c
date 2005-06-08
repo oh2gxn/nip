@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.78 2005-06-07 12:57:46 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.79 2005-06-08 10:48:33 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -206,6 +206,149 @@ nip parse_model(char* file){
   reset_clique_array();
 
   return new;
+}
+
+
+int write_model(nip model, char* name){
+  int i, j, n;
+  int x, y;
+  FILE *f = NULL;
+  char *filename = NULL;
+  variable v = NULL;
+  int *temp = NULL;
+  int *map = NULL;
+  clique c = NULL;
+  potential p = NULL;
+
+  /* form the filename */
+  filename = (char*) calloc(strlen(name) + 5, sizeof(char));
+  if(!filename){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+  strcpy(filename, name);   /* copy the model name */
+  strcat(filename, ".net"); /* append with the extension */
+
+  /* open the stream */
+  f = fopen(filename, "w");
+  if(!f){
+    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    free(filename);
+    return ERROR_IO;
+  }
+
+  /* remove the evidence */
+  reset_model(model);
+
+  /* Reminder:
+   * fputs("some text", f);
+   * fprintf(f, "value = %g", 1.23400000); */
+  /*******************************************************/
+  /* Replace %f with %g if you don't like trailing zeros */
+
+  /** Lets print the NET file **/
+
+  /** standard stuff in the beginning **/
+  fprintf(f, "class %s \n", name);
+  fputs("{ \n", f);
+  fputs("    inputs = (); \n", f);
+  fputs("    outputs = (); \n", f);
+  fputs("    node_size = (40 40); \n", f);
+
+  /** the variables **/
+  for(i = 0; i < model->num_of_vars; i++){
+    v = model->variables[i];
+    n = number_of_values(v)-1;
+    get_position(v, &x, &y);
+    fputs("\n", f);
+    fprintf(f, "    node %s \n", get_symbol(v));
+    fputs("    { \n", f);
+    fprintf(f, "        label = \"%s\"; \n", v->name);
+    fprintf(f, "        position = (%d %d); \n", x, y);
+    fprintf(f, "        states = (");
+    for(j = 0; j < n; j++)
+      fprintf(f, "\"%s\" ", v->statenames[j]);
+    fprintf(f, "\"%s\"); \n", v->statenames[n]);
+    if(v->next)
+      fprintf(f, "        NIP_next = \"%s\"; \n", get_symbol(v->next));
+    fputs("    } \n", f);    
+  }
+
+  /** the priors **/
+  for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
+    v = model->independent[i];
+    n = number_of_values(v) - 1;
+    fputs("\n", f);
+    /* independent variables have priors */
+    fprintf(f, "    potential (%s) \n", get_symbol(v));
+    fputs("    { \n", f);
+    fputs("        data = ( ", f);
+    for(j = 0; j < n; j++)
+      fprintf(f, "%f  ", v->prior[j]);
+    fprintf(f, "%f ); \n", v->prior[n]);
+    fputs("    } \n", f);
+  }
+
+  /** the potentials **/
+  for(i = 0; i < model->num_of_children; i++){
+    v = model->children[i];
+    n = number_of_parents(v) - 1;
+    fputs("\n", f);
+    /* child variables have conditional distributions */
+    fprintf(f, "    potential (%s | ", get_symbol(v));
+    for(j = 0; j < n; j++)
+      fprintf(f, "%s ", get_symbol(v->parents[j]));
+    fprintf(f, "%s)\n", get_symbol(v->parents[n]));
+    fputs("    { \n", f);
+    fputs("        data = (", f);
+
+    n++; /* number of parents */
+    temp = (int*) calloc(n+1, sizeof(int));
+    if(!temp){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      fclose(f);
+      free(filename);
+      return ERROR_OUTOFMEMORY;
+    }
+
+    /* form the potential */
+    temp[0] = v->cardinality; /* child must be the first... */
+    /* ...then the parents in reverse order */
+    for(j = 1; j <= n; j++)
+      temp[j] = v->parents[n-j]->cardinality;
+    p = make_potential(temp, n+1, NULL);
+
+    /* compute the distribution */
+    c = find_family(model->cliques, model->num_of_cliques, v);
+    map = find_family_mapping(c, v);
+    temp[0] = map[0]; /* reuse the temp array for mapping */
+    for(j = 1; j <= n; j++)
+      temp[j] = map[1+n-j];
+    general_marginalise(c->p, p, temp);
+
+    /* print the stuff */
+    n = number_of_values(v);
+    for(j = 0; j < p->size_of_data; j++){
+      if(j > 0 && j % n == 0)
+	fputs("\n                ", f);
+      fprintf(f, " %f ", p->data[j]);
+    }
+    fputs("); \n", f);
+    fputs("    } \n", f);
+    free(temp);
+    free_potential(p);
+  }
+
+  fputs("} \n", f); /* the last brace */
+
+  /* close the file */
+  if(fclose(f)){
+    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    free(filename);
+    return ERROR_IO;
+  }
+  free(filename);
+  return NO_ERROR;
 }
 
 

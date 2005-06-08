@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.30 2005-06-02 11:43:01 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.31 2005-06-08 10:48:33 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -95,6 +95,10 @@ void use_priors(nip model, int has_history);
 /* Creates a model according to the net file. 
  * The single parameter is the name of the net file as a string. */
 nip parse_model(char* file);
+
+
+/* Writes the parameters of <model> into Hugin NET file named <name>.net */
+int write_model(nip model, char* name);
 
 
 /* This provides a way to get rid of a model and free some memory. */

@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.1 2005-05-27 13:18:04 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.2 2005-06-08 10:48:33 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -61,6 +61,8 @@ variable new_variable(const char* symbol, const char* name,
   v->num_of_parents = 0;
   v->family_clique = NULL;
   v->family_mapping = NULL;
+  v->pos_x = 100;
+  v->pos_y = 100;
  
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
@@ -334,6 +336,26 @@ int number_of_parents(variable v){
     return -1;
   }
   return v->num_of_parents;
+}
+
+
+void set_position(variable v, int x, int y){
+  if(v){
+    v->pos_x = x;
+    v->pos_y = y;
+  }
+  else
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+}
+
+
+void get_position(variable v, int* x, int* y){
+  if(v && x && y){
+    *x = v->pos_x;
+    *y = v->pos_y;
+  }
+  else
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
 }
 
 

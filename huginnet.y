@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.58 2005-05-27 13:18:04 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.59 2005-06-08 10:48:33 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -144,6 +144,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     reset_strings(); /* frees the original parsed statenames */
     YYABORT;
   }
+  set_variable_position(v); /* sets the parsed position values */
 
   if((nip_next = get_nip_next()) != NULL){
     retval = add_time_init(v, nip_next);
@@ -198,7 +199,9 @@ statesDeclaration:    token_states '=' '(' strings ')' ';' {
 ;
 
 
-positionDeclaration:  token_position '=' '(' NUMBER NUMBER ')' ';'
+positionDeclaration:  token_position '=' '(' NUMBER NUMBER ')' ';' {
+  set_parser_node_position($4, $5);
+}
 ;
 
 

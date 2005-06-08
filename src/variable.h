@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.2 2005-06-08 08:57:37 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.3 2005-06-08 10:48:34 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -137,6 +137,14 @@ int number_of_values(variable v);
 
 /* Tells how many parents the variable has. */
 int number_of_parents(variable v);
+
+
+/* Sets the position (a.k.a node position in Hugin NET file) */
+void set_position(variable v, int x, int y);
+
+
+/* Gets you the position (a.k.a node position in Hugin NET file) */
+void get_position(variable v, int* x, int* y);
 
 
 /* Sets the parents for the variable v. */

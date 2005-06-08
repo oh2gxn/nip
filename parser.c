@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.97 2005-06-06 12:32:56 jatoivol Exp $
+ * $Id: parser.c,v 1.98 2005-06-08 10:48:33 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -61,6 +61,8 @@ static int nip_yyparse_infile_open = 0;
 
 static clique *nip_cliques = NULL;
 static int nip_num_of_cliques = 0;
+static int parser_node_position_x = 100;
+static int parser_node_position_y = 100;
 
 static int add_to_stringlink(stringlink *s, char* string);
 
@@ -682,6 +684,17 @@ int add_symbol(variable v){
 }
 
 
+void set_parser_node_position(double x, double y){
+  parser_node_position_x = abs((int)x);
+  parser_node_position_y = abs((int)y);
+}
+
+
+void set_variable_position(variable v){
+  set_position(v, parser_node_position_x, parser_node_position_y);
+}
+
+
 /* correctness? */
 int add_initData(potential p, variable child, variable* parents){
   initDataLink new = (initDataLink) malloc(sizeof(initDataElement));
@@ -1034,7 +1047,6 @@ int time2Vars(){
 
   /* Add time relations to variables. */
   while(initlist != NULL){
-    
     v1 = initlist->var;
     v2 = get_parser_variable(initlist->next);
     if(v1->cardinality == v2->cardinality){

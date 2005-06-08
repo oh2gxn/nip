@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser and for other parsers.
- * $Id: parser.h,v 1.39 2005-05-27 13:18:04 jatoivol Exp $
+ * $Id: parser.h,v 1.40 2005-06-08 10:48:33 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -134,6 +134,15 @@ char *next_token(int *token_length);
 /* Adds a variable into a list for creating an array. The variable is 
  * chosen from THE list of variables according to the given symbol. */
 int add_symbol(variable v);
+
+
+/* Saves two positive integers by truncating and  */
+void set_parser_node_position(double x, double y);
+
+
+/* Sets variable position (node position by Hugin) according to 
+ * the two position values saved by set_parser_node_position */
+void set_variable_position(variable v);
 
 
 /* Adds a potential and the correspondent variable references into a list.
