@@ -52,12 +52,12 @@ int main(int argc, char *argv[]) {
 
   /* THE algorithm (may take a while) */
   printf("Computing... \n");
-/*   i = em_learn(ts, threshold); */
-/*   if(i != NO_ERROR){ */
-/*     fprintf(stderr, "There were errors during learning:\n"); */
-/*     report_error(__FILE__, __LINE__, i, 1); */
-/*     return -1; */
-/*   } */
+  i = em_learn(ts, threshold);
+  if(i != NO_ERROR){
+    fprintf(stderr, "There were errors during learning:\n");
+    report_error(__FILE__, __LINE__, i, 1);
+    return -1;
+  }
   printf("...done.\n");
 
   /* Write the results to a NET file */

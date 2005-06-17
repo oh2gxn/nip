@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.12 2005-06-07 12:57:46 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.13 2005-06-17 12:53:42 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -517,9 +517,9 @@ double *reorder_potential(variable vars[], potential p){
   int i, j;
   int *old_indices, *new_indices;
   int *new_card;
-  unsigned long smallest_id;
-  unsigned long this_id;
-  unsigned long biggest_taken;
+  unsigned long smallest_id = 0;
+  unsigned long this_id = 0;
+  unsigned long biggest_taken = 0;
   int smallest_index = 0;
   double *new_data;
   int card_temp;
@@ -1680,7 +1680,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   
   /* 4.4 Normalise (?) */
   /* Q: is this a good idea at this point? */
-  //normalise(sum->data, sum->size_of_data);
+  /*normalise(sum->data, sum->size_of_data);*/
 
   free(mapping);
   return sum;

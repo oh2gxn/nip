@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.98 2005-06-08 10:48:33 jatoivol Exp $
+ * $Id: parser.c,v 1.99 2005-06-17 12:53:42 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1135,9 +1135,9 @@ int parsedPots2JTree(){
       else{ 
 	/* Priors of the independent variables are stored into the variable 
 	 * itself, but NOT entered into the model YET. */
-	//retval = enter_evidence(vars, nvars, nip_cliques, 
-	//			nip_num_of_cliques, initlist->child, 
-	//			initlist->data->data);
+	/*retval = enter_evidence(vars, nvars, nip_cliques, 
+	 *			nip_num_of_cliques, initlist->child, 
+	 *			initlist->data->data);*/
 	retval = set_prior(initlist->child, initlist->data->data);
 	if(retval != NO_ERROR){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);

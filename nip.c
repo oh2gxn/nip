@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.80 2005-06-08 13:07:58 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.81 2005-06-17 12:53:42 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -253,7 +253,7 @@ int write_model(nip model, char* name){
   fputs("{ \n", f);
   fputs("    inputs = (); \n", f);
   fputs("    outputs = (); \n", f);
-  fputs("    node_size = (60 60); \n", f);
+  fputs("    node_size = (60 80); \n", f);
 
   /** the variables **/
   for(i = 0; i < model->num_of_vars; i++){
@@ -267,11 +267,12 @@ int write_model(nip model, char* name){
     fprintf(f, "        position = (%d %d); \n", x, y);
     fprintf(f, "        states = (");
     for(j = 0; j < n; j++)
-      fprintf(f, "\"%s\" ", v->statenames[j]);
+      fprintf(f, "\"%s\" \n", v->statenames[j]);
     fprintf(f, "\"%s\"); \n", v->statenames[n]);
     if(v->next)
       fprintf(f, "        NIP_next = \"%s\"; \n", get_symbol(v->next));
-    fputs("    } \n", f);    
+    fputs("    } \n", f);
+    fflush(f);
   }
 
   /** the priors **/
@@ -287,6 +288,7 @@ int write_model(nip model, char* name){
       fprintf(f, "%f  ", v->prior[j]);
     fprintf(f, "%f ); \n", v->prior[n]);
     fputs("    } \n", f);
+    fflush(f);
   }
 
   /** the potentials **/
@@ -340,6 +342,7 @@ int write_model(nip model, char* name){
     fputs("    } \n", f);
     free(temp);
     free_potential(p);
+    fflush(f);
   }
 
   fputs("} \n", f); /* the last brace */
@@ -1520,8 +1523,8 @@ static int m_step(potential* parameters, nip model){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
       }
-      // couldn't use initialise() here because of the messy order of
-      // parameter potentials
+      /* couldn't use initialise() here because of the messy order of
+       * parameter potentials */
     }
     else{
       /* Update the priors of independent variables */
@@ -1587,7 +1590,7 @@ int em_learn(time_series ts, double threshold){
     }
 
     /* DEBUG */
-    printf("Iteration %d: \t average loglikelihood = %lf\n", i++, 
+    printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
 	   loglikelihood);
 
     /* NOTE: I'm afraid there's a large possibility to overflow */
