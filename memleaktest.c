@@ -10,13 +10,15 @@
 #include "nip.h"
 #include "em_test.h"
 
-#define LOPUT
+#define TESTATUT
 #define THRESHOLD 0.001
 
 int main(int argc, char *argv[]){
   
   int i;
   int n;
+
+#ifdef TESTATUT
   int j;
   int cardinality[] = {3, 2, 3};
   int num_of_vars = 3;
@@ -35,11 +37,10 @@ int main(int argc, char *argv[]){
   clique *cl2 = NULL;
   sepset s;
   Graph *g;
+#endif
 
-#ifdef LOPUT
   nip model = NULL;
   time_series ts = NULL;
-#endif
 
   if(argc > 3)
     n = atoi(argv[3]);
@@ -53,6 +54,7 @@ int main(int argc, char *argv[]){
     return 0;
   }
 
+#ifdef TESTATUT
   /* This works well, no memory leaks. */
   printf("Allocating and freeing potentials:\n");
   for(i = 0; i < n; i++){
@@ -159,8 +161,6 @@ int main(int argc, char *argv[]){
   }
   printf("\rDone.                                             \n");
 
-
-
   /* Free some memory */
   first = get_first_variable();
   last = get_last_variable();
@@ -186,9 +186,9 @@ int main(int argc, char *argv[]){
   free(states);
   free(symbols);
   free(names);
+#endif /* TESTATUT */
 
 
-#ifdef LOPUT
   if(argc > 2){
     printf("\nParsing and freeing models:\n");
     for(i = 0; i < n; i++){
@@ -226,11 +226,10 @@ int main(int argc, char *argv[]){
       write_model(model, "memwaste");
       printf("\rIteration %d of %d                               ", i + 1, n);
     }
+    printf("\rDone.                                             \n");
     free_timeseries(ts);
   }
   free_model(model);
-
-#endif
 
   return 0;
 }

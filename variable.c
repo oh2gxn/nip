@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.2 2005-06-08 10:48:33 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.3 2005-06-20 14:41:54 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -187,6 +187,7 @@ void free_variable(variable v){
   free(v->parents);
   free(v->family_mapping);
   free(v->likelihood);
+  free(v->prior);
   free(v);
 }
 

@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.13 2005-06-17 12:53:42 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.14 2005-06-20 14:41:54 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -354,7 +354,6 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
 
 
 void free_sepset(sepset s){
-
   if(s){
     if(s->old->num_of_vars)
       free(s->variables);
@@ -364,7 +363,6 @@ void free_sepset(sepset s){
     free(s->cliques);
     free(s);
   }
-
   return;
 }
 

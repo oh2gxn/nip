@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.3 2005-06-08 10:48:34 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.4 2005-06-20 14:41:54 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -10,10 +10,6 @@
 #define VAR_NAME_LENGTH 40
 #define VAR_STATENAME_LENGTH 20
 #define VAR_MIN_ID 1
-
-/***
- * TODO: a set of mutators etc. for handling parents... 
- */
 
 struct nip_var {
   char symbol[VAR_SYMBOL_LENGTH + 1]; /* short symbol for the node */
