@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.81 2005-06-17 12:53:42 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.82 2005-06-20 13:21:34 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -148,6 +148,8 @@ nip parse_model(char* file){
   }
   
   /* count the number of nexts and children */
+  new->num_of_nexts = 0;
+  new->num_of_children = 0;
   for(i = 0; i < new->num_of_vars; i++){
     if(new->variables[i]->next)
       new->num_of_nexts++;
@@ -159,6 +161,8 @@ nip parse_model(char* file){
   new->next = (variable*) calloc(new->num_of_nexts, sizeof(variable));
   new->previous = (variable*) calloc(new->num_of_nexts, sizeof(variable));
   new->children = (variable*) calloc(new->num_of_children, sizeof(variable));
+  /*  printf("\nDEBUG %s (%d): num_of_children = %d\n", __FILE__, __LINE__, 
+   *	 new->num_of_children);*/
   new->independent = 
     (variable*) calloc(new->num_of_vars - new->num_of_children, 
 		       sizeof(variable));
@@ -167,6 +171,7 @@ nip parse_model(char* file){
     free(new->variables);
     free(new->next);
     free(new->previous);
+    free(new->children);
     free(new);
     return NULL;
   }
@@ -379,7 +384,8 @@ void free_model(nip model){
 
 
 time_series read_timeseries(nip model, char* filename){
-  int i, j, k, m;
+  int i, j, k, m; 
+  int obs;
   char** tokens = NULL;
   time_series ts = NULL;
   datafile* df = NULL;
@@ -407,24 +413,21 @@ time_series read_timeseries(nip model, char* filename){
   ts->length = df->datarows;
 
   /* Check the contents of data file */
+  obs = 0;
   for(i = 0; i < df->num_of_nodes; i++){
     v = model_variable(model, df->node_symbols[i]);
-    if(v == NULL){
-      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-      free(ts);
-      close_datafile(df);
-      return NULL;
-    }
+    if(v)
+      obs++;
   }
 
   /* Find out how many (totally) latent variables there are. */
-  ts->num_of_hidden = model->num_of_vars - df->num_of_nodes;
+  ts->num_of_hidden = model->num_of_vars - obs;
 
   /* Allocate the array for the hidden variables. */
   ts->hidden = (variable *) calloc(ts->num_of_hidden, sizeof(variable));
-  if(df->num_of_nodes > 0)
-    ts->observed = (variable *) calloc(df->num_of_nodes, sizeof(variable));
-  if(!(ts->hidden && (ts->observed || df->num_of_nodes == 0))){
+  if(obs > 0)
+    ts->observed = (variable *) calloc(obs, sizeof(variable));
+  if(!(ts->hidden && (ts->observed || obs == 0))){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(ts->hidden);
     free(ts);
@@ -436,17 +439,22 @@ time_series read_timeseries(nip model, char* filename){
   m = 0;
   for(k = 0; k < model->num_of_vars; k++){
     j = 1;
-    for(i = 0; i < df->num_of_nodes; i++)
+    for(i = 0; i < df->num_of_nodes; i++){
       if(equal_variables(model->variables[k], 
 			 model_variable(model, df->node_symbols[i])))
 	j = 0;
+    }
     if(j)
       ts->hidden[m++] = model->variables[k];
   }
 
-  if(df->num_of_nodes > 0){
-    for(i = 0; i < df->num_of_nodes; i++)
-      ts->observed[i] = model_variable(model, df->node_symbols[i]);
+  if(obs > 0){
+    k = 0;
+    for(i = 0; i < df->num_of_nodes; i++){
+      v = model_variable(model, df->node_symbols[i]);
+      if(v)
+	ts->observed[k++] = v;
+    }
 
     /* Allocate some space for data */
     ts->data = (int**) calloc(ts->length, sizeof(int*));
@@ -459,7 +467,7 @@ time_series read_timeseries(nip model, char* filename){
       return NULL;
     }
     for(i = 0; i < ts->length; i++){
-      ts->data[i] = (int*) calloc(df->num_of_nodes, sizeof(int));
+      ts->data[i] = (int*) calloc(obs, sizeof(int));
       if(!(ts->data[i])){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	for(j = 0; j < i; j++)
@@ -480,9 +488,9 @@ time_series read_timeseries(nip model, char* filename){
       
       /* 3. Put into the data array */
       for(i = 0; i < m; i++){
-	ts->data[j][i] = get_stateindex(model_variable(model, 
-						       df->node_symbols[i]), 
-					tokens[i]);
+	v = model_variable(model, df->node_symbols[i]);
+	if(v)
+	  ts->data[j][i] = get_stateindex(v, tokens[i]);
 	
 	/* Q: Should missing data be allowed?   A: Yes. */
 	/* assert(data[j][i] >= 0); */

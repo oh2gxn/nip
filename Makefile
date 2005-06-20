@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.42 2005-06-17 12:53:42 jatoivol Exp $
+# $Id: Makefile,v 1.43 2005-06-20 13:21:34 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -14,9 +14,9 @@ IO_SRCS=fileio.c errorhandler.c
 DF_SRCS=$(PAR_SRCS)
 HMM_SRCS=nip.c $(BIS_SRCS)
 HTM_SRCS=$(HMM_SRCS)
-MLT_SRCS=$(HTM_SRCS)
 JNT_SRCS=$(HMM_SRCS)
 EM_SRCS=$(HMM_SRCS)
+MLT_SRCS=$(HMM_SRCS)
 
 # XXX Replace "cliquetest" below with the name you want for your program!
 POT_TARGET=potentialtest
@@ -28,9 +28,9 @@ BIS_TARGET=bisontest
 DF_TARGET=datafiletest
 HMM_TARGET=hmmtest
 HTM_TARGET=htmtest
-MLT_TARGET=memleaktest
 JNT_TARGET=joint_test
 EM_TARGET=em_test
+MLT_TARGET=memleaktest
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
 $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
 $(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET)
@@ -38,8 +38,8 @@ $(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET)
 # Sets the name and some flags for the C compiler and linker
 CC=gcc
 #CFLAGS=-O2 -Wall
-#CFLAGS=-g -Wall
-CFLAGS=-Os -g -Wall -ansi -pedantic-errors
+CFLAGS=-g -Wall
+#CFLAGS=-Os -g -Wall -ansi -pedantic-errors
 #CFLAGS=-O2 -g -Wall
 #CFLAGS=-g -Wall --save-temps
 #CFLAGS=-Wall

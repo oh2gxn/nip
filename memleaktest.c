@@ -8,8 +8,10 @@
 #include "potential.h"
 #include "parser.h"
 #include "nip.h"
+#include "em_test.h"
 
 #define LOPUT
+#define THRESHOLD 0.001
 
 int main(int argc, char *argv[]){
   
@@ -35,8 +37,8 @@ int main(int argc, char *argv[]){
   Graph *g;
 
 #ifdef LOPUT
-  nip model;
-  datafile* dataf;
+  nip model = NULL;
+  time_series ts = NULL;
 #endif
 
   if(argc > 3)
@@ -51,7 +53,7 @@ int main(int argc, char *argv[]){
     return 0;
   }
 
-  /* This works OK, no memory leaks. */
+  /* This works well, no memory leaks. */
   printf("Allocating and freeing potentials:\n");
   for(i = 0; i < n; i++){
     /* Create a potential */
@@ -187,25 +189,46 @@ int main(int argc, char *argv[]){
 
 
 #ifdef LOPUT
-  if(argc > 3){
-    printf("\nOpening and closing the datafile:\n");
-    for(i = 0; i < n; i++){
-      dataf = open_datafile(argv[2], ',', 0, 1);
-      printf("\rIteration %d of %d                               ", i + 1, n); 
-      close_datafile(dataf);
-    }
-    printf("\rDone.                                             \n");
-  }
-
   if(argc > 2){
     printf("\nParsing and freeing models:\n");
     for(i = 0; i < n; i++){
+      /* FIXME: These operations leak memory */
       model = parse_model(argv[1]);
       printf("\rIteration %d of %d                               ", i + 1, n);
       free_model(model);
     }
     printf("\rDone.                                             \n");
+    model = parse_model(argv[1]);
   }
+
+  if(argc > 3){
+    printf("\nReading and freeing data:\n");
+    for(i = 0; i < n/500; i++){
+      /* ...guess this is OK... */
+      ts = read_timeseries(model, argv[2]);
+      printf("\rIteration %d of %d                               ", i + 1, n); 
+      free_timeseries(ts);
+    }
+    printf("\rDone.                                             \n");
+    ts = read_timeseries(model, argv[2]);
+
+
+    printf("\nRunning EM-algorithm %d times:\n",n);
+    for(i = 0; i < n; i++){
+      total_reset(ts->model);
+      em_learn(ts, THRESHOLD);
+      printf("\rIteration %d of %d                               ", i + 1, n);
+    }
+    printf("\rDone.                                             \n");
+
+    printf("\nWriting models into memwaste.net:\n");
+    for(i = 0; i < n; i++){
+      write_model(model, "memwaste");
+      printf("\rIteration %d of %d                               ", i + 1, n);
+    }
+    free_timeseries(ts);
+  }
+  free_model(model);
 
 #endif
 
