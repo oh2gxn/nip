@@ -8,7 +8,6 @@
 #include "potential.h"
 #include "parser.h"
 #include "nip.h"
-#include "em_test.h"
 
 #define TESTATUT
 #define THRESHOLD 0.001
