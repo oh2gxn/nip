@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.14 2005-06-20 14:41:54 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.15 2005-06-21 12:23:11 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1101,6 +1101,7 @@ clique find_family(clique *cliques, int num_of_cliques, variable var){
 
   found = find_clique(cliques, num_of_cliques, family, n+1);
   var->family_clique = found; /* MEMOIZE! */
+  free(family);
   return found;
 }
 

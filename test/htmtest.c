@@ -133,9 +133,9 @@ int main(int argc, char *argv[]){
     }
   }
 
-  free_model(model);
   free_timeseries(ts);
   free_uncertainseries(ucs);
+  free_model(model);
   
   return 0;
 }

@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.99 2005-06-17 12:53:42 jatoivol Exp $
+ * $Id: parser.c,v 1.100 2005-06-21 12:23:11 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -63,6 +63,8 @@ static clique *nip_cliques = NULL;
 static int nip_num_of_cliques = 0;
 static int parser_node_position_x = 100;
 static int parser_node_position_y = 100;
+static int parser_node_size_x = 80;
+static int parser_node_size_y = 60;
 
 static int add_to_stringlink(stringlink *s, char* string);
 
@@ -692,6 +694,18 @@ void set_parser_node_position(double x, double y){
 
 void set_variable_position(variable v){
   set_position(v, parser_node_position_x, parser_node_position_y);
+}
+
+
+void set_parser_node_size(double x, double y){
+  parser_node_size_x = abs((int)x);
+  parser_node_size_y = abs((int)y);
+}
+
+
+void get_parser_node_size(int* x, int* y){
+  *x = parser_node_size_x;
+  *y = parser_node_size_y;
 }
 
 

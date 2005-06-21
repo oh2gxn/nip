@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.59 2005-06-08 10:48:33 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.60 2005-06-21 12:23:11 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -38,6 +38,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
 /******************************************************************/
 
 %token token_class "class"
+%token token_node_size "node_size"
 %token token_data "data"
 %token token_label "label"
 %token token_node "node"
@@ -174,9 +175,9 @@ node_params: /* end of definitions */
 ;
 
 parameters:    /* end of definitions */
-             | unknownDeclaration parameters
+| nodeSizeDeclaration parameters {}
+| unknownDeclaration parameters {}
 ;
-
 
 labelDeclaration:     token_label '=' QUOTED_STRING ';' { $$ = $3; }
 ;
@@ -200,10 +201,12 @@ statesDeclaration:    token_states '=' '(' strings ')' ';' {
 
 
 positionDeclaration:  token_position '=' '(' NUMBER NUMBER ')' ';' {
-  set_parser_node_position($4, $5);
-}
+  set_parser_node_position($4, $5);}
 ;
 
+nodeSizeDeclaration:  token_node_size '=' '(' NUMBER NUMBER ')' ';' {
+  set_parser_node_size($4, $5);}
+;
 
 unknownDeclaration:  UNQUOTED_STRING '=' value ';' { free($1); }
 ;
@@ -441,7 +444,7 @@ yylex (void)
       return token_states;
     }
 
-    /* position */
+    /* position or NIP_next */
     if(tokenlength == 8){
       if(strncmp("position", token, 8) == 0){
 	free(token);
@@ -451,6 +454,13 @@ yylex (void)
 	free(token);
 	return token_next;
       }
+    }
+
+    /* node_size */
+    if(tokenlength == 9 &&
+       strncmp("node_size", token, 9) == 0){
+      free(token);
+      return token_node_size;
     }
     /* End of literal string tokens */
 

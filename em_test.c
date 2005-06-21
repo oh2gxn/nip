@@ -68,5 +68,8 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  free_timeseries(ts);
+  free_model(model);
+
   return 0;
 }

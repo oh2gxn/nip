@@ -39,7 +39,7 @@ class htm_timeslice
 
     node A0
     {
-	label = "";
+	label = "A0";
 	position = (50 300);
 	states = ("s1" "s2" "s3");
 	HR_Desc = "";
@@ -50,7 +50,7 @@ class htm_timeslice
 
     node A1
     {
-	label = "";
+	label = "A1";
 	position = (300 300);
 	states = ("s1" "s2" "s3");
 	HR_Desc = "";
@@ -61,7 +61,7 @@ class htm_timeslice
 
     node B0
     {
-	label = "";
+	label = "B0";
 	position = (175 175);
 	states = ("s1" "s2" "s3");
 	HR_Desc = "";
@@ -72,7 +72,7 @@ class htm_timeslice
 
     node B1
     {
-	label = "";
+	label = "B1";
 	position = (425 175);
 	states = ("s1" "s2" "s3");
 	HR_Desc = "";
@@ -84,7 +84,7 @@ class htm_timeslice
 
     node S1
     {
-	label = "";
+	label = "S1";
 	position = (300 50);
 	states = ("s1" "s2" "s3");
 	HR_Desc = "";
@@ -96,7 +96,7 @@ class htm_timeslice
 
     node S0
     {
-	label = "";
+	label = "S0";
 	position = (50 50);
 	states = ("s1" "s2" "s3");
 	HR_Desc = "";

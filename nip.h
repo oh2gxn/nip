@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.31 2005-06-08 10:48:33 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.32 2005-06-21 12:23:11 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -39,6 +39,8 @@ typedef struct{
 
   clique tail_clique;  /* The clique which handles the connection to the 
 			* timeslices in the past */
+  int node_size_x;
+  int node_size_y;
 }nip_type;
 
 typedef nip_type *nip;

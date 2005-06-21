@@ -191,10 +191,11 @@ int main(int argc, char *argv[]){
 
   if(argc > 2){
     printf("\nParsing and freeing models:\n");
-    for(i = 0; i < n; i++){
+    for(i = 0; i < n/200; i++){
       /* FIXME: These operations leak memory */
       model = parse_model(argv[1]);
-      printf("\rIteration %d of %d                               ", i + 1, n);
+      printf("\rIteration %d of %d                               ", i + 1, 
+	     n/200);
       free_model(model);
     }
     printf("\rDone.                                             \n");
@@ -206,7 +207,8 @@ int main(int argc, char *argv[]){
     for(i = 0; i < n/500; i++){
       /* ...guess this is OK... */
       ts = read_timeseries(model, argv[2]);
-      printf("\rIteration %d of %d                               ", i + 1, n); 
+      printf("\rIteration %d of %d                               ", i + 1, 
+	     n/500); 
       free_timeseries(ts);
     }
     printf("\rDone.                                             \n");

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.82 2005-06-20 13:21:34 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.83 2005-06-21 12:23:11 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -195,6 +195,7 @@ nip parse_model(char* file){
   
   new->front_clique = NULL;
   new->tail_clique = NULL;
+  get_parser_node_size(&(new->node_size_x), &(new->node_size_y));
 
   /* Let's check one detail */
   for(i = 0; i < new->num_of_vars - new->num_of_children; i++)  
@@ -258,7 +259,8 @@ int write_model(nip model, char* name){
   fputs("{ \n", f);
   fputs("    inputs = (); \n", f);
   fputs("    outputs = (); \n", f);
-  fputs("    node_size = (60 80); \n", f);
+  fprintf(f, "    node_size = (%d %d); \n", 
+	model->node_size_x, model->node_size_y);
 
   /** the variables **/
   for(i = 0; i < model->num_of_vars; i++){
@@ -272,7 +274,7 @@ int write_model(nip model, char* name){
     fprintf(f, "        position = (%d %d); \n", x, y);
     fprintf(f, "        states = (");
     for(j = 0; j < n; j++)
-      fprintf(f, "\"%s\" \n", v->statenames[j]);
+      fprintf(f, "\"%s\" \n                  ", v->statenames[j]);
     fprintf(f, "\"%s\"); \n", v->statenames[n]);
     if(v->next)
       fprintf(f, "        NIP_next = \"%s\"; \n", get_symbol(v->next));
@@ -330,9 +332,7 @@ int write_model(nip model, char* name){
     map = find_family_mapping(c, v);
     general_marginalise(c->p, p, map);
 
-    /************************/
-    /* FIXME: normalisation */
-    /************************/
+    /* normalisation */
     n = number_of_values(v);    
     for(j = 0; j < p->size_of_data; j += n)
       normalise(p->data + j, n);
@@ -534,6 +534,7 @@ void free_uncertainseries(uncertain_series ucs){
 	free(ucs->data[t][i]);
       free(ucs->data[t]);
     }
+    free(ucs->data);
     free(ucs->variables);
     free(ucs);
   }
@@ -665,7 +666,7 @@ static int start_timeslice_message_pass(nip model, int direction,
   }
   assert(c != NULL);
 
-  mapping = (int*) calloc(c->p->num_of_vars - nvars, sizeof(int));
+  mapping = (int*) calloc(nvars, sizeof(int));
   if(!mapping){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
@@ -675,11 +676,13 @@ static int start_timeslice_message_pass(nip model, int direction,
   for(i=0; i < c->p->num_of_vars; i++){
     if(k == nvars)
       break; /* all pointers found */
-    for(j=0; j < nvars; j++)
+    for(j=0; j < nvars; j++){
       if(equal_variables((c->variables)[i], vars[j])){
 	mapping[j] = i;
 	k++;
+	break;
       }
+    }
   }    
 
   general_marginalise(c->p, sepset, mapping);
@@ -717,7 +720,7 @@ static int finish_timeslice_message_pass(nip model, int direction,
   }
   assert(c != NULL);
 
-  mapping = (int*) calloc(c->p->num_of_vars - nvars, sizeof(int));
+  mapping = (int*) calloc(nvars, sizeof(int));
   if(!mapping){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
@@ -726,11 +729,13 @@ static int finish_timeslice_message_pass(nip model, int direction,
   for(i=0; i < c->p->num_of_vars; i++){
     if(k == nvars)
       break; /* all pointers found */
-    for(j=0; j < nvars; j++)
+    for(j=0; j < nvars; j++){
       if(equal_variables((c->variables)[i], vars[j])){
 	mapping[j] = i;
 	k++;
+	break;
       }
+    }
   }
 
   update_potential(num, den, c->p, mapping);
@@ -1273,6 +1278,9 @@ static int e_step(time_series ts, potential* parameters,
 		  double* loglikelihood){
   int i, j, k, t, size;
   int *cardinalities = NULL;
+  int nobserved;
+  int *data = NULL;
+  variable* observed = NULL;
   variable temp;
   potential *timeslice_sepsets = NULL;
   potential *results = NULL;
@@ -1281,9 +1289,14 @@ static int e_step(time_series ts, potential* parameters,
   nip model = ts->model;
 
   /* Reserve some memory for calculation */
+  nobserved = model->num_of_vars - ts->num_of_hidden;
+  observed = (variable*) calloc(nobserved, sizeof(variable));
+  data     = (int*) calloc(nobserved, sizeof(int));
   results = (potential*) calloc(model->num_of_vars, sizeof(potential));
-  if(!results){
+  if(!(results && data && observed)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(data);
+    free(observed);
     return ERROR_OUTOFMEMORY;
   }
   for(i = 0; i < model->num_of_vars; i++){
@@ -1305,6 +1318,8 @@ static int e_step(time_series ts, potential* parameters,
       for(i = 0; i < model->num_of_vars; i++)
 	free_potential(results[i]);
       free(results);
+      free(data);
+      free(observed);
       free(timeslice_sepsets);
       return ERROR_OUTOFMEMORY;
     }
@@ -1342,6 +1357,8 @@ static int e_step(time_series ts, potential* parameters,
 	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
+	free(data);
+	free(observed);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(timeslice_sepsets[i]);
 	free(timeslice_sepsets);
@@ -1349,10 +1366,16 @@ static int e_step(time_series ts, potential* parameters,
       }
 
     /* This computes the log likelihood of the ts */
-    /*** FIXME: watch out for missing data etc. ***/
+    /*** Watch out for missing data etc. ***/
+    j = 0;
+    for(i = 0; i < nobserved; i++){
+      if(ts->data[t][i] >= 0){
+	data[j] = ts->data[t][i];
+	observed[j++] = ts->observed[i];
+      }
+    }
     *loglikelihood = *loglikelihood + 
-      momentary_loglikelihood(model, ts->observed, ts->data[t], 
-			      model->num_of_vars - ts->num_of_hidden);
+      momentary_loglikelihood(model, observed, data, j);
 
     /* Put some data in */
     insert_ts_step(ts, t, model);
@@ -1367,6 +1390,8 @@ static int e_step(time_series ts, potential* parameters,
       for(i = 0; i < model->num_of_vars; i++)
 	free_potential(results[i]);
       free(results);
+      free(data);
+      free(observed);
       for(i = 0; i <= ts->length; i++)
 	free_potential(timeslice_sepsets[i]);
       free(timeslice_sepsets);
@@ -1401,6 +1426,8 @@ static int e_step(time_series ts, potential* parameters,
 	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
+	free(data);
+	free(observed);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(timeslice_sepsets[i]);
 	free(timeslice_sepsets);
@@ -1417,6 +1444,8 @@ static int e_step(time_series ts, potential* parameters,
 	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
+	free(data);
+	free(observed);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(timeslice_sepsets[i]);
 	free(timeslice_sepsets);
@@ -1472,6 +1501,8 @@ static int e_step(time_series ts, potential* parameters,
 	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
+	free(data);
+	free(observed);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(timeslice_sepsets[i]);
 	free(timeslice_sepsets);
@@ -1487,6 +1518,8 @@ static int e_step(time_series ts, potential* parameters,
   for(i = 0; i < model->num_of_vars; i++)
     free_potential(results[i]);
   free(results);
+  free(data);
+  free(observed);
 
   /* free the intermediate potentials */
   for(t = 0; t <= ts->length; t++)
@@ -1599,7 +1632,7 @@ int em_learn(time_series ts, double threshold){
 
     /* DEBUG */
     printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
-	   loglikelihood);
+           loglikelihood);
 
     /* NOTE: I'm afraid there's a large possibility to overflow */
     if(loglikelihood - old_loglikelihood == 0)
@@ -1616,7 +1649,7 @@ int em_learn(time_series ts, double threshold){
 
   /** <a splendid opportunity to write the parameters to a file> **/
 
-  for(v = 0; v < ts->model->num_of_children; v++){
+  for(v = 0; v < ts->model->num_of_vars; v++){
     free_potential(parameters[v]);
   }
   free(parameters);
