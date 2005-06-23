@@ -28,6 +28,7 @@ int main(int argc, char *argv[]){
   printf("\tName: %s\n", file->name);
   printf("\tSeparator: %c\n", file->separator);
   printf("\tis_open: %d\n", file->is_open);
+  printf("\tlabel_line: %d\n", file->label_line);
   printf("\tNumber of time series: %d\n", file->ndatarows);
   printf("\tNumber of data rows for each time series: \n");
   for(i = 0; i < file->ndatarows; i++)

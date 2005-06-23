@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.101 2005-06-23 11:07:34 jatoivol Exp $
+ * $Id: parser.c,v 1.102 2005-06-23 13:20:38 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -128,6 +128,7 @@ datafile *open_datafile(char *filename, char separator,
   f->is_open = 0;
   f->firstline_labels = 0;
   f->line_now = 0;
+  f->label_line = -1;
   f->ndatarows = 0;
   f->datarows = NULL;
   f->node_symbols = NULL;
@@ -176,7 +177,7 @@ datafile *open_datafile(char *filename, char separator,
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
       num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
-      
+      (f->line_now)++;
       /* JJT  1.9.2004: A sort of bug fix. Ignore empty lines */
       /* JJT 22.6.2005: Another fix. Ignore only the empty lines 
        * immediately after the node labels... and duplicate empty lines.
@@ -191,7 +192,10 @@ datafile *open_datafile(char *filename, char separator,
 	linecounter++;
 	empty_lines_read = 0;
 	if(state > 0){
-	  linecounter = 0; /* reset for data lines */
+	  if(state > 1){
+	    f->label_line = f->line_now;
+	    linecounter = 0; /* reset for data lines */
+	  }
 	  state--; /* stop ignoring single empty lines and the node names */
 	}
 	if(state == 0 && linecounter == 1)
@@ -396,7 +400,6 @@ datafile *open_datafile(char *filename, char separator,
     }
 
     for(i = 0; i < f->num_of_nodes; i++){
-
       f->node_states[i] =
 	(char **) calloc(f->num_of_states[i], sizeof(char *));
 
@@ -431,7 +434,7 @@ datafile *open_datafile(char *filename, char separator,
     temp = statenames[i];
     while(temp != NULL){
       temp2 = temp->fwd;
-      free(temp->data);
+/*       free(temp->data); */
       free(temp);
       temp = temp2;
     }
@@ -491,7 +494,7 @@ void close_datafile(datafile *file){
 
 /* Frees the memory used by (possibly partially allocated) datafile f. */
 static void free_datafile(datafile *f){
-  int j;
+  int i,j;
 
   if(!f)
     return;
@@ -501,12 +504,15 @@ static void free_datafile(datafile *f){
       free(f->node_symbols[j]);
     free(f->node_symbols);
   }
-  free(f->num_of_states);
   if(f->node_states){
-    for(j = 0; j < f->num_of_nodes; j++)
-      free(f->node_states[j]);
+    for(i = 0; i < f->num_of_nodes; i++){
+      for(j = 0; j < f->num_of_states[i]; j++)
+	free(f->node_states[i][j]);
+      free(f->node_states[i]);
+    }
     free(f->node_states);
   }
+  free(f->num_of_states);
   free(f->datarows);
   free(f);
 }
@@ -516,7 +522,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
 
   char line[MAX_LINELENGTH];
   char *token;
-  int num_of_tokens = 0;
+  int num_of_tokens;
   int *token_bounds;
   int i, j;
 
@@ -530,21 +536,21 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
     return -1;
   }
 
-  /* Skip the first line if it contains node labels. */
-  /* FIXME: this needs to skip also the empty lines */
-  if(f->firstline_labels && f->line_now == 0){
+  /* seek the first line of data (starting from the current line) */
+  num_of_tokens = 0;
+  do{
     if(fgets(line, MAX_LINELENGTH, f->file) == NULL)
-      return -1;
+      break;
     else
       f->line_now++;
-  }
+    
+    num_of_tokens = count_tokens(line, NULL, 0, &separator, 1, 0, 0);
+    
+    /* Skip the first line if it contains node labels. */
+    if((f->line_now == f->label_line)  &&  f->firstline_labels)
+      num_of_tokens = 0;
 
-  if(fgets(line, MAX_LINELENGTH, f->file) == NULL)
-    return -1;
-  else
-    f->line_now++;
-
-  num_of_tokens = count_tokens(line, NULL, 0, &separator, 1, 0, 0);
+  }while(num_of_tokens < 1);
 
   if(num_of_tokens == 0)
     return 0;

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.84 2005-06-23 11:07:34 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.85 2005-06-23 13:20:38 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -514,6 +514,12 @@ int read_timeseries(nip model, char* filename,
 	  free(tokens[i]);
 	free(tokens);
       }
+      
+/*       m = nextline_tokens(df, ',', &tokens); /\* Read an empty line *\/ */
+/*       assert(m == 0); */
+/*       for(i = 0; i < m; i++) /\* Dump away *\/ */
+/* 	free(tokens[i]); */
+/*       free(tokens); */
     }
 
     (*results)[n] = ts;
@@ -1655,9 +1661,13 @@ int em_learn(time_series *ts, int n_ts, double threshold){
       }
     }
 
+
+
     /* DEBUG */
     printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
            loglikelihood);
+
+
 
     /* NOTE: I'm afraid there's a large possibility to overflow */
     if(loglikelihood - old_loglikelihood == 0)
