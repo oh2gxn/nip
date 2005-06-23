@@ -10,7 +10,7 @@
 
 int main(int argc, char *argv[]){
 
-  int i, j, k, t = 0;
+  int i, j, k, n, t = 0;
   double** quotient = NULL;
   double*** result = NULL; /* probs of the hidden variables */
 
@@ -20,6 +20,7 @@ int main(int argc, char *argv[]){
   variable temp = NULL;
   variable interesting = NULL;
 
+  time_series *ts_set = NULL;
   time_series ts = NULL;
 
   /*************************************/
@@ -47,14 +48,14 @@ int main(int argc, char *argv[]){
   /*****************************/
   /* read the data from a file */
   /*****************************/
-  ts = read_timeseries(model, argv[2]); /* 1. Open */
-  if(ts == NULL){
+  n = read_timeseries(model, argv[2], &ts_set); /* 1. Open */
+  if(n == 0){
     free_model(model);
-    report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s\n", argv[2]);
     return -1;
   }
-
+  ts = ts_set[0];
 
   /* Allocate some space for filtering */
   result = (double***) calloc(ts->length + 1, sizeof(double**));
@@ -280,8 +281,10 @@ int main(int argc, char *argv[]){
   free(result);
   free(quotient);
 
-  free_timeseries(ts);
-
+  for(i = 0; i < n; i++)
+    free_timeseries(ts_set[i]);
+  free(ts_set);
+  
   free_model(model);
 
   return 0;

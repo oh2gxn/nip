@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.32 2005-06-21 12:23:11 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.33 2005-06-23 11:07:34 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -109,7 +109,8 @@ void free_model(nip model);
 
 /* This reads data from the data file and constructs a time series according 
  * to the given model. */
-time_series read_timeseries(nip model, char* datafile);
+int read_timeseries(nip model, char* datafile, 
+		    time_series **results);
 
 
 /* A method for freeing the huge chunk of memory used by a time series. 
@@ -199,13 +200,8 @@ time_series mlss(variable vars[], int nvars, time_series ts);
  * EM-algorithm. Returns an error code as an integer. 
  * NOTE:  this is not implemented yet! 
  * NOTE2: the model is included in the time_series */
-int em_learn(time_series ts, double threshold);
+int em_learn(time_series *ts, int n_ts, double threshold);
 
-
-/********************************************************************
- * TODO: a set of functions for reading the results of inference from 
- *       the model 
- */
 
 /* Computes the logaritmic likelihood of the obseravations. */
 double momentary_loglikelihood(nip model, variable* observed, 

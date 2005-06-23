@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.9 2005-06-06 12:32:56 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.10 2005-06-23 11:07:34 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) data file with one step,
  * 3) names of wanted variables
@@ -17,12 +17,13 @@
 
 int main(int argc, char *argv[]){
 
-  int i;
+  int i, n;
   int num_of_vars = 0;
   potential result = NULL;
 
   nip model = NULL;
   time_series ts = NULL;
+  time_series *ts_set = NULL;
   variable v = NULL;
   variable *vars = NULL;
 
@@ -43,9 +44,10 @@ int main(int argc, char *argv[]){
   use_priors(model, 1);
 
   /* read the data */
-  ts = read_timeseries(model, argv[2]);
-  if(!ts)
+  n = read_timeseries(model, argv[2], &ts_set);
+  if(n == 0)
     return -1;
+  ts = ts_set[0];
 
   /**********************/
   /* Compute likelihood */
@@ -97,7 +99,9 @@ int main(int argc, char *argv[]){
   
   free(vars);
   free_potential(result);
-  free_timeseries(ts);
+  for(i = 0; i < n; i++)
+    free_timeseries(ts_set[i]);
+  free(ts_set);
   free_model(model);
 
   return 0;

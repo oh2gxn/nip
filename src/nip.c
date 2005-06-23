@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.83 2005-06-21 12:23:11 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.84 2005-06-23 11:07:34 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -383,126 +383,144 @@ void free_model(nip model){
 }
 
 
-time_series read_timeseries(nip model, char* filename){
-  int i, j, k, m; 
+int read_timeseries(nip model, char* filename, 
+		    time_series** results){
+  int i, j, k, m, n, N; 
   int obs;
   char** tokens = NULL;
   time_series ts = NULL;
   datafile* df = NULL;
-  variable v =NULL;
+  variable v = NULL;
   
-  ts = (time_series) malloc(sizeof(time_series_type));
-  if(!ts){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-  ts->model = model;
-  ts->hidden = NULL;
-  ts->observed = NULL;
-  ts->data = NULL;
-
   df = open_datafile(filename, ',', 0, 1);
 
   if(df == NULL){
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
     fprintf(stderr, "%s\n", filename);
-    free(ts);
-    return NULL;
+    return 0;
   }  
 
-  ts->length = df->datarows;
-
-  /* Check the contents of data file */
-  obs = 0;
-  for(i = 0; i < df->num_of_nodes; i++){
-    v = model_variable(model, df->node_symbols[i]);
-    if(v)
-      obs++;
-  }
-
-  /* Find out how many (totally) latent variables there are. */
-  ts->num_of_hidden = model->num_of_vars - obs;
-
-  /* Allocate the array for the hidden variables. */
-  ts->hidden = (variable *) calloc(ts->num_of_hidden, sizeof(variable));
-  if(obs > 0)
-    ts->observed = (variable *) calloc(obs, sizeof(variable));
-  if(!(ts->hidden && (ts->observed || obs == 0))){
+  /* N time series */
+  N = df->ndatarows;
+  *results = (time_series*) calloc(N, sizeof(time_series));
+  if(!*results){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(ts->hidden);
-    free(ts);
     close_datafile(df);
-    return NULL;
-  }  
-
-  /* Set the pointers to the hidden variables. */
-  m = 0;
-  for(k = 0; k < model->num_of_vars; k++){
-    j = 1;
-    for(i = 0; i < df->num_of_nodes; i++){
-      if(equal_variables(model->variables[k], 
-			 model_variable(model, df->node_symbols[i])))
-	j = 0;
-    }
-    if(j)
-      ts->hidden[m++] = model->variables[k];
+    return 0;
   }
 
-  if(obs > 0){
-    k = 0;
+  for(n = 0; n < N; n++){
+    ts = (time_series) malloc(sizeof(time_series_type));
+    if(!ts){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(*results);
+      close_datafile(df);
+      return 0;
+    }
+    ts->model = model;
+    ts->hidden = NULL;
+    ts->observed = NULL;
+    ts->data = NULL;
+    ts->length = df->datarows[n];
+    
+    /* Check the contents of data file */
+    obs = 0;
     for(i = 0; i < df->num_of_nodes; i++){
       v = model_variable(model, df->node_symbols[i]);
       if(v)
-	ts->observed[k++] = v;
+	obs++;
     }
-
-    /* Allocate some space for data */
-    ts->data = (int**) calloc(ts->length, sizeof(int*));
-    if(!(ts->data)){
+    
+    /* Find out how many (totally) latent variables there are. */
+    ts->num_of_hidden = model->num_of_vars - obs;
+    
+    /* Allocate the array for the hidden variables. */
+    ts->hidden = (variable *) calloc(ts->num_of_hidden, sizeof(variable));
+    if(obs > 0)
+      ts->observed = (variable *) calloc(obs, sizeof(variable));
+    if(!(ts->hidden && (ts->observed || obs == 0))){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free(ts->hidden);
-      free(ts->observed);
       free(ts);
+      free(*results);
       close_datafile(df);
-      return NULL;
+      return 0;
+    }  
+    
+    /* Set the pointers to the hidden variables. */
+    m = 0;
+    for(k = 0; k < model->num_of_vars; k++){
+      j = 1;
+      for(i = 0; i < df->num_of_nodes; i++){
+	if(equal_variables(model->variables[k], 
+			   model_variable(model, df->node_symbols[i])))
+	  j = 0;
+      }
+      if(j)
+	ts->hidden[m++] = model->variables[k];
     }
-    for(i = 0; i < ts->length; i++){
-      ts->data[i] = (int*) calloc(obs, sizeof(int));
-      if(!(ts->data[i])){
+    
+    if(obs > 0){
+      k = 0;
+      for(i = 0; i < df->num_of_nodes; i++){
+	v = model_variable(model, df->node_symbols[i]);
+	if(v)
+	  ts->observed[k++] = v;
+      }
+      
+      /* Allocate some space for data */
+      ts->data = (int**) calloc(ts->length, sizeof(int*));
+      if(!(ts->data)){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	for(j = 0; j < i; j++)
-	  free(ts->data[j]);
-	free(ts->data);
 	free(ts->hidden);
 	free(ts->observed);
 	free(ts);
+	free(*results);
 	close_datafile(df);
-	return NULL;
+	return 0;
       }
-    }
-    
-    /* Get the data */
-    for(j = 0; j < ts->length; j++){
-      m = nextline_tokens(df, ',', &tokens); /* 2. Read */
-      assert(m == df->num_of_nodes);
+      for(i = 0; i < ts->length; i++){
+	ts->data[i] = (int*) calloc(obs, sizeof(int));
+	if(!(ts->data[i])){
+	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  for(j = 0; j < i; j++)
+	    free(ts->data[j]);
+	  free(ts->data);
+	  free(ts->hidden);
+	  free(ts->observed);
+	  free(ts);
+	  free(*results);
+	  close_datafile(df);
+	  return 0;
+	}
+      }
       
-      /* 3. Put into the data array */
-      for(i = 0; i < m; i++){
-	v = model_variable(model, df->node_symbols[i]);
-	if(v)
-	  ts->data[j][i] = get_stateindex(v, tokens[i]);
+      /* Get the data */
+      for(j = 0; j < ts->length; j++){
+	m = nextline_tokens(df, ',', &tokens); /* 2. Read */
+	assert(m == df->num_of_nodes);
 	
-	/* Q: Should missing data be allowed?   A: Yes. */
-	/* assert(data[j][i] >= 0); */
+	/* 3. Put into the data array */
+	for(i = 0; i < m; i++){
+	  v = model_variable(model, df->node_symbols[i]);
+	  if(v)
+	    ts->data[j][i] = get_stateindex(v, tokens[i]);
+	  
+	  /* Q: Should missing data be allowed?   A: Yes. */
+	  /* assert(data[j][i] >= 0); */
+	}
+	
+	for(i = 0; i < m; i++) /* 4. Dump away */
+	  free(tokens[i]);
+	free(tokens);
       }
-      
-      for(i = 0; i < m; i++) /* 4. Dump away */
-	free(tokens[i]);
-      free(tokens);
     }
+
+    (*results)[n] = ts;
   }
+  
   close_datafile(df);
-  return ts;
+  return N;
 }
 
 
@@ -1579,23 +1597,29 @@ static int m_step(potential* parameters, nip model){
 
 /* Teaches the given model (ts->model) according to the given time series 
  * (ts) with EM-algorithm. Returns an error code as an integer. */
-int em_learn(time_series ts, double threshold){
+int em_learn(time_series *ts, int n_ts, double threshold){
   int i, n, v;
+  int length;
   int *card;
   double old_loglikelihood; 
   double loglikelihood = -DBL_MAX;
   potential *parameters;
+  nip model = ts[0]->model;
 
   /* Reserve some memory for calculation */
-  parameters = (potential*) calloc(ts->model->num_of_vars, 
+  parameters = (potential*) calloc(model->num_of_vars, 
 				   sizeof(potential));
   if(!parameters){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
 
-  for(v = 0; v < ts->model->num_of_vars; v++){
-    n = ts->model->variables[v]->num_of_parents + 1;
+  length = 0;
+  for(i = 0; i < n_ts; i++)
+    length += ts[i]->length;
+
+  for(v = 0; v < model->num_of_vars; v++){
+    n = model->variables[v]->num_of_parents + 1;
     card = (int*) calloc(n, sizeof(int));
     if(!card){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -1606,9 +1630,9 @@ int em_learn(time_series ts, double threshold){
     }
     /* The child MUST be the first variable in order to normalize
      * potentials reasonably */
-    card[0] = ts->model->variables[v]->cardinality;
+    card[0] = model->variables[v]->cardinality;
     for(i = 1; i < n; i++)
-      card[i] = ts->model->variables[v]->parents[i-1]->cardinality;
+      card[i] = model->variables[v]->parents[i-1]->cardinality;
 
     /* variable->parents should be null only if n==1 
      * => no for-loop => no null dereference */
@@ -1623,11 +1647,12 @@ int em_learn(time_series ts, double threshold){
   do{
     old_loglikelihood = loglikelihood;
 
-    /* E-Step: Now this is the heavy stuff..! */
-    n = e_step(ts, parameters, &loglikelihood);
-    if(n != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      return ERROR_GENERAL;
+    for(n = 0; n < n_ts; n++){
+      /* E-Step: Now this is the heavy stuff..! */
+      if(e_step(ts[n], parameters, &loglikelihood) != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
     }
 
     /* DEBUG */
@@ -1639,17 +1664,16 @@ int em_learn(time_series ts, double threshold){
       break;
 
     /* M-Step: The parameter estimation... */
-    n = m_step(parameters, ts->model);
-    if(n != NO_ERROR){
+    if(m_step(parameters, model) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }
-  }while(((loglikelihood - old_loglikelihood)/ts->length) > threshold);
+  }while(((loglikelihood - old_loglikelihood)/length) > threshold);
   /*** When should we stop? ***/
 
   /** <a splendid opportunity to write the parameters to a file> **/
 
-  for(v = 0; v < ts->model->num_of_vars; v++){
+  for(v = 0; v < model->num_of_vars; v++){
     free_potential(parameters[v]);
   }
   free(parameters);

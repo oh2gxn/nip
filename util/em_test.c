@@ -13,9 +13,9 @@
 
 int main(int argc, char *argv[]) {
 
-  int i;
+  int i, n;
   nip model = NULL;
-  time_series ts = NULL;
+  time_series *ts_set = NULL;
   double threshold = 0;
   char* tailptr = NULL;
 
@@ -37,8 +37,8 @@ int main(int argc, char *argv[]) {
   use_priors(model, 1);
 
   /* read the data */
-  ts = read_timeseries(model, argv[2]);
-  if(!ts){
+  n = read_timeseries(model, argv[2], &ts_set);
+  if(n == 0){
     printf("Unable to parse the data file: %s?\n", argv[2]);
     return -1;
   }
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 
   /* THE algorithm (may take a while) */
   printf("Computing... \n");
-  i = em_learn(ts, threshold);
+  i = em_learn(ts_set, n, threshold);
   if(i != NO_ERROR){
     fprintf(stderr, "There were errors during learning:\n");
     report_error(__FILE__, __LINE__, i, 1);
@@ -68,7 +68,9 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  free_timeseries(ts);
+  for(i = 0; i < n; i++)
+    free_timeseries(ts_set[i]);
+  free(ts_set);
   free_model(model);
 
   return 0;

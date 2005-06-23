@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.100 2005-06-21 12:23:11 jatoivol Exp $
+ * $Id: parser.c,v 1.101 2005-06-23 11:07:34 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -107,8 +107,10 @@ datafile *open_datafile(char *filename, char separator,
   int num_of_tokens = 0;
   int *token_bounds;
   int linecounter = 0;
+  int tscounter = 0;
   int dividend;
-  int i, j;
+  int i, j, state;
+  int empty_lines_read = 0;
   stringlink *statenames = NULL;
   stringlink temp, temp2;
   datafile *f = NULL;
@@ -126,7 +128,8 @@ datafile *open_datafile(char *filename, char separator,
   f->is_open = 0;
   f->firstline_labels = 0;
   f->line_now = 0;
-  f->datarows = 0;
+  f->ndatarows = 0;
+  f->datarows = NULL;
   f->node_symbols = NULL;
   f->num_of_nodes = 0;
   f->node_states = NULL;
@@ -158,28 +161,98 @@ datafile *open_datafile(char *filename, char separator,
   strcpy(f->name, filename);
 
   /*
-   * If file is opened in read mode, check the contents.
+   * If the file is opened in read mode, check the contents.
    * This includes names of nodes and their states.
    */
   if(!write){
 
+    linecounter = 0;
+    empty_lines_read = 0;
+    /* tries to ignore the empty lines in the beginning of file
+     * and between the node labels and data */
+    state = 1; /* ignores empty lines before data */
+    if(nodenames)
+      state = 2; /* ignores empty lines before node labels */
+
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
       num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
-      token_bounds =
-	tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 0);
-
-      /* JJT 1.9.2004: A sort of bug fix. Ignore empty lines */
-      if(num_of_tokens == 0)
-	continue;
-
-      if(!token_bounds){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	close_datafile(f);
-	return NULL;
+      
+      /* JJT  1.9.2004: A sort of bug fix. Ignore empty lines */
+      /* JJT 22.6.2005: Another fix. Ignore only the empty lines 
+       * immediately after the node labels... and duplicate empty lines.
+       * Otherwise start a new timeseries */
+      if(num_of_tokens == 0){
+	linecounter = 0;
+	empty_lines_read++;
+	if(state || empty_lines_read > 1)
+	  continue; /* empty lines to be ignored */
       }
+      else{
+	linecounter++;
+	empty_lines_read = 0;
+	if(state > 0){
+	  linecounter = 0; /* reset for data lines */
+	  state--; /* stop ignoring single empty lines and the node names */
+	}
+	if(state == 0 && linecounter == 1)
+	  (f->ndatarows)++;;
+      }
+    }
 
+    /* rewind */
+    rewind(f->file);
+    f->line_now = 0;
+    linecounter = 0;
+    state = 1;
+    if(nodenames)
+      state = 2;
+
+    /* allocate f->datarows array */
+    f->datarows = (int*) calloc(f->ndatarows, sizeof(int));
+    /* NOTE: calloc resets the contents to zero! */
+    if(!f->datarows){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      close_datafile(f);
+      return NULL;
+    }
+
+    while(fgets(last_line, MAX_LINELENGTH, f->file)){
+      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
+      if(num_of_tokens > 0){
+	token_bounds =
+	  tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 0);      
+	if(!token_bounds){
+	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	  close_datafile(f);
+	  return NULL;
+	}
+      }
+      (f->line_now)++;
+      
+      /* JJT  1.9.2004: A sort of bug fix. Ignore empty lines */
+      /* JJT 22.6.2005: Another fix. Ignore only the empty lines 
+       * immediately after the node labels... and duplicate empty lines.
+       * Otherwise start a new timeseries */
+      if(num_of_tokens == 0){
+	empty_lines_read++;
+	continue; /* empty lines to be ignored */
+      }
+      else{
+	if(empty_lines_read){
+	  linecounter = 1;
+	  if(state < 1)
+	    tscounter++;
+	}
+	else
+	  linecounter++;
+	empty_lines_read = 0;
+	if(state > 0)
+	  state--; /* stop ignoring single empty lines */
+      }
+      
       /* Read node names or make them up. */
-      if(linecounter == 0){
+      if(state){ 
+	/* reading the first non-empty line and expecting node names */
 	f->num_of_nodes = num_of_tokens;
 	f->node_symbols = (char **) calloc(num_of_tokens, sizeof(char *));
 
@@ -265,21 +338,21 @@ datafile *open_datafile(char *filename, char separator,
 	  }
 	}
       }
+      else{
+	/* Read observations (just in order to see all the different
+	   kinds of observations for each node). */
 
-      /* Read observations (just in order to see all the different
-	 kinds of observations for each node). */
-      if(linecounter != 0 || (linecounter == 0 && !nodenames)){
+	f->datarows[tscounter]++;
+	
+	/* j == min(f->num_of_nodes, num_of_tokens) */
+	if(f->num_of_nodes < num_of_tokens)
+	  j = f->num_of_nodes;
+	else
+	  j = num_of_tokens;
 
-	if(num_of_tokens > 0)
-	  f->datarows++;
-
-	for(i = 0;
-	    i < (f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens);
-	    i++){
-
+	for(i = 0; i < j; i++){
 	  token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
 				  sizeof(char));
-
 	  if(!token){
 	    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	    close_datafile(f);
@@ -308,9 +381,7 @@ datafile *open_datafile(char *filename, char separator,
 	  free(token);
 	}
       }
-
       free(token_bounds);
-      linecounter++;
     }
 
     /* Count number of states in each variable. */
@@ -353,7 +424,6 @@ datafile *open_datafile(char *filename, char separator,
 	temp = temp->fwd;
       }
     }
-
   }
 
   /* JJT: Added 13.8.2004 because of possible memory leaks. */
@@ -421,8 +491,8 @@ void close_datafile(datafile *file){
 
 /* Frees the memory used by (possibly partially allocated) datafile f. */
 static void free_datafile(datafile *f){
-  
   int j;
+
   if(!f)
     return;
   free(f->name);
@@ -437,6 +507,7 @@ static void free_datafile(datafile *f){
       free(f->node_states[j]);
     free(f->node_states);
   }
+  free(f->datarows);
   free(f);
 }
 
@@ -460,6 +531,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
   }
 
   /* Skip the first line if it contains node labels. */
+  /* FIXME: this needs to skip also the empty lines */
   if(f->firstline_labels && f->line_now == 0){
     if(fgets(line, MAX_LINELENGTH, f->file) == NULL)
       return -1;

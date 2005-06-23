@@ -14,11 +14,9 @@
 
 int main(int argc, char *argv[]){
   
-  int i;
-  int n;
+  int i, j, m, n;
 
 #ifdef TESTATUT
-  int j;
   int cardinality[] = {3, 2, 3};
   int num_of_vars = 3;
   int num_of_cliques;
@@ -39,7 +37,7 @@ int main(int argc, char *argv[]){
 #endif
 
   nip model = NULL;
-  time_series ts = NULL;
+  time_series *ts_set = NULL;
 
   if(argc > 3)
     n = atoi(argv[3]);
@@ -205,19 +203,20 @@ int main(int argc, char *argv[]){
     printf("\nReading and freeing data:\n");
     for(i = 0; i < n/500; i++){
       /* ...guess this is OK... */
-      ts = read_timeseries(model, argv[2]);
+      m = read_timeseries(model, argv[2], &ts_set);
       printf("\rIteration %d of %d                               ", i + 1, 
 	     n/500); 
-      free_timeseries(ts);
+      for(j = 0; j < m; j++)
+	free_timeseries(ts_set[0]);
+      free(ts_set);
     }
     printf("\rDone.                                             \n");
-    ts = read_timeseries(model, argv[2]);
-
+    m = read_timeseries(model, argv[2], &ts_set);
 
     printf("\nRunning EM-algorithm %d times:\n",n);
     for(i = 0; i < n; i++){
-      total_reset(ts->model);
-      em_learn(ts, THRESHOLD);
+      total_reset(model);
+      em_learn(ts_set, m, THRESHOLD);
       printf("\rIteration %d of %d                               ", i + 1, n);
     }
     printf("\rDone.                                             \n");
@@ -228,7 +227,9 @@ int main(int argc, char *argv[]){
       printf("\rIteration %d of %d                               ", i + 1, n);
     }
     printf("\rDone.                                             \n");
-    free_timeseries(ts);
+    for(i = 0; i < m; i++)
+      free_timeseries(ts_set[i]);
+    free(ts_set);
   }
   free_model(model);
 

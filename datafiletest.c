@@ -2,12 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/*
+#define PRINT_ALL
+*/
+
 int main(int argc, char *argv[]){
 
   int i, j;
-  int num_of_tokens;
   datafile *file;
+#ifdef PRINT_ALL
+  int num_of_tokens;
   char **tokens;
+#endif
 
   if(argc < 2){
     printf("Filename must be given!\n");
@@ -22,16 +28,20 @@ int main(int argc, char *argv[]){
   printf("\tName: %s\n", file->name);
   printf("\tSeparator: %c\n", file->separator);
   printf("\tis_open: %d\n", file->is_open);
-  printf("\tNumber of data rows: %d\n", file->datarows);
+  printf("\tNumber of time series: %d\n", file->ndatarows);
+  printf("\tNumber of data rows for each time series: \n");
+  for(i = 0; i < file->ndatarows; i++)
+    printf("\t  %d,\n", file->datarows[i]);
   printf("\tNumber of nodes: %d\n", file->num_of_nodes);
   printf("Nodes:\n");
   for(i = 0; i < file->num_of_nodes; i++){
     printf("\tNode %s, states:\n\t", file->node_symbols[i]);
     for(j = 0; j < file->num_of_states[i]; j++)
-      printf("%s ", file->node_states[i][j]);
+      printf("%s, ", file->node_states[i][j]);
     printf("\n");
   }
 
+#ifdef PRINT_ALL
   printf("\nReading tokens one line at a time.\n");
 
   while((num_of_tokens = nextline_tokens(file, ',', &tokens)) >= 0){
@@ -43,6 +53,7 @@ int main(int argc, char *argv[]){
     printf("\n");
     free(tokens);
   }
+#endif
 
   close_datafile(file);
 

@@ -30,12 +30,13 @@
 
 int main(int argc, char *argv[]){
 
-  int i, j, t = 0;
+  int i, j, n, t = 0;
 
   nip model = NULL;
   variable temp = NULL;
 
   time_series ts = NULL;
+  time_series *ts_set = NULL;
   uncertain_series ucs = NULL;
 
   /*************************************/
@@ -64,15 +65,16 @@ int main(int argc, char *argv[]){
   /* read the data from a file */
   /*****************************/
 
-  ts = read_timeseries(model, argv[2]);
+  n = read_timeseries(model, argv[2], &ts_set);
 
-  if(ts == NULL){
-    report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
+  if(n < 1){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s\n", argv[2]);
     free_model(model);
     return -1;
   }
 
+  ts = ts_set[0];
 
   /*****************/
   /* Forward phase */
@@ -133,7 +135,9 @@ int main(int argc, char *argv[]){
     }
   }
 
-  free_timeseries(ts);
+  for(i = 0; i < n; i++)
+    free_timeseries(ts_set[0]);
+  free(ts_set);
   free_uncertainseries(ucs);
   free_model(model);
   
