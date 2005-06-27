@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.85 2005-06-23 13:20:38 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.86 2005-06-27 08:57:38 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -47,9 +47,6 @@
  *   - something like forward_inference and a little loop where you
  *     set values for variables and infer the probabilities for the next 
  *     ones to be set
-
-
- * - Function for writing the model parameters into a file
  *****/
 
 extern int yyparse();
@@ -514,12 +511,6 @@ int read_timeseries(nip model, char* filename,
 	  free(tokens[i]);
 	free(tokens);
       }
-      
-/*       m = nextline_tokens(df, ',', &tokens); /\* Read an empty line *\/ */
-/*       assert(m == 0); */
-/*       for(i = 0; i < m; i++) /\* Dump away *\/ */
-/* 	free(tokens[i]); */
-/*       free(tokens); */
     }
 
     (*results)[n] = ts;
@@ -710,7 +701,7 @@ static int start_timeslice_message_pass(nip model, int direction,
   }    
 
   general_marginalise(c->p, sepset, mapping);
-  free(mapping);
+  free(mapping); /* should mapping-array be a part of sepset? */
 
   return NO_ERROR;
 }
@@ -1605,10 +1596,10 @@ static int m_step(potential* parameters, nip model){
  * (ts) with EM-algorithm. Returns an error code as an integer. */
 int em_learn(time_series *ts, int n_ts, double threshold){
   int i, n, v;
-  int length;
   int *card;
   double old_loglikelihood; 
   double loglikelihood = -DBL_MAX;
+  double probe = 0;
   potential *parameters;
   nip model = ts[0]->model;
 
@@ -1619,10 +1610,6 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
-
-  length = 0;
-  for(i = 0; i < n_ts; i++)
-    length += ts[i]->length;
 
   for(v = 0; v < model->num_of_vars; v++){
     n = model->variables[v]->num_of_parents + 1;
@@ -1652,13 +1639,14 @@ int em_learn(time_series *ts, int n_ts, double threshold){
   i = 0;
   do{
     old_loglikelihood = loglikelihood;
-
+    loglikelihood = 0;
     for(n = 0; n < n_ts; n++){
       /* E-Step: Now this is the heavy stuff..! */
-      if(e_step(ts[n], parameters, &loglikelihood) != NO_ERROR){
+      if(e_step(ts[n], parameters, &probe) != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
       }
+      loglikelihood += (probe / timeseries_length(ts[n]));
     }
 
 
@@ -1678,7 +1666,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }
-  }while(((loglikelihood - old_loglikelihood)/length) > threshold);
+  }while((loglikelihood - old_loglikelihood) > threshold);
   /*** When should we stop? ***/
 
   /** <a splendid opportunity to write the parameters to a file> **/
