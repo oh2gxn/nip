@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.1 2005-06-27 08:57:55 jatoivol Exp $
+% $Id: doc.tex,v 1.2 2005-06-27 13:51:09 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -123,13 +123,33 @@ within the domain of multivariate discrete time series...
 
 
 \section{Overview}
-The implementation can be seen as a set of layers divided in levels of 
-abstraction. The lowest level of computation is done with so-called
-potentials and therefore the files providing the abstract data type (ADT) 
-{\it potential} is used throughout the system.
-% Some outline of the system... The parts and stuff...
-% How?
+The implementation can be seen as a set of layers divided in levels of
+abstraction (see Fig.~\ref{fig1}). The lowest level of computation is done
+with so-called potentials and therefore the abstract data type (ADT) 
+{\it potential} is used throughout the system. Another common data type is 
+{\it variable} which contains information e.g. about the name of a variable 
+and its states.
+%
+\begin{figure} [!ht]
+  \begin{center}
+    \includegraphics[width=110mm]{layers.eps}
+    \caption{Abstraction layers of the system}
+    \label{fig1}
+  \end{center}
+\end{figure}
 
+Files {\it Graph.h} and {\it Graph.c} contain part of the software
+responsible for Bayesian network representation and transformation into a
+so-called {\it join tree}. Various operations for handling join trees is
+located in {\it clique.h} and {\it clique.c}. Abstractions provided by
+potential, clique, graph and variable subsystems are used by the 
+{\it parser} subsystem for reading models and data from input files. 
+Finally the {\it nip} subsystem (files nip.h and nip.c) provides
+abstraction for time series and most of the other things mentioned above.
+
+The following sections will explain each of the subsystems in close
+detail. Probably the most important parts for the user of this software
+library are the ones describing variables and NIP abstractions.
 
 
 \newpage
@@ -196,7 +216,7 @@ is a pointer to a struct which has the following fields:
 \item[previous] is used for describing the repetitive structure in
   timeslice models. It is a pointer to the variable which this variable
   will replace in previous timeslice. The pointer is \cdatatype{NULL} if 
-  the model has no repetitive structure.
+  the model has no repetitive structure or dependencies between time steps.
 
 \item[next] is a same kind of pointer as \cstructfield{previous} above, 
   but this one tells which variable will be replaced in the next timeslice.
@@ -210,10 +230,20 @@ is a pointer to a struct which has the following fields:
 \item[num\_of\_parents] is a positive \cdatatype{integer} which tells the 
   number of parents and thus the size of the \cstructfield{parents} array.
 
-\item[family\_clique] is a void pointer for so called memoization of family
+\item[family\_clique] is a void pointer for so-called memoization of family
   cliques of variables. The pointer is initially NULL and is set only when 
   the family clique is found the first time.
 
+\item[family\_mapping] is an integer array telling which variables of the
+  clique belong to the family and in which order. This is only a
+  memoization trick for some join tree operations.
+
+\item[pos\_x] is an integer describing horizontal position of the graph
+  node on computer display. This is also known as the {\it node position}
+  in Hugin net files.
+
+\item[pos\_y] is an integer describing vertical position of the graph node
+  on computer display. (a.k.a. the {\it node position} in Hugin net files)
 \end{description}
 
 \cfilename{variable.h} provides also data types for implementing lists of
@@ -321,6 +351,13 @@ The functions provided in \cfilename{variable.c} are
 \item[number\_of\_parents(v)] tells how many parents the
   variable~\cparameter{v} has.
   
+\item[set\_position(v, x, y)] will set the integer position
+  values~\cparameter{x} and \cparameter{y} of the variable~\cparameter{v}.
+
+\item[get\_position(v, x, y)] will write the position values of the
+  variable~\cparameter{v} into the integers referenced by the pointers 
+  \cparameter{x} and \cparameter{y}.
+
 \item[set\_parents(v, parents, nparents)] sets the parents for the
   variable~\cparameter{v} by copying the references from the
   \cparameter{parents}, which is an \cdatatype{array of variables}. 
@@ -331,6 +368,17 @@ The functions provided in \cfilename{variable.c} are
   variable~\cparameter{v}. After you get the pointer to the array of 
   parents, DO NOT alter the content of the array. Note that the size of the
   array can be found out with the \cfunction{number\_of\_parents} function.
+
+\item[set\_prior(v, prior)] sets the prior probability distribution for the 
+  variable~\cparameter{v} according to the given \cdatatype{double array} 
+  \cparameter{prior}. The array must have one element for each of the
+  states of the variable. Old prior array will be de-allocated if it exists
+  and the given array \cparameter{prior} is copied.
+
+\item[get\_prior(v)] gives a base pointer to the \cdatatype{double array}
+  describing the prior distribution of given variable \cparameter{v}.
+  Don't mess with the contents of the array unless you need to alter the 
+  prior distribution.
 \end{description}
 
 
@@ -417,39 +465,40 @@ with the graph. Used internally for better performance.
 The functions provided in \cfilename{Graph.c} are:
 
 \begin{description}
-\item[new\_graph(n)] creates a new graph with memory reserved for $n$
-variables. Returns a pointer.
-\item[copy\_graph(G)] creates a copy of the graph \examplecode{G}.
+\item[new\_graph(n)] creates a new graph with memory reserved for
+  \cparameter{n} variables. Returns a pointer.
+\item[copy\_graph(G)] creates a copy of the graph \cparameter{G}.
 \item[free\_graph(G)] frees the memory reserved for the graph
-\examplecode{G}.
+  \cparameter{G}.
 \item[get\_size(G)] returns the number of variables in the graph
-\examplecode{G}.
+  \cparameter{G}.
 \item[get\_variables(G)] returns the variables in the graph
-\examplecode{G} as an array.
+  \cparameter{G} as an array.
 \item[get\_graph\_index(G, v)] returns the index of the variable
-\examplecode{v} in the internal array of the graph \examplecode{G}.
+  \cparameter{v} in the internal array of the graph \cparameter{G}.
 \item[get\_neighbours(G, v\_array, v)] returns the number of
-neighbours of variable \examplecode{v} in graph \examplecode{G}. The
-neighbours will be stored in the array \examplecode{v\_array}, which
-{\it must be large enough}. No variable can have more neighbours than
-$n-1$, where $n$ is the number of variables in \examplecode{G}.
+  neighbours of variable \cparameter{v} in graph \cparameter{G}. The
+  neighbours will be stored in the array \cparameter{v\_array}, which
+  {\it must be large enough}. No variable can have more neighbours than
+  $n-1$, where $n$ is the number of variables in \cparameter{G}.
 \item[is\_child(G, v1, v2)] will return \examplecode{True} when
-variable \examplecode{v2} is a child of variable \examplecode{v1} in
-the graph \examplecode{G}.
-\item[add\_variable(G, v)] adds a new variable \examplecode{v} to the
-graph \examplecode{G}. You must add as many variables as you specified
-when creating \examplecode{G}.
-\item[add\_child(G, v1, v2)] adds an edge to graph \examplecode{G}
-from variable \examplecode{v1} to variable \examplecode{v2}, ie. makes
-\examplecode{v2} a child of \examplecode{v1}.
-\item[find\_cliques(G, cp)] finds cliques in \examplecode{G} and
-stores them in the clique-array \examplecode{*cp}\footnote{Type of
-\examplecode{cp} is \cdatatype{clique**}, ie. it is a pointer to such
-an array. It need not be initialized.}. Returns the number of elements
-in the array.
+  variable \cparameter{v2} is a child of variable \cparameter{v1} in
+  the graph \cparameter{G}.
+\item[add\_variable(G, v)] adds a new variable \cparameter{v} to the
+  graph \cparameter{G}. You must add as many variables as you specified
+  when creating \cparameter{G}.
+\item[add\_child(G, v1, v2)] adds an edge to graph \cparameter{G}
+  from variable \cparameter{v1} to variable \cparameter{v2}, ie. makes
+  \cparameter{v2} a child of \cparameter{v1}.
+\item[find\_cliques(G, cp)] finds cliques in \cparameter{G} and
+  stores them in the clique-array \cparameter{*cp}
+  \footnote{Type of
+    \examplecode{cp} is \cdatatype{clique**}, ie. it is a pointer to such
+    an array. It need not be initialized.}. Returns the number of elements
+  in the array.
 \item[make\_undirected(G)] returns an undirected copy of Graph
-\examplecode{G}.
-\item[moralise(G)] returns a moralised copy of graph \examplecode{G}.
+  \cparameter{G}.
+\item[moralise(G)] returns a moralised copy of graph \cparameter{G}.
 
 \end{description}
 
@@ -471,7 +520,6 @@ weights in neighbouring nodes change when the minimum weight node is
 removed. This also means that the heap implementation must be tied in
 with the \cdatatype{Graph}. This has led to number of tradeoffs and
 possible pitfalls.
-
  
 % XX
 
@@ -604,132 +652,132 @@ The functions provided for manipulating \cdatatype{potentials} are
 placed in \cfilename{potential.c} and are as follows:
 \begin{description}
 \item[make\_potential(cardinality, num\_of\_vars, data)] creates a
-potential struct according to the parameters and returns a pointer to
-it. The resulting potential will have its cardinalities of variables set
-according to the given \cparameter{cardinality} array by copying the
-elements in it. The number of associated variables is given as the integer
-\cparameter{num\_of\_vars}.
-
-The \cparameter{data} parameter can be a null pointer or a
-\cdatatype{double array} of the size equal to the product of the
-cardinalities of the variables. In case of a null pointer, the potential
-will be initialised to uniform distribution. Otherwise the contents of the
-\cstructfield{data} array in the potential struct will be copied from the
-given \cparameter{data} array.
-
+  potential struct according to the parameters and returns a pointer to
+  it. The resulting potential will have its cardinalities of variables set
+  according to the given \cparameter{cardinality} array by copying the
+  elements in it. The number of associated variables is given as the integer
+  \cparameter{num\_of\_vars}.
+  
+  The \cparameter{data} parameter can be a null pointer or a
+  \cdatatype{double array} of the size equal to the product of the
+  cardinalities of the variables. In case of a null pointer, the potential
+  will be initialised to uniform distribution. Otherwise the contents of the
+  \cstructfield{data} array in the potential struct will be copied from the
+  given \cparameter{data} array.
+  
 \item[free\_potential(p)] frees the memory allocated for the
-potential~\cparameter{p}.
-
+  potential~\cparameter{p}.
+  
 \item[get\_pvalue(p, indices)] retrieves the possibly non-normalised
-probability of the configuration of variables, described by the
-\cdatatype{integer array} \cparameter{indices}, from the
-\cdatatype{potential}~\cparameter{p}. The \cparameter{indices} array tells
-which value each of the associated variables are assigned: $n-1$ in the
-array corresponds to the $n$:th value of the variable.  The
-\cparameter{indices} must be in the same order as the corresponding
-variables and their cardinalities in the potential~\cparameter{p}.
-
+  probability of the configuration of variables, described by the
+  \cdatatype{integer array} \cparameter{indices}, from the
+  \cdatatype{potential}~\cparameter{p}. The \cparameter{indices} array tells
+  which value each of the associated variables are assigned: $n-1$ in the
+  array corresponds to the $n$:th value of the variable.  The
+  \cparameter{indices} must be in the same order as the corresponding
+  variables and their cardinalities in the potential~\cparameter{p}.
+  
 \item[set\_pvalue(p, indices, value)] sets a \cdatatype{double}
-\cparameter{value} in the \cdatatype{potential}~\cparameter{p} the same way
-as \\ \cfunction{get\_pvalue(p, indices)} retrieves it.  (See the
-description above.)
-
+  \cparameter{value} in the \cdatatype{potential}~\cparameter{p} the same way
+  as \\ \cfunction{get\_pvalue(p, indices)} retrieves it.  (See the
+  description above.)
+  
 \item[inverse\_mapping(p, flat\_index, indices)] transforms a so-called
-flat index into the \cdatatype{integer array} \cparameter{indices}
-according to the \cdatatype{potential}~\cdatatype{p}.  A flat index is an
-index used for addressing data in the potential and is therefore an integer
-between \examplecode{0} and \examplecode{p->size\_of\_data - 1}
-inclusive. Shortly, this function is made for finding out which
-configuration of states of the variables corresponds to each element in the
-potential. Note that the \cparameter{indices} array is not allocated by the
-function.
-
+  flat index into the \cdatatype{integer array} \cparameter{indices}
+  according to the \cdatatype{potential}~\cdatatype{p}.  A flat index is an
+  index used for addressing data in the potential and is therefore an integer
+  between \examplecode{0} and \examplecode{p->size\_of\_data - 1}
+  inclusive. Shortly, this function is made for finding out which
+  configuration of states of the variables corresponds to each element in the
+  potential. Note that the \cparameter{indices} array is not allocated by the
+  function.
+  
 \item[general\_marginalise(source, destination, mapping)] is one of the
-most useful functions since it computes the marginalisation i.e. a sum over
-the variables not being indicated by the given \cdatatype{integer array}
-\cparameter{mapping} and places the result in the given
-\cparameter{destination} potential. To make any sense, the number of
-associated variables in \cparameter{source} must be greater than in
-\cparameter{destination}.
-
-The \cparameter{mapping} array tells which variable in \cparameter{source}
-corresponds to each of the variables in \cparameter{destination}. It
-consists of indices ranging from \examplecode{0} to
-\examplecode{source->num\_of\_vars - 1} inclusive.  The $n$'th variable of
-destination potential corresponds to the $mapping[n]$'th variable in the
-source potential. Size of the array must equal the number of variables
-associated with the destination potential.  Note that the result of
-marginalisation is not normalised.
-
+  most useful functions since it computes the marginalisation i.e. a sum over
+  the variables not being indicated by the given \cdatatype{integer array}
+  \cparameter{mapping} and places the result in the given
+  \cparameter{destination} potential. To make any sense, the number of
+  associated variables in \cparameter{source} must be greater than in
+  \cparameter{destination}.
+  
+  The \cparameter{mapping} array tells which variable in \cparameter{source}
+  corresponds to each of the variables in \cparameter{destination}. It
+  consists of indices ranging from \examplecode{0} to
+  \examplecode{source->num\_of\_vars - 1} inclusive.  The $n$'th variable of
+  destination potential corresponds to the $mapping[n]$'th variable in the
+  source potential. Size of the array must equal the number of variables
+  associated with the destination potential.  Note that the result of
+  marginalisation is not normalised.
+  
 \item[total\_marginalise(source, destination, variable)] can be used for
-finding out the probability distribution of a single variable according to
-the \cparameter{source} potential. The function is similar to the
-\cfunction{general\_marginalise} but the user must indicate which one of
-the variables is left unmarginalised. The parameter \cparameter{variable}
-is an \cdatatype{integer} ranging from \examplecode{0} to
-\examplecode{source->num\_of\_vars - 1} inclusive. Zero indicates the first
-variable in the potential.
-
-Another difference arises from the fact that the probability distribution
-of a single variable fits into a one-dimensional array.  The place to put
-the resulting \cdatatype{double array} (\cparameter{destination}) is given
-to the function as one of the parameters. Size of the array must be equal
-(or greater) to the cardinality of the desired variable, so remember to
-allocate one before calling this function. Note that the result of
-marginalisation is not normalised.
-
+  finding out the probability distribution of a single variable according to
+  the \cparameter{source} potential. The function is similar to the
+  \cfunction{general\_marginalise} but the user must indicate which one of
+  the variables is left unmarginalised. The parameter \cparameter{variable}
+  is an \cdatatype{integer} ranging from \examplecode{0} to
+  \examplecode{source->num\_of\_vars - 1} inclusive. Zero indicates the first
+  variable in the potential.
+  
+  Another difference arises from the fact that the probability distribution
+  of a single variable fits into a one-dimensional array.  The place to put
+  the resulting \cdatatype{double array} (\cparameter{destination}) is given
+  to the function as one of the parameters. Size of the array must be equal
+  (or greater) to the cardinality of the desired variable, so remember to
+  allocate one before calling this function. Note that the result of
+  marginalisation is not normalised.
+  
 \item[update\_potential(numerator, denominator, target, mapping)]
-implements the multiplication of potentials. The function simply multiplies
-the elements of the \cparameter{target} potential with the corresponding
-elements in the \cparameter{numerator} potential. At the same time, the
-function is able to divide the \cparameter{target} potential with the
-optional \cparameter{denominator} potential. If no division is needed,
-\cparameter{denominator} can be \cdatatype{NULL}.  The
-\cparameter{numerator} and \cparameter{denominator} potentials are left
-unchanged by the function.
-
-The function is made for multiplying the a clique potential with the old
-and new sepset potentials. It is assumed that the variables associated with
-the multiplier potentials correspond to a subset of the variables
-associated with the target potential. Thus the user needs to indicate which
-of the variables in the target potential correspond to each variable in the
-multiplier potentials. This is achieved with the fourth parameter
-\cparameter{mapping} which is an \cdatatype{integer array}. The variables
-of numerator and denominator potentials are assumed to be in the same
-order. For example, the array \examplecode{\{0, 3, 1\}} tells that the
-first variable of \cparameter{numerator} is also first in the
-\cparameter{target}, but the second variable of \cparameter{numerator} is
-the fourth (3+1) variable of the \cparameter{target} potential.
-
+  implements the multiplication of potentials. The function simply multiplies
+  the elements of the \cparameter{target} potential with the corresponding
+  elements in the \cparameter{numerator} potential. At the same time, the
+  function is able to divide the \cparameter{target} potential with the
+  optional \cparameter{denominator} potential. If no division is needed,
+  \cparameter{denominator} can be \cdatatype{NULL}.  The
+  \cparameter{numerator} and \cparameter{denominator} potentials are left
+  unchanged by the function.
+  
+  The function is made for multiplying the a clique potential with the old
+  and new sepset potentials. It is assumed that the variables associated with
+  the multiplier potentials correspond to a subset of the variables
+  associated with the target potential. Thus the user needs to indicate which
+  of the variables in the target potential correspond to each variable in the
+  multiplier potentials. This is achieved with the fourth parameter
+  \cparameter{mapping} which is an \cdatatype{integer array}. The variables
+  of numerator and denominator potentials are assumed to be in the same
+  order. For example, the array \examplecode{\{0, 3, 1\}} tells that the
+  first variable of \cparameter{numerator} is also first in the
+  \cparameter{target}, but the second variable of \cparameter{numerator} is
+  the fourth (3+1) variable of the \cparameter{target} potential.
+  
 \item[update\_evidence(numerator, denominator, target, var)] is made for
-multiplying potentials with probability distributions of a single
-variable. The potential to be manipulated is given as the
-\cparameter{target} parameter. It is multiplied by the given
-\cdatatype{double array} \cparameter{numerator} which usually represents
-the probability distribution of a variable. The \cparameter{denominator} is
-a similar \cdatatype{double array} used for dividing the
-\cparameter{target} potential. If not needed, the \cparameter{denominator}
-can be \cdatatype{NULL}.
-
-Typically the function is used for multiplying evidence into a clique
-potential and dividing with possible old evidence. The variable, whose
-distribution is to be passed into the potential, must be indicated with the
-\cparameter{var} \cdatatype{integer}. E.g. a zero tells the function that
-the evidence is about the first variable associated with the potential.
-
+  multiplying potentials with probability distributions of a single
+  variable. The potential to be manipulated is given as the
+  \cparameter{target} parameter. It is multiplied by the given
+  \cdatatype{double array} \cparameter{numerator} which usually represents
+  the probability distribution of a variable. The \cparameter{denominator} is
+  a similar \cdatatype{double array} used for dividing the
+  \cparameter{target} potential. If not needed, the \cparameter{denominator}
+  can be \cdatatype{NULL}.
+  
+  Typically the function is used for multiplying evidence into a clique
+  potential and dividing with possible old evidence. The variable, whose
+  distribution is to be passed into the potential, must be indicated with the
+  \cparameter{var} \cdatatype{integer}. E.g. a zero tells the function that
+  the evidence is about the first variable associated with the potential.
+  
 \item[init\_potential(probs, target, mapping)] is essentially the same as
-the \cfunction{update\_potential} function. It is meant for multiplying the
-\cparameter{target} potential with the given \cparameter{probs}
-potential. If the potentials are similar, i.e. they have the same
-associated variables and in the same order, the \cparameter{mapping}
-parameter may be \cdatatype{NULL}. Otherwise, \cparameter{mapping} is an
-\cdatatype{integer array} indicating which of the variables associated with
-the target potential correspond to each of the variables in the multiplier
-potential.
+  the \cfunction{update\_potential} function. It is meant for multiplying the
+  \cparameter{target} potential with the given \cparameter{probs}
+  potential. If the potentials are similar, i.e. they have the same
+  associated variables and in the same order, the \cparameter{mapping}
+  parameter may be \cdatatype{NULL}. Otherwise, \cparameter{mapping} is an
+  \cdatatype{integer array} indicating which of the variables associated with
+  the target potential correspond to each of the variables in the multiplier
+  potential.
 
 \item[print\_potential(p)] is mainly for debugging purposes. It prints the
-contents of the \cdatatype{potential}~\cparameter{p} to the standard
-output.
+  contents of the \cdatatype{potential}~\cparameter{p} to the standard
+  output.
 \end{description}
 
 
