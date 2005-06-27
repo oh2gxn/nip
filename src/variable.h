@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.4 2005-06-20 14:41:54 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.5 2005-06-27 13:51:04 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -96,8 +96,6 @@ int total_num_of_vars();
 
 /* Call this before searching through the list of variables. */
 varlink get_first_variable();
-
-
 varlink get_last_variable();
 
 
