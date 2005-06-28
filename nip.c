@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.87 2005-06-28 15:23:35 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.88 2005-06-28 15:34:39 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -702,6 +702,13 @@ static int start_timeslice_message_pass(nip model, int direction,
 
   general_marginalise(c->p, sepset, mapping);
   free(mapping); /* should mapping-array be a part of sepset? */
+
+
+
+  /*** TODO & FIXME: Check if the elements of potentials tend to
+   *** become too small... Normalise if needed! ***/
+
+
 
   return NO_ERROR;
 }
