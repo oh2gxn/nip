@@ -36,9 +36,9 @@ int main(int argc, char *argv[]){
   printf("\tNumber of nodes: %d\n", file->num_of_nodes);
   printf("Nodes:\n");
   for(i = 0; i < file->num_of_nodes; i++){
-    printf("\tNode %s, states:\n\t", file->node_symbols[i]);
+    printf("\tNode <%s>, states:\n\t", file->node_symbols[i]);
     for(j = 0; j < file->num_of_states[i]; j++)
-      printf("%s, ", file->node_states[i][j]);
+      printf("<%s>, ", file->node_states[i][j]);
     printf("\n");
   }
 

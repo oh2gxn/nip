@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.102 2005-06-23 13:20:38 jatoivol Exp $
+ * $Id: parser.c,v 1.103 2005-06-28 15:23:35 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -176,8 +176,10 @@ datafile *open_datafile(char *filename, char separator,
       state = 2; /* ignores empty lines before node labels */
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
-      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
+      /* treat the white space as separators */
+      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 1);
       (f->line_now)++;
+
       /* JJT  1.9.2004: A sort of bug fix. Ignore empty lines */
       /* JJT 22.6.2005: Another fix. Ignore only the empty lines 
        * immediately after the node labels... and duplicate empty lines.
@@ -221,10 +223,12 @@ datafile *open_datafile(char *filename, char separator,
     }
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
-      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 0);
+      /* treat the white space as separators */
+      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 1);
+
       if(num_of_tokens > 0){
 	token_bounds =
-	  tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 0);      
+	  tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 1);
 	if(!token_bounds){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	  close_datafile(f);
@@ -476,17 +480,14 @@ static int nullobservation(char *token){
 
 
 void close_datafile(datafile *file){
-
   if(!file){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return;
   }
-
   if(file->is_open){
     fclose(file->file);
     file->is_open = 0;
   }
-
   /* Release the memory of file struct. */
   free_datafile(file);
 }
@@ -544,7 +545,8 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
     else
       f->line_now++;
     
-    num_of_tokens = count_tokens(line, NULL, 0, &separator, 1, 0, 0);
+    /* treat the white space as separators */
+    num_of_tokens = count_tokens(line, NULL, 0, &separator, 1, 0, 1);
     
     /* Skip the first line if it contains node labels. */
     if((f->line_now == f->label_line)  &&  f->firstline_labels)
@@ -555,7 +557,8 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
   if(num_of_tokens == 0)
     return 0;
 
-  token_bounds = tokenise(line, num_of_tokens, 0, &separator, 1, 0, 0);
+  /* treat the white space as separators */
+  token_bounds = tokenise(line, num_of_tokens, 0, &separator, 1, 0, 1);
   
   if(!token_bounds){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -602,7 +605,6 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
 
   /* Return the number of acquired tokens. */
   return f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens;
-
 }
 
 

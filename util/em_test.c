@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <float.h>
+#include <math.h>
+
 #include "nip.h"
 #include "variable.h"
 
@@ -18,6 +21,15 @@ int main(int argc, char *argv[]) {
   time_series *ts_set = NULL;
   double threshold = 0;
   char* tailptr = NULL;
+
+  /* a little test */
+/*   printf(" DBL_MIN = %f\n", DBL_MIN); */
+/*   printf(" DBL_MAX = %f\n", DBL_MAX); */
+/*   printf(" HUGE_VAL = %f\n", HUGE_VAL); */
+/*   printf("-HUGE_VAL = %f\n", -HUGE_VAL); */
+/*   printf("ln(DBL_MIN) = %f\n", log(DBL_MIN)); */
+/*   printf("ln(DBL_MAX) = %f\n", log(DBL_MAX)); */
+/*   printf("ln(-DBL_MAX) = %f\n", log(-DBL_MAX)); */
 
   if(argc < 5){
     printf("Give the names of: \n"); 

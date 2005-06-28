@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.86 2005-06-27 08:57:38 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.87 2005-06-28 15:23:35 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -39,14 +39,14 @@
  *
  *   - Determine the parameters of the algorithm
  *     - when to stop?
- *       - difference in the negative loglikelihood of the timeseries...
+ *       - difference in the average loglikelihood of the timeseries...
  *       - loglikelihood should be calculated during E-step
 
 
  * - Function for generating artificial data according to the model
  *   - something like forward_inference and a little loop where you
- *     set values for variables and infer the probabilities for the next 
- *     ones to be set
+ *     set values for variables and infer the probabilities for the 
+ *     next ones to be set
  *****/
 
 extern int yyparse();
@@ -870,9 +870,6 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
-    /* Put some data in (Q: should this be AFTER message passing) */
-    insert_ts_step(ts, t, model);
-    
     if(t > 0)
       if(finish_timeslice_message_pass(model, FORWARD, 
 				       timeslice_sepset, NULL) != NO_ERROR){
@@ -882,12 +879,14 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 	return NULL;
       }
     
+    /* Put some data in (Q: should this be AFTER message passing) */
+    insert_ts_step(ts, t, model);
+    
     /* Do the inference */
     make_consistent(model);
 
     /* Write the results */
-    for(i = 0; i < results->num_of_vars; i++){
-      
+    for(i = 0; i < results->num_of_vars; i++){      
       /* 1. Decide which variable you are interested in */
       temp = results->variables[i];
       
@@ -902,8 +901,8 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       
       /* 4. Normalisation */
       normalise(results->data[t][i], number_of_values(temp));
-    }
-    
+    } 
+   
     /* Start a message pass between timeslices */
     if(start_timeslice_message_pass(model, FORWARD, 
 				    timeslice_sepset) != NO_ERROR){
@@ -912,11 +911,9 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       free_potential(timeslice_sepset);
       return NULL;
     }
-
     /* Forget old evidence */
     reset_model(model);
   }
-
   free_potential(timeslice_sepset); 
 
   return results;
@@ -1042,9 +1039,6 @@ uncertain_series forward_backward_inference(time_series ts,
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
-    /* Put some data in (Q: should this be AFTER message passing?) */
-    insert_ts_step(ts, t, model);
-    
     if(t > 0)
       if(finish_timeslice_message_pass(model, FORWARD, 
 				       timeslice_sepsets[t-1], 
@@ -1056,6 +1050,9 @@ uncertain_series forward_backward_inference(time_series ts,
 	free(timeslice_sepsets);
 	return NULL;
       }
+
+    /* Put some data in (Q: should this be AFTER message passing?) */
+    insert_ts_step(ts, t, model);    
     
     /* Do the inference */
     make_consistent(model);
@@ -1086,9 +1083,6 @@ uncertain_series forward_backward_inference(time_series ts,
   
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
-    /* Put some evidence in */
-    insert_ts_step(ts, t, model);
-
     /* Pass the message from the past */
     if(t > 0)
       if(finish_timeslice_message_pass(model, FORWARD, 
@@ -1116,6 +1110,9 @@ uncertain_series forward_backward_inference(time_series ts,
 	free(timeslice_sepsets);
 	return NULL;
       }
+
+    /* Put some evidence in */
+    insert_ts_step(ts, t, model);
 
     /* Do the inference */
     make_consistent(model);
@@ -1389,8 +1386,18 @@ static int e_step(time_series ts, potential* parameters,
 	observed[j++] = ts->observed[i];
       }
     }
-    *loglikelihood = *loglikelihood + 
+
+    /** DEBUG **/
+    printf("t = %d : ", t);
+
+    *loglikelihood = (*loglikelihood) + 
       momentary_loglikelihood(model, observed, data, j);
+
+
+    /*** DEBUG ***/
+/*     printf("loglikelihood became %f at t=%d\n", *loglikelihood, t); */
+/*     assert(*loglikelihood > -HUGE_VAL); */
+
 
     /* Put some data in */
     insert_ts_step(ts, t, model);
@@ -1646,6 +1653,11 @@ int em_learn(time_series *ts, int n_ts, double threshold){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
       }
+
+      /** DEBUG **/
+      printf("probe = %f\n", probe);
+      assert(probe > -HUGE_VAL);
+
       loglikelihood += (probe / timeseries_length(ts[n]));
     }
 
@@ -1658,7 +1670,8 @@ int em_learn(time_series *ts, int n_ts, double threshold){
 
 
     /* NOTE: I'm afraid there's a large possibility to overflow */
-    if(loglikelihood - old_loglikelihood == 0)
+    if(loglikelihood - old_loglikelihood == 0 ||
+       loglikelihood == -HUGE_VAL)
       break;
 
     /* M-Step: The parameter estimation... */
@@ -1699,6 +1712,14 @@ double momentary_loglikelihood(nip model, variable* observed,
   /* we needed only one of the computed values */
   likelihood = get_pvalue(p, indexed_data);
   free_potential(p); /* Remember to free some memory */
+
+
+
+  /** DEBUG **/
+  printf("Likelihood equals %f\n", likelihood);
+
+
+
   if(likelihood > 0)
     return log(likelihood); /* natural logarithm (a.k.a. ln) */
   else

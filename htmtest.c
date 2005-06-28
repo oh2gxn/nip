@@ -76,6 +76,15 @@ int main(int argc, char *argv[]){
 
   ts = ts_set[0];
 
+  /** DEBUG **/
+  printf("Observed variables:\n  ");
+  for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+    printf("%s ", ts->observed[i]->symbol);
+  printf("\nHidden variables:\n  ");
+  for(i = 0; i < ts->num_of_hidden; i++)
+    printf("%s ", ts->hidden[i]->symbol);
+  printf("\n");
+
   /*****************/
   /* Forward phase */
   /*****************/
@@ -136,7 +145,7 @@ int main(int argc, char *argv[]){
   }
 
   for(i = 0; i < n; i++)
-    free_timeseries(ts_set[0]);
+    free_timeseries(ts_set[i]);
   free(ts_set);
   free_uncertainseries(ucs);
   free_model(model);
