@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.88 2005-06-28 15:34:39 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.89 2005-06-29 10:28:01 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -659,6 +659,7 @@ static int start_timeslice_message_pass(nip model, int direction,
   clique c;
   variable *vars;
   int nvars = model->num_of_nexts;
+  double norm;
 
   if(direction == FORWARD){
     vars = model->next;
@@ -700,15 +701,16 @@ static int start_timeslice_message_pass(nip model, int direction,
     }
   }    
 
+  /* the marginalisation */
   general_marginalise(c->p, sepset, mapping);
-  free(mapping); /* should mapping-array be a part of sepset? */
+  free(mapping); /* should mapping-array be a part of sepsets? */
 
+  /* normalisation in order to avoid drifting towards zeros */
+  normalise(sepset->data, sepset->size_of_data);
 
-
-  /*** TODO & FIXME: Check if the elements of potentials tend to
-   *** become too small... Normalise if needed! ***/
-
-
+  /* Q: since potential arrays may be large, should the 
+   * sum of elements be normalised to N instead of 1..???     
+   */
 
   return NO_ERROR;
 }
@@ -760,6 +762,7 @@ static int finish_timeslice_message_pass(nip model, int direction,
     }
   }
 
+  /* the multiplication */
   update_potential(num, den, c->p, mapping);
   free(mapping);
   
@@ -1393,10 +1396,6 @@ static int e_step(time_series ts, potential* parameters,
 	observed[j++] = ts->observed[i];
       }
     }
-
-    /** DEBUG **/
-    printf("t = %d : ", t);
-
     *loglikelihood = (*loglikelihood) + 
       momentary_loglikelihood(model, observed, data, j);
 
@@ -1719,13 +1718,6 @@ double momentary_loglikelihood(nip model, variable* observed,
   /* we needed only one of the computed values */
   likelihood = get_pvalue(p, indexed_data);
   free_potential(p); /* Remember to free some memory */
-
-
-
-  /** DEBUG **/
-  printf("Likelihood equals %f\n", likelihood);
-
-
 
   if(likelihood > 0)
     return log(likelihood); /* natural logarithm (a.k.a. ln) */
