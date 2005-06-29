@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.3 2005-06-20 14:41:54 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.4 2005-06-29 14:39:41 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -63,6 +63,7 @@ variable new_variable(const char* symbol, const char* name,
   v->family_mapping = NULL;
   v->pos_x = 100;
   v->pos_y = 100;
+  v->mark = 0;
  
   strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
   v->symbol[VAR_SYMBOL_LENGTH] = '\0';
@@ -206,6 +207,23 @@ unsigned long get_id(variable v){
 }
 
 
+void mark_variable(variable v){
+  if(v) 
+    v->mark = 1;
+}
+
+void unmark_variable(variable v){
+  if(v)
+    v->mark = 0;
+}
+
+int variable_marked(variable v){
+  if(v)
+    return (v->mark != 0);
+  return 0;
+}
+
+
 char *get_symbol(variable v){
   if(v)
     return v->symbol;
@@ -221,6 +239,13 @@ int get_stateindex(variable v, char *state){
     if(strcmp(state, v->statenames[i]) == 0)
       return i;
   return -1;
+}
+
+
+char* get_statename(variable v, int index){
+  if(!v->statenames)
+    return NULL;
+  return v->statenames[index];
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.89 2005-06-29 10:28:01 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.90 2005-06-29 14:39:41 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -521,6 +521,62 @@ int read_timeseries(nip model, char* filename,
 }
 
 
+int write_timeseries(time_series ts, char *filename){
+  int i, n, t;
+  int d;
+  variable v;
+  FILE *f = NULL;
+
+  n = ts->model->num_of_vars - ts->num_of_hidden;
+  if(!(n && ts && filename)){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  /* Try to open the file for write */
+  f = fopen(filename, "w");
+  if(!f){
+    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    return ERROR_IO;
+  }
+
+  /* Write names of the variables */
+  fprintf(f, "%s", get_symbol(ts->observed[0]));
+  for(i = 1; i < n; i++){
+      v = ts->observed[i];
+      fprintf(f, ", %s", get_symbol(v));
+  }
+  fputs("\n", f);
+
+  /* Write the data */
+  for(t = 0; t < ts->length; t++){
+    v = ts->observed[0];
+    d = ts->data[t][0];
+    if(d >= 0)
+      fprintf(f, "%s", get_statename(v, d));
+    else
+      fputs("null", f);
+
+    for(i = 1; i < n; i++){
+      v = ts->observed[i];
+      d = ts->data[t][i];
+      if(d >= 0)
+	fprintf(f, ", %s", get_statename(v, d));
+      else
+	fputs(", null", f);
+    }
+    fputs("\n", f);
+  }
+  
+  /* Close the file */
+  if(fclose(f)){
+    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    return ERROR_IO;
+  }
+  return NO_ERROR;
+}
+
+
 void free_timeseries(time_series ts){
   int t;
   if(ts){
@@ -659,7 +715,6 @@ static int start_timeslice_message_pass(nip model, int direction,
   clique c;
   variable *vars;
   int nvars = model->num_of_nexts;
-  double norm;
 
   if(direction == FORWARD){
     vars = model->next;
@@ -1735,12 +1790,10 @@ double *get_probability(nip model, variable v){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return NULL;
   }
-
   if(!v){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return NULL;
   }
-
   cardinality = number_of_values(v);
   result = (double *) calloc(cardinality, sizeof(double));
   if(!result){
@@ -1785,6 +1838,101 @@ potential get_joint_probability(nip model, variable *vars, int num_of_vars){
   /* Normalisation (???) */
   normalise(p->data, p->size_of_data);
   return p;
+}
+
+
+time_series generate_data(nip model, int length){
+  int i, j, k, t;
+  int nvars = model->num_of_vars;
+  variable *vars = NULL;
+  /* reserved the possibility to pass the set of variables 
+   * as a parameter in order to omit part of the data...   */
+  variable v;
+  time_series ts = NULL;
+
+  vars = (variable*) calloc(nvars, sizeof(variable));
+  if(!vars){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  /* sort the variables appropriately */
+  for(i = 0; i < model->num_of_vars; i++)
+    unmark_variable(model->variables[i]);
+
+  /* first the independent variables... */
+  j = 0;
+  for(i = 0; i < model->num_of_vars; i++){
+    v = model->variables[i];
+    if(!v->num_of_parents){
+      vars[j++] = v;
+      mark_variable(v);
+    }
+  }
+ 
+  /* ...then the children whose parents are already included */
+  while(j < nvars){
+    for(i = 0; i < model->num_of_vars; i++){
+      v = model->variables[i];
+      if(variable_marked(v))
+	continue;
+      t = 1;
+      for(k = 0; k < v->num_of_parents; k++){
+	if(!variable_marked(v->parents[k])){
+	  t = 0;
+	  break;
+	}
+      }
+      if(t){
+	vars[j++] = v;
+	mark_variable[v];
+      }	
+    }
+  }
+
+  /* allocate memory for the time series */
+  ts = (time_series) malloc(sizeof(time_series_type));
+  if(!ts){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(vars);
+    return NULL;
+  }
+  ts->model = model;
+  ts->hidden = NULL;
+  ts->num_of_hidden = model->num_of_vars - nvars;
+  ts->observed = vars;
+  ts->length = length;
+  ts->data = NULL;
+
+  ts->data = (int**) calloc(ts->length, sizeof(int*));
+  if(!ts->data){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(ts);
+    free(vars);
+    return(NULL);
+  }
+  for(t = 0; t < ts->length; t++){
+    ts->data[t] = (int*) calloc(obs, sizeof(int));
+    if(!(ts->data[t])){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      while(t >= 0)
+	free(ts->data[t--]);
+      free(ts->data);
+      free(ts);
+      free(vars);
+      return NULL;
+    }
+  }
+  
+  /* TODO... */
+
+  /* for each time step */
+  /** for each variable */
+  /*** get the probability distribution */
+  /*** organize a lottery */
+  /*** insert the data into the time series and the model as evidence */
+
+  return NULL;
 }
 
 

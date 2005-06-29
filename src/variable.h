@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.5 2005-06-27 13:51:04 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.6 2005-06-29 14:39:41 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -30,6 +30,7 @@ struct nip_var {
 			     * variables in the family clique */
   int pos_x; /* node position by Hugin */
   int pos_y;
+  char mark; /* mark for some algorithms (like DFS and data generation) */
 };
 
 typedef struct nip_var vtype;
@@ -79,6 +80,12 @@ int equal_variables(variable v1, variable v2);
 unsigned long get_id(variable v);
 
 
+/* Functions for checking if variables are marked for some reason. */
+void mark_variable(variable v)
+void unmark_variable(variable v)
+int variable_marked(variable v)
+
+
 /* Returns the symbol of the variable (a reference). It is a string 
  * (or NULL if nullpointer given). */
 char *get_symbol(variable v);
@@ -89,6 +96,10 @@ char *get_symbol(variable v);
  * such a state. This function is needed when parsing data. */
 int get_stateindex(variable v, char *state);
 
+
+/* The reciprocal of the function above... 
+ */
+char* get_statename(variable v, int index);
 
 /* Tells the length of the list of variables. */
 int total_num_of_vars();

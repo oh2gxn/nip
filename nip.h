@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.33 2005-06-23 11:07:34 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.34 2005-06-29 14:39:41 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -111,6 +111,10 @@ void free_model(nip model);
  * to the given model. */
 int read_timeseries(nip model, char* datafile, 
 		    time_series **results);
+
+
+/* This writes the time series data into a file. */
+int write_timeseries(time_series ts, char* filename);
 
 
 /* A method for freeing the huge chunk of memory used by a time series. 
@@ -233,6 +237,10 @@ double *get_probability(nip model, variable v);
  * In case of problems, NULL is returned.
  */
 potential get_joint_probability(nip model, variable *vars, int num_of_vars);
+
+
+/* Generates time series data according to a model. */
+time_series generate_data(nip model, int length);
 
 
 /*
