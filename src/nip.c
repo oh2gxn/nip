@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.92 2005-06-30 12:15:37 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.93 2005-06-30 14:51:42 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,8 +44,8 @@
  *       - loglikelihood should be calculated during E-step
 
 
- * - Function for generating artificial data according to the model
- *   - something like forward_inference and a little loop where you
+ * + Function for generating artificial data according to the model
+ *   + something like forward_inference and a little loop where you
  *     set values for variables and infer the probabilities for the 
  *     next ones to be set
  *****/
@@ -564,7 +564,7 @@ int write_timeseries(time_series ts, char *filename){
       v = ts->observed[i];
       d = ts->data[t][i];
       if(d >= 0)
-	fprintf(f, ", %s", get_statename(v, d));
+	fprintf(f, ", %s", get_statename(v, d));      
       else
 	fputs(", null", f);
     }
@@ -831,7 +831,7 @@ static int finish_timeslice_message_pass(nip model, int direction,
 /* forward-only inference consumes constant (1 time slice) amount of memory 
  * + the results (which is linear) */
 uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
-  int i, k, t;
+  int i, t;
   int *cardinalities = NULL;
   variable temp;
   potential timeslice_sepset = NULL;
@@ -849,12 +849,11 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   }
 
   /* Fill the array */
-  k = 0;
-  for(i = 0; i < ts->num_of_hidden; i++){
-    temp = ts->hidden[i];
-    if(temp->next)
-      cardinalities[k++] = number_of_values(temp);
-  }
+  /*** WTF? (hidden && "next") or "next" variables??? ***/
+  for(i = 0; i < model->num_of_nexts; i++)
+    cardinalities[i] = number_of_values(model->next[i]);
+
+
 
   /* Allocate some space for the results */
   results = (uncertain_series) malloc(sizeof(uncertain_series_type));
@@ -992,7 +991,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
  * sepsets between time slices. */
 uncertain_series forward_backward_inference(time_series ts,
 					   variable vars[], int nvars){
-  int i, k, t;
+  int i, t;
   int *cardinalities = NULL;
   variable temp;
   potential *timeslice_sepsets = NULL;
@@ -1010,12 +1009,10 @@ uncertain_series forward_backward_inference(time_series ts,
   }
 
   /* Fill the array */
-  k = 0;
-  for(i = 0; i < ts->num_of_hidden; i++){
-    temp = ts->hidden[i];
-    if(temp->next)
-      cardinalities[k++] = number_of_values(temp);
-  }
+  /*** WTF? (hidden && "next") or "next" variables??? ***/
+  for(i = 0; i < model->num_of_nexts; i++)
+    cardinalities[i] = number_of_values(model->next[i]);
+
 
   /* Allocate some space for the results */
   results = (uncertain_series) malloc(sizeof(uncertain_series_type));
@@ -1086,7 +1083,6 @@ uncertain_series forward_backward_inference(time_series ts,
       }
     }
   }
-
 
   /* Allocate some space for the intermediate potentials */
   timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
@@ -1404,12 +1400,12 @@ static int e_step(time_series ts, potential* parameters,
       return ERROR_OUTOFMEMORY;
     }
   }
-  k = 0;
-  for(i = 0; i < ts->num_of_hidden; i++){
-    temp = ts->hidden[i];
-    if(temp->next)
-      cardinalities[k++] = number_of_values(temp);
-  }
+
+
+  /*** WTF? (hidden && "next") or "next" variables??? ***/
+  for(i = 0; i < model->num_of_nexts; i++)
+    cardinalities[i] = number_of_values(model->next[i]);
+
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++){
@@ -1417,7 +1413,6 @@ static int e_step(time_series ts, potential* parameters,
 					  NULL);
   }
   free(cardinalities);
-
 
   /*****************/
   /* Forward phase */
@@ -1935,12 +1930,13 @@ time_series generate_data(nip model, int length){
       return NULL;
     }
   }
-  k = 0;
-  for(i = 0; i < ts->num_of_hidden; i++){
-    v = ts->hidden[i];
-    if(v->next)
-      cardinalities[k++] = number_of_values(v);
-  }
+
+
+  /*** WTF? (hidden && "next") or "next" variables??? ***/
+
+
+  for(i = 0; i < model->num_of_nexts; i++)
+    cardinalities[i] = number_of_values(model->next[i]);
   timeslice_sepset = make_potential(cardinalities, model->num_of_nexts, NULL);
   free(cardinalities);
   

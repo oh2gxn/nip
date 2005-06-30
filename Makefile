@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.43 2005-06-20 13:21:34 jatoivol Exp $
+# $Id: Makefile,v 1.44 2005-06-30 14:51:42 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -17,6 +17,7 @@ HTM_SRCS=$(HMM_SRCS)
 JNT_SRCS=$(HMM_SRCS)
 EM_SRCS=$(HMM_SRCS)
 MLT_SRCS=$(HMM_SRCS)
+GEN_SRCS=$(HMM_SRCS)
 
 # XXX Replace "cliquetest" below with the name you want for your program!
 POT_TARGET=potentialtest
@@ -31,9 +32,10 @@ HTM_TARGET=htmtest
 JNT_TARGET=joint_test
 EM_TARGET=em_test
 MLT_TARGET=memleaktest
+GEN_TARGET=gen_test
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
 $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
-$(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET)
+$(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET)
 
 # Sets the name and some flags for the C compiler and linker
 CC=gcc
@@ -68,9 +70,10 @@ HTM_OBJS=$(HTM_SRCS:.c=.o) htmtest.o
 MLT_OBJS=$(MLT_SRCS:.c=.o) memleaktest.o
 JNT_OBJS=$(JNT_SRCS:.c=.o) joint_test.o
 EM_OBJS=$(EM_SRCS:.c=.o) em_test.o
+GEN_OBJS=$(GEN_SRCS:.c=.o) gen_test.o
 OBJS=$(HTM_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o \
 bisontest.o iotest.o datafiletest.o hmmtest.o memleaktest.o joint_test.o \
-em_test.o
+em_test.o gen_test.o
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program
@@ -80,7 +83,7 @@ em_test.o
 # \t<command>
 all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) \
 $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) $(MLT_TARGET) \
-$(JNT_TARGET) $(EM_TARGET)
+$(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET)
 
 # The program depends on the object files in $(OBJS). Make knows how
 # to compile a .c file into an object (.o) file; this rule tells it
@@ -120,6 +123,9 @@ $(JNT_TARGET): $(JNT_OBJS) $(HUG_OBJS)
 
 $(EM_TARGET): $(EM_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(EM_OBJS) $(LIBS)
+
+$(GEN_TARGET): $(GEN_OBJS) $(HUG_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(GEN_OBJS) $(LIBS)
 
 $(HUG_SRCS): $(HUG_DEFS)
 	$(YY) $(YYFLAGS) $(HUG_DEFS)

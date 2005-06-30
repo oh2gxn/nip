@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 /*   printf("ln(-DBL_MAX) = %f\n", log(-DBL_MAX)); */
 
   if(argc < 5){
-    printf("Give the names of: \n"); 
+    printf("You must specity: \n"); 
     printf(" - the original NET file, \n");
     printf(" - data file, \n"); 
     printf(" - threshold value (0...1), and \n");
