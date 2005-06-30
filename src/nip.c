@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.91 2005-06-30 10:51:53 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.92 2005-06-30 12:15:37 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -12,6 +12,7 @@
 #include <string.h>
 #include <float.h>
 #include <math.h>
+#include <time.h>
 
 /*
 #define DEBUG_NIP
@@ -1936,9 +1937,9 @@ time_series generate_data(nip model, int length){
   }
   k = 0;
   for(i = 0; i < ts->num_of_hidden; i++){
-    temp = ts->hidden[i];
-    if(temp->next)
-      cardinalities[k++] = number_of_values(temp);
+    v = ts->hidden[i];
+    if(v->next)
+      cardinalities[k++] = number_of_values(v);
   }
   timeslice_sepset = make_potential(cardinalities, model->num_of_nexts, NULL);
   free(cardinalities);
