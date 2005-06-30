@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.90 2005-06-29 14:39:41 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.91 2005-06-30 10:51:53 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -58,6 +58,8 @@ static int finish_timeslice_message_pass(nip model, int direction,
 
 static int e_step(time_series ts, potential* results, double* loglikelihood);
 static int m_step(potential* results, nip model);
+
+static int lottery(double* distribution, int size);
 
 void reset_model(nip model){
   int i, retval;
@@ -584,9 +586,9 @@ void free_timeseries(time_series ts){
       for(t = 0; t < ts->length; t++)
 	free(ts->data[t]);
       free(ts->data);
-      free(ts->hidden);
-      free(ts->observed);
     }
+    free(ts->hidden);
+    free(ts->observed);
     free(ts);
   }
 }
@@ -968,7 +970,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       normalise(results->data[t][i], number_of_values(temp));
     } 
    
-    /* Start a message pass between timeslices */
+    /* Start a message pass between time slices */
     if(start_timeslice_message_pass(model, FORWARD, 
 				    timeslice_sepset) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1716,19 +1718,14 @@ int em_learn(time_series *ts, int n_ts, double threshold){
       }
 
       /** DEBUG **/
-      printf("probe = %f\n", probe);
-      assert(probe > -HUGE_VAL);
+      assert(probe > -HUGE_VAL && probe <= 0.0);
 
       loglikelihood += (probe / timeseries_length(ts[n]));
     }
 
-
-
     /* DEBUG */
     printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
            loglikelihood);
-
-
 
     /* NOTE: I'm afraid there's a large possibility to overflow */
     if(loglikelihood - old_loglikelihood == 0 ||
@@ -1841,14 +1838,18 @@ potential get_joint_probability(nip model, variable *vars, int num_of_vars){
 }
 
 
+/* JJ: this has some common elements with the forward_inference function */
 time_series generate_data(nip model, int length){
   int i, j, k, t;
+  int *cardinalities = NULL;
+  potential timeslice_sepset = NULL;
   int nvars = model->num_of_vars;
   variable *vars = NULL;
   /* reserved the possibility to pass the set of variables 
    * as a parameter in order to omit part of the data...   */
   variable v;
   time_series ts = NULL;
+  double *distribution = NULL;
 
   vars = (variable*) calloc(nvars, sizeof(variable));
   if(!vars){
@@ -1885,7 +1886,7 @@ time_series generate_data(nip model, int length){
       }
       if(t){
 	vars[j++] = v;
-	mark_variable[v];
+	mark_variable(v);
       }	
     }
   }
@@ -1912,7 +1913,7 @@ time_series generate_data(nip model, int length){
     return(NULL);
   }
   for(t = 0; t < ts->length; t++){
-    ts->data[t] = (int*) calloc(obs, sizeof(int));
+    ts->data[t] = (int*) calloc(nvars, sizeof(int));
     if(!(ts->data[t])){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       while(t >= 0)
@@ -1923,16 +1924,91 @@ time_series generate_data(nip model, int length){
       return NULL;
     }
   }
+
+  /* create the sepset potential between the time slices */
+  if(model->num_of_nexts > 0){
+    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+    if(!cardinalities){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free_timeseries(ts);
+      return NULL;
+    }
+  }
+  k = 0;
+  for(i = 0; i < ts->num_of_hidden; i++){
+    temp = ts->hidden[i];
+    if(temp->next)
+      cardinalities[k++] = number_of_values(temp);
+  }
+  timeslice_sepset = make_potential(cardinalities, model->num_of_nexts, NULL);
+  free(cardinalities);
   
-  /* TODO... */
+  /* new seed number for rand and clear the previous evidence from the model */
+  srand(time(0));
+  reset_model(model);
+  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
   /* for each time step */
-  /** for each variable */
-  /*** get the probability distribution */
-  /*** organize a lottery */
-  /*** insert the data into the time series and the model as evidence */
+  for(t = 0; t < ts->length; t++){
+    /* influence of the previous time step */
+    if(t > 0)
+      if(finish_timeslice_message_pass(model, FORWARD, 
+				       timeslice_sepset, NULL) != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	free_timeseries(ts);
+	free_potential(timeslice_sepset);
+	return NULL;
+      }
+    
+    /** for each variable */
+    for(i = 0; i < nvars; i++){
+      make_consistent(model);
+      v = vars[i];
+      /*** get the probability distribution */
+      distribution = get_probability(model, v);
 
-  return NULL;
+      /*** organize a lottery */
+      k = lottery(distribution, number_of_values(v));
+      free(distribution);
+
+      /*** insert the data into the time series and the model as evidence */
+      ts->data[t][i] = k;
+      enter_i_observation(model->variables, model->num_of_vars, 
+			  model->cliques, model->num_of_cliques, v, k);
+    }
+    make_consistent(model);
+
+    /* influence from the current time slice to the next one */
+    if(start_timeslice_message_pass(model, FORWARD, 
+				    timeslice_sepset) != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      free_timeseries(ts);
+      free_potential(timeslice_sepset);
+      return NULL;
+    }
+    /* Forget old evidence */
+    reset_model(model);
+  }
+  free_potential(timeslice_sepset);
+
+  return ts;
+}
+
+
+/* Function for generating random discrete values according to a specified 
+ * distribution. Values are between 0 and <size>-1 inclusive. */
+static int lottery(double* distribution, int size){
+  int i = 0;
+  double sum = 0;
+  double r = (1.0 * rand()) / RAND_MAX;
+  do{
+    if(i >= size){
+      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+      return size-1;
+    }
+    sum += distribution[i++];
+  }while(sum < r);
+  return i-1;
 }
 
 

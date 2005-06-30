@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.6 2005-06-29 14:39:41 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.7 2005-06-30 10:51:53 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -81,9 +81,9 @@ unsigned long get_id(variable v);
 
 
 /* Functions for checking if variables are marked for some reason. */
-void mark_variable(variable v)
-void unmark_variable(variable v)
-int variable_marked(variable v)
+void mark_variable(variable v);
+void unmark_variable(variable v);
+int variable_marked(variable v);
 
 
 /* Returns the symbol of the variable (a reference). It is a string 

@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.15 2005-06-21 12:23:11 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.16 2005-06-30 10:51:53 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -996,7 +996,6 @@ int enter_i_observation(variable* vars, int nvars, clique* cliques,
 
   retval = enter_evidence(vars, nvars, cliques, ncliques, v, evidence);
   free(evidence);
-
   return retval;
 }
 
