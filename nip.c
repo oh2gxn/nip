@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.94 2005-07-01 11:10:38 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.95 2005-07-01 14:15:59 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -330,7 +330,7 @@ int write_model(nip model, char* name){
     /* compute the distribution */
     c = find_family(model->cliques, model->num_of_cliques, v);
     map = find_family_mapping(c, v);
-    general_marginalise(c->p, p, map);
+    general_marginalise(c->original_p, p, map);
 
     /* normalisation */
     n = number_of_values(v);    
@@ -1361,7 +1361,7 @@ static int e_step(time_series ts, potential* parameters,
   potential *timeslice_sepsets = NULL;
   potential *results = NULL;
   potential p;
-  clique clique_of_interest = NULL;
+  clique c = NULL;
   nip model = ts->model;
 
   /* Reserve some memory for calculation */
@@ -1447,14 +1447,9 @@ static int e_step(time_series ts, potential* parameters,
 	observed[j++] = ts->observed[i];
       }
     }
+    make_consistent(model);
     *loglikelihood = (*loglikelihood) + 
       momentary_loglikelihood(model, observed, data, j);
-
-
-    /*** DEBUG ***/
-/*     printf("loglikelihood became %f at t=%d\n", *loglikelihood, t); */
-/*     assert(*loglikelihood > -HUGE_VAL); */
-
 
     /* Put some data in */
     insert_ts_step(ts, t, model);
@@ -1492,9 +1487,6 @@ static int e_step(time_series ts, potential* parameters,
   
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
-    /* Put some evidence in */
-    insert_ts_step(ts, t, model);
-
     /* Pass the message from the past */
     if(t > 0)
       if(finish_timeslice_message_pass(model, FORWARD, 
@@ -1513,6 +1505,9 @@ static int e_step(time_series ts, potential* parameters,
 	return ERROR_GENERAL;
       }
     
+    /* Put some evidence in */
+    insert_ts_step(ts, t, model);
+
     /* Pass the message from the future */
     if(t < ts->length - 1)
       if(finish_timeslice_message_pass(model, BACKWARD, 
@@ -1539,19 +1534,28 @@ static int e_step(time_series ts, potential* parameters,
     for(i = 0; i < model->num_of_vars; i++){
       p = results[i];
 
+
+
+      /********************************************************
+       * BUG: Excuse me, but WHAT THE HECK is this doing      *
+       * with the potential when <temp> is observed!?!?!?!?!  *
+       ********************************************************/
+
+      /* The result is uniform distribution for the "emission" 
+       * probability distributions. */
+
+
+
       /* 1. Decide which variable you are interested in */
       temp = model->variables[i];
       
       /* 2. Find the clique that contains the family of 
        *    the interesting variable */
-      clique_of_interest = find_family(model->cliques, 
-				       model->num_of_cliques, 
-				       temp);
-      assert(clique_of_interest != NULL);
+      c = find_family(model->cliques, model->num_of_cliques, temp);
+      assert(c != NULL);
       
       /* 3. General Marginalisation from the timeslice */
-      general_marginalise(clique_of_interest->p, p,
-			  find_family_mapping(clique_of_interest, temp));
+      general_marginalise(c->p, p, find_family_mapping(c, temp));
       
       /* 4. Normalisation */
       size = p->size_of_data;
@@ -1620,7 +1624,7 @@ static int m_step(potential* parameters, nip model){
     k = parameters[i]->size_of_data;
     for(j = 0; j < k; j++)
       if(parameters[i]->data[j] < EPSILON)
-	parameters[i]->data[j] == EPSILON;
+	parameters[i]->data[j] = EPSILON;
     /* Q: Should the tiny value be proportional to the number of zeros
      *    so that the added weight is constant? */
   }
@@ -1706,10 +1710,10 @@ int em_learn(time_series *ts, int n_ts, double threshold){
 
   /* Randomize the parameters */
   random_seed();
-  for(i = 0; i < model->num_of_vars; i++){
-    n = parameters[i]->size_of_data;
+  for(v = 0; v < model->num_of_vars; v++){
+    n = parameters[v]->size_of_data;
     for(j = 0; j < n; j++)
-      parameters[i]->data[j] = drand48();
+      parameters[v]->data[j] = drand48();
     /* the M-step will take care of the normalisation and 
      * elimination of zeros */
   }
@@ -1729,6 +1733,15 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     old_loglikelihood = loglikelihood;
     loglikelihood = 0;
 
+    /* Initialise the parameter potentials to "zero" for  
+     * accumulating the "average parameters" in the E-step */
+    for(v = 0; v < model->num_of_vars; v++){
+      n = parameters[v]->size_of_data;
+      memset(parameters[v]->data, 0, n * sizeof(double));
+      /* the M-step will take care of the normalisation and 
+       * elimination of zeros */
+    }
+
     /* E-Step: Now this is the heavy stuff..! 
      * (for each time series separately to save memory) */
     for(n = 0; n < n_ts; n++){
@@ -1742,6 +1755,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
 
       loglikelihood += (probe / timeseries_length(ts[n]));
     }
+    loglikelihood /= n_ts;
 
     /* DEBUG */
     printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
@@ -1751,10 +1765,8 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     if(loglikelihood - old_loglikelihood == 0 ||
        loglikelihood == -HUGE_VAL)
       break;
-  }while((loglikelihood - old_loglikelihood) > threshold);
+  }while((loglikelihood - old_loglikelihood) > threshold || i < 3);
   /*** When should we stop? ***/
-
-  /** <a splendid opportunity to write the parameters into a file> **/
 
   for(v = 0; v < model->num_of_vars; v++){
     free_potential(parameters[v]);
