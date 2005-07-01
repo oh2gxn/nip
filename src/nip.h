@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.34 2005-06-29 14:39:41 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.35 2005-07-01 11:10:38 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -13,6 +13,9 @@
 # define FORWARD  1
 # define BACKWARD 0
 # define HAD_A_PREVIOUS_TIMESLICE 1
+
+/* "How probable is the impossible" */
+# define EPSILON 0.000001
 
 typedef struct{
   int num_of_cliques;
@@ -241,6 +244,13 @@ potential get_joint_probability(nip model, variable *vars, int num_of_vars);
 
 /* Generates time series data according to a model. */
 time_series generate_data(nip model, int length);
+
+
+/* Sets the seed number for drand48 & co. */
+void random_seed();
+
+/* For generating single observations. */
+int lottery(double* distribution, int size);
 
 
 /*

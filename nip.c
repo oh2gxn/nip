@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.93 2005-06-30 14:51:42 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.94 2005-07-01 11:10:38 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -13,6 +13,7 @@
 #include <float.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 
 /*
 #define DEBUG_NIP
@@ -60,7 +61,6 @@ static int finish_timeslice_message_pass(nip model, int direction,
 static int e_step(time_series ts, potential* results, double* loglikelihood);
 static int m_step(potential* results, nip model);
 
-static int lottery(double* distribution, int size);
 
 void reset_model(nip model){
   int i, retval;
@@ -1401,11 +1401,9 @@ static int e_step(time_series ts, potential* parameters,
     }
   }
 
-
   /*** WTF? (hidden && "next") or "next" variables??? ***/
   for(i = 0; i < model->num_of_nexts; i++)
     cardinalities[i] = number_of_values(model->next[i]);
-
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++){
@@ -1555,7 +1553,7 @@ static int e_step(time_series ts, potential* parameters,
       general_marginalise(clique_of_interest->p, p,
 			  find_family_mapping(clique_of_interest, temp));
       
-      /* 4. Normalisation ??? */
+      /* 4. Normalisation */
       size = p->size_of_data;
       k = temp->cardinality;
       for(j = 0; j < size; j = j + k)
@@ -1616,6 +1614,16 @@ static int m_step(potential* parameters, nip model){
   int* fam_map;
   clique fam_clique = NULL;
   variable child = NULL;
+
+  /* 0. Make sure there are no zero probabilities */
+  for(i = 0; i < model->num_of_vars; i++){
+    k = parameters[i]->size_of_data;
+    for(j = 0; j < k; j++)
+      if(parameters[i]->data[j] < EPSILON)
+	parameters[i]->data[j] == EPSILON;
+    /* Q: Should the tiny value be proportional to the number of zeros
+     *    so that the added weight is constant? */
+  }
   
   /* 1. Normalise parameters by dividing with the sums over child variables */
   for(i = 0; i < model->num_of_vars; i++){
@@ -1625,9 +1633,6 @@ static int m_step(potential* parameters, nip model){
     /* Maybe this works, maybe not... */
   }
 
-  /* Q: Should the clique potential be initially uniform? */
-  /* A: Doesn't seem to make sense otherwise...           */
-  
   /* 2. Reset the clique potentials and everything */
   total_reset(model);
 
@@ -1661,7 +1666,7 @@ static int m_step(potential* parameters, nip model){
 /* Teaches the given model (ts->model) according to the given time series 
  * (ts) with EM-algorithm. Returns an error code as an integer. */
 int em_learn(time_series *ts, int n_ts, double threshold){
-  int i, n, v;
+  int i, j, n, v;
   int *card;
   double old_loglikelihood; 
   double loglikelihood = -DBL_MAX;
@@ -1699,15 +1704,34 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     free(card);
   }
 
+  /* Randomize the parameters */
+  random_seed();
+  for(i = 0; i < model->num_of_vars; i++){
+    n = parameters[i]->size_of_data;
+    for(j = 0; j < n; j++)
+      parameters[i]->data[j] = drand48();
+    /* the M-step will take care of the normalisation and 
+     * elimination of zeros */
+  }
+
   /************/
   /* THE Loop */
   /************/
   i = 0;
   do{
+    /* M-Step... or at least the last part of it. 
+     * On the first iteration this enters the random parameters 
+     * into the model. */
+    if(m_step(parameters, model) != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
     old_loglikelihood = loglikelihood;
     loglikelihood = 0;
+
+    /* E-Step: Now this is the heavy stuff..! 
+     * (for each time series separately to save memory) */
     for(n = 0; n < n_ts; n++){
-      /* E-Step: Now this is the heavy stuff..! */
       if(e_step(ts[n], parameters, &probe) != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
@@ -1727,16 +1751,10 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     if(loglikelihood - old_loglikelihood == 0 ||
        loglikelihood == -HUGE_VAL)
       break;
-
-    /* M-Step: The parameter estimation... */
-    if(m_step(parameters, model) != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      return ERROR_GENERAL;
-    }
   }while((loglikelihood - old_loglikelihood) > threshold);
   /*** When should we stop? ***/
 
-  /** <a splendid opportunity to write the parameters to a file> **/
+  /** <a splendid opportunity to write the parameters into a file> **/
 
   for(v = 0; v < model->num_of_vars; v++){
     free_potential(parameters[v]);
@@ -1941,7 +1959,7 @@ time_series generate_data(nip model, int length){
   free(cardinalities);
   
   /* new seed number for rand and clear the previous evidence from the model */
-  srand(time(0));
+  random_seed();
   reset_model(model);
   use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
@@ -1992,12 +2010,30 @@ time_series generate_data(nip model, int length){
 }
 
 
+/* This one is borrowed from Jaakko Hollmen. */
+void random_seed(){
+  struct tm aika, *aikap;
+  time_t aika2;
+  long seedvalue;
+
+  /* The time since midnight in seconds in the seed for
+     the random number generator */
+  aika2 = time(NULL);
+  aikap = &aika;
+  aikap = localtime(&aika2);
+  seedvalue = aikap->tm_sec + 60 *aikap->tm_min
+    + 3600 * aikap->tm_hour;
+  seedvalue ^= (getpid() + (getpid() << 15));
+  srand48(seedvalue);
+}
+
+
 /* Function for generating random discrete values according to a specified 
  * distribution. Values are between 0 and <size>-1 inclusive. */
-static int lottery(double* distribution, int size){
+int lottery(double* distribution, int size){
   int i = 0;
   double sum = 0;
-  double r = (1.0 * rand()) / RAND_MAX;
+  double r = drand48();
   do{
     if(i >= size){
       report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
