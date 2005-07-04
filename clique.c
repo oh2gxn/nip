@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.16 2005-06-30 10:51:53 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.17 2005-07-04 14:57:45 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1134,6 +1134,7 @@ int* find_family_mapping(clique family, variable child){
 	  if(equal_variables((family->variables)[i], child->parents[j])){
 	    result[j+1] = i;
 	    p++;
+	    break;
 	  }
       }
     }

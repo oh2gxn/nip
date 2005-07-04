@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.95 2005-07-01 14:15:59 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.96 2005-07-04 14:57:45 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -161,8 +161,6 @@ nip parse_model(char* file){
   new->next = (variable*) calloc(new->num_of_nexts, sizeof(variable));
   new->previous = (variable*) calloc(new->num_of_nexts, sizeof(variable));
   new->children = (variable*) calloc(new->num_of_children, sizeof(variable));
-  /*  printf("\nDEBUG %s (%d): num_of_children = %d\n", __FILE__, __LINE__, 
-   *	 new->num_of_children);*/
   new->independent = 
     (variable*) calloc(new->num_of_vars - new->num_of_children, 
 		       sizeof(variable));
@@ -500,11 +498,14 @@ int read_timeseries(nip model, char* filename,
 	m = nextline_tokens(df, ',', &tokens); /* 2. Read */
 	assert(m == df->num_of_nodes);
 	
-	/* 3. Put into the data array */
+	/* 3. Put into the data array 
+	 * (the same loop as above to ensure the data is in 
+	 *  the same order as variables) */
+	k = 0;
 	for(i = 0; i < m; i++){
 	  v = model_variable(model, df->node_symbols[i]);
 	  if(v)
-	    ts->data[j][i] = get_stateindex(v, tokens[i]);
+	    ts->data[j][k++] = get_stateindex(v, tokens[i]);
 	  
 	  /* Q: Should missing data be allowed?   A: Yes. */
 	  /* assert(data[j][i] >= 0); */
@@ -1561,7 +1562,7 @@ static int e_step(time_series ts, potential* parameters,
       size = p->size_of_data;
       k = temp->cardinality;
       for(j = 0; j < size; j = j + k)
-	normalise(p->data + j, k);
+	normalise(&(p->data[j]), k);
       /* Not so sure whether this works correctly or not... 
        * I assume that the child variable is the least significant 
        * w.r.t. the address in the potential data. 
@@ -1633,7 +1634,7 @@ static int m_step(potential* parameters, nip model){
   for(i = 0; i < model->num_of_vars; i++){
     k = number_of_values(model->variables[i]);
     for(j = 0; j < parameters[i]->size_of_data; j = j + k)
-      normalise(parameters[i]->data + j, k);
+      normalise(&(parameters[i]->data[j]), k);
     /* Maybe this works, maybe not... */
   }
 
