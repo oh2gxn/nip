@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.97 2005-07-05 12:07:31 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.98 2005-07-05 13:55:10 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1675,8 +1675,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
   nip model = ts[0]->model;
 
   /* Reserve some memory for calculation */
-  parameters = (potential*) calloc(model->num_of_vars, 
-				   sizeof(potential));
+  parameters = (potential*) calloc(model->num_of_vars, sizeof(potential));
   if(!parameters){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
@@ -1697,9 +1696,9 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     card[0] = model->variables[v]->cardinality;
     for(i = 1; i < n; i++)
       card[i] = model->variables[v]->parents[i-1]->cardinality;
-
     /* variable->parents should be null only if n==1 
      * => no for-loop => no null dereference */
+
     parameters[v] = make_potential(card, n, NULL);
     free(card);
   }
@@ -1751,7 +1750,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
 
       loglikelihood += (probe / timeseries_length(ts[n]));
     }
-    loglikelihood /= n_ts;
+    //loglikelihood /= n_ts;
 
     /* DEBUG */
     printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
