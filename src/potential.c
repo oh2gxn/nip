@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.60 2005-07-05 12:07:31 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.61 2005-07-05 13:24:27 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -34,9 +34,7 @@ static double *get_ppointer(potential p, int indices[]){
     index += indices[i] * card_temp;
     card_temp *= p->cardinality[i];
   }
-
   return &(p->data[index]);
-
 }
 
 
@@ -110,7 +108,6 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
     for(i=0; i < size_of_data; i++)
       p->data[i] = data[i];
   }
-
   return p;
 }
 
@@ -164,7 +161,6 @@ void inverse_mapping(potential p, int flat_index, int indices[]){
 
 int general_marginalise(potential source, potential destination, 
 			int mapping[]){
-
   int i;
   int *source_indices = NULL; 
   int *dest_indices = NULL;
@@ -189,8 +185,7 @@ int general_marginalise(potential source, potential destination,
   }
 
   /* source->num_of_vars > 0 always */
-  source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
-  
+  source_indices = (int *) calloc(source->num_of_vars, sizeof(int));  
   if(!source_indices){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(dest_indices);
@@ -203,7 +198,6 @@ int general_marginalise(potential source, potential destination,
 
   /* Linear traverse through array for easy access */
   for(i = 0; i < source->size_of_data; i++){
-
     /* flat index i  ->  index array  */
     inverse_mapping(source, i, source_indices);
 
@@ -345,7 +339,6 @@ int update_potential(potential numerator, potential denominator,
   free(target_indices);
 
   return NO_ERROR;
-
 }
 
 int update_evidence(double numerator[], double denominator[], 
@@ -381,9 +374,7 @@ int update_evidence(double numerator[], double denominator[],
   }
 
   free(target_indices);   /* JJ NOTE: GET RID OF THESE */
-
   return NO_ERROR;
-
 }
 
 int init_potential(potential probs, potential target, int mapping[]){
@@ -478,7 +469,5 @@ void print_potential(potential p){
     printf(") = %f\n", p->data[big_index]);
     
   }
-
   free(indices);
-
 }

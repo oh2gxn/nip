@@ -1,12 +1,14 @@
 /*
- * iotest.c $Id: iotest.c,v 1.4 2004-06-29 11:45:22 mvkorpel Exp $
+ * iotest.c $Id: iotest.c,v 1.5 2005-07-05 13:24:27 jatoivol Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "fileio.h"
 
 #define PRINTWORDS 20
+#define BUF_SIZE 10000
 
 /*
 #define TOKENS
@@ -20,7 +22,7 @@
  */
 int main(int argc, char **argv){
 
-  char s[10000];
+  char s[BUF_SIZE];
   int chars = 0, words = 0, lines = 0;
   int chartemp, wordtemp, i;
   int only_count = 0;
@@ -31,7 +33,7 @@ int main(int argc, char **argv){
   if(argc > 1)
     only_count = 1;
 
-  while(gets(s) != NULL){
+  while(fgets(s, BUF_SIZE, stdin) != NULL){
 
     printf("%s\n", s);
 
@@ -40,6 +42,9 @@ int main(int argc, char **argv){
 #else
     wordtemp = count_words(s, &chartemp);
 #endif
+
+    if(wordtemp == 0)
+      break;
 
     if(!only_count){
 #if defined(TOKENS)
