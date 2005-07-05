@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.98 2005-07-05 13:55:10 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.99 2005-07-05 14:57:50 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1750,7 +1750,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
 
       loglikelihood += (probe / timeseries_length(ts[n]));
     }
-    //loglikelihood /= n_ts;
+    loglikelihood = loglikelihood / n_ts;
 
     /* DEBUG */
     printf("Iteration %d: \t average loglikelihood = %f\n", i++, 

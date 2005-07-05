@@ -1,0 +1,60 @@
+class baligga
+{
+    inputs = ();
+    outputs = ();
+    node_size = (80 40);
+
+    node S1
+    {
+	label = "S(t)";
+	position = (100 100);
+	states = ("s1" "s2");
+    }
+
+    node Y1
+    {
+	label = "Y(t)";
+	position = (100 200);
+	states = ("0" "1");
+    }
+
+    node S2
+    {
+	label = "S(t+1)";
+	position = (200 100);
+	states = ("s1" "s2");
+	NIP_next = "S1";
+    }
+
+    node Y2
+    {
+	label = "Y(t+1)";
+	position = (200 200);
+	states = ("0" "1");
+	NIP_next = "Y1";
+    }
+
+    potential (S1)
+    {
+        data = ( 1 1 );
+    }
+
+    potential (Y1 | S1)
+    {          %  Y1=0  Y1=1  
+	data = (( 0.80  0.20 )  %  S1=s1
+		( 0.40  0.60 ));%  S1=s2
+    }
+
+    potential (S2 | S1)
+    {          %  S2=s1  S2=s2  
+	data = (( 0.95   0.05 )	  %  A=s1
+		( 0.05   0.95 )); %  A=s2
+    }
+
+    potential (Y2 | S2)
+    {          %  Y2=0  Y2=1  
+	data = (( 0.80  0.20 )  %  S2=s1
+		( 0.40  0.60 ));%  S2=s2
+    }
+
+} % class baligga
