@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.96 2005-07-04 14:57:45 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.97 2005-07-05 12:07:31 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,11 +44,6 @@
  *       - difference in the average loglikelihood of the timeseries...
  *       - loglikelihood should be calculated during E-step
 
-
- * + Function for generating artificial data according to the model
- *   + something like forward_inference and a little loop where you
- *     set values for variables and infer the probabilities for the 
- *     next ones to be set
  *****/
 
 extern int yyparse();
@@ -333,7 +328,7 @@ int write_model(nip model, char* name){
     /* normalisation */
     n = number_of_values(v);    
     for(j = 0; j < p->size_of_data; j += n)
-      normalise(p->data + j, n);
+      normalise(&(p->data[j]), n);
 
     /* print the stuff */
     for(j = 0; j < p->size_of_data; j++){
@@ -1407,10 +1402,9 @@ static int e_step(time_series ts, potential* parameters,
     cardinalities[i] = number_of_values(model->next[i]);
 
   /* Initialise intermediate potentials */
-  for(t = 0; t <= ts->length; t++){
+  for(t = 0; t <= ts->length; t++)
     timeslice_sepsets[t] = make_potential(cardinalities, model->num_of_nexts, 
 					  NULL);
-  }
   free(cardinalities);
 
   /*****************/
@@ -1664,11 +1658,12 @@ static int m_step(potential* parameters, nip model){
 	child->prior[j] = parameters[i]->data[j];
     }
   }
+  
   return NO_ERROR;
 }
 
 
-/* Teaches the given model (ts->model) according to the given time series 
+/* Trains the given model (ts->model) according to the given time series 
  * (ts) with EM-algorithm. Returns an error code as an integer. */
 int em_learn(time_series *ts, int n_ts, double threshold){
   int i, j, n, v;
@@ -1962,10 +1957,6 @@ time_series generate_data(nip model, int length){
     }
   }
 
-
-  /*** WTF? (hidden && "next") or "next" variables??? ***/
-
-
   for(i = 0; i < model->num_of_nexts; i++)
     cardinalities[i] = number_of_values(model->next[i]);
   timeslice_sepset = make_potential(cardinalities, model->num_of_nexts, NULL);
@@ -2061,7 +2052,8 @@ int lottery(double* distribution, int size){
 void print_cliques(nip model){
   int i;
   int num_of_cliques;
-  clique clique_of_interest;
+  sepset s;
+  clique c;
   sepset_link sepsetlist;
   clique *cliques;
 
@@ -2073,13 +2065,16 @@ void print_cliques(nip model){
   cliques = model->cliques;
   num_of_cliques = model->num_of_cliques;
 
-  printf("Found cliques:\n");
+  printf("Cliques of the model:\n");
   for(i = 0; i < num_of_cliques; i++){
-    clique_of_interest = cliques[i];
-    print_clique(clique_of_interest);
-    sepsetlist = clique_of_interest->sepsets;
+    c = cliques[i];
+    print_clique(c);
+    print_potential(c->p);
+    sepsetlist = c->sepsets;
     while(sepsetlist){
-      print_sepset((sepset)sepsetlist->data);
+      s = (sepset)sepsetlist->data;
+      print_sepset(s);
+      print_potential(s->new);      
       sepsetlist = sepsetlist->fwd;
     }
     printf("\n");

@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.59 2005-06-01 12:59:10 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.60 2005-07-05 12:07:31 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -395,6 +395,19 @@ int init_potential(potential probs, potential target, int mapping[]){
   int *target_indices = NULL;
   double *potvalue;
 
+  if(!mapping){
+    if(probs->size_of_data != target->size_of_data){
+      /* certainly different geometry but no mapping !?!? */
+      report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+      return ERROR_NULLPOINTER;
+    }
+    else{ /* the potentials (may) have the same geometry */
+      for(i = 0; i < target->size_of_data; i++)
+	target->data[i] *= probs->data[i];
+      return NO_ERROR;
+    }
+  }
+
   if(probs->num_of_vars){
     probs_indices = (int *) calloc(probs->num_of_vars, sizeof(int));
     if(!probs_indices){
@@ -414,26 +427,25 @@ int init_potential(potential probs, potential target, int mapping[]){
   }
 
   /* The general idea is the same as in marginalise */
-  if(probs->num_of_vars == target->num_of_vars)
-    for(i = 0; i < target->size_of_data; i++) /* similar kind of potentials */
-      target->data[i] *= probs->data[i];
-  else
-    for(i = 0; i < target->size_of_data; i++){
-      inverse_mapping(target, i, target_indices);
-      choose_indices(target_indices, probs_indices, 
-		     mapping, probs->num_of_vars);
-      
-      potvalue =
-	get_ppointer(probs, probs_indices);
-      target->data[i] *= *potvalue;  /* THE multiplication */
-    }
+  /** JJ NOTE: the fact that two potentials have the same 
+   ** number of variables DOES NOT imply that the elements are 
+   ** in the same order! (Had funny effects with the EM-algorithm :) 
+   **/
+  for(i = 0; i < target->size_of_data; i++){
+    inverse_mapping(target, i, target_indices);
+    choose_indices(target_indices, probs_indices, 
+		   mapping, probs->num_of_vars);    
+    potvalue =
+      get_ppointer(probs, probs_indices);
+    target->data[i] *= *potvalue;  /* THE multiplication */
+  }
   
   free(probs_indices); /* JJ NOTE: GET RID OF THESE? */
   free(target_indices);
 
   return NO_ERROR;
-
 }
+
 
 void print_potential(potential p){
 

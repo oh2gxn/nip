@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.30 2005-05-10 12:09:06 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.31 2005-07-05 12:07:31 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -67,8 +67,8 @@ int total_marginalise(potential source, double destination[], int variable);
  * -numerator: multiplier, usually the newer sepset potential (source)
  * -denominator: divider, usually the older sepset potential. This MUST have 
  *  similar geometry to numerator.
- * -extra_vars: an integer array which holds the placement of the variables 
- *              of numerator/denominator potential in the target potential
+ * -mapping: an integer array which holds the placement of the variables 
+ *           of numerator/denominator potential in the target potential
  * EXAMPLE: If two sepset variables are the third (indexed by 2) and 
  *          fifth (4) variables in a five variable clique, the call is 
  *  update(newSepsetPotential, oldSepsetPotential, cliquePotential, {2, 4}) 
