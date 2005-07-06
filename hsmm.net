@@ -31,6 +31,7 @@ class hsmm
 	label = "Y(t+1)";
 	position = (200 200);
 	states = ("Aarne" "Iivari" "Vihtori" "Otto" "Tyyne");
+	NIP_next = "Y";
     }
 
     potential (S)

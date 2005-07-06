@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.100 2005-07-06 12:49:08 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.101 2005-07-06 14:24:08 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1552,7 +1552,7 @@ static int e_step(time_series ts, potential* parameters,
       /* 4. Normalisation */
       size = p->size_of_data;
       normalise(p->data, size);
-      /* Not so sure whether this is the correct way or not... */
+      /* JJ NOTE: Not so sure whether this is the correct way or not... */
 
       /* 5. THE SUM of conditional probabilities over time */
       for(j = 0; j < size; j++)
@@ -1702,7 +1702,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     n = parameters[v]->size_of_data;
     for(j = 0; j < n; j++)
       parameters[v]->data[j] = drand48();
-    /* the M-step will take care of the normalisation and 
+    /* the M-step will take care of the normalisation and
      * elimination of zeros */
   }
 
@@ -1718,6 +1718,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }
+
     old_loglikelihood = loglikelihood;
     loglikelihood = 0;
 
@@ -1750,11 +1751,11 @@ int em_learn(time_series *ts, int n_ts, double threshold){
            loglikelihood);
 
     /* NOTE: I'm afraid there's a large possibility to overflow */
-    if(old_loglikelihood - loglikelihood > 16*threshold || /* wrong way */
-       loglikelihood == -HUGE_VAL){ /* some "impossible" data */
+    if(loglikelihood == -HUGE_VAL){ /* some "impossible" data */
       printf("WTF?\n");
       break;
     }
+
   }while(fabs(loglikelihood - old_loglikelihood) > threshold || i < 3);
   /*** When should we stop? ***/
 

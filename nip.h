@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.37 2005-07-05 13:24:27 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.38 2005-07-06 14:24:08 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -15,7 +15,7 @@
 # define HAD_A_PREVIOUS_TIMESLICE 1
 
 /* "How probable is the impossible" */
-# define EPSILON 0.000001
+# define EPSILON 0.0001
 
 typedef struct{
   int num_of_cliques;
