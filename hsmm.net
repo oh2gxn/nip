@@ -1,0 +1,68 @@
+class hsmm
+{
+    inputs = ();
+    outputs = ();
+    node_size = (80 40);
+
+    node S
+    {
+	label = "S(t)";
+	position = (100 100);
+	states = ("s1" "s2" "s3" "s4" "s5");
+    }
+
+    node Y
+    {
+	label = "Y(t)";
+	position = (100 200);
+	states = ("Aarne" "Iivari" "Vihtori" "Otto" "Tyyne");
+    }
+
+    node S2
+    {
+	label = "S(t+1)";
+	position = (200 100);
+	states = ("s1" "s2" "s3" "s4" "s5");
+	NIP_next = "S";
+    }
+
+    node Y2
+    {
+	label = "Y(t+1)";
+	position = (200 200);
+	states = ("Aarne" "Iivari" "Vihtori" "Otto" "Tyyne");
+    }
+
+    potential (S)
+    {
+        data = ( 1 1 1 1 1 );
+    }
+
+    potential (Y | S)
+    {          %  Y=0   Y=1    Y=2    Y=3    Y=4
+	data = (( 0.15  0.55   0.15   0.05   0.1  )	%  S=s1
+		( 0.8	0.05   0.05   0.05   0.05 )	%  S=s2
+		( 0.05	0.1    0.65   0.05   0.15 )	%  S=s3
+		( 0.1	0.05   0.1    0.4    0.35 )	%  S=s4
+		( 0.05	0.05   0.05   0.2    0.65 ));	%  S=s5
+    }
+
+    potential (S2 | S)
+    {          %  S2=s1 S2=s2  S2=s3  S2=s4  S2=s5
+	data = (( 0.5   0.1    0.2    0.05   0.15 )	%  S=s1
+		( 0.2   0.6    0.05   0.1    0.05 )	%  S=s2
+		( 0.05  0.2    0.4    0.05   0.3  )	%  S=s3
+		( 0.05  0.05   0.1    0.5    0.3  )	%  S=s4
+		( 0.2   0.05   0.25   0.3    0.2  ));	%  S=s5
+    }
+
+    potential (Y2 | S2)
+    {          %  Y2=0  Y2=1   Y2=2   Y2=3   Y2=4
+	data = (( 0.15  0.55   0.15   0.05   0.1  )	%  S2=s1
+		( 0.8	0.05   0.05   0.05   0.05 )	%  S2=s2
+		( 0.05	0.1    0.65   0.05   0.15 )	%  S2=s3
+		( 0.1	0.05   0.1    0.4    0.35 )	%  S2=s4
+		( 0.05	0.05   0.05   0.2    0.65 ));	%  S2=s5
+    }
+
+} % class hsmm
