@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.99 2005-07-05 14:57:50 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.100 2005-07-06 12:49:08 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -267,8 +267,8 @@ int write_model(nip model, char* name){
     fprintf(f, "        position = (%d %d); \n", x, y);
     fprintf(f, "        states = (");
     for(j = 0; j < n; j++)
-      fprintf(f, "\"%s\" \n                  ", v->statenames[j]);
-    fprintf(f, "\"%s\"); \n", v->statenames[n]);
+      fprintf(f, " \"%s\" \n                  ", v->statenames[j]);
+    fprintf(f, " \"%s\" ); \n", v->statenames[n]);
     if(v->next)
       fprintf(f, "        NIP_next = \"%s\"; \n", get_symbol(v->next));
     fputs("    } \n", f);
@@ -1139,8 +1139,11 @@ uncertain_series forward_backward_inference(time_series ts,
   
   /* forget old evidence */
   reset_model(model);
-  use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
-  
+  if(ts->length > 1)
+    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+  else
+    use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
     /* Pass the message from the past */
@@ -1213,7 +1216,10 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* forget old evidence */
     reset_model(model);
-    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+    if(t > 1)
+      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+    else
+      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);      
   }
 
   /* free the intermediate potentials */
@@ -1478,7 +1484,10 @@ static int e_step(time_series ts, potential* parameters,
   
   /* forget old evidence */
   reset_model(model);
-  use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+  if(ts->length > 1)
+    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+  else
+    use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
   
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
@@ -1500,9 +1509,6 @@ static int e_step(time_series ts, potential* parameters,
 	return ERROR_GENERAL;
       }
     
-    /* Put some evidence in */
-    insert_ts_step(ts, t, model);
-
     /* Pass the message from the future */
     if(t < ts->length - 1)
       if(finish_timeslice_message_pass(model, BACKWARD, 
@@ -1521,6 +1527,9 @@ static int e_step(time_series ts, potential* parameters,
 	return ERROR_GENERAL;
       }
 
+    /* Put some evidence in */
+    insert_ts_step(ts, t, model);
+
     /* Do the inference */
     make_consistent(model);
     
@@ -1528,18 +1537,6 @@ static int e_step(time_series ts, potential* parameters,
     /*** THE CORE: Write the results of inference ***/
     for(i = 0; i < model->num_of_vars; i++){
       p = results[i];
-
-
-
-      /********************************************************
-       * BUG: Excuse me, but WHAT THE HECK is this doing      *
-       * with the potential when <temp> is observed!?!?!?!?!  *
-       ********************************************************/
-
-      /* The result is uniform distribution for the "emission" 
-       * probability distributions. */
-
-
 
       /* 1. Decide which variable you are interested in */
       temp = model->variables[i];
@@ -1554,19 +1551,12 @@ static int e_step(time_series ts, potential* parameters,
       
       /* 4. Normalisation */
       size = p->size_of_data;
-      k = temp->cardinality;
-      for(j = 0; j < size; j = j + k)
-	normalise(&(p->data[j]), k);
-      /* Not so sure whether this works correctly or not... 
-       * I assume that the child variable is the least significant 
-       * w.r.t. the address in the potential data. 
-       * (as is the case in Hugin net files) 
-       */
+      normalise(p->data, size);
+      /* Not so sure whether this is the correct way or not... */
 
       /* 5. THE SUM of conditional probabilities over time */
-      for(j = 0; j < size; j++){
+      for(j = 0; j < size; j++)
 	parameters[i]->data[j] += p->data[j];
-      }
     }
     /*** Finished writing results for this timestep ***/
 
@@ -1589,7 +1579,10 @@ static int e_step(time_series ts, potential* parameters,
 
     /* forget old evidence */
     reset_model(model);
-    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+    if(t > 1)
+      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+    else
+      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
   }
 
   /* free the space for calculations */
@@ -1658,7 +1651,7 @@ static int m_step(potential* parameters, nip model){
 	child->prior[j] = parameters[i]->data[j];
     }
   }
-  
+
   return NO_ERROR;
 }
 
@@ -1757,10 +1750,12 @@ int em_learn(time_series *ts, int n_ts, double threshold){
            loglikelihood);
 
     /* NOTE: I'm afraid there's a large possibility to overflow */
-    if(loglikelihood - old_loglikelihood == 0 ||
-       loglikelihood == -HUGE_VAL)
+    if(old_loglikelihood - loglikelihood > 16*threshold || /* wrong way */
+       loglikelihood == -HUGE_VAL){ /* some "impossible" data */
+      printf("WTF?\n");
       break;
-  }while((loglikelihood - old_loglikelihood) > threshold || i < 3);
+    }
+  }while(fabs(loglikelihood - old_loglikelihood) > threshold || i < 3);
   /*** When should we stop? ***/
 
   for(v = 0; v < model->num_of_vars; v++){
