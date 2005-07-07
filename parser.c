@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.103 2005-06-28 15:23:35 jatoivol Exp $
+ * $Id: parser.c,v 1.104 2005-07-07 14:18:39 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1136,6 +1136,7 @@ int parsedVars2Graph(){
 
 
 int time2Vars(){
+  int i;
   variable v1, v2;
   time_init_link initlist = nip_first_timeinit;
 
@@ -1144,10 +1145,24 @@ int time2Vars(){
     v1 = initlist->var;
     v2 = get_parser_variable(initlist->next);
     if(v1->cardinality == v2->cardinality){
+      /* check one thing */
+      for(i = 0; i < v1->cardinality; i++){
+	if(strcmp(get_statename(v1, i), get_statename(v2, i))){
+	  fprintf(stderr, 
+		  "Warning: Corresponding variables %s and %s\n", 
+		  get_symbol(v1), get_symbol(v2));
+	  fprintf(stderr, 
+		  "have different kind of states %s and %s!\n", 
+		  get_statename(v1,i), get_statename(v2,i));
+	}
+      }
       v1->next = v2;
       v2->previous = v1;
     }
     else{
+      fprintf(stderr, 
+	      "NET parser: Invalid NIP_next field for node %s!\n",
+	      get_symbol(v1));
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }

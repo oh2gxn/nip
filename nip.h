@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.38 2005-07-06 14:24:08 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.39 2005-07-07 14:18:39 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -14,8 +14,8 @@
 # define BACKWARD 0
 # define HAD_A_PREVIOUS_TIMESLICE 1
 
-/* "How probable is the impossible" */
-# define EPSILON 0.0001
+/* "How probable is the impossible" (0 < epsilon << 1) */
+# define EPSILON 0.00001
 
 typedef struct{
   int num_of_cliques;
@@ -33,6 +33,9 @@ typedef struct{
 		       * arrays*/
 
   /* Undocumented features: */
+  variable *fwd_messengers;
+  variable *bwd_messengers;
+  int num_of_messengers;
   variable *children;    /* All the variables which have parents */
   variable *independent; /* ...and those who dont. (Redundant?)  */
   int num_of_children;

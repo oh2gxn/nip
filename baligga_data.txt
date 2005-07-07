@@ -1,4 +1,4 @@
-hide_S1, Y1, hide_S2, hide_Y2
+S1, Y1, hide_S2, hide_Y2
 s2, 1, s2, 0
 s2, 0, s2, 1
 s2, 1, s2, 0

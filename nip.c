@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.101 2005-07-06 14:24:08 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.102 2005-07-07 14:18:39 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -99,7 +99,7 @@ void use_priors(nip model, int has_history){
 
 
 nip parse_model(char* file){
-  int i, j, k, retval;
+  int i, j, k, m, n, retval;
   variable temp;
   variable_iterator it;
   nip new = (nip) malloc(sizeof(nip_type));
@@ -142,41 +142,82 @@ nip parse_model(char* file){
     temp = next_variable(&it);
   }
   
-  /* count the number of nexts and children */
+  /* count the number of various kinds of "special" variables */
   new->num_of_nexts = 0;
   new->num_of_children = 0;
+  new->num_of_messengers = 0;
   for(i = 0; i < new->num_of_vars; i++){
-    if(new->variables[i]->next)
-      new->num_of_nexts++;
+    temp = new->variables[i];
 
-    if(new->variables[i]->parents)
+    if(temp->next){
+      /* how many belong to the next timeslice */
+      new->num_of_nexts++;
+      
+      /* how many belong to the sepset between timeslices */
+      if(temp->parents){
+	m = 0;
+	for(n = 0; n < temp->num_of_parents; n++)
+	  if(temp->parents[n]->next == NULL){
+	    m = 1; break;
+	  }
+	if(m)
+	  new->num_of_messengers++;
+      }
+    }
+
+    /* how many have parents */
+    if(temp->parents)
       new->num_of_children++;
   }
 
   new->next = (variable*) calloc(new->num_of_nexts, sizeof(variable));
   new->previous = (variable*) calloc(new->num_of_nexts, sizeof(variable));
+  new->fwd_messengers = (variable*) calloc(new->num_of_messengers, 
+					   sizeof(variable));
+  new->bwd_messengers = (variable*) calloc(new->num_of_messengers, 
+					   sizeof(variable));
   new->children = (variable*) calloc(new->num_of_children, sizeof(variable));
   new->independent = 
     (variable*) calloc(new->num_of_vars - new->num_of_children, 
 		       sizeof(variable));
-  if(!(new->independent && new->children && new->previous && new->next)){
+  if(!(new->independent && new->children && 
+       new->bwd_messengers && new->fwd_messengers && 
+       new->previous && new->next)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(new->variables);
     free(new->next);
     free(new->previous);
+    free(new->fwd_messengers);
+    free(new->bwd_messengers);
     free(new->children);
     free(new);
     return NULL;
   }
 
-  j = 0;
-  for(i = 0; i < new->num_of_vars; i++)
-    if(new->variables[i]->next){
-      new->next[j] = new->variables[i];
-      new->previous[j] = new->variables[i]->next;
+  /* This selects the variables for various special purposes */
+  j = 0; k = 0;
+  for(i = 0; i < new->num_of_vars; i++){
+    temp = new->variables[i];
+    if(temp->next){
+      new->next[j] = temp;
+      new->previous[j] = temp->next;
       j++;
-    }
 
+      if(temp->parents){
+	m = 0;
+	for(n = 0; n < temp->num_of_parents; n++)
+	  if(temp->parents[n]->next == NULL){
+	    m = 1; break;
+	  }
+	if(m){
+	  new->fwd_messengers[k] = temp;
+	  new->bwd_messengers[k] = temp->next;
+	  k++;
+	}
+      }
+    }
+  }
+  
   /* Reminder: (Before I indexed the children with j, the program had 
    * funny crashes on Linux systems :) */
   j = 0; k = 0;
@@ -368,10 +409,12 @@ void free_model(nip model){
   for(i = 0; i < model->num_of_vars; i++)
     free_variable(model->variables[i]);
   free(model->variables);
-  free(model->children);
-  free(model->independent);
   free(model->next);
   free(model->previous);
+  free(model->fwd_messengers);
+  free(model->bwd_messengers);
+  free(model->children);
+  free(model->independent);
   free(model);
 }
 
@@ -713,14 +756,18 @@ static int start_timeslice_message_pass(nip model, int direction,
   int *mapping;
   clique c;
   variable *vars;
-  int nvars = model->num_of_nexts;
+  int nvars = model->num_of_messengers;
 
+  /*****************************************************/
+  /* TODO: invent a better way to choose the variables */
+  /*****************************************************/
+  
   if(direction == FORWARD){
-    vars = model->next;
+    vars = model->fwd_messengers;
     c = model->front_clique; /* null if not yet memoized */
   }
   else{
-    vars = model->previous;
+    vars = model->bwd_messengers;
     c = model->tail_clique; /* null if not yet memoized */
   }
 
@@ -777,15 +824,15 @@ static int finish_timeslice_message_pass(nip model, int direction,
   int *mapping;
   clique c;
   variable *vars;
-  int nvars = model->num_of_nexts;
+  int nvars = model->num_of_messengers;
 
   /* This uses memoization for finding a suitable clique c */
   if(direction == FORWARD){
-    vars = model->previous;
+    vars = model->bwd_messengers;
     c = model->tail_clique;
   }
   else{
-    vars = model->next;
+    vars = model->fwd_messengers;
     c = model->front_clique;
   }
 
@@ -837,7 +884,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   
   /* Allocate an array */
   if(model->num_of_nexts > 0){
-    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+    cardinalities = (int*) calloc(model->num_of_messengers, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return NULL;
@@ -845,9 +892,8 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   }
 
   /* Fill the array */
-  /*** WTF? (hidden && "next") or "next" variables??? ***/
-  for(i = 0; i < model->num_of_nexts; i++)
-    cardinalities[i] = number_of_values(model->next[i]);
+  for(i = 0; i < model->num_of_messengers; i++)
+    cardinalities[i] = number_of_values(model->fwd_messengers[i]);
 
 
 
@@ -922,7 +968,9 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   }
 
   /* Initialise the intermediate potential */
-  timeslice_sepset = make_potential(cardinalities, model->num_of_nexts, NULL);
+  timeslice_sepset = make_potential(cardinalities, 
+				    model->num_of_messengers, 
+				    NULL);
   free(cardinalities);
 
   /*****************/
@@ -996,8 +1044,8 @@ uncertain_series forward_backward_inference(time_series ts,
   nip model = ts->model;
 
   /* Allocate an array for describing the dimensions of timeslice sepsets */
-  if(model->num_of_nexts > 0){
-    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+  if(model->num_of_messengers > 0){
+    cardinalities = (int*) calloc(model->num_of_messengers, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return NULL;
@@ -1005,9 +1053,8 @@ uncertain_series forward_backward_inference(time_series ts,
   }
 
   /* Fill the array */
-  /*** WTF? (hidden && "next") or "next" variables??? ***/
-  for(i = 0; i < model->num_of_nexts; i++)
-    cardinalities[i] = number_of_values(model->next[i]);
+  for(i = 0; i < model->num_of_messengers; i++)
+    cardinalities[i] = number_of_values(model->fwd_messengers[i]);
 
 
   /* Allocate some space for the results */
@@ -1085,11 +1132,11 @@ uncertain_series forward_backward_inference(time_series ts,
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++){
-    timeslice_sepsets[t] = make_potential(cardinalities, model->num_of_nexts, 
+    timeslice_sepsets[t] = make_potential(cardinalities, 
+					  model->num_of_messengers, 
 					  NULL);
   }
   free(cardinalities);
-
 
   /*****************/
   /* Forward phase */
@@ -1130,20 +1177,15 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* Forget old evidence */
     reset_model(model);
-    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+    if(ts->length > 1)
+      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+    else
+      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
   }
   
   /******************/
   /* Backward phase */
   /******************/
-  
-  /* forget old evidence */
-  reset_model(model);
-  if(ts->length > 1)
-    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
-  else
-    use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
-
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
     /* Pass the message from the past */
@@ -1189,7 +1231,8 @@ uncertain_series forward_backward_inference(time_series ts,
       
       /* 2. Find the clique that contains the family of 
        *    the interesting variable */
-      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
+      clique_of_interest = find_family(model->cliques, 
+				       model->num_of_cliques, 
 				       temp);
       assert(clique_of_interest != NULL);
       
@@ -1389,8 +1432,8 @@ static int e_step(time_series ts, potential* parameters,
   timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
 
   /* Allocate an array for describing the dimensions of timeslice sepsets */
-  if(model->num_of_nexts > 0){
-    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+  if(model->num_of_messengers > 0){
+    cardinalities = (int*) calloc(model->num_of_messengers, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       for(i = 0; i < model->num_of_vars; i++)
@@ -1403,13 +1446,13 @@ static int e_step(time_series ts, potential* parameters,
     }
   }
 
-  /*** WTF? (hidden && "next") or "next" variables??? ***/
-  for(i = 0; i < model->num_of_nexts; i++)
-    cardinalities[i] = number_of_values(model->next[i]);
+  for(i = 0; i < model->num_of_messengers; i++)
+    cardinalities[i] = number_of_values(model->fwd_messengers[i]);
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++)
-    timeslice_sepsets[t] = make_potential(cardinalities, model->num_of_nexts, 
+    timeslice_sepsets[t] = make_potential(cardinalities, 
+					  model->num_of_messengers, 
 					  NULL);
   free(cardinalities);
 
@@ -1439,7 +1482,7 @@ static int e_step(time_series ts, potential* parameters,
 	return ERROR_GENERAL;
       }
 
-    /* This computes the log likelihood of the ts */
+    /* This computes log likelihood of <ts> */
     /*** Watch out for missing data etc. ***/
     j = 0;
     for(i = 0; i < nobserved; i++){
@@ -1475,20 +1518,15 @@ static int e_step(time_series ts, potential* parameters,
 
     /* Forget old evidence */
     reset_model(model);
-    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+    if(ts->length > 1)
+      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+    else
+      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
   }
   
   /******************/
   /* Backward phase */
   /******************/
-  
-  /* forget old evidence */
-  reset_model(model);
-  if(ts->length > 1)
-    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
-  else
-    use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
-  
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
     
     /* Pass the message from the past */
@@ -1549,10 +1587,15 @@ static int e_step(time_series ts, potential* parameters,
       /* 3. General Marginalisation from the timeslice */
       general_marginalise(c->p, p, find_family_mapping(c, temp));
       
+      /********************/
       /* 4. Normalisation */
+      /********************/
       size = p->size_of_data;
+      k = number_of_values(temp);
       normalise(p->data, size);
+      /******************************************************************/
       /* JJ NOTE: Not so sure whether this is the correct way or not... */
+      /******************************************************************/
 
       /* 5. THE SUM of conditional probabilities over time */
       for(j = 0; j < size; j++)
@@ -1560,7 +1603,7 @@ static int e_step(time_series ts, potential* parameters,
     }
     /*** Finished writing results for this timestep ***/
 
-
+    /* Pass the message to the past */
     if(t > 0)
       if(start_timeslice_message_pass(model, BACKWARD, 
 				      timeslice_sepsets[t]) != NO_ERROR){
@@ -1657,10 +1700,11 @@ static int m_step(potential* parameters, nip model){
 
 
 /* Trains the given model (ts->model) according to the given time series 
- * (ts) with EM-algorithm. Returns an error code as an integer. */
+ * (ts) with EM-algorithm. Returns an error code. */
 int em_learn(time_series *ts, int n_ts, double threshold){
   int i, j, n, v;
   int *card;
+  int ts_steps;
   double old_loglikelihood; 
   double loglikelihood = -DBL_MAX;
   double probe = 0;
@@ -1686,9 +1730,9 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     }
     /* The child MUST be the first variable in order to normalize
      * potentials reasonably */
-    card[0] = model->variables[v]->cardinality;
+    card[0] = number_of_values(model->variables[v]);
     for(i = 1; i < n; i++)
-      card[i] = model->variables[v]->parents[i-1]->cardinality;
+      card[i] = number_of_values(model->variables[v]->parents[i-1]);
     /* variable->parents should be null only if n==1 
      * => no for-loop => no null dereference */
 
@@ -1705,6 +1749,10 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     /* the M-step will take care of the normalisation and
      * elimination of zeros */
   }
+
+  ts_steps = 0;
+  for(n = 0; n < n_ts; n++)
+    ts_steps += timeseries_length(ts[n]);
 
   /************/
   /* THE Loop */
@@ -1742,9 +1790,9 @@ int em_learn(time_series *ts, int n_ts, double threshold){
       /** DEBUG **/
       assert(probe > -HUGE_VAL && probe <= 0.0);
 
-      loglikelihood += (probe / timeseries_length(ts[n]));
+      loglikelihood += probe;
     }
-    loglikelihood = loglikelihood / n_ts;
+    loglikelihood = loglikelihood / ts_steps; /* normalisation */
 
     /* DEBUG */
     printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
