@@ -4,39 +4,53 @@ class palikka
     outputs = ();
     node_size = (80 40);
 
+    node S0
+    {
+	label = "S(t-1)";
+	position = (100 100);
+	states = ("s1" "s2" "s3");
+    }
+
+    node Y0
+    {
+	label = "Y(t-1)";
+	position = (100 200);
+	states = ("1" "2" "3" "4" "5");
+    }
+
     node S1
     {
 	label = "S(t)";
-	position = (100 100);
+	position = (200 100);
 	states = ("s1" "s2" "s3");
+	NIP_next = "S0";
     }
 
     node Y1
     {
 	label = "Y(t)";
-	position = (100 200);
-	states = ("1" "2" "3" "4" "5");
-    }
-
-    node S2
-    {
-	label = "S(t+1)";
-	position = (200 100);
-	states = ("s1" "s2" "s3");
-	NIP_next = "S1";
-    }
-
-    node Y2
-    {
-	label = "Y(t+1)";
 	position = (200 200);
 	states = ("1" "2" "3" "4" "5");
-	NIP_next = "Y1";
+	NIP_next = "Y0";
     }
 
-    potential (S1)
+    potential (S0)
     {
         data = ( 1 1 1 );
+    }
+
+    potential (Y0 | S0)
+    {          %  Y0=1  Y0=2   Y0=3   Y0=4   Y0=5
+	data = (( 0.48  0.48   0.02   0.01   0.01 )	%  S0=s1
+		( 0.05	0.20   0.50   0.20   0.05 )	%  S0=s2
+		( 0.01	0.01   0.02   0.48   0.48 ));	%  S0=s3
+    }
+
+    potential (S1 | S0)
+    {          %  S1=s1  S1=s2  S1=s3
+	data = (( 0.9    0.099  0.001 )	  %  A=s1
+		( 0.001  0.9    0.099 )	  %  A=s2
+		( 0.099  0.001  0.9   )); %  A=s3
     }
 
     potential (Y1 | S1)
@@ -44,20 +58,6 @@ class palikka
 	data = (( 0.48  0.48   0.02   0.01   0.01 )	%  S1=s1
 		( 0.05	0.20   0.50   0.20   0.05 )	%  S1=s2
 		( 0.01	0.01   0.02   0.48   0.48 ));	%  S1=s3
-    }
-
-    potential (S2 | S1)
-    {          %  S2=s1  S2=s2  S2=s3
-	data = (( 0.9    0.099  0.001 )	  %  A=s1
-		( 0.001  0.9    0.099 )	  %  A=s2
-		( 0.099  0.001  0.9   )); %  A=s3
-    }
-
-    potential (Y2 | S2)
-    {          %  Y2=1  Y2=2   Y2=3   Y2=4   Y2=5
-	data = (( 0.48  0.48   0.02   0.01   0.01 )	%  S2=s1
-		( 0.05	0.20   0.50   0.20   0.05 )	%  S2=s2
-		( 0.01	0.01   0.02   0.48   0.48 ));	%  S2=s3
     }
 
 } % class palikka
