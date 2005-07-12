@@ -19,20 +19,12 @@ int main(int argc, char *argv[]) {
   int i, n;
   nip model = NULL;
   time_series *ts_set = NULL;
+  time_series ts;
   double threshold = 0;
   char* tailptr = NULL;
 
-  /* a little test */
-/*   printf(" DBL_MIN = %f\n", DBL_MIN); */
-/*   printf(" DBL_MAX = %f\n", DBL_MAX); */
-/*   printf(" HUGE_VAL = %f\n", HUGE_VAL); */
-/*   printf("-HUGE_VAL = %f\n", -HUGE_VAL); */
-/*   printf("ln(DBL_MIN) = %f\n", log(DBL_MIN)); */
-/*   printf("ln(DBL_MAX) = %f\n", log(DBL_MAX)); */
-/*   printf("ln(-DBL_MAX) = %f\n", log(-DBL_MAX)); */
-
   if(argc < 5){
-    printf("You must specity: \n"); 
+    printf("You must specify: \n"); 
     printf(" - the original NET file, \n");
     printf(" - data file, \n"); 
     printf(" - threshold value (0...1), and \n");
@@ -54,6 +46,16 @@ int main(int argc, char *argv[]) {
     printf("Unable to parse the data file: %s?\n", argv[2]);
     return -1;
   }
+
+  /* print a summary about the variables */
+  ts = ts_set[0];
+  printf("Hidden variables are:\n");
+  for(i = 0; i < ts->num_of_hidden; i++)
+    printf("  %s", get_symbol(ts->hidden[i]));
+  printf("\nObserved variables are:\n");
+  for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
+    printf("  %s", get_symbol(ts->observed[i]));
+  printf("\n");
 
   /* read the threshold value */
   threshold = strtod(argv[3], &tailptr);

@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.7 2005-06-30 10:51:53 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.8 2005-07-12 14:46:03 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -119,11 +119,13 @@ void reset_variable_list();
 variable next_variable(variable_iterator *it);
 
 
+/* Gets the variable according to the symbol (when parsing). */
+variable get_parser_variable(char *symbol);
+
+
 /* Gets the parsed variable according to the symbol. */
 variable get_variable(variable* vars, int nvars, char *symbol);
 
-/* Gets the variable according to the symbol (when parsing). */
-variable get_parser_variable(char *symbol);
 
 /* Gives v a new likelihood array. The size of the array
  * must match v->cardinality. Returns an error code.

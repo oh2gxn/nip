@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.102 2005-07-07 14:18:39 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.103 2005-07-12 14:46:03 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -41,8 +41,8 @@
  *
  *   - Determine the parameters of the algorithm
  *     - when to stop?
- *       - difference in the average loglikelihood of the timeseries...
- *       - loglikelihood should be calculated during E-step
+ *       + difference in the average loglikelihood of the timeseries...
+ *       + loglikelihood should be calculated during E-step
 
  *****/
 
@@ -1798,13 +1798,13 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
            loglikelihood);
 
-    /* NOTE: I'm afraid there's a large possibility to overflow */
-    if(loglikelihood == -HUGE_VAL){ /* some "impossible" data */
+    if(loglikelihood < old_loglikelihood ||
+       loglikelihood == -HUGE_VAL){ /* some "impossible" data */
       printf("WTF?\n");
       break;
     }
 
-  }while(fabs(loglikelihood - old_loglikelihood) > threshold || i < 3);
+  }while((loglikelihood - old_loglikelihood) > threshold || i < 3);
   /*** When should we stop? ***/
 
   for(v = 0; v < model->num_of_vars; v++){
