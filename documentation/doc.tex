@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.3 2005-06-29 14:39:54 jatoivol Exp $
+% $Id: doc.tex,v 1.4 2005-07-12 14:46:14 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -176,7 +176,7 @@ variable $V$ and its parents $\mathbf{\Pi}_V$ form a set of variables
 $\mathbf{F}_V$ naturally called the {\it family of V}. There's more about
 the quantitative relationship in the following sections.
 
-\subsection{The functionality description}
+\subsection{Functionality description}
 
 \subsubsection{The data structure}
 The data type \cdatatype{variable} defined in \cfilename{variable.h} 
@@ -309,7 +309,7 @@ The functions provided in \cfilename{variable.c} are
   or not (returns the integer 0 if not).
 
 \item[get\_symbol(v)] returns the symbol of the variable~\cparameter{v}. It
-  will not make a copy of the string so don't mess with it.
+  will not make a copy of the string so don't mess with the contents.
 
 \item[get\_stateindex(v, state)] tells the place of the string
   \cparameter{state} in the state name array of the
@@ -450,7 +450,7 @@ interface is designed to hide the implementation details. The
 \cdatatype{Graph}-like datatype and could possibly be refactored.
 
 
-\subsection{The functionality description}
+\subsection{Functionality description}
 %The interface + how the stuff works...
 \subsubsection{The data structures}
 The data type \cdatatype{Graph} defined in \cfilename{Graph.h} is a
@@ -633,7 +633,7 @@ an array is the least significant one and $\mathbf{X} = \{X_1,X_2\}$, then
 \end{itemize}
 
 
-\subsection{The functionality description}
+\subsection{Functionality description}
 
 \subsubsection{The data structure}
 The data type \cdatatype{potential} defined in \cfilename{potential.h} is a
@@ -643,13 +643,16 @@ pointer to a struct which contains the following fields:
 elements in the potential. It must be the product of all the elements in
 the \cstructfield{cardinality} array (or one if the number of variables
 equals zero).
+
 \item[cardinality] is an array of \cdatatype{integers}. The integers are
 the cardinalities of each variable the potential is related to. Thus the
 size of the array must be the same as the number of variables. Also the
 order of the cardinality array is significant because the variables are
 assumed to have a certain order.
+
 \item[num\_of\_vars] is an \cdatatype{integer} which tells the number of
 variables associated with the potential.
+
 \item[data] is the \cdatatype{double array} describing a probability
 distribution of the associated variables. The size of this array is in the
 \cstructfield{size\_of\_data} field. The data in the array is arranged
@@ -749,7 +752,7 @@ placed in \cfilename{potential.c} and are as follows:
   \cparameter{numerator} and \cparameter{denominator} potentials are left
   unchanged by the function.
   
-  The function is made for multiplying the a clique potential with the old
+  The function is made for multiplying a clique potential with the old
   and new sepset potentials. It is assumed that the variables associated with
   the multiplier potentials correspond to a subset of the variables
   associated with the target potential. Thus the user needs to indicate which
@@ -804,10 +807,11 @@ variables in a potential is fixed, then a subset of variables in a time
 slice should be in the same order as the other set of corresponding
 variables in the previous time slice.  By using an integer array to remap
 the order of the variables, we avoid this and possibly other problems. In
-the previous implementation, the used had to specify (in a certain order)
+the previous implementation, the user had to specify (in a certain order)
 which variables were NOT shared by the operands of a potential operation
 and use was therefore less intuitive. Note that the join tree
 implementation still requires a static and total order among variables.
+
 
 \newpage
 \section{Join trees} % cliques and sepsets
@@ -849,9 +853,9 @@ which simply means that a sepset potential must describe the same kind of
 dependency between its variables than the neigbouring clique potential. The
 clique just has some extra variables which the sepset does not care about.
 
-The intention of the join tree potentials is to encode the joint probabilty
-distribution of all the variables in the original belief network. This 
-property is called the \textbf{global consistency}:
+The intention of the join tree potentials is to encode the joint
+probability distribution of all the variables in the original belief
+network. This property is called the \textbf{global consistency}:
 \begin{equation}
 P(\mathbf{U}) = \frac{\prod_i \phi_{\mathbf{X}_i}} 
                      {\prod_j \phi_{\mathbf{S}_j}},
@@ -928,14 +932,42 @@ evidence has to be distributed throughout the tree. You could think that
 most of the inference will happen during the third phase where the tree is
 made consistent.
 
-The consistency is achieved by a two-phase procedure, where...
+The consistency is achieved with a two-phase procedure, where the effects
+of evidence are first propagated away from an arbitrary root clique and 
+then towards the same clique in depth first order. The key property of this 
+{\it message-passing} procedure is that each clique passes a message to a 
+neigbouring clique after if has received messages from all of its other 
+neighbours (see~\cite{huang1994} for examples). 
+
+A single message from clique $C_1$ to its neigbor $C_2$ is passed as
+follows:
+\begin{enumerate}
+\item Save the old potential of sepset $S_{1,2}$ between the cliques:
+  \begin{equation}
+    \phi_{S}^{old} \leftarrow \phi_{S}
+  \end{equation}
+
+\item Compute the new sepset potential by marginalising from clique $C_1$.
+  This is so-called {\it projection}:
+  \begin{equation}
+    \phi_{S} \leftarrow \sum_{C_1 \setminus S} \phi_{C_1}
+  \end{equation}
+
+\item Update the potential in clique $C_2$ by multiplying with the new 
+  sepset potential. Old information is cancelled by dividing with the 
+  old sepset potential. This is also known as {\it absorption}:
+  \begin{equation}
+    \phi_{C_2} \leftarrow \phi_{C_2} \frac{\phi_{S}}{\phi_{S}^{old}}
+  \end{equation}
+\end{enumerate}
 
 % marginalisation
+After the evidence is entered and the join tree is made consistent, ...
 
 % XX To be continued...
 
 
-\subsection{The functionality description}
+\subsection{Functionality description}
 The files \cfilename{clique.h} and \cfilename{clique.c} provide data 
 types and functions for operating with sepsets and cliques. Together 
 these form the concept known as join tree. In the NIP system, a join 
