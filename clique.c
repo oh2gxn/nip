@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.17 2005-07-04 14:57:45 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.18 2005-07-14 14:57:03 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -937,7 +937,6 @@ void normalise(double result[], int array_size){
 
 int global_retraction(variable* vars, int nvars, clique* cliques, 
 		      int ncliques){
-
   int i, index;
   int retval;
   variable v;
@@ -1404,8 +1403,6 @@ static void jtree_dfs(clique start, void (*cFuncPointer)(clique),
   }
 }
 
-
-/* a recursive dfs of some sort */
 
 /** TODO: Currently this computes potentials in EVERY node of join tree 
  ** even if the answer can be found in a single node. It could try to 

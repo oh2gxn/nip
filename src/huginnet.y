@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.60 2005-06-21 12:23:11 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.61 2005-07-14 14:57:03 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -40,12 +40,17 @@ yyerror (const char *s);  /* Called by yyparse on error */
 %token token_class "class"
 %token token_node_size "node_size"
 %token token_data "data"
-%token token_label "label"
+%token token_utility "utility"
+%token token_decision "decision"
+%token token_discrete "discrete"
+%token token_continuous "continuous"
 %token token_node "node"
+%token token_label "label"
 %token token_position "position"
-%token token_potential "potential"
 %token token_states "states"
 %token token_next "NIP_next"
+%token token_potential "potential"
+%token token_normal "normal"
 %token <name> QUOTED_STRING
 %token <name> UNQUOTED_STRING
 %token <numval> NUMBER
@@ -164,6 +169,95 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   reset_strings(); /* frees the original parsed statenames */
   set_nip_next(NULL);
   $$ = v;}
+|    token_discrete token_node UNQUOTED_STRING '{' node_params '}' {
+  int retval;
+  char *nip_next;
+  char *label = get_nip_label();
+  char **states = get_nip_statenames();
+  variable v = new_variable($3, label, states, get_nip_strings_parsed());
+
+  if(v == NULL){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free($3);
+    free(label);
+    reset_strings(); /* frees the original parsed statenames */
+    YYABORT;
+  }
+  set_variable_position(v); /* sets the parsed position values */
+
+  if((nip_next = get_nip_next()) != NULL){
+    retval = add_time_init(v, nip_next);
+    if(retval != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      free($3);
+      free(label);
+      reset_strings(); /* frees the original parsed statenames */
+      free_variable(v);
+      YYABORT;
+    }
+  }
+
+  free($3);
+  free(label);
+  reset_strings(); /* frees the original parsed statenames */
+  set_nip_next(NULL);
+  $$ = v;}
+
+| token_continuous token_node UNQUOTED_STRING '{' ignored_params '}' { 
+  /* FIXME: this may be a little buggy... */ 
+  char *nip_next = get_nip_next();
+  char *label = get_nip_label();
+  char **states = get_nip_statenames();
+  variable v = new_variable($3, label, states, get_nip_strings_parsed());
+  free_variable(v);
+  yyerror("NET parser: Continuous variables are not supported.");
+  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  free($3);
+  free(nip_next);
+  reset_strings();
+  set_nip_next(NULL);
+  YYABORT;
+  $$=NULL;}
+
+| token_utility UNQUOTED_STRING '{' ignored_params '}' { 
+  /* FIXME: this may be a little buggy... */ 
+  char *nip_next = get_nip_next();
+  char *label = get_nip_label();
+  char **states = get_nip_statenames();
+  variable v = new_variable($2, label, states, get_nip_strings_parsed());
+  free_variable(v);
+  yyerror("Utility nodes are not supported.");
+  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  free($2);
+  free(nip_next);
+  reset_strings();
+  set_nip_next(NULL);
+  YYABORT;
+  $$=NULL;}
+
+| token_decision UNQUOTED_STRING '{' ignored_params '}' { 
+  /* FIXME: this may be a little buggy... */ 
+  char *nip_next = get_nip_next();
+  char *label = get_nip_label();
+  char **states = get_nip_statenames();
+  variable v = new_variable($2, label, states, get_nip_strings_parsed());
+  free_variable(v);
+  yyerror("Decision nodes are not supported.");
+  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  free($2);
+  free(nip_next);
+  reset_strings();
+  set_nip_next(NULL);
+  YYABORT;
+  $$=NULL;}
+;
+
+ignored_params: /* end of list */
+|            unknownDeclaration ignored_params
+|            statesDeclaration ignored_params { set_nip_statenames($1); }
+|            labelDeclaration ignored_params { set_nip_label($1); }
+|            nextDeclaration ignored_params { set_nip_next($1); }
+|            positionDeclaration ignored_params
 ;
 
 node_params: /* end of definitions */
@@ -406,62 +500,95 @@ yylex (void)
   /* Multicharacter tokens */
   else{
     /* Literal string tokens */ 
-    /* label or class */
-    if(tokenlength == 5){
-      if(strncmp("label", token, 5) == 0){
-	free(token);
-	return token_label;
-
-      }else if(strncmp("class", token, 5) == 0){
-	free(token);
-	return token_class;
-      }
-    }
-
-    /* node or data */
     if(tokenlength == 4){
+      /* node */
       if(strncmp("node", token, 4) == 0){
 	free(token);
 	return token_node;
-
-      }else if(strncmp("data", token, 4) == 0){
+      }
+      /* data */
+      else if(strncmp("data", token, 4) == 0){
 	free(token);
 	return token_data;
       }
     }
 
-    /* potential */
-    if(tokenlength == 9 &&
-       strncmp("potential", token, 9) == 0){
-      free(token);
-      return token_potential;
-    }
-
-    /* states */
-    if(tokenlength == 6 &&
-       strncmp("states", token, 6) == 0){
-      free(token);
-      return token_states;
-    }
-
-    /* position or NIP_next */
-    if(tokenlength == 8){
-      if(strncmp("position", token, 8) == 0){
+    if(tokenlength == 5){
+      /* label */
+      if(strncmp("label", token, 5) == 0){
 	free(token);
-	return token_position;
-
-      }else if(strncmp("NIP_next", token, 8) == 0){
+	return token_label;
+      }
+      /* class */
+      else if(strncmp("class", token, 5) == 0){
 	free(token);
-	return token_next;
+	return token_class;
       }
     }
 
-    /* node_size */
-    if(tokenlength == 9 &&
-       strncmp("node_size", token, 9) == 0){
-      free(token);
-      return token_node_size;
+    if(tokenlength == 6){
+      /* states */
+      if(strncmp("states", token, 6) == 0){
+	free(token);
+	return token_states;
+      }
+      /* normal */
+      else if(strncmp("normal", token, 6) == 0){
+	free(token);
+	return token_normal;
+      }
     }
+
+    /* utility */
+    if(tokenlength == 7 &&
+       strncmp("utility", token, 7) == 0){
+      free(token);
+      return token_utility;
+    }
+
+    if(tokenlength == 8){
+      /* position */
+      if(strncmp("position", token, 8) == 0){
+	free(token);
+	return token_position;
+      }
+      /* NIP_next */
+      else if(strncmp("NIP_next", token, 8) == 0){
+	free(token);
+	return token_next;
+      }
+      /* decision */
+      else if(strncmp("decision", token, 8) == 0){
+	free(token);
+	return token_decision;
+      }
+      /* discrete */
+      else if(strncmp("discrete", token, 8) == 0){
+	free(token);
+	return token_discrete;
+      } 
+    }
+
+    if(tokenlength == 9){ 
+      /* node_size */
+      if(strncmp("node_size", token, 9) == 0){
+	free(token);
+	return token_node_size;
+      }
+      /* potential */
+      else if(strncmp("potential", token, 9) == 0){
+	free(token);
+	return token_potential;
+      }
+    }
+
+    /* continuous */
+    if(tokenlength == 10 &&
+       strncmp("continuous", token, 10) == 0){
+      free(token);
+      return token_continuous;
+    }
+
     /* End of literal string tokens */
 
     /* Regular tokens (not literal string) */

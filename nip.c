@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.103 2005-07-12 14:46:03 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.104 2005-07-14 14:57:04 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1834,6 +1834,11 @@ double momentary_loglikelihood(nip model, variable* observed,
   
   /* we needed only one of the computed values */
   likelihood = get_pvalue(p, indexed_data);
+  /* NOTE: I believe this could have been computed the same way as 
+   * artificial data is generated. First you check the likelihood 
+   * of data for parent variables, insert the data for parent variables, 
+   * and then multiply with the likelihood of child variables */
+
   free_potential(p); /* Remember to free some memory */
 
   if(likelihood > 0)

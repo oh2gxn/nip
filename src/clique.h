@@ -1,5 +1,5 @@
 /*
- * clique.h $Id: clique.h,v 1.3 2005-06-03 15:00:12 jatoivol Exp $
+ * clique.h $Id: clique.h,v 1.4 2005-07-14 14:57:03 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -147,7 +147,7 @@ void normalise(double result[], int array_size);
 
 
 /* Method for backing away from impossibilities in observation. */
-int global_retraction(variable* vars, int num_of_vars, clique* cliques, 
+int global_retraction(variable* vars, int nvars, clique* cliques, 
 		      int num_of_cliques);
 
 
