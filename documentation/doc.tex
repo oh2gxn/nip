@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.4 2005-07-12 14:46:14 jatoivol Exp $
+% $Id: doc.tex,v 1.5 2005-07-14 14:57:25 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -941,18 +941,19 @@ neighbours (see~\cite{huang1994} for examples).
 
 A single message from clique $C_1$ to its neigbor $C_2$ is passed as
 follows:
+%
 \begin{enumerate}
 \item Save the old potential of sepset $S_{1,2}$ between the cliques:
   \begin{equation}
     \phi_{S}^{old} \leftarrow \phi_{S}
   \end{equation}
-
+%
 \item Compute the new sepset potential by marginalising from clique $C_1$.
   This is so-called {\it projection}:
   \begin{equation}
     \phi_{S} \leftarrow \sum_{C_1 \setminus S} \phi_{C_1}
   \end{equation}
-
+%
 \item Update the potential in clique $C_2$ by multiplying with the new 
   sepset potential. Old information is cancelled by dividing with the 
   old sepset potential. This is also known as {\it absorption}:
@@ -960,11 +961,77 @@ follows:
     \phi_{C_2} \leftarrow \phi_{C_2} \frac{\phi_{S}}{\phi_{S}^{old}}
   \end{equation}
 \end{enumerate}
+%
+Due to the running intersection property, the projection phase will
+conserve all information about changes needed futher down the join tree.
 
 % marginalisation
-After the evidence is entered and the join tree is made consistent, ...
+After the evidence is entered and the join tree is made consistent, 
+probability distribution of a single variable $V$ can be computed by
+marginalising from a suitable clique $C$ (so that $V \in C$):
+\begin{equation}
+  \phi_V = \sum_{C \setminus V} \phi_C.
+\end{equation}
+%
+Finally, the resulting 1-variable potential may need some normalisation:
+\begin{equation}
+  P(V = v_i) = \frac{\phi_V[i]}{\sum_i \phi_V[i]}.
+\end{equation}
 
-% XX To be continued...
+\subsubsection{Joint probability distributions}
+In principle, equation~\ref{global_consistency} tells how to compute the
+joint probability distribution of {\it all} variables. Such a distribution
+should be useless, since the primary motivation for using a join tree in
+the first place is to save memory by avoiding huge tables required by
+probability distributions of many variables. However, some algorithms
+(e.g. the EM-algorithm) need to know the likelihood of the data and
+therefore at least single elements of a joint probability distribution of
+arbitrary variables need to be computed.
+
+In case it is needed, joint probability distribution of arbitrary variables
+$P(\mathbf{V})$ can be computed by traversing the (consistent) join tree in
+depth-first order and multiplying clique and sepset potentials as shown in
+Eq.~\ref{global_consistency}. Since the variables of interest 
+(set $\mathbf{V}$) do not usually include all the variables 
+(i.e. $\mathbf{V} \subset \mathbf{U}$), some 
+marginalisation is needed:
+\begin{equation}
+  P(\mathbf{V}) = \sum_{U \setminus V} P(\mathbf{U}).
+\end{equation}
+
+Computing the entire joint probability distribution $P(\mathbf{U})$ first
+would either use too much memory or make the use of a join tree
+meaningless. In order to avoid pointless memory consumption, some of the
+marginalisations can be done between the multiplications. 
+\begin{figure}[!ht]
+  \begin{center}
+    \includegraphics[width=100mm]{tree.eps}
+    \caption{An example of a join tree}
+    \label{fig2}
+  \end{center}
+\end{figure}
+
+An example: the
+variables are $\mathbf{U} = \{A, B, C, D, E, F, G, H\}$ and we have cliques
+$C_1 = \{A, B, C\}$, $C_2 = \{A, B, D\}$, $C_3 = \{A, E\}$, $C_4 = \{B,
+F\}$, $C_5 = \{C, G\}$, and $C_6 = \{G, H\}$. If we are interested in the
+joint probability distribution of variables $\mathbf{V} = \{C, G, F\}$, it
+can be calculated in the following way:
+\begin{equation}
+  \begin{split}
+  P(\mathbf{V}) = \sum_A \phi_{ABC} &* \left[ \sum_D 
+    \left( \frac{\phi_{ABD}}{\phi_{AB}}*
+    (\sum_{\emptyset} \frac{\phi_{BF}}{\phi_{B}}) * 
+    (\sum_E \frac{\phi_{AE}}{\phi_{A}}) \right) \right]\\
+  &* \left[ \sum_{\emptyset} \left( \frac{\phi_{CG}}{\phi_C} * 
+    (\sum_H \frac{\phi_{GH}}{\phi_G}) \right) \right].
+  \end{split}
+\end{equation}
+
+As the example shows, the join tree is traversed in depth-first postorder
+marginalising away all the variables which are not included in $V$ or the
+current parent clique in the tree (see Fig.~\ref{fig2}). Again, the running
+intersection property makes the algorithm straightforward.
 
 
 \subsection{Functionality description}
@@ -987,40 +1054,40 @@ the sepset.
 \item[variables] is an \cdatatype{array of variables}. These are the 
 variables associated with the sepset. They are in the same order as
 their cardinalities in the \cdatatype{potentials} \cstructfield{old} and 
-\cstructfield{new}. The number of the variables can be found in either 
+\cstructfield{new}. Number of the variables can be found in either 
 of the \cdatatype{potentials} \cstructfield{old} and \cstructfield{new}.
 
 \item[cliques] is an \cdatatype{array of cliques}. The references to the
-adjacent cliques are there. The size of the array is always two
-because of the nature of sepsets.
+adjacent cliques are there. Size of the array is always two because of the
+nature of sepsets.
 \end{description}
 
 
 The data type \cdatatype{sepset\_link} provides an implementation for lists
 of \cdatatype{sepsets}. It is a pointer to a struct containing
 \begin{description}
-\item[data] is a so-called \cdatatype{void pointer} because of the order of
-  definitions. (You can't really define a list of sepsets before you
-  have defined sepsets. sepsets can't be defined before cliques and
-  cliques can't be defined before lists of sepsets.) When the list of
-  sepsets is used, the \cstructfield{data} field has to be cast to the 
-  \cdatatype{sepset} type. 
+\item[data] which is a so-called \cdatatype{void pointer} because of the
+  order of definitions. (You can't really define a list of sepsets before
+  you have defined sepsets. sepsets can't be defined before cliques and
+  cliques can't be defined before lists of sepsets.) When a list of
+  sepsets is used, the \cstructfield{data} field has to be cast to the
+  \cdatatype{sepset} type.
 
-\item[fwd] is the next \cdatatype{sepset\_link} in the list or 
+\item[fwd] which is the next \cdatatype{sepset\_link} in the list or 
   \cdatatype{NULL} at the end of the list.
 
-\item[bwd] is the previous \cdatatype{sepset\_link} in the list or 
+\item[bwd] which is the previous \cdatatype{sepset\_link} in the list or 
   \cdatatype{NULL} at the beginning of the list.
-
 \end{description}
 
 The data type \cdatatype{clique} is a pointer to a struct containing all the
-necessary for working with cliques. The fields are
+necessary information for working with cliques. The fields are
 \begin{description}
 \item[p] is the clique \cdatatype{potential}
 
 \item[original\_p] is the original clique \cdatatype{potential} initialised
-  according to the parameters of the model
+  according to the parameters of the model. This one is never affected 
+  by the evidence entered into the model.
 
 \item[variables] is an \cdatatype{array of variables}. These are the
   references to the variables associated with the clique. They are in
@@ -1046,10 +1113,11 @@ The file \cfilename{clique.c} provides the following functions
 \begin{description}
 \item[make\_clique(vars, num\_of\_vars)] creates a \cdatatype{clique}. The
   associated variables are given as the \cdatatype{variable array}
-  \cparameter{vars} and the number of the variables as the \cdatatype{integer} 
-  \cparameter{num\_of\_vars}. A shallow copy of the array is made, so
-  remember to free it (but not the contents). The clique will not have 
-  any adjacent sepsets initially. sepsets must be added separately.
+  \cparameter{vars} and the number of the variables as the
+  \cdatatype{integer} \cparameter{num\_of\_vars}. A shallow copy of the
+  array is made, so remember to free it (but not the variables
+  themselves). The clique will not have any adjacent sepsets
+  initially: sepsets must be added separately.
 
 \item[free\_clique(c)] frees the memory allocated by the 
   \cdatatype{clique}~\cparameter{c}. It will not free the memory allocated for 
@@ -1060,16 +1128,17 @@ The file \cfilename{clique.c} provides the following functions
 
 \item[add\_sepset(c, s)] adds the \cdatatype{sepset} \cparameter{s} to the 
   \cdatatype{clique}~\cparameter{c}. Remember to add the sepset to both
-  adjacent cliques and never add a sepset to the same clique twice.
+  adjacent cliques and never add the same sepset to the same clique twice.
 
-\item[make\_sepset(variables, num\_of\_vars, cliques)] creates a {\it
-  sepset}. The associated variables are given as the \cdatatype{variable
-  array} \cparameter{variables} and the size of the array as the {\it
-  integer} \cparameter{num\_of\_vars}. Both adjacent cliques must be given
-  as an \cdatatype{array of cliques} (\cparameter{cliques}). This
-  usually means that the \cdatatype{cliques} must be created before the
-  \cdatatype{sepsets}. Note that a shallow copy of the parameter arrays
-  is made, so freeing the arrays after calling the function is up to the user.
+\item[make\_sepset(variables, num\_of\_vars, cliques)] creates a
+  \cdatatype{sepset}. The associated variables are given as the
+  \cdatatype{variable array} \cparameter{variables} and the size of the
+  array as the \cdatatype{integer} \cparameter{num\_of\_vars}. Both
+  adjacent cliques must be given as \cdatatype{array of cliques}
+  (\cparameter{cliques}). This usually means that the \cdatatype{cliques}
+  must be created before the \cdatatype{sepsets}. Note that a shallow copy
+  of the parameter arrays is made, so freeing the arrays after calling the
+  function is up to the user.
   
 \item[free\_sepset(s)] just frees the memory allocated for the
   \cdatatype{sepset} \cparameter{s}. This is called automatically by 
@@ -1077,14 +1146,14 @@ The file \cfilename{clique.c} provides the following functions
   freeing possible useless \cdatatype{sepsets} which are not included in the 
   join tree.
 
-\item[create\_potential(variables, num\_of\_vars, data)] can help if
-  you need to create potentials out of \cdatatype{double arrays} like 
-  the \cparameter{data} parameter. The function creates a \cdatatype{potential}
-  which has its data arranged correcty in order to work with the
-  system. To rearrange the data correctly, the function needs to know 
-  the order of the corresponding variables. This is achieved by 
-  specifying the \cdatatype{variable array} \cparameter{variables} and the size
-  of it as the \cdatatype{integer} \cparameter{num\_of\_vars}. 
+\item[create\_potential(variables, num\_of\_vars, data)] can help if you
+  need to create potentials out of \cdatatype{double arrays} like the
+  \cparameter{data} parameter. The function creates a \cdatatype{potential}
+  which has its data arranged correcty in order to work with the system. To
+  rearrange the data correctly, the function needs to know the order of the
+  corresponding variables. This is achieved by specifying the
+  \cdatatype{variable array} \cparameter{variables} and the size of it as
+  the \cdatatype{integer} \cparameter{num\_of\_vars}.
 
   The most important thing is to have the \cdatatype{variables} array in the 
   same order as the \cparameter{data} array is sorted. For example, the 
@@ -1110,36 +1179,50 @@ The file \cfilename{clique.c} provides the following functions
 \item[distribute\_evidence(c)] implements the algorithm which spreads 
   the evidence entered in to the cliques away from the given 
   \cdatatype{clique}~\cparameter{c}. See \cite{huang1994} page 21 for
-  details. 
+  details. Remember to unmark all the cliques before calling this.
 
-\item[collect\_evidence(c1, s12, c2)] implements the algorithm which 
-  collects evidence from the subtree rooted in the given 
-  \cdatatype{clique}~\cparameter{c2} and passes the evidence to the 
+\item[collect\_evidence(c1, s12, c2)] implements the algorithm which
+  collects evidence from the subtree rooted in the given
+  \cdatatype{clique}~\cparameter{c2} and passes the evidence to the
   \cdatatype{clique}~\cparameter{c1}. The
-  \cdatatype{sepset}~\cparameter{s12} is the sepset between the two 
-  cliques. The function is recursive and is usually used like this: 
-  \examplecode{collect\_evidence(NULL, NULL, c);} 
-  where \examplecode{c} is some \cdatatype{clique}. This causes the 
-  evidence to be collected from the entire join tree.
+  \cdatatype{sepset}~\cparameter{s12} is the sepset between the two
+  cliques. The function is recursive and is usually used like this:
+  \examplecode{collect\_evidence(NULL, NULL, c);} where \examplecode{c} is
+  some \cdatatype{clique}. This causes the evidence to be collected from
+  the entire join tree.  Remember to unmark all the cliques before calling
+  this.
+
+\item[gather\_joint\_probability(start, vars, n\_vars, isect, n\_isect)] is
+  a recursive function for computing the joint probability distribution of 
+  the \cparameter{n\_vars} variables contained by the \cdatatype{variable 
+    array} \cparameter{vars}. The recursion begins (or continues) from the 
+  \cparameter{start} \cdatatype{clique}.
+
+  The \cparameter{isect} parameter is an \cdatatype{array of variables}
+  containing the \cparameter{n\_isect} variables shared by the start and
+  previous cliques. These are needed only for the recursion and the
+  function is usually called like this:\\
+  \examplecode{gather\_joint\_probability(c, vars, n, NULL, 0);} \\ where
+  \examplecode{c} is some \cdatatype{clique} and \examplecode{vars}
+  contains the \examplecode{n} variables of interest. The function returns
+  a potential which is ordered accoding to the given variables, so the
+  result depends on the order of \examplecode{vars} array.
 
 % !!! NOTE !!! This requires variables to have a certain order in clique c!
-\item[initialise(c, child, parents, p)] is used for entering the
+\item[initialise(c, child, p, transient)] is used for entering the
   quantitative parameters of the model into the join tree. This function
-  initialises the \cdatatype{clique}~\cparameter{c} with the given 
-  \cdatatype{potential}~\cparameter{p}. The initialisation ensures that 
-  the parameters are not reset by the \cfunction{global\_retraction} 
-  function. Note that~\cparameter{p} should be a valid 
-  \cdatatype{potential} i.e. the data contained by it should be 
-  correctly arranged and the number of variables specified in it should 
-  equal to the number of parent variables plus one (the child).
+  initialises the \cdatatype{clique}~\cparameter{c} with the given
+  \cdatatype{potential}~\cparameter{p}. The initialisation ensures that the
+  parameters are not reset by the \cfunction{global\_retraction} function,
+  in case the \cparameter{transient} parameter is zero.  Note
+  that~\cparameter{p} should be a valid \cdatatype{potential} i.e. the data
+  contained by it should be correctly arranged and the number of variables
+  specified in it should equal to the number of parent variables plus one
+  (the child).
   
   Since the clique to be initialised can be associated with more
   variables than are associated with the potential, the user must
-  specify the \cparameter{child} \cdatatype{variable} and the 
-  \cdatatype{array of variables} which contain the
-  \cparameter{parents}. The order of the variables in the
-  \cparameter{parents} array is not relevant and the array is not needed 
-  after the function has executed.
+  specify the \cparameter{child} \cdatatype{variable}.
 
 \item[marginalise(c, v, r)] is one of the most useful functions
   because it finds out the probability distribution of the 
@@ -1152,10 +1235,10 @@ The file \cfilename{clique.c} provides the following functions
 
 \item[normalise(result, array\_size)] simply normalises the
   \cdatatype{double array} \cparameter{result}. After the function has
-  executed, sum of the elements in the array will be one, unless it's 
+  executed, sum of the elements in the array will be one, unless it's
   filled with zeros. If the array is full of zeros, it is left
-  unchanged. The size of the array must be specified as the 
-  \cdatatype{integer} \cparameter{array\_size}.
+  unchanged. Size of the array must be specified as the \cdatatype{integer}
+  \cparameter{array\_size}.
 
 \item[global\_retraction(vars, nvars, cliques, ncliques)] resets the 
   clique potentials to the state they had after the initialisation and 
@@ -1167,9 +1250,9 @@ The file \cfilename{clique.c} provides the following functions
   This function is needed for retracting evidence in some cases. To
   achieve this, the user must enter the wanted evidence into the
   variables and run \cfunction{global\_retraction}. The 
-  \cdatatype{variable array} \cparameter{vars} (containing all the 
+  \cdatatype{variable array} \cparameter{vars} (containing {\it all} the 
   variables) and a \cdatatype{clique array} \cparameter{cliques} must be 
-  specified. Also the number of the variables and cliques has to be given 
+  specified. Also number of the variables and cliques has to be given 
   to the function as the \cdatatype{integers} \cparameter{nvars}
   and \cparameter{ncliques}.
 
@@ -1207,6 +1290,12 @@ The file \cfilename{clique.c} provides the following functions
   \cparameter{cliques} (\cdatatype{clique} array) and 
   \cparameter{num\_of\_cliques} (\cdatatype{integer}).
 
+\item[find\_family\_mapping(family, child)] returns an \cdatatype{array of
+  integers} which can be used as a mapping from the \cparameter{family} 
+  \cdatatype{clique} to a potential containing the joint probability
+  distribution of the family variables. The mapping array is useful with 
+  the \examplecode{general\_marginalise} function.
+
 \item[find\_clique(cliques, num\_of\_cliques, variables, num\_of\_vars)]
   tries to find a \cdatatype{clique} which contains all the variables (or
   more) specified in the \cdatatype{variable array}
@@ -1214,13 +1303,14 @@ The file \cfilename{clique.c} provides the following functions
   fourth parameter \cparameter{num\_of\_vars}. The function returns 
   \cdatatype{NULL} if there are no suitable cliques in the specified 
   \cdatatype{array of cliques} (\cparameter{cliques}) within the given 
-  size \cparameter{num\_of\_cliques}.
+  size \cparameter{num\_of\_cliques}. (remember to use find\_family 
+  when possible, since it is faster due to memoization)
 
 \item[find\_sepsets(cliques, num\_of\_cliques)] creates and inserts 
   the sepsets between the \cdatatype{cliques} specified in the array 
   \cparameter{cliques}. The size of the array must be given as the 
   \cdatatype{integer} \cparameter{num\_of\_cliques}. This function is 
-  meant to be used only once after all of the cliques have been created. 
+  meant to be used only once after all the cliques have been created. 
   Consequently, it is not intended for repairing partially created 
   join trees.
   
@@ -1236,17 +1326,49 @@ The file \cfilename{clique.c} provides the following functions
   variables are common to the specified \cdatatype{cliques}~\cparameter{cl1}
   and~\cparameter{cl2}. The parameter \cparameter{vars} is a 
   \cdatatype{pointer to an array of variables} and the array will 
-  contain the found variables  after the execution. The size of the
+  contain the found variables  after the execution. Size of the
   array is written to the place pointed by the 
   \cdatatype{integer pointer}~\cparameter{n}. The resulting array
   is allocated by the function and it should be freed by the user.
 \end{description}
 
 
+\subsection{Other possibilities}
+It could have been better to include the variables into the potential
+datatype instead of the cliques. That way part of the duplicate bookkeeping
+of variable cardinalities would have been avoided and potentials would be 
+more ``independent'' entities. On the other hand, some parts of the system 
+(like the time slice message passing) need to make potential operations as 
+if they had different variables.
+
 \newpage
 \section{The Hugin net language parser}
 \subsection{General}
-The structure of Hugin net files...
+The probabilistic models are defined using so-called {\it net language} 
+defined by Hugin Expert A/S. Documentation about Hugin net language can 
+be found at \\
+\verb+http://developer.hugin.com/documentation/net/+
+\footnote{Cited 14.7.2005}, but here is an introduction to the implemented
+parser which is based on the first, a little restricted, revision of the 
+language.
+
+\subsubsection{Classes}
+The parser assumes that each net file contains only one model which is
+denoted as a {\it class} in net language. All the meaningful content 
+(i.e. not including whitespace nor the comments) may optionally be enclosed 
+in a class statement. Such a statement begins with the keyword 
+\textbf{class} followed by the name of the model and the enclosing braces 
+(\{ and \}). The implemented parser does not mind if the actual content 
+of the file is not enclosed in a class statement as long as there are no 
+extra braces, class keywords or otherwise incomplete definitions.
+
+
+
+\subsubsection{Nodes}
+
+
+\subsubsection{Potentials}
+Both structured and unstructured data fields...
 
 % TODO...
 
