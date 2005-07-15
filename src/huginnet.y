@@ -1,9 +1,11 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.61 2005-07-14 14:57:03 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.62 2005-07-15 13:52:27 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
 %{
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +39,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
 /* (The "ownership" of strings changes.)                          */
 /******************************************************************/
 
+%token token_net "net"
 %token token_class "class"
 %token token_node_size "node_size"
 %token token_data "data"
@@ -68,60 +71,74 @@ input:  nodes potentials {
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
-
   reset_timeinit();
 
   if(parsedVars2Graph() != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-
   if(Graph2JTree() != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-
   if(parsedPots2JTree() != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-
 #ifdef DEBUG_BISON
   print_parsed_stuff();
 #endif
-
   reset_initData();}
 
-| token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
-
-  free($2); /* the classname is useless */
-
+/* optional net block */
+|  netDeclaration nodes potentials {
   if(time2Vars() != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
-
   reset_timeinit();
 
   if(parsedVars2Graph() != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-
   if(Graph2JTree() != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-
   if(parsedPots2JTree() != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-
 #ifdef DEBUG_BISON
   print_parsed_stuff();
 #endif
+  reset_initData();}
 
+/* possible old class statement */
+| token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
+  free($2); /* the classname is useless */
+  if(time2Vars() != NO_ERROR){
+    yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
+    YYABORT;
+  }
+  reset_timeinit();
+
+  if(parsedVars2Graph() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
+  if(Graph2JTree() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
+  if(parsedPots2JTree() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
+#ifdef DEBUG_BISON
+  print_parsed_stuff();
+#endif
   reset_initData();}
 ;
 
@@ -138,26 +155,51 @@ potentials:    /* empty */ {/* list of initialisation data ready */}
 
 nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   int retval;
-  char *nip_next;
+  char *nip_next = get_nip_next();
   char *label = get_nip_label();
   char **states = get_nip_statenames();
+  
+  /* have to check that all the necessary fields were included */
+  if(label == NULL)
+    asprintf(&label, " "); /* default label is empty */
+
+  if(states == NULL){
+    free(label);
+    set_nip_label(NULL);
+    asprintf(&label, "NIP parser: The states field is missing (node %s)", $2);
+    yyerror(label);
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free($2);
+    free(label);
+    free(nip_next);
+    set_nip_next(NULL);
+    YYABORT;
+  }
+
   variable v = new_variable($2, label, states, get_nip_strings_parsed());
 
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free($2);
     free(label);
+    set_nip_label(NULL);
+    free(nip_next);
+    set_nip_next(NULL);
     reset_strings(); /* frees the original parsed statenames */
     YYABORT;
   }
   set_variable_position(v); /* sets the parsed position values */
+  set_parser_node_position(0, 0); /* reset */
 
-  if((nip_next = get_nip_next()) != NULL){
+  if(nip_next != NULL){
     retval = add_time_init(v, nip_next);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free($2);
       free(label);
+      set_nip_label(NULL);
+      free(nip_next);
+      set_nip_next(NULL);
       reset_strings(); /* frees the original parsed statenames */
       free_variable(v);
       YYABORT;
@@ -169,28 +211,54 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   reset_strings(); /* frees the original parsed statenames */
   set_nip_next(NULL);
   $$ = v;}
+
 |    token_discrete token_node UNQUOTED_STRING '{' node_params '}' {
   int retval;
-  char *nip_next;
+  char *nip_next = get_nip_next();
   char *label = get_nip_label();
   char **states = get_nip_statenames();
+  
+  /* have to check that all the necessary fields were included */
+  if(label == NULL)
+    asprintf(&label, " "); /* default label is empty */
+
+  if(states == NULL){
+    free(label);
+    set_nip_label(NULL);
+    asprintf(&label, "NIP parser: The states field is missing (node %s)", $3);
+    yyerror(label);
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    free($3);
+    free(label);
+    free(nip_next);
+    set_nip_next(NULL);
+    YYABORT;
+  }
+
   variable v = new_variable($3, label, states, get_nip_strings_parsed());
 
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free($3);
     free(label);
+    set_nip_label(NULL);
+    free(nip_next);
+    set_nip_next(NULL);
     reset_strings(); /* frees the original parsed statenames */
     YYABORT;
   }
   set_variable_position(v); /* sets the parsed position values */
+  set_parser_node_position(0, 0); /* reset */
 
-  if((nip_next = get_nip_next()) != NULL){
+  if(nip_next != NULL){
     retval = add_time_init(v, nip_next);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free($3);
       free(label);
+      set_nip_label(NULL);
+      free(nip_next);
+      set_nip_next(NULL);
       reset_strings(); /* frees the original parsed statenames */
       free_variable(v);
       YYABORT;
@@ -204,50 +272,53 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   $$ = v;}
 
 | token_continuous token_node UNQUOTED_STRING '{' ignored_params '}' { 
-  /* FIXME: this may be a little buggy... */ 
   char *nip_next = get_nip_next();
   char *label = get_nip_label();
-  char **states = get_nip_statenames();
-  variable v = new_variable($3, label, states, get_nip_strings_parsed());
-  free_variable(v);
-  yyerror("NET parser: Continuous variables are not supported.");
+  free(label);
+  set_nip_label(NULL);
+  asprintf(&label, "NET parser: Continuous variables (node %s) %s", $3, 
+	   "are not supported.");
+  yyerror(label);
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   free($3);
+  free(label);
   free(nip_next);
-  reset_strings();
   set_nip_next(NULL);
+  reset_strings();
   YYABORT;
   $$=NULL;}
 
 | token_utility UNQUOTED_STRING '{' ignored_params '}' { 
-  /* FIXME: this may be a little buggy... */ 
   char *nip_next = get_nip_next();
   char *label = get_nip_label();
-  char **states = get_nip_statenames();
-  variable v = new_variable($2, label, states, get_nip_strings_parsed());
-  free_variable(v);
-  yyerror("Utility nodes are not supported.");
+  free(label);
+  set_nip_label(NULL);
+  asprintf(&label, "NET parser: Utility nodes (node %s) %s", $2, 
+	   "are not supported.");
+  yyerror(label);
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   free($2);
+  free(label);
   free(nip_next);
-  reset_strings();
   set_nip_next(NULL);
+  reset_strings();
   YYABORT;
   $$=NULL;}
 
 | token_decision UNQUOTED_STRING '{' ignored_params '}' { 
-  /* FIXME: this may be a little buggy... */ 
   char *nip_next = get_nip_next();
   char *label = get_nip_label();
-  char **states = get_nip_statenames();
-  variable v = new_variable($2, label, states, get_nip_strings_parsed());
-  free_variable(v);
-  yyerror("Decision nodes are not supported.");
+  free(label);
+  set_nip_label(NULL);
+  asprintf(&label, "NET parser: Decision nodes (node %s) %s", $2, 
+	   "are not supported.");
+  yyerror(label);
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   free($2);
+  free(label);
   free(nip_next);
-  reset_strings();
   set_nip_next(NULL);
+  reset_strings();
   YYABORT;
   $$=NULL;}
 ;
@@ -266,6 +337,9 @@ node_params: /* end of definitions */
 |            labelDeclaration node_params { set_nip_label($1); }
 |            nextDeclaration node_params { set_nip_next($1); }
 |            positionDeclaration node_params
+;
+
+netDeclaration: token_net '{' parameters '}' { /* did enough already */ }
 ;
 
 parameters:    /* end of definitions */
@@ -500,6 +574,13 @@ yylex (void)
   /* Multicharacter tokens */
   else{
     /* Literal string tokens */ 
+
+    /* net */
+    if(tokenlength == 3 && strncmp("net", token, 3) == 0){
+      free(token);
+      return token_net;
+    }
+
     if(tokenlength == 4){
       /* node */
       if(strncmp("node", token, 4) == 0){

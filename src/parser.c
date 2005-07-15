@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.104 2005-07-07 14:18:39 jatoivol Exp $
+ * $Id: parser.c,v 1.105 2005-07-15 13:52:27 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1018,7 +1018,7 @@ void reset_doubles(){
 
 
 /* Removes everything from the list of strings and resets the counter. 
- * The actual memory for the strings is not freed, only the list. */
+ * The actual memory for the strings is not freed also. */
 void reset_strings(){
   int i;
   stringlink ln = nip_last_string;

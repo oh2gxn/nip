@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.104 2005-07-14 14:57:04 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.105 2005-07-15 13:52:27 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -14,6 +14,9 @@
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
+
+/* write new kind of net files (net language rev.2) */
+#define NET_LANG_V2
 
 /*
 #define DEBUG_NIP
@@ -259,6 +262,13 @@ int write_model(nip model, char* name){
   int *map = NULL;
   clique c = NULL;
   potential p = NULL;
+  char *indent;
+
+#ifdef NET_LANG_V1
+  indent = "    ";
+#else
+  indent = "";
+#endif
 
   /* form the filename */
   filename = (char*) calloc(strlen(name) + 5, sizeof(char));
@@ -289,12 +299,21 @@ int write_model(nip model, char* name){
   /** Lets print the NET file **/
 
   /** standard stuff in the beginning **/
+#ifdef NET_LANG_V1
   fprintf(f, "class %s \n", name);
-  fputs("{ \n", f);
-  fputs("    inputs = (); \n", f);
-  fputs("    outputs = (); \n", f);
-  fprintf(f, "    node_size = (%d %d); \n", 
+#else
+  fputs("net\n", f);
+#endif
+  fputs("{\n", f);
+#ifdef NET_LANG_V1
+  fputs("    inputs = ();\n", f);
+  fputs("    outputs = ();\n", f);
+#endif
+  fprintf(f, "    node_size = (%d %d);\n", 
 	model->node_size_x, model->node_size_y);
+#ifndef NET_LANG_V1
+  fputs("}\n", f);
+#endif
 
   /** the variables **/
   for(i = 0; i < model->num_of_vars; i++){
@@ -302,17 +321,17 @@ int write_model(nip model, char* name){
     n = number_of_values(v)-1;
     get_position(v, &x, &y);
     fputs("\n", f);
-    fprintf(f, "    node %s \n", get_symbol(v));
-    fputs("    { \n", f);
-    fprintf(f, "        label = \"%s\"; \n", v->name);
-    fprintf(f, "        position = (%d %d); \n", x, y);
-    fprintf(f, "        states = (");
+    fprintf(f, "%snode %s\n", indent, get_symbol(v));
+    fprintf(f, "%s{\n", indent);
+    fprintf(f, "%s    label = \"%s\";\n", indent, v->name);
+    fprintf(f, "%s    position = (%d %d);\n", indent, x, y);
+    fprintf(f, "%s    states = (", indent);
     for(j = 0; j < n; j++)
-      fprintf(f, " \"%s\" \n                  ", v->statenames[j]);
-    fprintf(f, " \"%s\" ); \n", v->statenames[n]);
+      fprintf(f, " \"%s\" \n%s              ", v->statenames[j], indent);
+    fprintf(f, " \"%s\" );\n", v->statenames[n]);
     if(v->next)
-      fprintf(f, "        NIP_next = \"%s\"; \n", get_symbol(v->next));
-    fputs("    } \n", f);
+      fprintf(f, "%s    NIP_next = \"%s\";\n", indent, get_symbol(v->next));
+    fprintf(f, "%s}\n", indent);
     fflush(f);
   }
 
@@ -322,13 +341,13 @@ int write_model(nip model, char* name){
     n = number_of_values(v) - 1;
     fputs("\n", f);
     /* independent variables have priors */
-    fprintf(f, "    potential (%s) \n", get_symbol(v));
-    fputs("    { \n", f);
-    fputs("        data = ( ", f);
+    fprintf(f, "%spotential (%s)\n", indent, get_symbol(v));
+    fprintf(f, "%s{\n", indent);
+    fprintf(f, "%s    data = ( ", indent);
     for(j = 0; j < n; j++)
       fprintf(f, "%f  ", v->prior[j]);
-    fprintf(f, "%f ); \n", v->prior[n]);
-    fputs("    } \n", f);
+    fprintf(f, "%f );\n", v->prior[n]);
+    fprintf(f, "%s}\n", indent);
     fflush(f);
   }
 
@@ -338,12 +357,12 @@ int write_model(nip model, char* name){
     n = number_of_parents(v) - 1;
     fputs("\n", f);
     /* child variables have conditional distributions */
-    fprintf(f, "    potential (%s | ", get_symbol(v));
+    fprintf(f, "%spotential (%s | ", indent, get_symbol(v));
     for(j = n; j > 0; j--) /* Hugin fellas put parents in reverse order */
       fprintf(f, "%s ", get_symbol(v->parents[j]));
     fprintf(f, "%s)\n", get_symbol(v->parents[0]));
-    fputs("    { \n", f);
-    fputs("        data = (", f);
+    fprintf(f, "%s{ \n", indent);
+    fprintf(f, "%s    data = (", indent);
 
     n++; /* number of parents */
     temp = (int*) calloc(n+1, sizeof(int));
@@ -374,17 +393,19 @@ int write_model(nip model, char* name){
     /* print the stuff */
     for(j = 0; j < p->size_of_data; j++){
       if(j > 0 && j % n == 0)
-	fputs("\n                ", f);
+	fprintf(f, "\n%s            ", indent);
       fprintf(f, " %f ", p->data[j]);
     }
-    fputs("); \n", f);
-    fputs("    } \n", f);
+    fputs(");\n", f);
+    fprintf(f, "%s}\n", indent);
     free(temp);
     free_potential(p);
     fflush(f);
   }
 
+#ifdef NET_LANG_V1
   fputs("} \n", f); /* the last brace */
+#endif
 
   /* close the file */
   if(fclose(f)){
