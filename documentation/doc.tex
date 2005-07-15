@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.5 2005-07-14 14:57:25 jatoivol Exp $
+% $Id: doc.tex,v 1.6 2005-07-15 13:52:44 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -1345,30 +1345,36 @@ if they had different variables.
 \section{The Hugin net language parser}
 \subsection{General}
 The probabilistic models are defined using so-called {\it net language} 
-defined by Hugin Expert A/S. Documentation about Hugin net language can 
+developed by Hugin Expert A/S. Documentation about Hugin net language can 
 be found at \\
 \verb+http://developer.hugin.com/documentation/net/+
 \footnote{Cited 14.7.2005}, but here is an introduction to the implemented
-parser which is based on the first, a little restricted, revision of the 
+parser which is based on the first, a slightly restricted, revision of the 
 language.
 
 \subsubsection{Classes}
 The parser assumes that each net file contains only one model which is
-denoted as a {\it class} in net language. All the meaningful content 
-(i.e. not including whitespace nor the comments) may optionally be enclosed 
-in a class statement. Such a statement begins with the keyword 
-\textbf{class} followed by the name of the model and the enclosing braces 
-(\{ and \}). The implemented parser does not mind if the actual content 
-of the file is not enclosed in a class statement as long as there are no 
-extra braces, class keywords or otherwise incomplete definitions.
+denoted as a {\it class} in net language. All the meaningful content
+(i.e. not including whitespace nor comments) may optionally be enclosed in
+a class statement. Such a statement begins with the keyword \textbf{class}
+followed by the name of the model and the braces (\{ and \}) enclosing all
+the other content. The implemented parser does not mind if the actual
+content of the file is not enclosed in a class statement as long as there
+are no extra braces, class keywords or otherwise incomplete definitions.
 
-
+% inputs, outputs, node_size and other fields in net statement or not
 
 \subsubsection{Nodes}
 
+% statement
+
+% label, position, states, NIP_next and other fields
 
 \subsubsection{Potentials}
-Both structured and unstructured data fields...
+
+% statement
+
+% Both structured and unstructured data fields...
 
 % TODO...
 
@@ -1907,13 +1913,22 @@ mentioned in the XXX. Because we have to dynamically update the
 \section{The timeslice-monster}
 
 
-\newpage
-\chapter{Comments}
-
-
-\newpage
-%\appendix
 %\newpage
+%\chapter{Comments}
+
+
+\newpage
+\appendix
+\renewcommand{\thesection}{A-\arabic{section}}
+% redefine the command that creates the equation no.
+\setcounter{section}{0}  % reset counter 
+\section*{APPENDIX}  % use *-form to suppress numbering
+
+
+\section{Net language example}
+\VerbatimInput{example.net}
+
+\newpage
 \bibliography{doc}
 
 \end{document}
