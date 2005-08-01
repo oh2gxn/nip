@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.62 2005-07-15 13:52:27 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.63 2005-08-01 06:42:01 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -158,6 +158,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   char *nip_next = get_nip_next();
   char *label = get_nip_label();
   char **states = get_nip_statenames();
+  variable v = NULL;
   
   /* have to check that all the necessary fields were included */
   if(label == NULL)
@@ -176,7 +177,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     YYABORT;
   }
 
-  variable v = new_variable($2, label, states, get_nip_strings_parsed());
+  v = new_variable($2, label, states, get_nip_strings_parsed());
 
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
