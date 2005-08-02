@@ -1,3 +1,10 @@
+/* hmmtest.c
+ *
+ * Experimental time slice stuff for Hidden Markov Models (HMM).
+ * Prints a MAP estimate for the hidden variable during the first
+ * time series in the given data file.
+ */
+
 #include <stdlib.h>
 #include <assert.h>
 #include "parser.h"

@@ -1,18 +1,23 @@
+/* em_test.c
+ *
+ * Reads the structure for the model from a Hugin NET file, 
+ * uses EM-algorithm for learning the parameters from the 
+ * given data file and writes the estimated model to the 
+ * specified output file. 
+ *
+ * SYNOPSIS: EM_TEST <ORIGINAL.NET> <DATA.TXT> <THRESHOLD> <RESULT>
+ * (resulting model will be written to the file <RESULT>.net) 
+ *
+ * EXAMPLE: ./em_test model1.net data.txt 0.00001 model2
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <float.h>
 #include <math.h>
-
 #include "nip.h"
 #include "variable.h"
-
-/* Reads an initial guess for the model from a Hugin NET file, 
- * uses EM-algorithm for learning the parameters from the 
- * given data file and writes the resulting model to the 
- * specified output file. 
- * SYNOPSIS: EM_TEST <ORIGINAL.NET> <DATA.TXT> <THRESHOLD> <RESULT>
- * (resulting model will be written to the file <result.net>) */
 
 int main(int argc, char *argv[]) {
 
