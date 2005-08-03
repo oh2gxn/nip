@@ -157,6 +157,7 @@ int main(int argc, char *argv[]){
       fprintf(f, "%s \n", (temp->statenames)[k]);
     }
     fputs("\n", f); /* space between time series */
+    free_uncertainseries(ucs); /* remember to free ucs */
   }
 
   printf("\n"); /* new line for the prompt */
@@ -171,7 +172,6 @@ int main(int argc, char *argv[]){
   for(i = 0; i < n_max; i++)
     free_timeseries(ts_set[i]);
   free(ts_set);
-  free_uncertainseries(ucs);
   free_model(model);
   
   return 0;
