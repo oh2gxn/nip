@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.105 2005-07-15 13:52:27 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.106 2005-08-16 16:22:53 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1505,7 +1505,7 @@ static int e_step(time_series ts, potential* parameters,
 
     /* This computes log likelihood of <ts> */
     /*** Watch out for missing data etc. ***/
-    j = 0;
+    j = 0; /* number of really observed variables for this time slice*/
     for(i = 0; i < nobserved; i++){
       if(ts->data[t][i] >= 0){
 	data[j] = ts->data[t][i];

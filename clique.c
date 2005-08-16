@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.18 2005-07-14 14:57:03 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.19 2005-08-16 16:22:53 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1429,8 +1429,15 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   sepset s;
   clique c;
   
-  if(start == NULL || vars == NULL || n_vars < 1){ 
-    /* error? */
+  /* error? */
+  if(start == NULL || n_vars < 0){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return NULL;
+  }
+  if(n_vars == 0)
+    return make_potential(NULL, 0, NULL); /* NOTE: verify correctness!? */
+  if(vars == NULL){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
@@ -1493,8 +1500,10 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   }
   for(i = 0; i < nuv; i++)
     cardinality[i] = number_of_values(union_vars[i]);
-  /* possibly HUGE potential array ! */
+
+  /* ### possibly HUGE potential array ! ### */
   product = make_potential(cardinality, nuv, NULL); 
+
   /* free(cardinality);
    * reuse the larger cardinality array: nuv >= n_vars */
 

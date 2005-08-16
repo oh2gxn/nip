@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.10 2005-06-23 11:07:34 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.11 2005-08-16 16:22:53 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) data file with one step,
  * 3) names of wanted variables
@@ -78,9 +78,16 @@ int main(int argc, char *argv[]){
     }
   }
   else{ /* argc == 3 */
-    /* else we just take the hidden variables */
-    num_of_vars = ts->num_of_hidden;
-    vars = ts->hidden;
+    if(ts->num_of_hidden > 0){
+      /* else we just take the hidden variables */
+      num_of_vars = ts->num_of_hidden;
+      vars = ts->hidden;
+    }
+    else{
+      /* or only the first observed variable */
+      num_of_vars = 1;
+      vars = ts->observed;
+    }
   }
   /* The inputs have been parsed. -- */
   
