@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.11 2005-08-16 16:22:53 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.12 2005-08-17 14:04:59 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) data file with one step,
  * 3) names of wanted variables
@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include "parser.h"
 #include "clique.h"
 #include "variable.h"
@@ -26,6 +27,8 @@ int main(int argc, char *argv[]){
   time_series *ts_set = NULL;
   variable v = NULL;
   variable *vars = NULL;
+
+  double m1, m2;
 
   /*****************************************/
   /* Parse the model from a Hugin NET file */
@@ -49,17 +52,18 @@ int main(int argc, char *argv[]){
     return -1;
   ts = ts_set[0];
 
-  /**********************/
-  /* Compute likelihood */
-  /**********************/
-  if(timeseries_length(ts) > 0)
-    printf("Log. likelihood: %f \n", 
-	   momentary_loglikelihood(model, ts->observed, ts->data[0], 
-				   model->num_of_vars - ts->num_of_hidden));
-  
-  /* enter the evidence and distribute it */
+  make_consistent(model); /* no side effects ? */
+
+  /* compute probability mass before entering evidence */
+  m1 = probability_mass(model->cliques, model->num_of_cliques);
+
+  /* enter the evidence... */
   i = insert_ts_step(ts, 0, model);
+  /* ...and distribute it */
   make_consistent(model);
+
+  /* compute probability mass after making the model consistent */
+  m2 = probability_mass(model->cliques, model->num_of_cliques);
   
   /* It's possible to select the variables as
    * the third...N'th command line parameters.
@@ -103,6 +107,10 @@ int main(int argc, char *argv[]){
   }
   printf("%s) equals: \n", get_symbol(vars[num_of_vars-1]));
   print_potential(result);
+
+  printf("Mass before evidence: m1 = %g\n", m1);
+  printf("Mass after evidence : m2 = %g\n", m2);
+  printf("Log. likelihood: ln(m2/m1) = %g\n", log(m2/m1));
   
   free(vars);
   free_potential(result);

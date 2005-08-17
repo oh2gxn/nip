@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.19 2005-08-16 16:22:53 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.20 2005-08-17 14:04:59 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include "clique.h"
 #include "variable.h"
 #include "potential.h"
@@ -28,14 +29,16 @@ static int var_index(clique c, variable v);
 
 static int clique_search(clique one, clique two);
 
-static void jtree_dfs(clique start, void (*cFuncPointer)(clique),
-		      void (*sFuncPointer)(sepset));
-
 static int clique_marked(clique c);
 
-static void retract_clique(clique c);
-
-static void retract_sepset(sepset s);
+static void jtree_dfs(clique start, 
+		      void (*cFuncPointer)(clique, double*),
+		      void (*sFuncPointer)(sepset, double*),
+		      double* ptr);
+static void  retract_clique(clique c, double* ptr);
+static void  retract_sepset(sepset s, double* ptr);
+static void     clique_mass(clique c, double* ptr);
+static void neg_sepset_mass(sepset s, double* ptr);
 
 static void remove_sepset(clique c, sepset s);
 
@@ -531,20 +534,17 @@ double *reorder_potential(variable vars[], potential p){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return NULL;
   }
-
   old_indices = (int *) calloc(p->num_of_vars, sizeof(int));
   if(!old_indices){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
-
   new_indices = (int *) calloc(p->num_of_vars, sizeof(int));
   if(!new_indices){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(old_indices);
     return NULL;
   }
-
   new_card = (int *) calloc(p->num_of_vars, sizeof(int));
   if(!new_card){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -552,7 +552,6 @@ double *reorder_potential(variable vars[], potential p){
     free(new_indices);
     return NULL;
   }
-
   new_data = (double *) calloc(p->size_of_data, sizeof(double));
   if(!new_data){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -561,13 +560,10 @@ double *reorder_potential(variable vars[], potential p){
     free(new_card);
     return NULL;
   }
-
-
   for(old_flat_index = 0; old_flat_index < p->size_of_data; old_flat_index++){
 
     /* 1. old_flat_index -> old_indices (inverse_mapping) */
     inverse_mapping(p, old_flat_index, old_indices);
-
 
     /* FIXME: This is totally wrong. */
     /* 2. "old_indices" is re-ordered according to "variables"
@@ -607,9 +603,6 @@ double *reorder_potential(variable vars[], potential p){
     }
     /* <\totally wrong> */
 
-
-
-
     /* 3. new_indices -> new_flat_index (look at get_ppointer()) */
     new_flat_index = 0;
     card_temp = 1;
@@ -631,7 +624,6 @@ double *reorder_potential(variable vars[], potential p){
 
   /* Pointer to allocated memory. Potential p remains alive also. */
   return new_data;
-
 }
 
 
@@ -946,7 +938,7 @@ int global_retraction(variable* vars, int nvars, clique* cliques,
     unmark_clique(cliques[index]);
 
   /* Reset all the potentials back to original. */
-  jtree_dfs(cliques[0], retract_clique, retract_sepset);
+  jtree_dfs(cliques[0], retract_clique, retract_sepset, NULL);
 
   /* Enter evidence back to the join tree. */
   for(i = 0; i < nvars; i++){
@@ -1225,8 +1217,7 @@ int find_sepsets(clique *cliques, int num_of_cliques){
 	free_heap(H);
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
-      }
-	
+      }	
       if(add_sepset(two, s) != NO_ERROR){
 	free_heap(H);
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1235,34 +1226,11 @@ int find_sepsets(clique *cliques, int num_of_cliques){
 
       inserted++;
     }
-
   }
 
   free_heap(H);
 
-#ifdef DEBUG_CLIQUE
-  for(i = 0; i < num_of_cliques - 1; i++)
-    for(j = i + 1; j < num_of_cliques; j++){
-
-      /* Unmark MUST be done before searching (clique_search). */
-      for(k = 0; k < num_of_cliques; k++)
-	unmark_clique(cliques[k]);
-
-      if(!clique_search(cliques[i], cliques[j])){
-	ok = 0;
-	printf("No connection between ");
-	print_clique(cliques[i]);
-
-	printf(" and ");
-	print_clique(cliques[j]);
-      }
-    }
-  if(ok)
-    printf("All connections between cliques are OK!\n");
-#endif
-
   return NO_ERROR;
-
 }
 
 
@@ -1275,11 +1243,6 @@ static int clique_search(clique one, clique two){
   sepset_link l = one->sepsets;
   sepset s;
 
-#ifdef DEBUG_CLIQUE
-  printf("clique_search in ");
-  print_clique(one);
-#endif
-
   if(one == NULL || two == NULL) /* normal situation or an error? */
     return 0; /* as in FALSE */
 
@@ -1290,27 +1253,14 @@ static int clique_search(clique one, clique two){
   if(one == two)
     return 1; /* TRUE (end of recursion) */
 
-#ifdef DEBUG_CLIQUE
-  if(l == NULL){
-    printf("In clique.c: No sepsets attached to ");
-    print_clique(one);
-  }
-#endif
-
   /* call neighboring cliques */
   while (l != NULL){
     s = (sepset)(l->data);
     if(!clique_marked(s->cliques[0])){
-#ifdef DEBUG_CLIQUE
-      printf("In clique_search: s->cliques[0] not marked.\n");
-#endif
       if(clique_search(s->cliques[0], two))
 	return 1; /* TRUE */
     }
     else if(!clique_marked(s->cliques[1])){
-#ifdef DEBUG_CLIQUE
-      printf("In clique_search: s->cliques[1] not marked.\n");
-#endif
       if(clique_search(s->cliques[1], two))
 	return 1; /* TRUE */
     }
@@ -1344,17 +1294,15 @@ void print_sepset(sepset s){
 }
 
 
-static void retract_clique(clique c){
+static void retract_clique(clique c, double* ptr){
   int i;
-
   for(i = 0; i < c->p->size_of_data; i++)
     c->p->data[i] = c->original_p->data[i];
 }
 
 
-static void retract_sepset(sepset s){
+static void retract_sepset(sepset s, double* ptr){
   int i;
-
   for(i = 0; i < s->old->size_of_data; i++){
     s->old->data[i] = 1;
     s->new->data[i] = 1;
@@ -1370,8 +1318,10 @@ static void retract_sepset(sepset s){
  * - a function pointer to the function to be used for every clique on the way
  * - a function pointer to the function to be used for every sepset on the way
  */
-static void jtree_dfs(clique start, void (*cFuncPointer)(clique),
-		      void (*sFuncPointer)(sepset)){
+static void jtree_dfs(clique start, 
+		      void (*cFuncPointer)(clique, double*),
+		      void (*sFuncPointer)(sepset, double*),
+		      double* ptr){
 
   /* a lot of copy-paste from collect/distribute_evidence and clique_search */
   sepset_link l = start->sepsets;
@@ -1384,23 +1334,59 @@ static void jtree_dfs(clique start, void (*cFuncPointer)(clique),
   start->mark = 1;
 
   if(cFuncPointer)
-    cFuncPointer(start); /* do it now or after the children ??? */
+    cFuncPointer(start, ptr); /* do it now or after the children ??? */
 
   /* call neighboring cliques */
   while (l != NULL){
     s = (sepset)(l->data);
     if(!clique_marked(s->cliques[0])){
       if(sFuncPointer)
-	sFuncPointer(s);
-      jtree_dfs(s->cliques[0], cFuncPointer, sFuncPointer);
+	sFuncPointer(s, ptr);
+      jtree_dfs(s->cliques[0], cFuncPointer, sFuncPointer, ptr);
     }
     else if(!clique_marked(s->cliques[1])){
       if(sFuncPointer)
-	sFuncPointer(s);
-      jtree_dfs(s->cliques[1], cFuncPointer, sFuncPointer);
+	sFuncPointer(s, ptr);
+      jtree_dfs(s->cliques[1], cFuncPointer, sFuncPointer, ptr);
     }
     l = l->fwd;
   }
+  return;
+}
+
+
+static void clique_mass(clique c, double* ptr){
+  int i;
+  double m = 0;
+  for(i = 0; i < c->p->size_of_data; i++)
+    m += c->p->data[i];
+  *ptr += m;
+  return;
+}
+
+static void neg_sepset_mass(sepset s, double* ptr){
+  int i;
+  double m = 0;
+  for(i = 0; i < s->new->size_of_data; i++)
+    m += s->new->data[i];
+  *ptr -= m;
+  return;
+}
+
+double probability_mass(clique* cliques, int ncliques){
+  int i;
+  double ret;
+
+  /* unmark all cliques */
+  for(i = 0; i < ncliques; i++)
+    unmark_clique(cliques[i]);
+
+  /* init */
+  ret = 0;
+
+  /* sum of the probability mass in cliques minus the mass in sepsets */
+  jtree_dfs(cliques[0], clique_mass, neg_sepset_mass, &ret);
+  return ret;
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.106 2005-08-16 16:22:53 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.107 2005-08-17 14:04:59 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1429,6 +1429,7 @@ static int e_step(time_series ts, potential* parameters,
   potential p;
   clique c = NULL;
   nip model = ts->model;
+  double m1, m2;
 
   /* Reserve some memory for calculation */
   nobserved = model->num_of_vars - ts->num_of_hidden;
@@ -1503,24 +1504,13 @@ static int e_step(time_series ts, potential* parameters,
 	return ERROR_GENERAL;
       }
 
-    /* This computes log likelihood of <ts> */
-    /*** Watch out for missing data etc. ***/
-    j = 0; /* number of really observed variables for this time slice*/
-    for(i = 0; i < nobserved; i++){
-      if(ts->data[t][i] >= 0){
-	data[j] = ts->data[t][i];
-	observed[j++] = ts->observed[i];
-      }
-    }
-    make_consistent(model);
-    *loglikelihood = (*loglikelihood) + 
-      momentary_loglikelihood(model, observed, data, j);
-
-    /* Put some data in */
-    insert_ts_step(ts, t, model);
-    
-    /* Do the inference */
-    make_consistent(model);
+    /* This computes the log likelihood (ratio of probability masses) */
+    m1 = model_prob_mass(model);
+    make_consistent(model);       /* ## Make the model consistent ## */
+    insert_ts_step(ts, t, model); /* ## Put some data in          ## */
+    make_consistent(model);       /* ## Do the inference          ## */
+    m2 = model_prob_mass(model);
+    *loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
     
     /* Start a message pass between timeslices */
     if(start_timeslice_message_pass(model, FORWARD,
@@ -1837,35 +1827,10 @@ int em_learn(time_series *ts, int n_ts, double threshold){
 }
 
 
-double momentary_loglikelihood(nip model, variable* observed, 
-			       int* indexed_data, int n_observed){
-  potential p;
-  double likelihood;
-
-  if(!observed || !n_observed)
-    return -DBL_MAX;
-
-  /* NOTE: the potential array will be ordered according to the 
-   * given variable-array, not the same way as clique potentials */
-  p = get_joint_probability(model, observed, n_observed); /* EXPENSIVE */
-  if(!p){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    return -DBL_MAX;
-  }
-  
-  /* we needed only one of the computed values */
-  likelihood = get_pvalue(p, indexed_data);
-  /* NOTE: I believe this could have been computed the same way as 
-   * artificial data is generated. First you check the likelihood 
-   * of data for parent variables, insert the data for parent variables, 
-   * and then multiply with the likelihood of child variables */
-
-  free_potential(p); /* Remember to free some memory */
-
-  if(likelihood > 0)
-    return log(likelihood); /* natural logarithm (a.k.a. ln) */
-  else
-    return -DBL_MAX;
+double model_prob_mass(nip model){
+  double m;
+  m = probability_mass(model->cliques, model->num_of_cliques);
+  return m;
 }
 
 

@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.39 2005-07-07 14:18:39 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.40 2005-08-17 14:04:59 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -213,9 +213,11 @@ time_series mlss(variable vars[], int nvars, time_series ts);
 int em_learn(time_series *ts, int n_ts, double threshold);
 
 
-/* Computes the logaritmic likelihood of the obseravations. */
-double momentary_loglikelihood(nip model, variable* observed, 
-			       int* indexed_data, int n_observed);
+/* Tells the likelihood of observations (not normalised). 
+ * You must normalise the result with the mass computed before 
+ * the evidence was put in. */
+double model_prob_mass(nip model);
+
 
 /*
  * Calculates the probability distribution of a variable.

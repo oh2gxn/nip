@@ -1,5 +1,5 @@
 /*
- * clique.h $Id: clique.h,v 1.4 2005-07-14 14:57:03 jatoivol Exp $
+ * clique.h $Id: clique.h,v 1.5 2005-08-17 14:04:59 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -148,8 +148,10 @@ void normalise(double result[], int array_size);
 
 /* Method for backing away from impossibilities in observation. */
 int global_retraction(variable* vars, int nvars, clique* cliques, 
-		      int num_of_cliques);
+		      int ncliques);
 
+/* ### Under construction... ### */
+double probability_mass(clique* cliques, int ncliques);
 
 /*
  * Function for entering an observation to a clique tree.
