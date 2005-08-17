@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.107 2005-08-17 14:04:59 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.108 2005-08-17 14:38:31 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -58,6 +58,9 @@ static int finish_timeslice_message_pass(nip model, int direction,
 
 static int e_step(time_series ts, potential* results, double* loglikelihood);
 static int m_step(potential* results, nip model);
+
+static double momentary_loglikelihood(nip model, variable* observed, 
+				      int* indexed_data, int n_observed);
 
 
 void reset_model(nip model){
@@ -1504,6 +1507,19 @@ static int e_step(time_series ts, potential* parameters,
 	return ERROR_GENERAL;
       }
 
+    /*** This used to compute the log likelihood ***/
+    /* Watch out for missing data etc. */
+    /* j = 0; */
+    /* for(i = 0; i < nobserved; i++){ */
+    /*   if(ts->data[t][i] >= 0){ */
+    /* 	   data[j] = ts->data[t][i]; */
+    /* 	   observed[j++] = ts->observed[i]; */
+    /*   } */
+    /* } */
+    /* make_consistent(model); */
+    /* *loglikelihood = (*loglikelihood) +  */
+    /* momentary_loglikelihood(model, observed, data, j); */
+
     /* This computes the log likelihood (ratio of probability masses) */
     m1 = model_prob_mass(model);
     make_consistent(model);       /* ## Make the model consistent ## */
@@ -1827,10 +1843,36 @@ int em_learn(time_series *ts, int n_ts, double threshold){
 }
 
 
+/* a little wrapper */
 double model_prob_mass(nip model){
   double m;
   m = probability_mass(model->cliques, model->num_of_cliques);
   return m;
+}
+
+
+/* This is just a naive idea we once had... */
+static double momentary_loglikelihood(nip model, variable* observed,
+				      int* indexed_data, int n_observed){
+  potential p;
+  double likelihood;
+  if(!observed || !n_observed)
+    return -DBL_MAX;
+  /* NOTE: the potential array will be ordered according to the 
+   * given variable-array, not the same way as clique potentials */
+  p = get_joint_probability(model, observed, n_observed); /* EXPENSIVE */
+  if(!p){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return -DBL_MAX;
+  }  
+  /* we needed only one of the computed values */
+  likelihood = get_pvalue(p, indexed_data);
+
+  free_potential(p); /* Remember to free some memory */
+  if(likelihood > 0)
+    return log(likelihood); /* natural logarithm (a.k.a. ln) */
+  else
+    return -DBL_MAX;
 }
 
 
