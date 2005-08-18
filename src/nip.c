@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.108 2005-08-17 14:38:31 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.109 2005-08-18 11:45:20 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -905,6 +905,9 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
+
+  /* DEBUG */
+  double m1, m2;
   
   /* Allocate an array */
   if(model->num_of_nexts > 0){
@@ -918,8 +921,6 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   /* Fill the array */
   for(i = 0; i < model->num_of_messengers; i++)
     cardinalities[i] = number_of_values(model->fwd_messengers[i]);
-
-
 
   /* Allocate some space for the results */
   results = (uncertain_series) malloc(sizeof(uncertain_series_type));
@@ -1013,12 +1014,21 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 	free_potential(timeslice_sepset);
 	return NULL;
       }
+
+    /* This is probably useless step */
+    make_consistent(model);
+
+    /* DEBUG: to see how the new likelihood computation is doing... */
+    m1 = model_prob_mass(model);
     
-    /* Put some data in (Q: should this be AFTER message passing) */
+    /* Put some data in */
     insert_ts_step(ts, t, model);
     
     /* Do the inference */
     make_consistent(model);
+
+    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
+    printf("Log.likelihood log(L(%d)) = %g\n", t, (log(m2) - log(m1)));
 
     /* Write the results */
     for(i = 0; i < results->num_of_vars; i++){      
@@ -1521,10 +1531,12 @@ static int e_step(time_series ts, potential* parameters,
     /* momentary_loglikelihood(model, observed, data, j); */
 
     /* This computes the log likelihood (ratio of probability masses) */
-    m1 = model_prob_mass(model);
     make_consistent(model);       /* ## Make the model consistent ## */
+    m1 = model_prob_mass(model);
+
     insert_ts_step(ts, t, model); /* ## Put some data in          ## */
     make_consistent(model);       /* ## Do the inference          ## */
+
     m2 = model_prob_mass(model);
     *loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
     
