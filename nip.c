@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.109 2005-08-18 11:45:20 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.110 2005-09-21 15:07:42 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -22,31 +22,31 @@
 #define DEBUG_NIP
 */
 
+/***********************************************************
+ * The time slice concept features some major difficulties 
+ * because the actual calculations are done in the join tree
+ * instead of the graph. The program should be able to 
+ * figure out how the join tree repeats itself and store 
+ * some kind of sepsets between the time slices... Note that 
+ * there can be only one sepset between two adjacent 
+ * time slices, because the join tree can't have loops. This 
+ * implies that the variables, which have links to the 
+ * variables in the next time slice, should be found in the 
+ * same clique.
+ *
+ */
+
+
 /***** 
  * TODO: 
+
+ * - Should "time slice sepsets" be included in the computation of 
+ *   likelihood of data?
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *   - another forward-like algorithm with elements of dynamic programming
  *   - To save huge amounts of memory, could the process use some kind of 
  *     "timeslice sepsets" for encoding the progress throughout time?
-
- 
- * - EM algorithm for estimating parameters of the model
- *   + Invent a concise and efficient way of computing each of the parameters.
- *     + one kind of solution:
- *       + build it around the forward-backward inference... (E-step)
- *       + due to the fact that the child is always the first variable in 
- *         the potentials defining the model, the M-step is quite trivial
- *
- *   + Find a neat way to replace the original parameters of the model.
- *     + gather a potential for each family of variables
- *     + initialise with saved potentials? (see parser.c line 1115)
- *
- *   - Determine the parameters of the algorithm
- *     - when to stop?
- *       + difference in the average loglikelihood of the timeseries...
- *       + loglikelihood should be calculated during E-step
-
  *****/
 
 extern int yyparse();
@@ -59,8 +59,8 @@ static int finish_timeslice_message_pass(nip model, int direction,
 static int e_step(time_series ts, potential* results, double* loglikelihood);
 static int m_step(potential* results, nip model);
 
-static double momentary_loglikelihood(nip model, variable* observed, 
-				      int* indexed_data, int n_observed);
+/* static double momentary_loglikelihood(nip model, variable* observed, 
+   int* indexed_data, int n_observed); */
 
 
 void reset_model(nip model){
@@ -609,8 +609,8 @@ int write_timeseries(time_series ts, char *filename){
   /* Write names of the variables */
   fprintf(f, "%s", get_symbol(ts->observed[0]));
   for(i = 1; i < n; i++){
-      v = ts->observed[i];
-      fprintf(f, ", %s", get_symbol(v));
+    v = ts->observed[i];
+    fprintf(f, ", %s", get_symbol(v));
   }
   fputs("\n", f);
 
@@ -660,6 +660,60 @@ void free_timeseries(time_series ts){
 
 int timeseries_length(time_series ts){
   return ts->length;
+}
+
+
+int write_uncertainseries(uncertain_series ucs, variable v, char *filename){
+  int i, n, t;
+  int v_index;
+  FILE *f = NULL;
+
+  n = number_of_values(v);
+  if(!(n>0 && ucs && filename)){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  v_index = -1; /* linear search */
+  for(i=0; i < ucs->num_of_vars; i++){
+    if(equal_variables(v, ucs->variables[i])){
+      v_index = i;
+      break;
+    }
+  }
+  if(v_index < 0){ /* no such variable in the UCS */
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  /* Try to open the file for write */
+  f = fopen(filename, "w");
+  if(!f){
+    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    return ERROR_IO;
+  }
+
+  /* Write names of the states */
+  fprintf(f, "%s", get_statename(v, 0));
+  for(i = 1; i < n; i++)
+    fprintf(f, ", %s", get_statename(v, i));
+  fputs("\n", f);
+
+  /* Write the data: probabilities... */
+  for(t = 0; t < ucs->length; t++){ /* ...for each time step... */
+
+    fprintf(f, "%f", ucs->data[t][v_index][0]); /* ...for each state. */
+    for(i = 1; i < n; i++) 
+      fprintf(f, ", %f", ucs->data[t][v_index][i]);      
+    fputs("\n", f);
+  }
+  
+  /* Close the file */
+  if(fclose(f)){
+    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    return ERROR_IO;
+  }
+  return NO_ERROR;
 }
 
 
@@ -1864,28 +1918,27 @@ double model_prob_mass(nip model){
 
 
 /* This is just a naive idea we once had... */
-static double momentary_loglikelihood(nip model, variable* observed,
-				      int* indexed_data, int n_observed){
-  potential p;
-  double likelihood;
-  if(!observed || !n_observed)
-    return -DBL_MAX;
-  /* NOTE: the potential array will be ordered according to the 
-   * given variable-array, not the same way as clique potentials */
-  p = get_joint_probability(model, observed, n_observed); /* EXPENSIVE */
-  if(!p){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    return -DBL_MAX;
-  }  
-  /* we needed only one of the computed values */
-  likelihood = get_pvalue(p, indexed_data);
-
-  free_potential(p); /* Remember to free some memory */
-  if(likelihood > 0)
-    return log(likelihood); /* natural logarithm (a.k.a. ln) */
-  else
-    return -DBL_MAX;
-}
+/* static double momentary_loglikelihood(nip model, variable* observed, */
+/* 				      int* indexed_data, int n_observed){ */
+/*   potential p; */
+/*   double likelihood; */
+/*   if(!observed || !n_observed) */
+/*     return -DBL_MAX; */
+/*   /\* NOTE: the potential array will be ordered according to the  */
+/*    * given variable-array, not the same way as clique potentials *\/ */
+/*  p = get_joint_probability(model, observed, n_observed);/\* EXPENSIVE *\/ */
+/*   if(!p){ */
+/*     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1); */
+/*     return -DBL_MAX; */
+/*   }   */
+/*   /\* we needed only one of the computed values *\/ */
+/*   likelihood = get_pvalue(p, indexed_data); */
+/*   free_potential(p); /\* Remember to free some memory *\/ */
+/*   if(likelihood > 0) */
+/*     return log(likelihood); /\* natural logarithm (a.k.a. ln) *\/ */
+/*   else */
+/*     return -DBL_MAX; */
+/* } */
 
 
 double *get_probability(nip model, variable v){

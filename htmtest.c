@@ -17,22 +17,6 @@
 #include "errorhandler.h"
 #include "nip.h"
 
-/***********************************************************
- * The time slice concept features some major difficulties 
- * because the actual calculations are done in the join tree
- * instead of the graph. The program should be able to 
- * figure out how the join tree repeats itself and store 
- * some kind of sepsets between the time slices... Note that 
- * there can be only one sepset between two adjacent 
- * time slices, because the join tree can't have loops. This 
- * implies that the variables, which have links to the 
- * variables in the next time slice, can be found in the 
- * same clique.
- *
- * (JJT: Currently, the problems seem to be solved.)
- */
-
-
 int main(int argc, char *argv[]){
 
   int i, j, n, t = 0;
@@ -65,7 +49,6 @@ int main(int argc, char *argv[]){
   /*****************************/
   /* read the data from a file */
   /*****************************/
-
   n = read_timeseries(model, argv[2], &ts_set);
 
   if(n < 1){
@@ -96,7 +79,7 @@ int main(int argc, char *argv[]){
    * + print the result
    * + reset model
    */
-
+  
   printf("## Forward phase ##\n");  
 
   ucs = forward_inference(ts, ts->hidden, ts->num_of_hidden);

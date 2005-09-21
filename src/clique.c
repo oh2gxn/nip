@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.20 2005-08-17 14:04:59 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.21 2005-09-21 15:07:42 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -157,9 +157,9 @@ void free_clique(clique c){
   l1 = c->sepsets;
   while(l1 != NULL){
     l2 = l1->fwd;
-    cl1 = ((sepset)l1->data)->cliques[0];
-    cl2 = ((sepset)l1->data)->cliques[1];
     s = (sepset)l1->data;
+    cl1 = s->cliques[0];
+    cl2 = s->cliques[1];
 
     /* Removes sepsets from the cliques. */
     remove_sepset(cl1, s);
@@ -1272,25 +1272,24 @@ static int clique_search(clique one, clique two){
 
 
 void print_clique(clique c){
-
   int i;
-
   printf("clique ");
+  /*printf("( ");*/
   for(i = 0; i < c->p->num_of_vars; i++)
     printf("%s ", c->variables[i]->symbol);
+  /*printf(")");*/
   printf("\n");
-
 }
 
 
 void print_sepset(sepset s){
   int i;
-
   printf("sepset ");
+  /*printf("[ ");*/
   for(i = 0; i < s->old->num_of_vars; i++)
     printf("%s ", s->variables[i]->symbol);
+  /*printf("]");*/
   printf("\n");
-
 }
 
 

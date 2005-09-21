@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.40 2005-08-17 14:04:59 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.41 2005-09-21 15:07:42 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -130,6 +130,10 @@ void free_timeseries(time_series ts);
 
 /* Tells the length of the time series. */
 int timeseries_length(time_series ts);
+
+
+/* Writes the inferred probabilities of given variable into a file. */
+int write_uncertainseries(uncertain_series ucs, variable v, char* filename);
 
 
 /* A method for freeing the memory used by an uncertain time series. */

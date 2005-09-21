@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.45 2005-08-02 15:35:32 jatoivol Exp $
+# $Id: Makefile,v 1.46 2005-09-21 15:07:42 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -19,6 +19,7 @@ EM_SRCS=$(HMM_SRCS)
 MLT_SRCS=$(HMM_SRCS)
 GEN_SRCS=$(HMM_SRCS)
 MAP_SRCS=$(HMM_SRCS)
+INF_SRCS=$(HMM_SRCS)
 
 # XXX Replace "cliquetest" below with the name you want for your program!
 POT_TARGET=potentialtest
@@ -35,9 +36,11 @@ EM_TARGET=em_test
 MLT_TARGET=memleaktest
 GEN_TARGET=gen_test
 MAP_TARGET=maptest
+INF_TARGET=inftest
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
 $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
-$(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET)
+$(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) \
+$(INF_TARGET)
 
 # Sets the name and some flags for the C compiler and linker
 CC=gcc
@@ -74,9 +77,10 @@ JNT_OBJS=$(JNT_SRCS:.c=.o) joint_test.o
 EM_OBJS=$(EM_SRCS:.c=.o) em_test.o
 GEN_OBJS=$(GEN_SRCS:.c=.o) gen_test.o
 MAP_OBJS=$(MAP_SRCS:.c=.o) maptest.o
+INF_OBJS=$(INF_SRCS:.c=.o) inftest.o
 OBJS=$(HTM_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o \
 bisontest.o iotest.o datafiletest.o hmmtest.o memleaktest.o joint_test.o \
-em_test.o gen_test.o maptest.o
+em_test.o gen_test.o maptest.o inftest.o
 
 # Rules for make
 # The first rule tells make what to do by default: compile the program
@@ -86,7 +90,7 @@ em_test.o gen_test.o maptest.o
 # \t<command>
 all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) \
 $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) $(MLT_TARGET) \
-$(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET)
+$(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET)
 
 # The program depends on the object files in $(OBJS). Make knows how
 # to compile a .c file into an object (.o) file; this rule tells it
@@ -132,6 +136,9 @@ $(GEN_TARGET): $(GEN_OBJS) $(HUG_OBJS)
 
 $(MAP_TARGET): $(MAP_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(MAP_OBJS) $(LIBS)
+
+$(INF_TARGET): $(INF_OBJS) $(HUG_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(INF_OBJS) $(LIBS)
 
 $(HUG_SRCS): $(HUG_DEFS)
 	$(YY) $(YYFLAGS) $(HUG_DEFS)
