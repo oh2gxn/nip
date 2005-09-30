@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.21 2005-09-21 15:07:42 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.22 2005-09-30 14:25:49 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -997,6 +997,8 @@ int enter_evidence(variable* vars, int nvars, clique* cliques,
   int retraction = 0;
   int retval;
   clique c;
+
+  /* TODO: why evidence is NULL in some cases? */
 
   if(v == NULL || evidence == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
