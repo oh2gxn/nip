@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
   /* Parse the model from a Hugin NET file */
   /*****************************************/
   if(argc < 4){
-    printf("Specify the names of the net file and input/output data files.\n");
+    printf("Specify the names of the net file and input data file, variable and output data file.\n");
     return 0;
   }
   else{
