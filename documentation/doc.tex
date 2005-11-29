@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.6 2005-07-15 13:52:44 jatoivol Exp $
+% $Id: doc.tex,v 1.7 2005-11-29 18:27:24 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -907,7 +907,7 @@ previously by Eq.~\ref{potentialmultiplication}
 % entering evidence 
 The next step is entering evidence into the join tree. First, e.g. for a
 single variable $V$, we need to encode the observation as a
-likelihood~$\Lambda_V^{new}$, which tells the probabilities for each state
+likelihood~$\lambda_V^{new}$, which tells the probabilities for each state
 of the variable. Then we multiply the potential of a suitable clique
 $\mathbf{X}$, containing the variable i.e. $V \in \mathbf{X}$, by the new
 likelihood. In the case of dynamic observations, the possible old
@@ -915,14 +915,14 @@ likelihood of the variable has to be canceled away from the clique
 potential with an element-wise division.
 %
 \begin{equation}
-\phi_\mathbf{X} \leftarrow \phi_\mathbf{X}\frac{\Lambda_V^{new}}{\Lambda_V}
+\phi_\mathbf{X} \leftarrow \phi_\mathbf{X}\frac{\lambda_V^{new}}{\lambda_V}
 \end{equation}
 %
-The previous likelihood of the variable, denoted by $\Lambda_V$, 
+The previous likelihood of the variable, denoted by $\lambda_V$, 
 is updated after the observation entry.
 %
 \begin{equation}
-\Lambda_V \leftarrow \Lambda_V^{new}.
+\lambda_V \leftarrow \lambda_V^{new}.
 \end{equation}
 
 % propagation by distributing and collecting evidence
