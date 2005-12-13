@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.110 2005-09-21 15:07:42 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.111 2005-12-13 13:37:16 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -798,7 +798,7 @@ int insert_soft_evidence(nip model, char* varname, double* distribution){
 /* note that <model> may be different from ts->model */
 int insert_ts_step(time_series ts, int t, nip model){
   int i;
-  if(t > timeseries_length(ts))
+  if(t < 0 || t > timeseries_length(ts))
     return ERROR_INVALID_ARGUMENT;
     
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++){
