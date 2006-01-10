@@ -20,6 +20,8 @@
 #include "errorhandler.h"
 #include "nip.h"
 
+#define PRINT_CLIQUE_TREE
+
 /* contains some copy-paste from write_timeseries in nip.c */
 
 int main(int argc, char *argv[]){
@@ -37,7 +39,8 @@ int main(int argc, char *argv[]){
   /* Parse the model from a Hugin NET file */
   /*****************************************/
   if(argc < 4){
-    printf("Specify the names of the net file and input data file, variable and output data file.\n");
+    printf("Specify the names of the net file, input data file, ");
+    printf("variable, and output data file.\n");
     return 0;
   }
   else{
@@ -46,6 +49,10 @@ int main(int argc, char *argv[]){
 
   if(model == NULL)
     return -1;
+
+#ifdef PRINT_CLIQUE_TREE
+  print_cliques(model);
+#endif
 
   use_priors(model, 0); /* Only to be sure... */
 
