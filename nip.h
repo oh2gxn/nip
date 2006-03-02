@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.41 2005-09-21 15:07:42 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.42 2006-03-02 12:27:19 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -10,12 +10,12 @@
 #include "errorhandler.h"
 #include <stdlib.h>
 
-# define FORWARD  1
-# define BACKWARD 0
-# define HAD_A_PREVIOUS_TIMESLICE 1
+#define FORWARD  1
+#define BACKWARD 0
+#define HAD_A_PREVIOUS_TIMESLICE 1
 
 /* "How probable is the impossible" (0 < epsilon << 1) */
-# define EPSILON 0.00001
+#define EPSILON 0.00001
 
 typedef struct{
   int num_of_cliques;
@@ -36,11 +36,11 @@ typedef struct{
   variable *fwd_messengers;
   variable *bwd_messengers;
   int num_of_messengers;
-  variable *children;    /* All the variables which have parents */
+  variable *children;    /* All the variables that have parents */
   variable *independent; /* ...and those who dont. (Redundant?)  */
   int num_of_children;
 
-  clique front_clique; /* A memoization reference to the clique which mediates
+  clique front_clique; /* Reference to the clique which mediates
 			* the message to the timeslices in the future */
 
   clique tail_clique;  /* The clique which handles the connection to the 
