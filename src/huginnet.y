@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.64 2005-08-01 06:44:12 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.65 2006-03-06 17:20:10 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -51,7 +51,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
 %token token_label "label"
 %token token_position "position"
 %token token_states "states"
-%token token_next "NIP_next"
+%token token_persistence "NIP_t-1"
 %token token_potential "potential"
 %token token_normal "normal"
 %token <name> QUOTED_STRING
@@ -60,7 +60,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
 %type <stringarray> statesDeclaration
 %type <doublearray> dataList
 %type <variable> nodeDeclaration child
-%type <name> labelDeclaration nextDeclaration
+%type <name> labelDeclaration persistenceDeclaration
 
 /* Grammar follows */
 
@@ -68,7 +68,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
 input:  nodes potentials {
 
   if(time2Vars() != NO_ERROR){
-    yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
+    yyerror("Invalid timeslice specification!\nCheck NIP_t-1 declarations.");
     YYABORT;
   }
   reset_timeinit();
@@ -93,7 +93,7 @@ input:  nodes potentials {
 /* optional net block */
 |  netDeclaration nodes potentials {
   if(time2Vars() != NO_ERROR){
-    yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
+    yyerror("Invalid timeslice specification!\nCheck NIP_t-1 declarations.");
     YYABORT;
   }
   reset_timeinit();
@@ -119,7 +119,7 @@ input:  nodes potentials {
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
   free($2); /* the classname is useless */
   if(time2Vars() != NO_ERROR){
-    yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
+    yyerror("Invalid timeslice specification!\nCheck NIP_t-1 declarations.");
     YYABORT;
   }
   reset_timeinit();
@@ -155,7 +155,7 @@ potentials:    /* empty */ {/* list of initialisation data ready */}
 
 nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   int retval;
-  char *nip_next = get_nip_next();
+  char *nip_persistence = get_nip_persistence();
   char *label = get_nip_label();
   char **states = get_nip_statenames();
   variable v = NULL;
@@ -172,8 +172,8 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free($2);
     free(label);
-    free(nip_next);
-    set_nip_next(NULL);
+    free(nip_persistence);
+    set_nip_persistence(NULL);
     YYABORT;
   }
 
@@ -184,23 +184,23 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     free($2);
     free(label);
     set_nip_label(NULL);
-    free(nip_next);
-    set_nip_next(NULL);
+    free(nip_persistence);
+    set_nip_persistence(NULL);
     reset_strings(); /* frees the original parsed statenames */
     YYABORT;
   }
   set_variable_position(v); /* sets the parsed position values */
   set_parser_node_position(0, 0); /* reset */
 
-  if(nip_next != NULL){
-    retval = add_time_init(v, nip_next);
+  if(nip_persistence != NULL){
+    retval = add_time_init(v, nip_persistence);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free($2);
       free(label);
       set_nip_label(NULL);
-      free(nip_next);
-      set_nip_next(NULL);
+      free(nip_persistence);
+      set_nip_persistence(NULL);
       reset_strings(); /* frees the original parsed statenames */
       free_variable(v);
       YYABORT;
@@ -210,12 +210,12 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   free($2);
   free(label);
   reset_strings(); /* frees the original parsed statenames */
-  set_nip_next(NULL);
+  set_nip_persistence(NULL);
   $$ = v;}
 
 |    token_discrete token_node UNQUOTED_STRING '{' node_params '}' {
   int retval;
-  char *nip_next = get_nip_next();
+  char *nip_persistence = get_nip_persistence();
   char *label = get_nip_label();
   char **states = get_nip_statenames();
   variable v = NULL;
@@ -232,8 +232,8 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free($3);
     free(label);
-    free(nip_next);
-    set_nip_next(NULL);
+    free(nip_persistence);
+    set_nip_persistence(NULL);
     YYABORT;
   }
 
@@ -244,23 +244,23 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     free($3);
     free(label);
     set_nip_label(NULL);
-    free(nip_next);
-    set_nip_next(NULL);
+    free(nip_persistence);
+    set_nip_persistence(NULL);
     reset_strings(); /* frees the original parsed statenames */
     YYABORT;
   }
   set_variable_position(v); /* sets the parsed position values */
   set_parser_node_position(0, 0); /* reset */
 
-  if(nip_next != NULL){
-    retval = add_time_init(v, nip_next);
+  if(nip_persistence != NULL){
+    retval = add_time_init(v, nip_persistence);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free($3);
       free(label);
       set_nip_label(NULL);
-      free(nip_next);
-      set_nip_next(NULL);
+      free(nip_persistence);
+      set_nip_persistence(NULL);
       reset_strings(); /* frees the original parsed statenames */
       free_variable(v);
       YYABORT;
@@ -270,11 +270,11 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   free($3);
   free(label);
   reset_strings(); /* frees the original parsed statenames */
-  set_nip_next(NULL);
+  set_nip_persistence(NULL);
   $$ = v;}
 
 | token_continuous token_node UNQUOTED_STRING '{' ignored_params '}' { 
-  char *nip_next = get_nip_next();
+  char *nip_persistence = get_nip_persistence();
   char *label = get_nip_label();
   free(label);
   set_nip_label(NULL);
@@ -284,14 +284,14 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   free($3);
   free(label);
-  free(nip_next);
-  set_nip_next(NULL);
+  free(nip_persistence);
+  set_nip_persistence(NULL);
   reset_strings();
   YYABORT;
   $$=NULL;}
 
 | token_utility UNQUOTED_STRING '{' ignored_params '}' { 
-  char *nip_next = get_nip_next();
+  char *nip_persistence = get_nip_persistence();
   char *label = get_nip_label();
   free(label);
   set_nip_label(NULL);
@@ -301,14 +301,14 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   free($2);
   free(label);
-  free(nip_next);
-  set_nip_next(NULL);
+  free(nip_persistence);
+  set_nip_persistence(NULL);
   reset_strings();
   YYABORT;
   $$=NULL;}
 
 | token_decision UNQUOTED_STRING '{' ignored_params '}' { 
-  char *nip_next = get_nip_next();
+  char *nip_persistence = get_nip_persistence();
   char *label = get_nip_label();
   free(label);
   set_nip_label(NULL);
@@ -318,8 +318,8 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   free($2);
   free(label);
-  free(nip_next);
-  set_nip_next(NULL);
+  free(nip_persistence);
+  set_nip_persistence(NULL);
   reset_strings();
   YYABORT;
   $$=NULL;}
@@ -329,7 +329,7 @@ ignored_params: /* end of list */
 |            unknownDeclaration ignored_params
 |            statesDeclaration ignored_params { set_nip_statenames($1); }
 |            labelDeclaration ignored_params { set_nip_label($1); }
-|            nextDeclaration ignored_params { set_nip_next($1); }
+|            persistenceDeclaration ignored_params { set_nip_persistence($1); }
 |            positionDeclaration ignored_params
 ;
 
@@ -337,7 +337,7 @@ node_params: /* end of definitions */
 |            unknownDeclaration node_params
 |            statesDeclaration node_params { set_nip_statenames($1); }
 |            labelDeclaration node_params { set_nip_label($1); }
-|            nextDeclaration node_params { set_nip_next($1); }
+|            persistenceDeclaration node_params { set_nip_persistence($1); }
 |            positionDeclaration node_params
 ;
 
@@ -352,7 +352,7 @@ parameters:    /* end of definitions */
 labelDeclaration:     token_label '=' QUOTED_STRING ';' { $$ = $3; }
 ;
 
-nextDeclaration:      token_next '=' QUOTED_STRING ';' { $$ = $3; }
+persistenceDeclaration: token_persistence '=' QUOTED_STRING ';' { $$ = $3; }
 ;
 
 /* JJT: cardinality == nip_strings_parsed ? */
@@ -622,11 +622,18 @@ yylex (void)
       }
     }
 
-    /* utility */
-    if(tokenlength == 7 &&
-       strncmp("utility", token, 7) == 0){
-      free(token);
-      return token_utility;
+    if(tokenlength == 7){
+      /* utility */
+      if(strncmp("utility", token, 7) == 0){
+	free(token);
+	return token_utility;
+      }
+      /* NIP_t-1 */
+      else if(strncmp("NIP_t-1", token, 7) == 0){
+	free(token);
+	return token_persistence;
+      }
+      
     }
 
     if(tokenlength == 8){
@@ -634,11 +641,6 @@ yylex (void)
       if(strncmp("position", token, 8) == 0){
 	free(token);
 	return token_position;
-      }
-      /* NIP_next */
-      else if(strncmp("NIP_next", token, 8) == 0){
-	free(token);
-	return token_next;
       }
       /* decision */
       else if(strncmp("decision", token, 8) == 0){

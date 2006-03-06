@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.8 2005-07-12 14:46:03 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.9 2006-03-06 17:20:10 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -11,23 +11,27 @@
 #define VAR_STATENAME_LENGTH 20
 #define VAR_MIN_ID 1
 
+enum interface_type {none, incoming, outgoing};
+typedef enum interface_type interface_flag;
+
 struct nip_var {
-  char symbol[VAR_SYMBOL_LENGTH + 1]; /* short symbol for the node */
-  char name[VAR_NAME_LENGTH + 1];     /* label in the Net language*/
-  char **statenames;  /* a string array with <cardinality> strings */
-  int cardinality;    /* number of possible values */
-  unsigned long id;   /* unique id for every variable */
-  double *likelihood; /* likelihood of each value */
-  double *prior;      /* prior prob. of each value for an indep. variable */
-  struct nip_var *previous; /* pointer to the variable which corresponds to
+  char symbol[VAR_SYMBOL_LENGTH + 1]; /* Short symbol for the node */
+  char name[VAR_NAME_LENGTH + 1];     /* Label in the Net language*/
+  char **statenames;  /* A string array with <cardinality> strings */
+  int cardinality;    /* Number of possible values */
+  unsigned long id;   /* Unique id for every variable */
+  double *likelihood; /* Likelihood of each value */
+  double *prior;      /* Prior prob. of each value for an indep. variable */
+  struct nip_var *previous; /* Pointer to the variable which corresponds to
 			     * this one in the previous timeslice */
-  struct nip_var *next;     /* pointer to the variable which corresponds to
+  struct nip_var *next;     /* Pointer to the variable which corresponds to
 			     * this one in the next timeslice */
-  struct nip_var **parents; /* array of pointers to the parents */
-  int num_of_parents;       /* number of parents */
-  void *family_clique;      /* possible reference to the family clique */
-  int *family_mapping;      /* maps the variables in the family to the
+  struct nip_var **parents; /* Array of pointers to the parents */
+  int num_of_parents;       /* Number of parents */
+  void *family_clique;      /* Possible reference to the family clique */
+  int *family_mapping;      /* Maps the variables in the family to the
 			     * variables in the family clique */
+  interface_flag if_status; /* Belongs to incoming/outgoing/none interface */
   int pos_x; /* node position by Hugin */
   int pos_y;
   char mark; /* mark for some algorithms (like DFS and data generation) */

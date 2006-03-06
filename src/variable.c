@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.4 2005-06-29 14:39:41 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.5 2006-03-06 17:20:10 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -61,6 +61,7 @@ variable new_variable(const char* symbol, const char* name,
   v->num_of_parents = 0;
   v->family_clique = NULL;
   v->family_mapping = NULL;
+  v->if_status = none; /* initially it does not belong to either interface */
   v->pos_x = 100;
   v->pos_y = 100;
   v->mark = 0;
@@ -73,7 +74,6 @@ variable new_variable(const char* symbol, const char* name,
     v->name[0] = '\0';
 
   if(states){
-
     v->statenames = (char **) calloc(cardinality, sizeof(char *));
     if(!(v->statenames)){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -81,9 +81,7 @@ variable new_variable(const char* symbol, const char* name,
       free(new);
       return NULL;
     }
-
     for(i = 0; i < cardinality; i++){
-
       v->statenames[i] = (char *) calloc(strlen(states[i]) + 1, 
 					   sizeof(char));
       if(!(v->statenames[i])){
@@ -94,7 +92,6 @@ variable new_variable(const char* symbol, const char* name,
 	free(v);
 	free(new);
       }
-
       strcpy(v->statenames[i], states[i]);
     }
   }

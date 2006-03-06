@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.42 2006-03-02 12:27:19 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.43 2006-03-06 17:20:10 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -19,8 +19,8 @@
 
 typedef struct{
   int num_of_cliques;
-  int num_of_vars;
   clique *cliques;
+  int num_of_vars;
   variable *variables;
   variable *next;     /* An array of the variables that will substitute 
 		       * another one in the next timeslice. */
@@ -33,18 +33,21 @@ typedef struct{
 		       * arrays*/
 
   /* Undocumented features: */
-  variable *fwd_messengers;
-  variable *bwd_messengers;
-  int num_of_messengers;
+  int outgoing_interface_size;
+  variable *outgoing_interface;
+  int incoming_interface_size;
+  variable *incoming_interface;
+
+  clique in_clique;  /* Reference to the clique which receives
+		      * the message from the past timeslices */
+
+  clique out_clique; /* The clique which handles the connection to the 
+		      * timeslices in the future */
+
   variable *children;    /* All the variables that have parents */
   variable *independent; /* ...and those who dont. (Redundant?)  */
   int num_of_children;
 
-  clique front_clique; /* Reference to the clique which mediates
-			* the message to the timeslices in the future */
-
-  clique tail_clique;  /* The clique which handles the connection to the 
-			* timeslices in the past */
   int node_size_x;
   int node_size_y;
 }nip_type;

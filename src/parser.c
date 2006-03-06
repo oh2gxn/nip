@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.105 2005-07-15 13:52:27 jatoivol Exp $
+ * $Id: parser.c,v 1.106 2006-03-06 17:20:10 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -48,7 +48,7 @@ static time_init_link nip_first_timeinit = NULL;
 
 static char** nip_statenames;
 static char* nip_label;
-static char* nip_next;
+static char* nip_persistence; /* The name included in the NIP_t-1 field */
 
 /* Should a new line be read in when the next token is requested? */
 static int nip_read_line = 1;
@@ -815,7 +815,7 @@ int add_initData(potential p, variable child, variable* parents){
 }
 
 
-int add_time_init(variable var, char* next){
+int add_time_init(variable var, char* name){
   time_init_link new = (time_init_link) malloc(sizeof(time_init_element));
 
   if(!new){
@@ -824,7 +824,7 @@ int add_time_init(variable var, char* next){
   }
 
   new->var = var;
-  new->next = next;
+  new->previous = name;
   new->fwd = nip_first_timeinit;
 
   nip_first_timeinit = new;
@@ -1079,7 +1079,7 @@ void reset_timeinit(){
   time_init_link ln = nip_first_timeinit;
   while(ln != NULL){
     nip_first_timeinit = ln->fwd;
-    free(ln->next); /* calloc is somewhere in the lexer */
+    free(ln->previous); /* calloc is somewhere in the lexer */
     free(ln);
     ln = nip_first_timeinit;    
   }
@@ -1104,19 +1104,16 @@ int parsedVars2Graph(){
   
   /* Add parsed variables to the graph. */
   while(v != NULL){
-    
     retval = add_variable(nip_graph, v);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }
-
     v = next_variable(&it);
   }
 
   /* Add child - parent relations to the graph. */
-  while(initlist != NULL){
-    
+  while(initlist != NULL){  
     for(i = 0; i < initlist->data->num_of_vars - 1; i++){
       retval = add_child(nip_graph, initlist->parents[i], initlist->child);
       if(retval != NO_ERROR){
@@ -1136,14 +1133,15 @@ int parsedVars2Graph(){
 
 
 int time2Vars(){
-  int i;
+  int i, m;
   variable v1, v2;
   time_init_link initlist = nip_first_timeinit;
+  varlink vars = nip_first_temp_var;
 
   /* Add time relations to variables. */
   while(initlist != NULL){
     v1 = initlist->var;
-    v2 = get_parser_variable(initlist->next);
+    v2 = get_parser_variable(initlist->previous);
     if(v1->cardinality == v2->cardinality){
       /* check one thing */
       for(i = 0; i < v1->cardinality; i++){
@@ -1156,26 +1154,53 @@ int time2Vars(){
 		  get_statename(v1,i), get_statename(v2,i));
 	}
       }
-      v1->next = v2;
-      v2->previous = v1;
+      /* the core */
+      v2->next = v1;
+      v1->previous = v2;
     }
     else{
       fprintf(stderr, 
-	      "NET parser: Invalid NIP_next field for node %s!\n",
+	      "NET parser: Invalid 'NIP_t-1' field for node %s!\n",
 	      get_symbol(v1));
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
     }
-    
     initlist = initlist->fwd;
   }
 
+  /* Find out which variables belong to incoming/outgoing interfaces */
+  while(vars != NULL){
+    v1 = vars->data; /* get a variable */
+    
+    m = 0;
+    if(v1->parents){ /* if v1 has parents */
+      for(i = 0; i < v1->num_of_parents; i++){ /* for each parent */
+	v2 = v1->parents[i];
+	/* Condition for belonging to the incoming interface */
+	if(v1->previous == NULL && 
+	   v2->previous != NULL){ 
+	  /* v1 has the parent v2 in the previous time slice */
+	  v1->if_status = incoming; 
+	  v2->if_status = outgoing;
+	  m = 1;
+	  break;
+	}
+      }
+    }
+    if(m){ /* parents of v1 in this time slice belong to incoming interface */
+      for(i = 0; i < v1->num_of_parents; i++){
+	v2 = v1->parents[i];
+	if(v2->previous == NULL) /* parent v2 in present time slice */
+	  v2->if_status = incoming;
+      }
+    }
+    vars = vars->fwd; /* next variable */
+  }
   return NO_ERROR;
 }
 
 
 int Graph2JTree(){
-
   int num_of_cliques;
   clique **cliques = &nip_cliques;
 
@@ -1365,13 +1390,13 @@ char* get_nip_label(){
 }
 
 
-void set_nip_next(char *next){
-  nip_next = next;
+void set_nip_persistence(char *name){
+  nip_persistence = name;
 }
 
 
-char* get_nip_next(){
-  return nip_next;
+char* get_nip_persistence(){
+  return nip_persistence;
 }
 
 

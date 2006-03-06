@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.46 2005-05-27 13:18:03 jatoivol Exp $
+ * Graph.c $Id: Graph.c,v 1.47 2006-03-06 17:20:09 jatoivol Exp $
  */
 
 #include <string.h>
@@ -106,7 +106,7 @@ int get_graph_index(Graph* G, variable v)
      * memory efficient and needs to be modified. */
 
     /* Voi räkä. adjmatrix ei muutu. Jospa lapsia vois lisätä vasta kun
-       kaikki muuttujat on lisätty?*/
+       kaikki muuttujat on lisätty? */
 
     if (G->var_ind != NULL)
     {
@@ -246,6 +246,32 @@ Graph* moralise(Graph* G)
     return Gm;
 }
 
+/* Additional interface edges. By Janne Toivola */
+Graph* add_interface_edges(Graph* G){
+  int i,j,n;
+  variable v1, v2;
+  Graph* Gi;
+  
+  if (G == NULL || G->variables == NULL)
+    return NULL;
+  
+  n = G->size;
+  Gi = copy_graph(G);
+  
+  /* compare variable by variable */
+  for (i = 0; i < n; i++)       /* Iterate variables */
+    for (j = i+1; j < n; j++) {
+      v1 = G->variables[i];
+      v2 = G->variables[j];
+      if ((v1->if_status == incoming && v2->if_status == incoming) ||
+	  (v1->if_status == outgoing && v2->if_status == outgoing)) {
+	ADJM(Gi, i, j) = 1;
+	ADJM(Gi, j, i) = 1;
+      }
+    }
+  return Gi;
+}
+
 /* Not specified in Graph.h -- internal helper function */
 int triangulate(Graph* Gm, clique** clique_p)
 {
@@ -312,11 +338,12 @@ int triangulate(Graph* Gm, clique** clique_p)
 
 int find_cliques(Graph* G, clique** cliques_p)
 {
-    Graph *Gu, *Gm;
+    Graph *Gu, *Gm, *Gi;
     int n_cliques = 0;
 
     Gm = moralise(G);
-    Gu = make_undirected(Gm);
+    Gi = add_interface_edges(Gm); /* added by JJT 6.3.2006 */
+    Gu = make_undirected(Gi);
 
     n_cliques = triangulate(Gu, cliques_p);
 

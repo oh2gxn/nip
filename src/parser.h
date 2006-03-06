@@ -1,6 +1,6 @@
 /*
  * Definitions for the bison parser and for other parsers.
- * $Id: parser.h,v 1.43 2005-06-23 13:20:38 jatoivol Exp $
+ * $Id: parser.h,v 1.44 2006-03-06 17:20:10 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -50,7 +50,7 @@ typedef initDataElement *initDataLink;
 
 struct time_init_list {
   variable var;
-  char* next;
+  char* previous;
   struct time_init_list *fwd;
 };
 
@@ -161,7 +161,7 @@ int add_initData(potential p, variable child, variable* parents);
 
 /* Adds information about the time relations between "time slices".
  */
-int add_time_init(variable var, char* next);
+int add_time_init(variable var, char* name);
 
 
 /* Adds a number into the list of parsed numbers. */
@@ -247,8 +247,8 @@ void set_nip_label(char *label);
 char* get_nip_label();
 
 
-void set_nip_next(char *next);
-char* get_nip_next();
+void set_nip_persistence(char *name);
+char* get_nip_persistence();
 
 int get_nip_symbols_parsed();
 

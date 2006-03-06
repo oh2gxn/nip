@@ -1,5 +1,5 @@
 /*
- * Graph.h $Id: Graph.h,v 1.21 2005-05-27 13:18:03 jatoivol Exp $
+ * Graph.h $Id: Graph.h,v 1.22 2006-03-06 17:20:10 jatoivol Exp $
  */
 
 #ifndef __GRAPH_H__
@@ -84,6 +84,13 @@ Graph* moralise(Graph* G);
  * Parameter G: An unmoral graph.
  * Returns moralised Graph.
  * Does not modify G.
+ */
+
+Graph* add_interface_edges(Graph* G);
+/* Adds undirected links between interface variables in a DAG.
+ * Parameter G: A graph with determined interface variables.
+ * Returns edited Graph.
+ * Does not modify G. (Author: Janne Toivola)
  */
 
 int find_cliques(Graph* G, clique** cliques_p);

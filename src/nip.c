@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.111 2005-12-13 13:37:16 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.112 2006-03-06 17:20:10 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -151,25 +151,20 @@ nip parse_model(char* file){
   /* count the number of various kinds of "special" variables */
   new->num_of_nexts = 0;
   new->num_of_children = 0;
-  new->num_of_messengers = 0;
+  new->outgoing_interface_size = 0;
+  new->incoming_interface_size = 0;
   for(i = 0; i < new->num_of_vars; i++){
     temp = new->variables[i];
 
-    if(temp->next){
-      /* how many belong to the next timeslice */
+    /* how many belong to the next timeslice */
+    if(temp->next)
       new->num_of_nexts++;
-      
-      /* how many belong to the sepset between timeslices */
-      if(temp->parents){
-	m = 0;
-	for(n = 0; n < temp->num_of_parents; n++)
-	  if(temp->parents[n]->next == NULL){
-	    m = 1; break;
-	  }
-	if(m)
-	  new->num_of_messengers++;
-      }
-    }
+    
+    /* how many belong to the interfaces */
+    if(temp->if_status == incoming)
+      new->incoming_interface_size++;
+    else if(temp->if_status == outgoing)
+      new->outgoing_interface_size++;
 
     /* how many have parents */
     if(temp->parents)
@@ -178,50 +173,43 @@ nip parse_model(char* file){
 
   new->next = (variable*) calloc(new->num_of_nexts, sizeof(variable));
   new->previous = (variable*) calloc(new->num_of_nexts, sizeof(variable));
-  new->fwd_messengers = (variable*) calloc(new->num_of_messengers, 
-					   sizeof(variable));
-  new->bwd_messengers = (variable*) calloc(new->num_of_messengers, 
-					   sizeof(variable));
+  new->outgoing_interface = (variable*) calloc(new->outgoing_interface_size, 
+					       sizeof(variable));
+  new->incoming_interface = (variable*) calloc(new->incoming_interface_size, 
+					       sizeof(variable));
   new->children = (variable*) calloc(new->num_of_children, sizeof(variable));
   new->independent = 
     (variable*) calloc(new->num_of_vars - new->num_of_children, 
 		       sizeof(variable));
   if(!(new->independent && new->children && 
-       new->bwd_messengers && new->fwd_messengers && 
+       new->outgoing_interface && new->incoming_interface && 
        new->previous && new->next)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(new->variables);
     free(new->next);
     free(new->previous);
-    free(new->fwd_messengers);
-    free(new->bwd_messengers);
+    free(new->outgoing_interface);
+    free(new->incoming_interface);
     free(new->children);
     free(new);
     return NULL;
   }
 
   /* This selects the variables for various special purposes */
-  j = 0; k = 0;
+  j = 0; k = 0; m = 0;
   for(i = 0; i < new->num_of_vars; i++){
     temp = new->variables[i];
+
     if(temp->next){
       new->next[j] = temp;
       new->previous[j] = temp->next;
       j++;
-
-      if(temp->parents){
-	m = 0;
-	for(n = 0; n < temp->num_of_parents; n++)
-	  if(temp->parents[n]->next == NULL){
-	    m = 1; break;
-	  }
-	if(m){
-	  new->fwd_messengers[k] = temp;
-	  new->bwd_messengers[k] = temp->next;
-	  k++;
-	}
-      }
     }
+    
+    if(temp->if_status == incoming)
+      new->incoming_interface[k++] = temp;
+    else if(temp->if_status == outgoing)
+      new->outgoing_interface[m++] = temp;
   }
   
   /* Reminder: (Before I indexed the children with j, the program had 
@@ -233,8 +221,8 @@ nip parse_model(char* file){
     else
       new->independent[k++] = new->variables[i];
   
-  new->front_clique = NULL;
-  new->tail_clique = NULL;
+  new->in_clique = NULL;
+  new->out_clique = NULL;
   get_parser_node_size(&(new->node_size_x), &(new->node_size_y));
 
   /* Let's check one detail */
