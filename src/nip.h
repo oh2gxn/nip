@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.43 2006-03-06 17:20:10 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.44 2006-03-09 16:14:40 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -16,6 +16,9 @@
 
 /* "How probable is the impossible" (0 < epsilon << 1) */
 #define EPSILON 0.00001
+
+enum direction_type {backward, forward};
+typedef enum direction_type direction;
 
 typedef struct{
   int num_of_cliques;

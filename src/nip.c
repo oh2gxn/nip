@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.112 2006-03-06 17:20:10 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.113 2006-03-09 16:14:40 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -34,6 +34,7 @@
  * variables in the next time slice, should be found in the 
  * same clique.
  *
+ * UPDATE: it seems that Mr. Murphy has a solution...
  */
 
 
@@ -51,9 +52,9 @@
 
 extern int yyparse();
 
-static int start_timeslice_message_pass(nip model, int direction, 
+static int start_timeslice_message_pass(nip model, direction dir, 
 					potential sepset);
-static int finish_timeslice_message_pass(nip model, int direction,
+static int finish_timeslice_message_pass(nip model, direction dir,
 					 potential num, potential den);
 
 static int e_step(time_series ts, potential* results, double* loglikelihood);
@@ -105,7 +106,7 @@ void use_priors(nip model, int has_history){
 
 
 nip parse_model(char* file){
-  int i, j, k, m, n, retval;
+  int i, j, k, m, retval;
   variable temp;
   variable_iterator it;
   nip new = (nip) malloc(sizeof(nip_type));
@@ -220,9 +221,23 @@ nip parse_model(char* file){
       new->children[j++] = new->variables[i]; /* set the children */
     else
       new->independent[k++] = new->variables[i];
-  
-  new->in_clique = NULL;
-  new->out_clique = NULL;
+
+  if(new->incoming_interface_size > 0){
+    new->in_clique = find_clique(new->cliques, 
+				 new->num_of_cliques, 
+				 new->incoming_interface, 
+				 new->incoming_interface_size);
+    assert(new->in_clique != NULL);
+    new->out_clique = find_clique(new->cliques, 
+				  new->num_of_cliques, 
+				  new->outgoing_interface, 
+				  new->outgoing_interface_size);
+    assert(new->out_clique != NULL);
+  }
+  else{
+    new->in_clique = NULL;
+    new->out_clique = NULL;
+  }
   get_parser_node_size(&(new->node_size_x), &(new->node_size_y));
 
   /* Let's check one detail */
@@ -321,7 +336,7 @@ int write_model(nip model, char* name){
       fprintf(f, " \"%s\" \n%s              ", v->statenames[j], indent);
     fprintf(f, " \"%s\" );\n", v->statenames[n]);
     if(v->next)
-      fprintf(f, "%s    NIP_next = \"%s\";\n", indent, get_symbol(v->next));
+      fprintf(f, "%s    NIP_t-1 = \"%s\";\n", indent, get_symbol(v->next));
     fprintf(f, "%s}\n", indent);
     fflush(f);
   }
@@ -423,8 +438,8 @@ void free_model(nip model){
   free(model->variables);
   free(model->next);
   free(model->previous);
-  free(model->fwd_messengers);
-  free(model->bwd_messengers);
+  free(model->outgoing_interface);
+  free(model->incoming_interface);
   free(model->children);
   free(model->independent);
   free(model);
@@ -816,38 +831,25 @@ int insert_ucs_step(uncertain_series ucs, int t, nip model){
 
 
 /* Starts a message pass between timeslices */
-static int start_timeslice_message_pass(nip model, int direction,
-					potential sepset){
+static int start_timeslice_message_pass(nip model, direction dir,
+					potential alpha_or_gamma){
   int i, j, k;
   int *mapping;
   clique c;
+  int nvars = model->outgoing_interface_size;
   variable *vars;
-  int nvars = model->num_of_messengers;
 
-  /*****************************************************/
-  /* TODO: invent a better way to choose the variables */
-  /*****************************************************/
-  
-  if(direction == FORWARD){
-    vars = model->fwd_messengers;
-    c = model->front_clique; /* null if not yet memoized */
+  if(dir == forward){
+    vars = model->outgoing_interface;
+    c = model->out_clique; /* null if not yet memoized */
   }
   else{
-    vars = model->bwd_messengers;
-    c = model->tail_clique; /* null if not yet memoized */
-  }
 
-  /* some cliques are memoized */
-  if(c == NULL){
-    c = find_clique(model->cliques, model->num_of_cliques, vars, nvars);
+    /* FIXME: "vars[i] = outgoing_interface[i]->next;"*/
+    vars = model->incoming_interface; 
 
-    /* this saves the result */
-    if(direction == FORWARD)
-      model->front_clique = c; 
-    else
-      model->tail_clique = c;
+    c = model->in_clique; /* null if not yet memoized */
   }
-  assert(c != NULL);
 
   mapping = (int*) calloc(nvars, sizeof(int));
   if(!mapping){
@@ -869,47 +871,40 @@ static int start_timeslice_message_pass(nip model, int direction,
   }    
 
   /* the marginalisation */
-  general_marginalise(c->p, sepset, mapping);
+  general_marginalise(c->p, alpha_or_gamma, mapping);
   free(mapping); /* should mapping-array be a part of sepsets? */
 
   /* normalisation in order to avoid drifting towards zeros */
-  normalise(sepset->data, sepset->size_of_data);
+  normalise(alpha_or_gamma->data, alpha_or_gamma->size_of_data);
 
   /* Q: since potential arrays may be large, should the 
    * sum of elements be normalised to N instead of 1..???     
    */
-
   return NO_ERROR;
 }
 
 
 /* Finishes the message pass between timeslices */
-static int finish_timeslice_message_pass(nip model, int direction,
+static int finish_timeslice_message_pass(nip model, direction dir,
 					 potential num, potential den){
   int i, j, k;
   int *mapping;
   clique c;
+  int nvars = model->outgoing_interface_size;
   variable *vars;
-  int nvars = model->num_of_messengers;
 
   /* This uses memoization for finding a suitable clique c */
-  if(direction == FORWARD){
-    vars = model->bwd_messengers;
-    c = model->tail_clique;
+  if(dir == forward){
+
+    /* FIXME: "vars[i] = outgoing_interface[i]->next;"*/    
+    vars = model->incoming_interface;
+
+    c = model->in_clique;
   }
   else{
-    vars = model->fwd_messengers;
-    c = model->front_clique;
+    vars = model->outgoing_interface;
+    c = model->out_clique;
   }
-
-  if(c == NULL){
-    c = find_clique(model->cliques, model->num_of_cliques, vars, nvars);
-    if(direction == FORWARD)
-      model->tail_clique = c;
-    else
-      model->front_clique = c;
-  }
-  assert(c != NULL);
 
   mapping = (int*) calloc(nvars, sizeof(int));
   if(!mapping){
@@ -929,10 +924,9 @@ static int finish_timeslice_message_pass(nip model, int direction,
     }
   }
 
-  /* the multiplication */
+  /* the multiplication (and division, if den != NULL) */
   update_potential(num, den, c->p, mapping);
-  free(mapping);
-  
+  free(mapping);  
   return NO_ERROR;
 }
 
@@ -943,7 +937,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   int i, t;
   int *cardinalities = NULL;
   variable temp;
-  potential timeslice_sepset = NULL;
+  potential alpha = NULL;
   clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
@@ -952,8 +946,9 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   double m1, m2;
   
   /* Allocate an array */
-  if(model->num_of_nexts > 0){
-    cardinalities = (int*) calloc(model->num_of_messengers, sizeof(int));
+  if(model->outgoing_interface_size > 0){
+    cardinalities = (int*) calloc(model->outgoing_interface_size, 
+				  sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return NULL;
@@ -961,8 +956,8 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   }
 
   /* Fill the array */
-  for(i = 0; i < model->num_of_messengers; i++)
-    cardinalities[i] = number_of_values(model->fwd_messengers[i]);
+  for(i = 0; i < model->outgoing_interface_size; i++)
+    cardinalities[i] = number_of_values(model->outgoing_interface[i]);
 
   /* Allocate some space for the results */
   results = (uncertain_series) malloc(sizeof(uncertain_series_type));
@@ -1035,9 +1030,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   }
 
   /* Initialise the intermediate potential */
-  timeslice_sepset = make_potential(cardinalities, 
-				    model->num_of_messengers, 
-				    NULL);
+  alpha = make_potential(cardinalities, model->outgoing_interface_size, NULL);
   free(cardinalities);
 
   /*****************/
@@ -1047,27 +1040,25 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
-    
-    if(t > 0)
-      if(finish_timeslice_message_pass(model, FORWARD, 
-				       timeslice_sepset, NULL) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_uncertainseries(results);
-	free_potential(timeslice_sepset);
-	return NULL;
-      }
-
-    /* This is probably useless step */
-    make_consistent(model);
-
     /* DEBUG: to see how the new likelihood computation is doing... */
     m1 = model_prob_mass(model);
     
     /* Put some data in */
     insert_ts_step(ts, t, model);
-    
+        
+    if(t > 0){ /*  Fwd or Fwd1  */
+      /*  clique_in = clique_in * alpha  */
+      if(finish_timeslice_message_pass(model, forward, 
+				       alpha, NULL    ) != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	free_uncertainseries(results);
+	free_potential(alpha);
+	return NULL;
+      }
+    }
+
     /* Do the inference */
-    make_consistent(model);
+    make_consistent(model); /* Collect to out_clique enough? */
 
     m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
     printf("Log.likelihood log(L(%d)) = %g\n", t, (log(m2) - log(m1)));
@@ -1090,18 +1081,18 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       normalise(results->data[t][i], number_of_values(temp));
     } 
    
-    /* Start a message pass between time slices */
-    if(start_timeslice_message_pass(model, FORWARD, 
-				    timeslice_sepset) != NO_ERROR){
+    /* Start a message pass between time slices (compute new alpha) */
+    if(start_timeslice_message_pass(model, forward, 
+				    alpha) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free_uncertainseries(results);
-      free_potential(timeslice_sepset);
+      free_potential(alpha);
       return NULL;
     }
     /* Forget old evidence */
     reset_model(model);
   }
-  free_potential(timeslice_sepset); 
+  free_potential(alpha); 
 
   return results;
 }
@@ -1114,14 +1105,14 @@ uncertain_series forward_backward_inference(time_series ts,
   int i, t;
   int *cardinalities = NULL;
   variable temp;
-  potential *timeslice_sepsets = NULL;
+  potential *alpha_gamma = NULL;
   clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
 
   /* Allocate an array for describing the dimensions of timeslice sepsets */
-  if(model->num_of_messengers > 0){
-    cardinalities = (int*) calloc(model->num_of_messengers, sizeof(int));
+  if(model->outgoing_interface_size > 0){
+    cardinalities = (int*) calloc(model->outgoing_interface_size, sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       return NULL;
@@ -1129,8 +1120,8 @@ uncertain_series forward_backward_inference(time_series ts,
   }
 
   /* Fill the array */
-  for(i = 0; i < model->num_of_messengers; i++)
-    cardinalities[i] = number_of_values(model->fwd_messengers[i]);
+  for(i = 0; i < model->outgoing_interface_size; i++)
+    cardinalities[i] = number_of_values(model->outgoing_interface[i]);
 
 
   /* Allocate some space for the results */
@@ -1204,13 +1195,13 @@ uncertain_series forward_backward_inference(time_series ts,
   }
 
   /* Allocate some space for the intermediate potentials */
-  timeslice_sepsets = (potential *) calloc(ts->length + 1, sizeof(potential));
+  alpha_gamma = (potential *) calloc(ts->length + 1, sizeof(potential));
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++){
-    timeslice_sepsets[t] = make_potential(cardinalities, 
-					  model->num_of_messengers, 
-					  NULL);
+    alpha_gamma[t] = make_potential(cardinalities, 
+				    model->outgoing_interface_size, 
+				    NULL);
   }
   free(cardinalities);
 
@@ -1222,32 +1213,31 @@ uncertain_series forward_backward_inference(time_series ts,
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
-    if(t > 0)
-      if(finish_timeslice_message_pass(model, FORWARD, 
-				       timeslice_sepsets[t-1], 
-				       NULL)                   != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	free_uncertainseries(results);
-	for(i = 0; i <= ts->length; i++)
-	  free_potential(timeslice_sepsets[i]);
-	free(timeslice_sepsets);
-	return NULL;
-      }
-
     /* Put some data in (Q: should this be AFTER message passing?) */
     insert_ts_step(ts, t, model);    
     
+    if(t > 0)
+      if(finish_timeslice_message_pass(model, forward, 
+				       alpha_gamma[t-1], NULL) != NO_ERROR){
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	free_uncertainseries(results);
+	for(i = 0; i <= ts->length; i++)
+	  free_potential(alpha_gamma[i]);
+	free(alpha_gamma);
+	return NULL;
+      }
+
     /* Do the inference */
     make_consistent(model);
     
     /* Start a message pass between timeslices */
-    if(start_timeslice_message_pass(model, FORWARD,
-				    timeslice_sepsets[t]) != NO_ERROR){
+    if(start_timeslice_message_pass(model, forward,
+				    alpha_gamma[t]) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free_uncertainseries(results);
       for(i = 0; i <= ts->length; i++)
-	free_potential(timeslice_sepsets[i]);
-      free(timeslice_sepsets);
+	free_potential(alpha_gamma[i]);
+      free(alpha_gamma);
       return NULL;
     }
 
@@ -1263,37 +1253,37 @@ uncertain_series forward_backward_inference(time_series ts,
   /* Backward phase */
   /******************/
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
+
+    /* Put some evidence in */
+    insert_ts_step(ts, t, model);
     
     /* Pass the message from the past */
     if(t > 0)
-      if(finish_timeslice_message_pass(model, FORWARD, 
-				       timeslice_sepsets[t-1], 
+      if(finish_timeslice_message_pass(model, forward, 
+				       alpha_gamma[t-1], 
 				       NULL)                   != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(timeslice_sepsets[i]);
-	free(timeslice_sepsets);
+	  free_potential(alpha_gamma[i]);
+	free(alpha_gamma);
 	return NULL;
       }
     
     /* Pass the message from the future */
     if(t < ts->length - 1)
-      if(finish_timeslice_message_pass(model, BACKWARD, 
-				       timeslice_sepsets[t+1], 
-				       timeslice_sepsets[t]) != NO_ERROR){
-
+      if(finish_timeslice_message_pass(model, backward, 
+				       alpha_gamma[t+1], /* gamma */
+				       alpha_gamma[t]  ) /* alpha */
+	 != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(timeslice_sepsets[i]);
-	free(timeslice_sepsets);
+	  free_potential(alpha_gamma[i]);
+	free(alpha_gamma);
 	return NULL;
       }
-
-    /* Put some evidence in */
-    insert_ts_step(ts, t, model);
 
     /* Do the inference */
     make_consistent(model);
@@ -1322,14 +1312,14 @@ uncertain_series forward_backward_inference(time_series ts,
 
 
     if(t > 0)
-      if(start_timeslice_message_pass(model, BACKWARD, 
-				      timeslice_sepsets[t]) != NO_ERROR){
+      if(start_timeslice_message_pass(model, backward, 
+				      alpha_gamma[t]) != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(timeslice_sepsets[i]);
-	free(timeslice_sepsets);
+	  free_potential(alpha_gamma[i]);
+	free(alpha_gamma);
 	return NULL;
       }
 
@@ -1343,8 +1333,8 @@ uncertain_series forward_backward_inference(time_series ts,
 
   /* free the intermediate potentials */
   for(t = 0; t <= ts->length; t++)
-    free_potential(timeslice_sepsets[t]);
-  free(timeslice_sepsets);
+    free_potential(alpha_gamma[t]);
+  free(alpha_gamma);
 
   return results;
 }
@@ -1543,7 +1533,7 @@ static int e_step(time_series ts, potential* parameters,
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     if(t > 0)
-      if(finish_timeslice_message_pass(model, FORWARD, 
+      if(finish_timeslice_message_pass(model, forward, 
 				       timeslice_sepsets[t-1], 
 				       NULL)                   != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1583,7 +1573,7 @@ static int e_step(time_series ts, potential* parameters,
     *loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
     
     /* Start a message pass between timeslices */
-    if(start_timeslice_message_pass(model, FORWARD,
+    if(start_timeslice_message_pass(model, forward,
 				    timeslice_sepsets[t]) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       for(i = 0; i < model->num_of_vars; i++)
@@ -1612,7 +1602,7 @@ static int e_step(time_series ts, potential* parameters,
     
     /* Pass the message from the past */
     if(t > 0)
-      if(finish_timeslice_message_pass(model, FORWARD, 
+      if(finish_timeslice_message_pass(model, forward, 
 				       timeslice_sepsets[t-1], 
 				       NULL)                   != NO_ERROR){
 
@@ -1630,7 +1620,7 @@ static int e_step(time_series ts, potential* parameters,
     
     /* Pass the message from the future */
     if(t < ts->length - 1)
-      if(finish_timeslice_message_pass(model, BACKWARD, 
+      if(finish_timeslice_message_pass(model, backward, 
 				       timeslice_sepsets[t+1], 
 				       timeslice_sepsets[t]) != NO_ERROR){
 
@@ -1686,7 +1676,7 @@ static int e_step(time_series ts, potential* parameters,
 
     /* Pass the message to the past */
     if(t > 0)
-      if(start_timeslice_message_pass(model, BACKWARD, 
+      if(start_timeslice_message_pass(model, backward, 
 				      timeslice_sepsets[t]) != NO_ERROR){
 
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1993,7 +1983,7 @@ potential get_joint_probability(nip model, variable *vars, int num_of_vars){
 time_series generate_data(nip model, int length){
   int i, j, k, t;
   int *cardinalities = NULL;
-  potential timeslice_sepset = NULL;
+  potential alpha = NULL;
   int nvars = model->num_of_vars;
   variable *vars = NULL;
   /* reserved the possibility to pass the set of variables 
@@ -2077,8 +2067,9 @@ time_series generate_data(nip model, int length){
   }
 
   /* create the sepset potential between the time slices */
-  if(model->num_of_nexts > 0){
-    cardinalities = (int*) calloc(model->num_of_nexts, sizeof(int));
+  if(model->outgoing_interface_size > 0){
+    cardinalities = (int*) calloc(model->outgoing_interface_size, 
+				  sizeof(int));
     if(!cardinalities){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free_timeseries(ts);
@@ -2086,9 +2077,9 @@ time_series generate_data(nip model, int length){
     }
   }
 
-  for(i = 0; i < model->num_of_nexts; i++)
-    cardinalities[i] = number_of_values(model->next[i]);
-  timeslice_sepset = make_potential(cardinalities, model->num_of_nexts, NULL);
+  for(i = 0; i < model->outgoing_interface_size; i++)
+    cardinalities[i] = number_of_values(model->outgoing_interface[i]);
+  alpha = make_potential(cardinalities, model->outgoing_interface_size, NULL);
   free(cardinalities);
   
   /* new seed number for rand and clear the previous evidence from the model */
@@ -2100,11 +2091,11 @@ time_series generate_data(nip model, int length){
   for(t = 0; t < ts->length; t++){
     /* influence of the previous time step */
     if(t > 0)
-      if(finish_timeslice_message_pass(model, FORWARD, 
-				       timeslice_sepset, NULL) != NO_ERROR){
+      if(finish_timeslice_message_pass(model, forward, 
+				       alpha, NULL) != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	free_timeseries(ts);
-	free_potential(timeslice_sepset);
+	free_potential(alpha);
 	return NULL;
       }
     
@@ -2114,11 +2105,9 @@ time_series generate_data(nip model, int length){
       v = vars[i];
       /*** get the probability distribution */
       distribution = get_probability(model, v);
-
       /*** organize a lottery */
       k = lottery(distribution, number_of_values(v));
       free(distribution);
-
       /*** insert the data into the time series and the model as evidence */
       ts->data[t][i] = k;
       enter_i_observation(model->variables, model->num_of_vars, 
@@ -2127,18 +2116,16 @@ time_series generate_data(nip model, int length){
     make_consistent(model);
 
     /* influence from the current time slice to the next one */
-    if(start_timeslice_message_pass(model, FORWARD, 
-				    timeslice_sepset) != NO_ERROR){
+    if(start_timeslice_message_pass(model, forward, alpha) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free_timeseries(ts);
-      free_potential(timeslice_sepset);
+      free_potential(alpha);
       return NULL;
     }
     /* Forget old evidence */
     reset_model(model);
   }
-  free_potential(timeslice_sepset);
-
+  free_potential(alpha);
   return ts;
 }
 
