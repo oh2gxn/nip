@@ -37,11 +37,50 @@ class htm_lite
     HR_Grid_Y = "40";
     HR_Grid_X = "40";
 
-    node A1
+    node A0
     {
 	label = "havainto";
 	position = (50 300);
 	states = ("a1" "a2");
+	HR_Group = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node B0
+    {
+	label = "latentti2";
+	position = (150 175);
+	states = ("b1" "b2");
+	HR_Group = "0";
+	HR_LinkMode_A1 = "0";
+	HR_LinkMode_B2 = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node S0
+    {
+	label = "latentti1";
+	position = (50 50);
+	states = ("s1" "s2");
+	HR_Group = "0";
+	HR_LinkMode_A1 = "0";
+	HR_LinkMode_B1 = "0";
+	HR_LinkMode_S2 = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
+    }
+
+    node A1
+    {
+	label = "havainto";
+	position = (300 300);
+	states = ("a1" "a2");
+	HR_Group = "0";
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
@@ -50,8 +89,11 @@ class htm_lite
     node B1
     {
 	label = "latentti2";
-	position = (150 175);
+	position = (400 175);
 	states = ("b1" "b2");
+	HR_Group = "0";
+	HR_LinkMode_A2 = "0";
+	HR_LinkMode_B3 = "0";
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
@@ -60,8 +102,12 @@ class htm_lite
     node S1
     {
 	label = "latentti1";
-	position = (50 50);
+	position = (300 50);
 	states = ("s1" "s2");
+	HR_Group = "0";
+	HR_LinkMode_A2 = "0";
+	HR_LinkMode_B2 = "0";
+	HR_LinkMode_S3 = "0";
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
@@ -70,8 +116,9 @@ class htm_lite
     node A2
     {
 	label = "havainto";
-	position = (300 300);
+	position = (550 300);
 	states = ("a1" "a2");
+	HR_Group = "0";
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
@@ -80,8 +127,10 @@ class htm_lite
     node B2
     {
 	label = "latentti2";
-	position = (400 175);
+	position = (650 175);
 	states = ("b1" "b2");
+	HR_Group = "0";
+	HR_LinkMode_A3 = "0";
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
@@ -90,103 +139,76 @@ class htm_lite
     node S2
     {
 	label = "latentti1";
-	position = (300 50);
-	states = ("s1" "s2");
-	HR_Desc = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node A3
-    {
-	label = "havainto";
-	position = (550 300);
-	states = ("a1" "a2");
-	HR_Desc = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node B3
-    {
-	label = "latentti2";
-	position = (650 175);
-	states = ("b1" "b2");
-	HR_Desc = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node S3
-    {
-	label = "latentti1";
 	position = (550 50);
 	states = ("s1" "s2");
+	HR_Group = "0";
+	HR_LinkMode_A3 = "0";
+	HR_LinkMode_B3 = "0";
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
     }
 
-    potential (A3 | B3 S3)
+    potential (A0 | B0 S0)
     {
-	data = ((( 0.95 0.05 )    %  B3=b1  S3=s1
-		 ( 0.07 0.93 ))   %  B3=b1  S3=s2
-		(( 0.06 0.94 )    %  B3=b2  S3=s1
-		 ( 0.96 0.04 ))); %  B3=b2  S3=s2
+	data = ((( 0.95 0.05 )	%  B0=b1  S0=s1
+		 ( 0.07 0.93 ))	%  B0=b1  S0=s2
+		(( 0.06 0.94 )	%  B0=b2  S0=s1
+		 ( 0.96 0.04 )));	%  B0=b2  S0=s2
     }
 
-    potential (A2 | B2 S2)
+    potential (B0 | S0)
     {
-	data = ((( 0.95 0.05 )    %  B2=b1  S2=s1
-		 ( 0.07 0.93 ))   %  B2=b1  S2=s2
-		(( 0.06 0.94 )    %  B2=b2  S2=s1
-		 ( 0.96 0.04 ))); %  B2=b2  S2=s2
+	data = (( 0.5 0.5 )	%  S0=s1
+		( 0.5 0.5 ));	%  S0=s2
+    }
+
+    potential (S0)
+    {
+	data = ( 1 1 );
     }
 
     potential (A1 | B1 S1)
     {
-	data = ((( 0.95 0.05 )    %  B1=b1  S1=s1
-		 ( 0.07 0.93 ))   %  B1=b1  S1=s2
-		(( 0.06 0.94 )    %  B1=b2  S1=s1
-		 ( 0.96 0.04 ))); %  B1=b2  S1=s2
+	data = ((( 0.95 0.05 )	%  B1=b1  S1=s1
+		 ( 0.07 0.93 ))	%  B1=b1  S1=s2
+		(( 0.06 0.94 )	%  B1=b2  S1=s1
+		 ( 0.96 0.04 )));	%  B1=b2  S1=s2
     }
 
-    potential (B1 | S1)
-    { % NOTE: this has to be marginalised from the P(B2 | S2 B1) below !
-	data = (( 0.5 0.5 )	%  S1=s1
-		( 0.5 0.5 ));	%  S1=s2
+    potential (B1 | S1 B0)
+    {
+	data = ((( 0.9 0.1 )	%  S1=s1  B0=b1
+		 ( 0.1 0.9 ))	%  S1=s1  B0=b2
+		(( 0.1 0.9 )	%  S1=s2  B0=b1
+		 ( 0.9 0.1 )));	%  S1=s2  B0=b2
+    }
+
+    potential (S1 | S0)
+    {
+	data = (( 0.6 0.4 )	%  S0=s1
+		( 0.3 0.7 ));	%  S0=s2
+    }
+
+    potential (A2 | B2 S2)
+    {
+	data = ((( 0.95 0.05 )	%  B2=b1  S2=s1
+		 ( 0.07 0.93 ))	%  B2=b1  S2=s2
+		(( 0.06 0.94 )	%  B2=b2  S2=s1
+		 ( 0.96 0.04 )));	%  B2=b2  S2=s2
     }
 
     potential (B2 | S2 B1)
     {
-	data = ((( 0.9 0.1 )      %  S2=s1  B1=b1
-		 ( 0.1 0.9 ))     %  S2=s1  B1=b2
-		(( 0.1 0.9 )      %  S2=s2  B1=b1
-		 ( 0.9 0.1 )));   %  S2=s2  B1=b2
-    }
-
-    potential (B3 | S3 B2)
-    {
-	data = ((( 0.9 0.1 )      %  S3=s1  B2=b1
-		 ( 0.1 0.9 ))     %  S3=s1  B2=b2
-		(( 0.1 0.9 )      %  S3=s2  B2=b1
-		 ( 0.9 0.1 )));   %  S3=s2  B2=b2
-    }
-
-    potential (S3 | S2)
-    {
-	data = (( 0.6 0.4 )   %  S2=s1
-		( 0.3 0.7 )); %  S2=s2
+	data = ((( 0.9 0.1 )	%  S2=s1  B1=b1
+		 ( 0.1 0.9 ))	%  S2=s1  B1=b2
+		(( 0.1 0.9 )	%  S2=s2  B1=b1
+		 ( 0.9 0.1 )));	%  S2=s2  B1=b2
     }
 
     potential (S2 | S1)
     {
-	data = (( 0.6 0.4 )   %  S1=s1
-		( 0.3 0.7 )); %  S1=s2
-    }
-
-    potential (S1)
-    {
-	data = ( 1 1 1 );
+	data = (( 0.6 0.4 )	%  S1=s1
+		( 0.3 0.7 ));	%  S1=s2
     }
 } % class htm_lite

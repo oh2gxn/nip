@@ -39,20 +39,10 @@ class htm2_timeslice
 
     node A1
     {
-	label = "";
-	position = (53 314);
+	label = "A(t)";
+	position = (280 280);
 	states = ("s1" "s2" "s3");
-	HR_Desc = "";
-	HR_State_2 = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node A2
-    {
-	label = "";
-	position = (304 314);
-	states = ("s1" "s2" "s3");
+	HR_Group = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
@@ -61,20 +51,26 @@ class htm2_timeslice
 
     node B1
     {
-	label = "";
-	position = (173 171);
+	label = "B(t)";
+	position = (360 160);
 	states = ("s1" "s2" "s3");
+	HR_Group = "0";
+	HR_LinkMode_A2 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
     }
 
-    node B2
+    node S0
     {
-	label = "";
-	position = (324 171);
+	label = "S(t-1)";
+	position = (80 40);
 	states = ("s1" "s2" "s3");
+	HR_Group = "0";
+	HR_LinkMode_A1 = "0";
+	HR_LinkMode_B1 = "0";
+	HR_LinkMode_S2 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
@@ -83,25 +79,17 @@ class htm2_timeslice
 
     node S1
     {
-	label = "";
-	position = (66 52);
+	label = "S(t)";
+	position = (280 40);
 	states = ("s1" "s2" "s3");
-	HR_Desc = "";
-	HR_State_2 = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
-    node S2
-    {
-	label = "";
-	position = (304 52);
-	states = ("s1" "s2" "s3");
-	HR_Desc = "";
-	HR_State_2 = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
 	NIP_next = "S1";
+	HR_Group = "0";
+	HR_LinkMode_A2 = "0";
+	HR_LinkMode_B2 = "0";
+	HR_Desc = "";
+	HR_State_2 = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
     }
 
     potential (A1 | B1 S1)
@@ -117,19 +105,6 @@ class htm2_timeslice
 		 ( 0.786 0.188 0.026 )));	%  B1=s3  S1=s3
     }
 
-    potential (A2 | B2 S2)
-    {
-	data = ((( 0.951 0.022 0.027 )	%  B2=s1  S2=s1
-		 ( 0.892 0.055 0.053 )	%  B2=s1  S2=s2
-		 ( 0.535 0.115 0.35 ))	%  B2=s1  S2=s3
-		(( 0.306 0.021 0.673 )	%  B2=s2  S2=s1
-		 ( 0.056 0.487 0.457 )	%  B2=s2  S2=s2
-		 ( 0.289 0.216 0.495 ))	%  B2=s2  S2=s3
-		(( 0.647 0.259 0.094 )	%  B2=s3  S2=s1
-		 ( 0.903 0.071 0.026 )	%  B2=s3  S2=s2
-		 ( 0.786 0.188 0.026 )));	%  B2=s3  S2=s3
-    }
-
     potential (B1 | S1)
     {
 	data = (( 0.085 0.045 0.87 )	%  S1=s1
@@ -137,22 +112,15 @@ class htm2_timeslice
 		( 0.088 0.519 0.393 ));	%  S1=s3
     }
 
-    potential (B2 | S2)
-    {
-	data = (( 0.085 0.045 0.87 )	%  S2=s1
-		( 0.96 0.03 0.01 )	%  S2=s2
-		( 0.088 0.519 0.393 ));	%  S2=s3
-    }
-
-    potential (S2 | S1)
-    {
-	data = (( 0.246 0.68 0.074 )	%  S1=s1
-		( 0.659 0.025 0.316 )	%  S1=s2
-		( 0.171 0.587 0.242 ));	%  S1=s3
-    }
-
-    potential (S1)
+    potential (S0)
     {
 	data = ( 1 1 1 );
+    }
+
+    potential (S1 | S0)
+    {
+	data = (( 0.246 0.68 0.074 )	%  S0=s1
+		( 0.659 0.025 0.316 )	%  S0=s2
+		( 0.171 0.587 0.242 ));	%  S0=s3
     }
 } % class htm2_timeslice

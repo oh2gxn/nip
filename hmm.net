@@ -39,8 +39,8 @@ class hmm
 
     node A
     {
-	label = "S1";
-	position = (100 200);
+	label = "S(1)";
+	position = (100 100);
 	states = ("s1" "s2" "s3" "s4" "s5");
 	HR_Desc = "";
 	HR_State_1 = "";
@@ -49,8 +49,8 @@ class hmm
 
     node B
     {
-	label = "Y1";
-	position = (100 100);
+	label = "Y(1)";
+	position = (100 200);
 	states = ("y1" "y2" "y3" "y4" "y5");
 	HR_Desc = "";
 	HR_State_1 = "";
@@ -59,8 +59,8 @@ class hmm
 
     node C
     {
-	label = "S2";
-	position = (200 200);
+	label = "S(2)";
+	position = (200 100);
 	states = ("s1" "s2" "s3" "s4" "s5");
 	HR_Desc = "";
 	HR_State_1 = "";
@@ -69,8 +69,8 @@ class hmm
 
     node D
     {
-	label = "Y2";
-	position = (200 100);
+	label = "Y(2)";
+	position = (200 200);
 	states = ("y1" "y2" "y3" "y4" "y5");
 	HR_Desc = "";
 	HR_State_1 = "";
@@ -79,8 +79,8 @@ class hmm
 
     node E
     {
-	label = "S3";
-	position = (300 200);
+	label = "S(3)";
+	position = (300 100);
 	states = ("s1" "s2" "s3" "s4" "s5");
 	HR_Desc = "";
 	HR_State_1 = "";
@@ -89,8 +89,8 @@ class hmm
 
     node F
     {
-	label = "Y3";
-	position = (300 100);
+	label = "Y(3)";
+	position = (300 200);
 	states = ("y1" "y2" "y3" "y4" "y5");
 	HR_Desc = "";
 	HR_State_1 = "";

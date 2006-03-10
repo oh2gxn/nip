@@ -39,38 +39,31 @@ class hmm_timeslice
 
     node A
     {
-	label = "S1";
+	label = "S(t-1)";
 	position = (100 100);
 	states = ("s1" "s2" "s3" "s4" "s5");
+	HR_LinkMode_B = "0";
+	HR_LinkMode_C = "0";
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-    }
-
-    node B
-    {
-	label = "Y1";
-	position = (100 200);
-	states = ("y1" "y2" "y3" "y4" "y5");
-	HR_Desc = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
+	NIP_next = "C";
     }
 
     node C
     {
-	label = "S2";
+	label = "S(t)";
 	position = (200 100);
 	states = ("s1" "s2" "s3" "s4" "s5");
+	HR_LinkMode_D = "0";
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-	NIP_next = "A";
     }
 
     node D
     {
-	label = "Y2";
+	label = "Y(t)";
 	position = (200 200);
 	states = ("y1" "y2" "y3" "y4" "y5");
 	HR_Desc = "";
@@ -80,34 +73,24 @@ class hmm_timeslice
 
     potential (A)
     {
-        data = ( 1 1 1 1 1 );
-    }
-
-    potential (B | A)
-    {          %  B=y1  B=y2   B=y3   B=y4   B=y5
-	data = (( 0.15  0.55   0.15   0.05   0.1  )	%  A=s1
-		( 0.8	0.05   0.05   0.05   0.05 )	%  A=s2
-		( 0.05	0.1    0.65   0.05   0.15 )	%  A=s3
-		( 0.1	0.05   0.1    0.4    0.35 )	%  A=s4
-		( 0.05	0.05   0.05   0.2    0.65 ));	%  A=s5
+	data = ( 1 1 1 1 1 );
     }
 
     potential (C | A)
-    {          %  C=s1  C=s2   C=s3   C=s4   C=s5
-	data = (( 0.5   0.1    0.2    0.05   0.15 )	%  A=s1
-		( 0.2   0.6    0.05   0.1    0.05 )	%  A=s2
-		( 0.05  0.2    0.4    0.05   0.3  )	%  A=s3
-		( 0.05  0.05   0.1    0.5    0.3  )	%  A=s4
-		( 0.2   0.05   0.25   0.3    0.2  ));	%  A=s5
+    {
+	data = (( 0.5 0.1 0.2 0.05 0.15 )	%  A=s1
+		( 0.2 0.6 0.05 0.1 0.05 )	%  A=s2
+		( 0.05 0.2 0.4 0.05 0.3 )	%  A=s3
+		( 0.05 0.05 0.1 0.5 0.3 )	%  A=s4
+		( 0.2 0.05 0.25 0.3 0.2 ));	%  A=s5
     }
 
     potential (D | C)
-    {          %  D=y1  D=y2   D=y3   D=y4   D=y5
-	data = (( 0.15  0.55   0.15   0.05   0.1  )	%  C=s1
-		( 0.8	0.05   0.05   0.05   0.05 )	%  C=s2
-		( 0.05	0.1    0.65   0.05   0.15 )	%  C=s3
-		( 0.1	0.05   0.1    0.4    0.35 )	%  C=s4
-		( 0.05	0.05   0.05   0.2    0.65 ));	%  C=s5
+    {
+	data = (( 0.15 0.55 0.15 0.05 0.1 )	%  C=s1
+		( 0.8 0.05 0.05 0.05 0.05 )	%  C=s2
+		( 0.05 0.1 0.65 0.05 0.15 )	%  C=s3
+		( 0.1 0.05 0.1 0.4 0.35 )	%  C=s4
+		( 0.05 0.05 0.05 0.2 0.65 ));	%  C=s5
     }
-
 } % class hmm_timeslice

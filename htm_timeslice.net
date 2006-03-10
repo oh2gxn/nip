@@ -37,17 +37,6 @@ class htm_timeslice
     HR_Grid_Y = "40";
     HR_Grid_X = "40";
 
-    node A0
-    {
-	label = "A0";
-	position = (50 300);
-	states = ("s1" "s2" "s3");
-	HR_Desc = "";
-	HR_State_2 = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
     node A1
     {
 	label = "A1";
@@ -57,7 +46,6 @@ class htm_timeslice
 	HR_State_2 = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-	NIP_next = "A0";
     }
 
     node B0
@@ -65,10 +53,13 @@ class htm_timeslice
 	label = "B0";
 	position = (175 175);
 	states = ("s1" "s2" "s3");
+	HR_LinkMode_A0 = "0";
+	HR_LinkMode_B1 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
+	NIP_next = "B1";
     }
 
     node B1
@@ -76,11 +67,11 @@ class htm_timeslice
 	label = "B1";
 	position = (425 175);
 	states = ("s1" "s2" "s3");
+	HR_LinkMode_A1 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-	NIP_next = "B0";
     }
 
     node S1
@@ -88,11 +79,12 @@ class htm_timeslice
 	label = "S1";
 	position = (300 50);
 	states = ("s1" "s2" "s3");
+	HR_LinkMode_A1 = "0";
+	HR_LinkMode_B1 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-	NIP_next = "S0";
     }
 
     node S0
@@ -100,27 +92,18 @@ class htm_timeslice
 	label = "S0";
 	position = (50 50);
 	states = ("s1" "s2" "s3");
+	HR_LinkMode_A0 = "0";
+	HR_LinkMode_B0 = "0";
+	HR_LinkMode_S1 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-    }
-
-    potential (A0 | B0 S0)
-    {
-	data = ((( 0.951 0.022 0.027 )	%  B0=s1  S0=s1
-		 ( 0.892 0.055 0.053 )	%  B0=s1  S0=s2
-		 ( 0.535 0.115 0.35 ))	%  B0=s1  S0=s3
-		(( 0.306 0.021 0.673 )	%  B0=s2  S0=s1
-		 ( 0.056 0.487 0.457 )	%  B0=s2  S0=s2
-		 ( 0.289 0.216 0.495 ))	%  B0=s2  S0=s3
-		(( 0.647 0.259 0.094 )	%  B0=s3  S0=s1
-		 ( 0.903 0.071 0.026 )	%  B0=s3  S0=s2
-		 ( 0.786 0.188 0.026 )));	%  B0=s3  S0=s3
+	NIP_next = "S1";
     }
 
     potential (A1 | B1 S1)
-    { 
+    {
 	data = ((( 0.951 0.022 0.027 )	%  B1=s1  S1=s1
 		 ( 0.892 0.055 0.053 )	%  B1=s1  S1=s2
 		 ( 0.535 0.115 0.35 ))	%  B1=s1  S1=s3
@@ -132,29 +115,25 @@ class htm_timeslice
 		 ( 0.786 0.188 0.026 )));	%  B1=s3  S1=s3
     }
 
-    potential (B0 | S0)
-    { % Has to be a uniform probability distribution ?
-        data = (( 0.3333333333 0.3333333333 0.3333333333 )	%  S0=s1
-       		( 0.3333333333 0.3333333333 0.3333333333 )	%  S0=s2
-        	( 0.3333333333 0.3333333333 0.3333333333 ));	%  S0=s3
-
-      % An old guess...
-      % data = (( 0.1283333333 0.0650 0.8066666667 )	%  S0=s1
-      %	        ( 0.9033333333 0.0566666667 0.0400 )	%  S0=s2
-      %         ( 0.0793333333 0.5396666667 0.3810 ));	%  S0=s3
-    }
+%% needed, useless or harmful?
+%    potential (B0 | S0)
+%    {
+%	data = (( 0.333333 0.333333 0.333333 )	%  S0=s1
+%		( 0.333333 0.333333 0.333333 )	%  S0=s2
+%		( 0.333333 0.333333 0.333333 ));	%  S0=s3
+%    }
 
     potential (B1 | S1 B0)
     {
 	data = ((( 0.085 0.045 0.87 )	%  S1=s1  B0=s1
-		 ( 0.1   0.05  0.85 )	%  S1=s1  B0=s2
-		 ( 0.2   0.1   0.7 ))	%  S1=s1  B0=s3
-		(( 0.96  0.03  0.01 )	%  S1=s2  B0=s1
-		 ( 0.9   0.05  0.05 )	%  S1=s2  B0=s2
-		 ( 0.85  0.09  0.06 ))	%  S1=s2  B0=s3
+		 ( 0.1 0.05 0.85 )	%  S1=s1  B0=s2
+		 ( 0.2 0.1 0.7 ))	%  S1=s1  B0=s3
+		(( 0.96 0.03 0.01 )	%  S1=s2  B0=s1
+		 ( 0.9 0.05 0.05 )	%  S1=s2  B0=s2
+		 ( 0.85 0.09 0.06 ))	%  S1=s2  B0=s3
 		(( 0.088 0.519 0.393 )	%  S1=s3  B0=s1
-		 ( 0.1   0.5   0.4 )	%  S1=s3  B0=s2
-		 ( 0.05  0.6   0.35 )));%  S1=s3  B0=s3
+		 ( 0.1 0.5 0.4 )	%  S1=s3  B0=s2
+		 ( 0.05 0.6 0.35 )));	%  S1=s3  B0=s3
     }
 
     potential (S1 | S0)
@@ -168,5 +147,4 @@ class htm_timeslice
     {
 	data = ( 1 1 1 );
     }
-
 } % class htm_timeslice

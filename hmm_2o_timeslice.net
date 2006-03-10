@@ -39,8 +39,8 @@ class hmm_2o_timeslice
 
     node C
     {
-	label = "C1";
-	position = (140 183);
+	label = "C(t)";
+	position = (333 181);
 	states = ("s1" "s2" "s3" "s4" "s5");
 	HR_Desc = "";
 	HR_State_4 = "";
@@ -52,9 +52,12 @@ class hmm_2o_timeslice
 
     node A
     {
-	label = "S1";
-	position = (100 34);
+	label = "S(t)";
+	position = (278 35);
 	states = ("s1" "s2" "s3" "s4" "s5");
+	HR_LinkMode_C = "0";
+	HR_LinkMode_B = "0";
+	HR_LinkMode_D = "0";
 	HR_State_4 = "";
 	HR_State_3 = "";
 	HR_State_2 = "";
@@ -65,8 +68,8 @@ class hmm_2o_timeslice
 
     node B
     {
-	label = "Y1";
-	position = (51 182);
+	label = "Y(t)";
+	position = (212 180);
 	states = ("y1" "y2" "y3" "y4" "y5");
 	HR_Desc = "";
 	HR_State_1 = "";
@@ -75,16 +78,17 @@ class hmm_2o_timeslice
 
     node D
     {
-	label = "S2";
-	position = (298 36);
+	label = "S(t-1)";
+	position = (91 36);
 	states = ("s1" "s2" "s3" "s4" "s5");
+	NIP_next = "A";
+	HR_Group = "0";
 	HR_State_4 = "";
 	HR_State_3 = "";
 	HR_State_2 = "";
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-	NIP_next = "A";
     }
 
     potential (C | A)
@@ -96,7 +100,7 @@ class hmm_2o_timeslice
 		( 0.059 0.453 0.042 0.288 0.158 ));	%  A=s5
     }
 
-    potential (A)
+    potential (D)
     {
 	data = ( 0.2 0.2 0.2 0.2 0.2 );
     }
@@ -110,12 +114,12 @@ class hmm_2o_timeslice
 		( 0.05 0.05 0.05 0.2 0.65 ));	%  A=s5
     }
 
-    potential (D | A)
+    potential (A | D)
     {
-	data = (( 0.5 0.1 0.2 0.05 0.15 )	%  A=s1
-		( 0.2 0.6 0.05 0.1 0.05 )	%  A=s2
-		( 0.05 0.2 0.4 0.05 0.3 )	%  A=s3
-		( 0.05 0.05 0.1 0.5 0.3 )	%  A=s4
-		( 0.2 0.05 0.25 0.3 0.2 ));	%  A=s5
+	data = (( 0.5 0.1 0.2 0.05 0.15 )	%  D=s1
+		( 0.2 0.6 0.05 0.1 0.05 )	%  D=s2
+		( 0.05 0.2 0.4 0.05 0.3 )	%  D=s3
+		( 0.05 0.05 0.1 0.5 0.3 )	%  D=s4
+		( 0.2 0.05 0.25 0.3 0.2 ));	%  D=s5
     }
 } % class hmm_2o_timeslice

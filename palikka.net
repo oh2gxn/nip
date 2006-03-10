@@ -3,19 +3,48 @@ class palikka
     inputs = ();
     outputs = ();
     node_size = (80 40);
+    HR_Desc = "";
+    HR_OOBN_FitExpand = "1";
+    HR_Zoom_ZoomFactor = "100";
+    HR_Groups_GroupColors = "";
+    HR_Groups_GroupNames = "";
+    HR_Groups_UserGroupsNo = "0";
+    HR_Color_Interface = "21";
+    HR_Color_Instance = "0";
+    HR_Color_Utility = "36";
+    HR_Color_Decision = "17";
+    HR_Color_ContinuousChance = "48";
+    HR_Color_DiscreteChance = "16";
+    HR_Monitor_InitSD = "2";
+    HR_Monitor_InitStates = "5";
+    HR_Monitor_OpenGraph = "0";
+    HR_Monitor_GraphPrecision = "100";
+    HR_Monitor_AutoUpdGraph = "0";
+    HR_Compile_MaxMinimalSeparators = "100000";
+    HR_Compile_ApproxEpsilon = "1.0E-5";
+    HR_Compile_Approximate = "0";
+    HR_Compile_Compress = "0";
+    HR_Compile_TriangMethod = "0";
+    HR_Propagate_AutoNormal = "1";
+    HR_Propagate_AutoSum = "1";
+    HR_Propagate_Auto = "1";
+    HR_Font_Italic = "0";
+    HR_Font_Weight = "400";
+    HR_Font_Size = "-12";
+    HR_Font_Name = "Arial";
+    HR_Grid_GridShow = "0";
+    HR_Grid_GridSnap = "0";
+    HR_Grid_Y = "40";
+    HR_Grid_X = "40";
 
     node S0
     {
 	label = "S(t-1)";
 	position = (100 100);
 	states = ("s1" "s2" "s3");
-    }
-
-    node Y0
-    {
-	label = "Y(t-1)";
-	position = (100 200);
-	states = ("1" "2" "3" "4" "5");
+	HR_LinkMode_Y0 = "0";
+	HR_LinkMode_S1 = "0";
+	NIP_next = "S1";
     }
 
     node S1
@@ -23,7 +52,7 @@ class palikka
 	label = "S(t)";
 	position = (200 100);
 	states = ("s1" "s2" "s3");
-	NIP_next = "S0";
+	HR_LinkMode_Y1 = "0";
     }
 
     node Y1
@@ -31,33 +60,24 @@ class palikka
 	label = "Y(t)";
 	position = (200 200);
 	states = ("1" "2" "3" "4" "5");
-	NIP_next = "Y0";
     }
 
     potential (S0)
     {
-        data = ( 1 1 1 );
-    }
-
-    potential (Y0 | S0)
-    {          %  Y0=1  Y0=2   Y0=3   Y0=4   Y0=5
-	data = (( 0.48  0.48   0.02   0.01   0.01 )	%  S0=s1
-		( 0.05	0.20   0.50   0.20   0.05 )	%  S0=s2
-		( 0.01	0.01   0.02   0.48   0.48 ));	%  S0=s3
+	data = ( 1 1 1 );
     }
 
     potential (S1 | S0)
-    {          %  S1=s1  S1=s2  S1=s3
-	data = (( 0.9    0.099  0.001 )	  %  A=s1
-		( 0.001  0.9    0.099 )	  %  A=s2
-		( 0.099  0.001  0.9   )); %  A=s3
+    {
+	data = (( 0.9 0.099 0.001 )	%  S0=s1
+		( 0.001 0.9 0.099 )	%  S0=s2
+		( 0.099 0.001 0.9 ));	%  S0=s3
     }
 
     potential (Y1 | S1)
-    {          %  Y1=1  Y1=2   Y1=3   Y1=4   Y1=5
-	data = (( 0.48  0.48   0.02   0.01   0.01 )	%  S1=s1
-		( 0.05	0.20   0.50   0.20   0.05 )	%  S1=s2
-		( 0.01	0.01   0.02   0.48   0.48 ));	%  S1=s3
+    {
+	data = (( 0.48 0.48 0.02 0.01 0.01 )	%  S1=s1
+		( 0.05 0.2 0.5 0.2 0.05 )	%  S1=s2
+		( 0.01 0.01 0.02 0.48 0.48 ));	%  S1=s3
     }
-
 } % class palikka
