@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.106 2006-03-06 17:20:10 jatoivol Exp $
+ * $Id: parser.c,v 1.107 2006-03-10 10:18:52 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -48,7 +48,7 @@ static time_init_link nip_first_timeinit = NULL;
 
 static char** nip_statenames;
 static char* nip_label;
-static char* nip_persistence; /* The name included in the NIP_t-1 field */
+static char* nip_persistence; /* The name included in the NIP_next field */
 
 /* Should a new line be read in when the next token is requested? */
 static int nip_read_line = 1;
@@ -1160,7 +1160,7 @@ int time2Vars(){
     }
     else{
       fprintf(stderr, 
-	      "NET parser: Invalid 'NIP_t-1' field for node %s!\n",
+	      "NET parser: Invalid 'NIP_next' field for node %s!\n",
 	      get_symbol(v1));
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;

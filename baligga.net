@@ -41,9 +41,10 @@ class baligga
 
     node S0
     {
-	label = "S(t)";
+	label = "S(t-1)";
 	position = (80 120);
 	states = ("s1" "s2");
+	NIP_next = "S1";
 	HR_Group = "0";
 	HR_Desc = "";
 	HR_State_1 = "";
@@ -52,39 +53,32 @@ class baligga
 	HR_LinkMode_S1 = "0";
     }
 
-    node Y0
-    {
-	label = "Y(t)";
-	position = (80 200);
-	states = ("0" "1");
-    }
-
     node S1
     {
-	label = "S(t+1)";
+	label = "S(t)";
 	position = (200 120);
 	states = ("s1" "s2");
+	HR_Group = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
 	HR_LinkMode_Y1 = "0";
-	NIP_next = "S0";
     }
 
     node Y1
     {
-	label = "Y(t+1)";
+	label = "Y(t)";
 	position = (200 200);
 	states = ("0" "1");
-	NIP_next = "Y0";
+	HR_Group = "0";
+	HR_Desc = "";
+	HR_State_1 = "";
+	HR_State_0 = "";
     }
 
     potential (S0)
     {
 	data = ( 1 1 );
-    }
-
-    potential (Y0 | S0)
-    {
-	data = (( 0.8 0.2 )	%  S0=s1
-		( 0.4 0.6 ));	%  S0=s2
     }
 
     potential (S1 | S0)

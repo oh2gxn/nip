@@ -109,10 +109,9 @@ int main(int argc, char *argv[]){
   /*******************************************/
   printf("## Computing ##\n");  
 
-
   /* the computation of posterior probabilities */
   ucs = forward_backward_inference(ts, &v, 1);
-  
+
   /* forget old evidence */
   reset_model(model);
   use_priors(model, 0);

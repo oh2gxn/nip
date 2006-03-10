@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.65 2006-03-06 17:20:10 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.66 2006-03-10 10:18:52 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -51,7 +51,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
 %token token_label "label"
 %token token_position "position"
 %token token_states "states"
-%token token_persistence "NIP_t-1"
+%token token_persistence "NIP_next"
 %token token_potential "potential"
 %token token_normal "normal"
 %token <name> QUOTED_STRING
@@ -68,7 +68,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
 input:  nodes potentials {
 
   if(time2Vars() != NO_ERROR){
-    yyerror("Invalid timeslice specification!\nCheck NIP_t-1 declarations.");
+    yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
   reset_timeinit();
@@ -93,7 +93,7 @@ input:  nodes potentials {
 /* optional net block */
 |  netDeclaration nodes potentials {
   if(time2Vars() != NO_ERROR){
-    yyerror("Invalid timeslice specification!\nCheck NIP_t-1 declarations.");
+    yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
   reset_timeinit();
@@ -119,7 +119,7 @@ input:  nodes potentials {
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
   free($2); /* the classname is useless */
   if(time2Vars() != NO_ERROR){
-    yyerror("Invalid timeslice specification!\nCheck NIP_t-1 declarations.");
+    yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
   reset_timeinit();
@@ -627,13 +627,7 @@ yylex (void)
       if(strncmp("utility", token, 7) == 0){
 	free(token);
 	return token_utility;
-      }
-      /* NIP_t-1 */
-      else if(strncmp("NIP_t-1", token, 7) == 0){
-	free(token);
-	return token_persistence;
-      }
-      
+      }      
     }
 
     if(tokenlength == 8){
@@ -651,7 +645,12 @@ yylex (void)
       else if(strncmp("discrete", token, 8) == 0){
 	free(token);
 	return token_discrete;
-      } 
+      }
+      /* NIP_next */
+      else if(strncmp("NIP_next", token, 8) == 0){
+	free(token);
+	return token_persistence;
+      }
     }
 
     if(tokenlength == 9){ 

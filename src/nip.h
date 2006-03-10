@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.44 2006-03-09 16:14:40 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.45 2006-03-10 10:18:52 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -37,9 +37,10 @@ typedef struct{
 
   /* Undocumented features: */
   int outgoing_interface_size;
-  variable *outgoing_interface;
+  variable *outgoing_interface; /* I_{t}-> */
+  variable *previous_outgoing_interface; /* I_{t-1}->*/
   int incoming_interface_size;
-  variable *incoming_interface;
+  variable *incoming_interface; /* I_{t}<- */
 
   clique in_clique;  /* Reference to the clique which receives
 		      * the message from the past timeslices */
