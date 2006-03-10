@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.107 2006-03-10 10:18:52 jatoivol Exp $
+ * $Id: parser.c,v 1.108 2006-03-10 12:25:14 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -1136,7 +1136,7 @@ int time2Vars(){
   int i, m;
   variable v1, v2;
   time_init_link initlist = nip_first_timeinit;
-  varlink vars = nip_first_temp_var;
+  variable_iterator it = get_first_variable();;
 
   /* Add time relations to variables. */
   while(initlist != NULL){
@@ -1169,33 +1169,33 @@ int time2Vars(){
   }
 
   /* Find out which variables belong to incoming/outgoing interfaces */
-  while(vars != NULL){
-    v1 = vars->data; /* get a variable */
-    
+  v2 = next_variable(&it); /* get a variable */
+  while(v2 != NULL){
     m = 0;
-    if(v1->parents){ /* if v1 has parents */
-      for(i = 0; i < v1->num_of_parents; i++){ /* for each parent */
-	v2 = v1->parents[i];
-	/* Condition for belonging to the incoming interface */
-	if(v1->previous == NULL && 
-	   v2->previous != NULL){ 
-	  /* v1 has the parent v2 in the previous time slice */
-	  v1->if_status = incoming; 
-	  v2->if_status = outgoing;
-	  m = 1;
-	  break;
+    for(i = 0; i < v2->num_of_parents; i++){ /* for each parent */
+      v1 = v2->parents[i];
+      /* Condition for belonging to the incoming interface */
+      if(v1->previous != NULL && 
+	 v2->previous == NULL){ 
+	/* v2 has the parent v1 in the previous time slice */
+	v1->if_status = outgoing;
+	v2->if_status = incoming; 
+	m = 1;
+	break;
+      }
+    }
+    if(m){ /* parents of v2 in this time slice belong to incoming interface */
+      for(i = 0; i < v2->num_of_parents; i++){
+	v1 = v2->parents[i];
+	if(v1->previous == NULL){ 
+	  /* v1 (in time slice t) is married with someone in t-1 */
+	  v1->if_status = incoming;
 	}
       }
     }
-    if(m){ /* parents of v1 in this time slice belong to incoming interface */
-      for(i = 0; i < v1->num_of_parents; i++){
-	v2 = v1->parents[i];
-	if(v2->previous == NULL) /* parent v2 in present time slice */
-	  v2->if_status = incoming;
-      }
-    }
-    vars = vars->fwd; /* next variable */
+    v2 = next_variable(&it);
   }
+
   return NO_ERROR;
 }
 

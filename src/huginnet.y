@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.66 2006-03-10 10:18:52 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.67 2006-03-10 12:25:13 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -66,17 +66,15 @@ yyerror (const char *s);  /* Called by yyparse on error */
 
 %%
 input:  nodes potentials {
-
+  if(parsedVars2Graph() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
   if(time2Vars() != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
   reset_timeinit();
-
-  if(parsedVars2Graph() != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    YYABORT;
-  }
   if(Graph2JTree() != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
@@ -92,16 +90,16 @@ input:  nodes potentials {
 
 /* optional net block */
 |  netDeclaration nodes potentials {
+  if(parsedVars2Graph() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
   if(time2Vars() != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
   reset_timeinit();
 
-  if(parsedVars2Graph() != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    YYABORT;
-  }
   if(Graph2JTree() != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
@@ -118,16 +116,16 @@ input:  nodes potentials {
 /* possible old class statement */
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
   free($2); /* the classname is useless */
+  if(parsedVars2Graph() != NO_ERROR){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
   if(time2Vars() != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
   reset_timeinit();
 
-  if(parsedVars2Graph() != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    YYABORT;
-  }
   if(Graph2JTree() != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.114 2006-03-10 10:18:52 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.115 2006-03-10 12:25:14 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -848,6 +848,7 @@ static int start_timeslice_message_pass(nip model, direction dir,
   clique c;
   int nvars = model->outgoing_interface_size;
   variable *vars;
+  variable v;
 
   if(dir == forward){
     vars = model->outgoing_interface;
@@ -868,8 +869,9 @@ static int start_timeslice_message_pass(nip model, direction dir,
   for(i=0; i < c->p->num_of_vars; i++){
     if(k == nvars)
       break; /* all pointers found */
+    v = (c->variables)[i];
     for(j=0; j < nvars; j++){
-      if(equal_variables((c->variables)[i], vars[j])){
+      if(equal_variables(v, vars[j])){
 	mapping[j] = i;
 	k++;
 	break;
@@ -1233,8 +1235,8 @@ uncertain_series forward_backward_inference(time_series ts,
     /* Do the inference */
     make_consistent(model);
 
-    /*** FIXME: segmentation fault ***/
-    
+    /* SEG.FAULT */
+
     /* Start a message pass between timeslices */
     if(start_timeslice_message_pass(model, forward,
 				    alpha_gamma[t]) != NO_ERROR){
@@ -1245,8 +1247,6 @@ uncertain_series forward_backward_inference(time_series ts,
       free(alpha_gamma);
       return NULL;
     }
-
-    /********************************/
 
     /* Forget old evidence */
     reset_model(model);
