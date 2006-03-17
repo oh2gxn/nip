@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.115 2006-03-10 12:25:14 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.116 2006-03-17 11:45:26 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1899,7 +1899,7 @@ double model_prob_mass(nip model){
 }
 
 
-/* This is just a naive idea we once had... */
+/* This is just a naive idea I once had... */
 /* static double momentary_loglikelihood(nip model, variable* observed, */
 /* 				      int* indexed_data, int n_observed){ */
 /*   potential p; */

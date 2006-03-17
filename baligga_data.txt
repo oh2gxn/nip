@@ -1,4 +1,4 @@
-hide_S0, hide_Y0, hide_S1, Y1
+hide_S0, invalid_Y0, hide_S1, Y1
 s2, 1, s2, 0
 s2, 0, s2, 1
 s2, 1, s2, 0
@@ -47,6 +47,7 @@ s2, 1, s2, 0
 s2, 0, s2, 1
 s2, 1, s2, 0
 s2, 0, s2, 1
+
 s2, 1, s2, 0
 s2, 0, s2, 1
 s2, 1, s2, 1
