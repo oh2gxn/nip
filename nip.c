@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.116 2006-03-17 11:45:26 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.117 2006-03-20 09:55:32 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -94,7 +94,8 @@ void use_priors(nip model, int has_history){
   variable v;
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
-    if(!has_history || v->previous == NULL){
+    /* The first time slice or nothing inherited from previous time slice */
+    if(v->prior != NULL && (!has_history || v->previous == NULL)){
       retval = enter_evidence(model->variables, model->num_of_vars, 
 			      model->cliques, model->num_of_cliques, 
 			      v, v->prior);
