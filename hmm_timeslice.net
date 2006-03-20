@@ -37,7 +37,7 @@ class hmm_timeslice
     HR_Grid_Y = "40";
     HR_Grid_X = "40";
 
-    node A
+    node S0
     {
 	label = "S(t-1)";
 	position = (100 100);
@@ -47,10 +47,10 @@ class hmm_timeslice
 	HR_Desc = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
-	NIP_next = "C";
+	NIP_next = "St";
     }
 
-    node C
+    node St
     {
 	label = "S(t)";
 	position = (200 100);
@@ -61,7 +61,7 @@ class hmm_timeslice
 	HR_State_0 = "";
     }
 
-    node D
+    node Yt
     {
 	label = "Y(t)";
 	position = (200 200);
@@ -71,26 +71,26 @@ class hmm_timeslice
 	HR_State_0 = "";
     }
 
-    potential (A)
+    potential (S0)
     {
 	data = ( 1 1 1 1 1 );
     }
 
-    potential (C | A)
+    potential (St | S0)
     {
-	data = (( 0.5 0.1 0.2 0.05 0.15 )	%  A=s1
-		( 0.2 0.6 0.05 0.1 0.05 )	%  A=s2
-		( 0.05 0.2 0.4 0.05 0.3 )	%  A=s3
-		( 0.05 0.05 0.1 0.5 0.3 )	%  A=s4
-		( 0.2 0.05 0.25 0.3 0.2 ));	%  A=s5
+	data = (( 0.5   0.1   0.2   0.05  0.15 )	%  S0=s1
+		( 0.2   0.6   0.05  0.1   0.05 )	%  S0=s2
+		( 0.05  0.2   0.4   0.05  0.3  )	%  S0=s3
+		( 0.05  0.05  0.1   0.5   0.3  )	%  S0=s4
+		( 0.2   0.05  0.25  0.3   0.2  ));	%  S0=s5
     }
 
-    potential (D | C)
+    potential (Yt | St)
     {
-	data = (( 0.15 0.55 0.15 0.05 0.1 )	%  C=s1
-		( 0.8 0.05 0.05 0.05 0.05 )	%  C=s2
-		( 0.05 0.1 0.65 0.05 0.15 )	%  C=s3
-		( 0.1 0.05 0.1 0.4 0.35 )	%  C=s4
-		( 0.05 0.05 0.05 0.2 0.65 ));	%  C=s5
+	data = (( 0.15  0.55  0.15  0.05  0.1  )	%  St=s1
+		( 0.8   0.05  0.05  0.05  0.05 )	%  St=s2
+		( 0.05  0.1   0.65  0.05  0.15 )	%  St=s3
+		( 0.1   0.05  0.1   0.4   0.35 )	%  St=s4
+		( 0.05  0.05  0.05  0.2   0.65 ));	%  St=s5
     }
 } % class hmm_timeslice

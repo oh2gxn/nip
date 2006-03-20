@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.117 2006-03-20 09:55:32 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.118 2006-03-20 14:12:00 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -94,8 +94,7 @@ void use_priors(nip model, int has_history){
   variable v;
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
-    /* The first time slice or nothing inherited from previous time slice */
-    if(v->prior != NULL && (!has_history || v->previous == NULL)){
+    if(v->prior != NULL){
       retval = enter_evidence(model->variables, model->num_of_vars, 
 			      model->cliques, model->num_of_cliques, 
 			      v, v->prior);
@@ -851,13 +850,19 @@ static int start_timeslice_message_pass(nip model, direction dir,
   variable *vars;
   variable v;
 
-  if(dir == forward){
-    vars = model->outgoing_interface;
-    c = model->out_clique;
+  /* What if there are no subsequent time slices? */
+  if(nvars == 0){
+    alpha_or_gamma->data[0] = 1.0;
+    return NO_ERROR;
   }
-  else{
+
+  if(dir == forward){
     vars = model->previous_outgoing_interface; 
     c = model->in_clique;
+  }
+  else{
+    vars = model->outgoing_interface;
+    c = model->out_clique;
   }
 
   mapping = (int*) calloc(nvars, sizeof(int));
@@ -905,12 +910,12 @@ static int finish_timeslice_message_pass(nip model, direction dir,
 
   /* This uses memoization for finding a suitable clique c */
   if(dir == forward){
-    vars = model->previous_outgoing_interface;
-    c = model->in_clique;
-  }
-  else{
     vars = model->outgoing_interface;
     c = model->out_clique;
+  }
+  else{
+    vars = model->previous_outgoing_interface;
+    c = model->in_clique;
   }
 
   mapping = (int*) calloc(nvars, sizeof(int));
@@ -1087,7 +1092,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       /* 4. Normalisation */
       normalise(results->data[t][i], number_of_values(temp));
     } 
-   
+
     /* Start a message pass between time slices (compute new alpha) */
     if(start_timeslice_message_pass(model, forward, 
 				    alpha) != NO_ERROR){
@@ -1096,8 +1101,10 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       free_potential(alpha);
       return NULL;
     }
+   
     /* Forget old evidence */
     reset_model(model);
+    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);    
   }
   free_potential(alpha); 
 
@@ -1235,8 +1242,6 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* Do the inference */
     make_consistent(model);
-
-    /* SEG.FAULT */
 
     /* Start a message pass between timeslices */
     if(start_timeslice_message_pass(model, forward,
