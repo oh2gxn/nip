@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.118 2006-03-20 14:12:00 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.119 2006-03-20 14:42:21 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -92,9 +92,13 @@ void total_reset(nip model){
 void use_priors(nip model, int has_history){
   int i, retval;
   variable v;
+
+  if(1) return; /* FIXME: Is this function totally useless? */
+
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
-    if(v->prior != NULL){
+    if(v->prior != NULL && 
+       (!has_history || v->if_status != outgoing)){
       retval = enter_evidence(model->variables, model->num_of_vars, 
 			      model->cliques, model->num_of_cliques, 
 			      v, v->prior);
@@ -1049,7 +1053,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   /* Forward phase */
   /*****************/
   reset_model(model);
-  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+  /* use_priors(model, !HAD_A_PREVIOUS_TIMESLICE); */
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     /* DEBUG: to see how the new likelihood computation is doing... */
@@ -1104,7 +1108,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
    
     /* Forget old evidence */
     reset_model(model);
-    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);    
+    /*use_priors(model, HAD_A_PREVIOUS_TIMESLICE);*/
   }
   free_potential(alpha); 
 
@@ -1222,7 +1226,7 @@ uncertain_series forward_backward_inference(time_series ts,
   /* Forward phase */
   /*****************/
   reset_model(model);
-  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+  /*use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);*/
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
@@ -1256,10 +1260,10 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* Forget old evidence */
     reset_model(model);
-    if(ts->length > 1)
-      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
-    else
-      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+    /*if(ts->length > 1)
+     *  use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+     *else
+     *  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE); */
   }
   
   /******************/
@@ -1337,10 +1341,10 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* forget old evidence */
     reset_model(model);
-    if(t > 1)
-      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
-    else
-      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);      
+    /*if(t > 1)
+     *  use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+     *else
+     *  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);*/
   }
 
   /* free the intermediate potentials */
@@ -1540,7 +1544,7 @@ static int e_step(time_series ts, potential* parameters,
   /* Forward phase */
   /*****************/
   reset_model(model);
-  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+  /*use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);*/
   *loglikelihood = 0; /* init */
   
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
@@ -1601,10 +1605,10 @@ static int e_step(time_series ts, potential* parameters,
 
     /* Forget old evidence */
     reset_model(model);
-    if(ts->length > 1)
-      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
-    else
-      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+    /*if(ts->length > 1)
+     *  use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+     *else
+     *  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);*/
   }
   
   /******************/
@@ -1703,10 +1707,10 @@ static int e_step(time_series ts, potential* parameters,
 
     /* forget old evidence */
     reset_model(model);
-    if(t > 1)
-      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
-    else
-      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+    /*if(t > 1)
+     *  use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+     *else
+     *  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);*/
   }
 
   /* free the space for calculations */
@@ -2089,13 +2093,14 @@ time_series generate_data(nip model, int length){
 
   for(i = 0; i < model->outgoing_interface_size; i++)
     cardinalities[i] = number_of_values(model->outgoing_interface[i]);
-  alpha = make_potential(cardinalities, model->outgoing_interface_size, NULL);
+  alpha = make_potential(cardinalities, 
+			 model->outgoing_interface_size, NULL);
   free(cardinalities);
   
-  /* new seed number for rand and clear the previous evidence from the model */
+  /* new seed number for rand and clear the previous evidence */
   random_seed();
   reset_model(model);
-  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+  /*use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);*/
 
   /* for each time step */
   for(t = 0; t < ts->length; t++){
@@ -2118,7 +2123,7 @@ time_series generate_data(nip model, int length){
       /*** organize a lottery */
       k = lottery(distribution, number_of_values(v));
       free(distribution);
-      /*** insert the data into the time series and the model as evidence */
+      /*** insert into the time series and the model as evidence */
       ts->data[t][i] = k;
       enter_i_observation(model->variables, model->num_of_vars, 
 			  model->cliques, model->num_of_cliques, v, k);
