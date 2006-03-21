@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.47 2006-03-06 17:20:09 jatoivol Exp $
+ * Graph.c $Id: Graph.c,v 1.48 2006-03-21 15:15:12 jatoivol Exp $
  */
 
 #include <string.h>
@@ -360,6 +360,7 @@ int find_cliques(Graph* G, clique** cliques_p)
     /* JJT: I added some free_graph stuff here, because I suspected
      * memory leaks... */
     free_graph(Gu);
+    free_graph(Gi);
     free_graph(Gm);
 
     return n_cliques;

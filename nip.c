@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.120 2006-03-21 14:43:25 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.121 2006-03-21 15:15:12 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -472,6 +472,7 @@ void free_model(nip model){
   free(model->next);
   free(model->previous);
   free(model->outgoing_interface);
+  free(model->previous_outgoing_interface);
   free(model->incoming_interface);
   free(model->children);
   free(model->independent);
