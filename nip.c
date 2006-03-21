@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.119 2006-03-20 14:42:21 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.120 2006-03-21 14:43:25 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -267,6 +267,25 @@ nip parse_model(char* file){
   free(it);
   reset_variable_list();
   reset_clique_array();
+
+#ifdef DEBUG_NIP
+  if(new->out_clique){
+    printf("Out clique:\n");
+    print_clique(new->out_clique);
+  }
+  printf("Incoming interface:\n");
+  for(i = 0; i < new->incoming_interface_size; i++)
+    printf("%s, ", new->incoming_interface[i]->symbol);
+  printf("\n");
+  printf("Outgoing interface:\n");
+  for(i = 0; i < new->outgoing_interface_size; i++)
+    printf("%s, ", new->outgoing_interface[i]->symbol);
+  printf("\n");
+  printf("Old outgoing interface:\n");
+  for(i = 0; i < new->outgoing_interface_size; i++)
+    printf("%s, ", new->previous_outgoing_interface[i]->symbol);
+  printf("\n");
+#endif
 
   return new;
 }
@@ -1074,7 +1093,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
     }
 
     /* Do the inference */
-    make_consistent(model); /* Collect to out_clique enough? */
+    make_consistent(model); /* Collect to out_clique would be enough? */
 
     m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
     printf("Log.likelihood log(L(%d)) = %g\n", t, (log(m2) - log(m1)));
@@ -1279,7 +1298,7 @@ uncertain_series forward_backward_inference(time_series ts,
       if(finish_timeslice_message_pass(model, forward, 
 				       alpha_gamma[t-1], 
 				       NULL)                   != NO_ERROR){
-
+	
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
