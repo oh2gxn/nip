@@ -1,0 +1,188 @@
+net
+{
+    node_size = (80 40);
+    HR_Desc = "";
+    HR_OOBN_FitExpand = "1";
+    HR_Zoom_ZoomFactor = "100";
+    HR_Groups_GroupColors = "";
+    HR_Groups_GroupNames = "";
+    HR_Groups_UserGroupsNo = "0";
+    HR_Color_Interface = "21";
+    HR_Color_Instance = "0";
+    HR_Color_Utility = "36";
+    HR_Color_Decision = "17";
+    HR_Color_ContinuousChance = "48";
+    HR_Color_DiscreteChance = "16";
+    HR_Monitor_InitSD = "2";
+    HR_Monitor_InitStates = "5";
+    HR_Monitor_OpenGraph = "0";
+    HR_Monitor_GraphPrecision = "100";
+    HR_Monitor_AutoUpdGraph = "0";
+    HR_Compile_MaxMinimalSeparators = "100000";
+    HR_Compile_ApproxEpsilon = "1.0E-5";
+    HR_Compile_Approximate = "0";
+    HR_Compile_Compress = "0";
+    HR_Compile_TriangMethod = "0";
+    HR_Propagate_AutoNormal = "1";
+    HR_Propagate_AutoSum = "1";
+    HR_Propagate_Auto = "1";
+    HR_Font_Italic = "0";
+    HR_Font_Weight = "400";
+    HR_Font_Size = "-12";
+    HR_Font_Name = "Arial";
+    HR_Grid_GridShow = "0";
+    HR_Grid_GridSnap = "0";
+    HR_Grid_Y = "40";
+    HR_Grid_X = "40";
+}
+
+node Y1
+{
+    label = "Y(t)";
+    position = (240 80);
+    states = ("State1" "State2" "State3");
+    HR_Group = "0";
+    HR_Desc = "";
+    HR_State_2 = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+    HR_LinkMode_C9 = "0";
+}
+
+node Y0
+{
+    label = "Y(t-1)";
+    position = (80 80);
+    states = ("State1" "State2" "State3");
+    NIP_next = "Y1";
+    HR_LinkMode_Y1 = "0";
+    HR_Group = "0";
+    HR_Desc = "";
+    HR_State_2 = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+    HR_LinkMode_C8 = "0";
+}
+
+node S1
+{
+    label = "S(t)";
+    position = (240 160);
+    states = ("State1" "State2" "State3");
+    HR_LinkMode_Y1 = "0";
+    HR_Group = "0";
+    HR_Desc = "";
+    HR_State_2 = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+    HR_LinkMode_C8 = "0";
+    HR_LinkMode_C6 = "0";
+}
+
+node S0
+{
+    label = "S(t-1)";
+    position = (80 160);
+    states = ("State1" "State2" "State3");
+    NIP_next = "S1";
+    HR_LinkMode_Y0 = "0";
+    HR_LinkMode_S1 = "0";
+    HR_Group = "0";
+    HR_Desc = "";
+    HR_State_2 = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+    HR_LinkMode_C7 = "0";
+    HR_LinkMode_C5 = "0";
+}
+
+node V1
+{
+    label = "V(t)";
+    position = (240 280);
+    states = ("State1" "State2" "State3");
+    HR_LinkMode_S1 = "0";
+    HR_Group = "0";
+    HR_Desc = "";
+    HR_State_2 = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+    HR_LinkMode_C5 = "0";
+    HR_LinkMode_C3 = "0";
+}
+
+node V0
+{
+    label = "V(t-1)";
+    position = (80 280);
+    states = ("State1" "State2" "State3");
+    NIP_next = "V1";
+    HR_LinkMode_S0 = "0";
+    HR_LinkMode_V1 = "0";
+    HR_Group = "0";
+    HR_Desc = "";
+    HR_State_2 = "";
+    HR_State_1 = "";
+    HR_State_0 = "";
+    HR_LinkMode_C4 = "0";
+    HR_LinkMode_C2 = "0";
+}
+
+potential (Y1 | S1 Y0)
+{
+    data
+     = ((( 0.8 0.1 0.1 )	%  S1=State1  Y0=State1
+	 ( 0.1 0.8 0.1 )	%  S1=State1  Y0=State2
+	 ( 0.1 0.1 0.8 ))	%  S1=State1  Y0=State3
+	(( 0.1 0.8 0.1 )	%  S1=State2  Y0=State1
+	 ( 0.1 0.1 0.8 )	%  S1=State2  Y0=State2
+	 ( 0.8 0.1 0.1 ))	%  S1=State2  Y0=State3
+	(( 0.1 0.1 0.8 )	%  S1=State3  Y0=State1
+	 ( 0.8 0.1 0.1 )	%  S1=State3  Y0=State2
+	 ( 0.1 0.8 0.1 )));	%  S1=State3  Y0=State3
+}
+
+%% useless or harmful?
+%potential (Y0 | S0)
+%{
+%    data
+%     = (( 1 1 1 )	%  S0=State1
+%	( 1 1 1 )	%  S0=State2
+%	( 1 1 1 ));	%  S0=State3
+%}
+
+potential (S1 | V1 S0)
+{
+    data
+     = ((( 0.8 0.1 0.1 )	%  V1=State1  S0=State1
+	 ( 0.1 0.8 0.1 )	%  V1=State1  S0=State2
+	 ( 0.1 0.1 0.8 ))	%  V1=State1  S0=State3
+	(( 0.1 0.8 0.1 )	%  V1=State2  S0=State1
+	 ( 0.1 0.1 0.8 )	%  V1=State2  S0=State2
+	 ( 0.8 0.1 0.1 ))	%  V1=State2  S0=State3
+	(( 0.1 0.1 0.8 )	%  V1=State3  S0=State1
+	 ( 0.8 0.1 0.1 )	%  V1=State3  S0=State2
+	 ( 0.1 0.8 0.1 )));	%  V1=State3  S0=State3
+}
+
+%% useless or harmful?
+%potential (S0 | V0)
+%{
+%    data
+%     = (( 1 1 1 )	%  V0=State1
+%	( 1 1 1 )	%  V0=State2
+%	( 1 1 1 ));	%  V0=State3
+%}
+
+potential (V1 | V0)
+{
+    data
+     = (( 0.99 0.005 0.005 )	%  V0=State1
+	( 0.005 0.99 0.005 )	%  V0=State2
+	( 0.005 0.005 0.99 ));	%  V0=State3
+}
+
+potential (V0)
+{
+    data = ( 1 1 1 );
+}
