@@ -20,7 +20,9 @@
 #include "errorhandler.h"
 #include "nip.h"
 
+/*
 #define PRINT_CLIQUE_TREE
+*/
 
 /* contains some copy-paste from write_timeseries in nip.c */
 
@@ -119,7 +121,7 @@ int main(int argc, char *argv[]){
   free_uncertainseries(ucs); /* remember to free ucs */
 
 
-  printf("\n"); /* new line for the prompt */
+  printf("done.\n"); /* new line for the prompt */
 
   /* free some memory */
   for(i = 0; i < n_max; i++)
