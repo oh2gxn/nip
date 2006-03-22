@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.121 2006-03-21 15:15:12 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.122 2006-03-22 14:47:26 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -174,6 +174,13 @@ nip parse_model(char* file){
     /* how many have parents */
     if(temp->parents)
       new->num_of_children++;
+    else
+      if(temp->prior == NULL){
+	fprintf(stderr, "Warning: No prior for the variable %s!\n", 
+		temp->symbol);
+	temp->prior = (double*) calloc(temp->cardinality, sizeof(double));
+	/* this fixes the situation */
+      }
   }
 
   new->next = (variable*) calloc(new->num_of_nexts, sizeof(variable));
@@ -1857,7 +1864,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
 
   ts_steps = 0;
   for(n = 0; n < n_ts; n++)
-    ts_steps += timeseries_length(ts[n]);
+    ts_steps += timeseries_length(ts[n]);  
 
   /************/
   /* THE Loop */
