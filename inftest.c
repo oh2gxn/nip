@@ -117,6 +117,8 @@ int main(int argc, char *argv[]){
   /* forget old evidence */
   reset_model(model);
   use_priors(model, 0);
+
+  /* write the output */
   write_uncertainseries(ucs, v, argv[4]);
   free_uncertainseries(ucs); /* remember to free ucs */
 

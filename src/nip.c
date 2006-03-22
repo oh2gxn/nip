@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.122 2006-03-22 14:47:26 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.123 2006-03-22 15:59:21 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -375,8 +375,9 @@ int write_model(nip model, char* name){
     for(j = 0; j < n; j++)
       fprintf(f, " \"%s\" \n%s              ", v->statenames[j], indent);
     fprintf(f, " \"%s\" );\n", v->statenames[n]);
-    if(v->next)
-      fprintf(f, "%s    NIP_next = \"%s\";\n", indent, get_symbol(v->next));
+    if(v->previous)
+      fprintf(f, "%s    NIP_next = \"%s\";\n", indent, 
+	      get_symbol(v->previous));
     fprintf(f, "%s}\n", indent);
     fflush(f);
   }
