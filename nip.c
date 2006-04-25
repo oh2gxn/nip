@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.123 2006-03-22 15:59:21 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.124 2006-04-25 12:57:16 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -940,6 +940,9 @@ static int finish_timeslice_message_pass(nip model, direction dir,
   int nvars = model->outgoing_interface_size;
   variable *vars;
 
+  if(nvars == 0) /* independent time slices (multiplication with 1) */
+    return NO_ERROR;
+
   /* This uses memoization for finding a suitable clique c */
   if(dir == forward){
     vars = model->outgoing_interface;
@@ -987,7 +990,9 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   nip model = ts->model;
 
   /* DEBUG */
+#ifdef DEBUG_NIP
   double m1, m2;
+#endif
   
   /* Allocate an array */
   if(model->outgoing_interface_size > 0){
@@ -1085,7 +1090,9 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     /* DEBUG: to see how the new likelihood computation is doing... */
+#ifdef DEBUG_NIP
     m1 = model_prob_mass(model);
+#endif
     
     /* Put some data in */
     insert_ts_step(ts, t, model);
@@ -1104,8 +1111,10 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
     /* Do the inference */
     make_consistent(model); /* Collect to out_clique would be enough? */
 
+#ifdef DEBUG_NIP
     m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
     printf("Log.likelihood log(L(%d)) = %g\n", t, (log(m2) - log(m1)));
+#endif
 
     /* Write the results */
     for(i = 0; i < results->num_of_vars; i++){      
@@ -2121,8 +2130,7 @@ time_series generate_data(nip model, int length){
 
   for(i = 0; i < model->outgoing_interface_size; i++)
     cardinalities[i] = number_of_values(model->outgoing_interface[i]);
-  alpha = make_potential(cardinalities, 
-			 model->outgoing_interface_size, NULL);
+  alpha = make_potential(cardinalities, model->outgoing_interface_size, NULL);
   free(cardinalities);
   
   /* new seed number for rand and clear the previous evidence */
@@ -2132,8 +2140,9 @@ time_series generate_data(nip model, int length){
 
   /* for each time step */
   for(t = 0; t < ts->length; t++){
-    /* influence of the previous time step */
-    if(t > 0)
+
+    /* influence from the previous time step */
+    if(t > 0){
       if(finish_timeslice_message_pass(model, forward, 
 				       alpha, NULL) != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -2141,6 +2150,7 @@ time_series generate_data(nip model, int length){
 	free_potential(alpha);
 	return NULL;
       }
+    }
     
     /** for each variable */
     for(i = 0; i < nvars; i++){
@@ -2165,6 +2175,7 @@ time_series generate_data(nip model, int length){
       free_potential(alpha);
       return NULL;
     }
+
     /* Forget old evidence */
     reset_model(model);
   }
