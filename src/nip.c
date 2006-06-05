@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.124 2006-04-25 12:57:16 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.125 2006-06-05 12:44:42 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -48,6 +48,10 @@
  *   - another forward-like algorithm with elements of dynamic programming
  *   - To save huge amounts of memory, could the process use some kind of 
  *     "timeslice sepsets" for encoding the progress throughout time?
+
+ * - Online forward_inference (+ refactor offline forward_inference?)
+
+ * - Online fixed_lag_smoothing...
  *****/
 
 extern int yyparse();
