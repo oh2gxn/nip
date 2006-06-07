@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.125 2006-06-05 12:44:42 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.126 2006-06-07 15:21:57 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -947,7 +947,7 @@ static int finish_timeslice_message_pass(nip model, direction dir,
   if(nvars == 0) /* independent time slices (multiplication with 1) */
     return NO_ERROR;
 
-  /* This uses memoization for finding a suitable clique c */
+  /* Find a suitable clique c */
   if(dir == forward){
     vars = model->outgoing_interface;
     c = model->out_clique;
