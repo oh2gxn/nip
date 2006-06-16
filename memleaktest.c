@@ -189,7 +189,6 @@ int main(int argc, char *argv[]){
   if(argc > 2){
     printf("\nParsing and freeing models:\n");
     for(i = 0; i < n/200; i++){
-      /* FIXME: These operations leak memory */
       model = parse_model(argv[1]);
       printf("\rIteration %d of %d                               ", i + 1, 
 	     n/200);
