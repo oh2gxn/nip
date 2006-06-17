@@ -123,6 +123,11 @@ class htm_timeslice
 %		( 0.333333 0.333333 0.333333 ));	%  S0=s3
 %    }
 
+    potential (B0)
+    {
+	data = ( 1 1 1 );
+    }
+
     potential (B1 | S1 B0)
     {
 	data = ((( 0.085 0.045 0.87 )	%  S1=s1  B0=s1
