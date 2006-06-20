@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.127 2006-06-16 15:07:50 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.128 2006-06-20 17:52:34 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -40,6 +40,9 @@
 
 /***** 
  * TODO: 
+
+ * - Refactorisation of variable_union(), variable_isect(), and
+ *   mapper() by replacing a lot of copy-paste code with them...
 
  * - Should "time slice sepsets" be included in the computation of 
  *   likelihood of data?
@@ -635,14 +638,52 @@ int read_timeseries(nip model, char* filename,
 }
 
 
-int write_timeseries(time_series ts, char *filename){
+int write_timeseries(time_series *ts_set, int n_series, char *filename){
   int i, n, t;
   int d;
+  int n_observed;
   variable v;
+  variable *observed;
+  variable *observed_more;
+  time_series ts;
+  nip the_model;
   FILE *f = NULL;
 
-  n = ts->model->num_of_vars - ts->num_of_hidden;
-  if(!(n && ts && filename)){
+  /* Check stuff */
+  if(!(n_series > 0 && ts_set && filename)){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  /* Check all the models are same */
+  the_model = ts_set[0]->model;
+  for(n = 1; n < n_series; n++){
+    if(ts_set[n]->model != the_model){
+      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+      return ERROR_INVALID_ARGUMENT;
+    }
+  }
+
+  /* Find out union of observed variables */
+  ts = ts_set[0];
+  observed = variable_union(ts->observed, NULL, 
+			    the_model->num_of_vars - ts->num_of_hidden,
+			    0, &n_observed);
+  if(n_observed < 0){
+    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    return ERROR_GENERAL;
+  }
+
+  for(n = 1; n < n_series; n++){
+    ts = ts_set[n];
+    observed_more = variable_union(observed, ts->observed, n_observed,
+				   the_model->num_of_vars - ts->num_of_hidden,
+				   &n_observed);
+    free(observed); /* nice to create the same array again and again? */
+    observed = observed_more;
+  }
+
+  if(!n_observed){ /* no observations in any time series? */
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
   }
@@ -655,33 +696,41 @@ int write_timeseries(time_series ts, char *filename){
   }
 
   /* Write names of the variables */
-  fprintf(f, "%s", get_symbol(ts->observed[0]));
-  for(i = 1; i < n; i++){
-    v = ts->observed[i];
+  fprintf(f, "%s", get_symbol(observed[0]));
+  for(i = 1; i < n_observed; i++){
+    v = observed[i];
     fprintf(f, ", %s", get_symbol(v));
   }
   fputs("\n", f);
 
   /* Write the data */
-  for(t = 0; t < ts->length; t++){
-    v = ts->observed[0];
-    d = ts->data[t][0];
-    if(d >= 0)
-      fprintf(f, "%s", get_statename(v, d));
-    else
-      fputs("null", f);
+  for(n = 0; n < n_series; n++){
+    ts = ts_set[n];
+    for(t = 0; t < ts->length; t++){
 
-    for(i = 1; i < n; i++){
-      v = ts->observed[i];
-      d = ts->data[t][i];
+      /* TODO: choosing the variable is not that easy! */
+
+      v = ts->observed[0];
+      d = ts->data[t][0];
       if(d >= 0)
-	fprintf(f, ", %s", get_statename(v, d));      
+	fprintf(f, "%s", get_statename(v, d));
       else
-	fputs(", null", f);
+	fputs("null", f);
+      
+      for(i = 1; i < n_observed; i++){
+	v = ts->observed[i];
+	d = ts->data[t][i];
+	if(d >= 0)
+	  fprintf(f, ", %s", get_statename(v, d));      
+	else
+	  fputs(", null", f);
+      }
+      fputs("\n", f);
     }
-    fputs("\n", f);
-  }
-  
+    fputs("\n", f); /* TS separator */
+  }  
+  free(observed);
+
   /* Close the file */
   if(fclose(f)){
     report_error(__FILE__, __LINE__, ERROR_IO, 1);

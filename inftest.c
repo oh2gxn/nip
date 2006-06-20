@@ -24,7 +24,6 @@
 #define PRINT_CLIQUE_TREE
 */
 
-/* contains some copy-paste from write_timeseries in nip.c */
 
 int main(int argc, char *argv[]){
 

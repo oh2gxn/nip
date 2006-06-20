@@ -1,5 +1,10 @@
 /*
- * variable.c $Id: variable.c,v 1.5 2006-03-06 17:20:10 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.6 2006-06-20 17:52:34 jatoivol Exp $
+ */
+
+/* TODO:
+ * - Set operations for variables? (union, intersection etc.) 
+ * - Mappings from ordered set to another?
  */
 
 #include <stdio.h>
@@ -478,4 +483,135 @@ variable *sort_variables(variable *vars, int num_of_vars){
 
   return sorted;
 
+}
+
+
+variable *variable_union(variable *a, variable *b, int na, int nb, int* nc){
+  int i, j, n, found;
+  variable *c = NULL;
+
+  /* Check stuff */
+  if(!(a && na > 0 && ((b == NULL && nb == 0) || (b != NULL && nb > 0)))){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    if(nc)
+      *nc = -1;
+    return NULL;
+  }
+  
+  /* Size of the union */
+  n = na + nb;
+  for(i = 0; i < na; i++){
+    for(j = 0; j < nb; j++){
+      if(equal_variables(a[i], b[j])){
+	n--;
+	break;
+      }
+    }
+  }
+  *nc = n; /* save */
+  if(!n)
+    return NULL; /* empty set */
+
+  /* The union operation */
+  c = (variable*) calloc(*nc, sizeof(variable));
+  if(!c){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    if(nc)
+      *nc = -1;
+    return NULL;
+  }
+  for(i = 0; i < na; i++){ /* first the set a */
+    c[i] = a[i];
+  }
+  n = na;
+  for(i = 0; i < nb; i++){ /* then the missing ones from b */
+    found = 0;
+    for(j = 0; j < n; j++){
+      if(equal_variables(b[i], c[j])){
+	found = 1;
+	break;
+      }
+    }
+    if(!found)
+      c[n++] = b[i];
+  }
+  /* assert(*nc==n); */
+  return c;
+}
+
+
+variable *variable_isect(variable *a, variable *b, int na, int nb, int* nc){
+  int i, j, n;
+  variable *c = NULL;
+  
+  /* Check stuff */
+  if(!(a && b && na > 0 && nb > 0)){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    if(nc)
+      *nc = -1;
+    return NULL;
+  }
+  
+  /* Size of the intersection */
+  n = 0;
+  for(i = 0; i < na; i++){
+    for(j = 0; j < nb; j++){
+      if(equal_variables(a[i], b[j])){
+	n++;
+	break;
+      }
+    }
+  }
+  *nc = n; /* save */
+  if(!n)
+    return NULL; /* empty set */
+
+  /* The intersection operation */
+  c = (variable*) calloc(*nc, sizeof(variable));
+  if(!c){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    if(nc)
+      *nc = -1;
+    return NULL;
+  }
+  n = 0;
+  for(i = 0; i < na; i++){
+    for(j = 0; j < nb; j++){
+      if(equal_variables(a[i], b[j])){
+	c[n++] = a[i];
+	break;
+      }
+    }
+  }
+  /* assert(*nc==n); */
+  return c;
+}
+
+
+int *mapper(variable *set, variable *subset, int nset, int nsubset){
+  int i, j;
+  int *mapping = NULL;
+  
+  /* Check stuff */
+  if(!(set && subset && nset > 0 && nsubset > 0)){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return NULL;
+  }
+
+  mapping = (int*) calloc(nsubset, sizeof(int));
+  if(!mapping){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  for(i = 0; i < nsubset; i++){
+    for(j = 0; j < nset; j++){ /* linear search */
+      if(equal_variables(subset[i], set[j])){
+	mapping[i] = j;
+	break;
+      }
+    }
+  }
+
+  return mapping;
 }

@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.9 2006-03-06 17:20:10 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.10 2006-06-20 17:52:34 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -180,5 +180,29 @@ double* get_prior(variable v);
  * in ascending order according to their ID number.
  */
 variable *sort_variables(variable *vars, int num_of_vars);
+
+
+/* Returns a new array that contains the union of given variables. 
+ * Preserves the order of first input array. 
+ * - nc is size of the union and negative in case of errors
+ * - returned pointer is NULL if the set is empty
+ * - b==NULL => nb==0 (and c==a)
+ * (free the result somewhere)
+ */
+variable *variable_union(variable *a, variable *b, int na, int nb, int* nc);
+
+
+/* Returns a new array that contains the intersection of given variables. 
+ * Preserves the order of first input array.
+ * - nc is size of the intersection and negative in case of errors
+ * - returned pointer is NULL if the set is empty
+ * (free the result somewhere)
+ */
+variable *variable_isect(variable *a, variable *b, int na, int nb, int* nc);
+
+
+/* Returns a mapping array which tells the location of subset variables in 
+ * the (ordered) set. (free the result somewhere) */
+int *mapper(variable *set, variable *subset, int nset, int nsubset);
 
 #endif /* __VARIABLE_H__ */

@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.45 2006-03-10 10:18:52 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.46 2006-06-20 17:52:34 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -63,7 +63,7 @@ typedef struct{
   nip model;          /* The model (contains the variables and state names) */
   variable *hidden;   /* An array containing the latent variables */
   int num_of_hidden;  /* Number of latent variables */
-  variable *observed; /* An array containing the observed variables ??? */
+  variable *observed; /* An array containing the observed variables */
 
   int length;
   int **data;         /* The time series */
@@ -120,14 +120,14 @@ int write_model(nip model, char* name);
 void free_model(nip model);
 
 
-/* This reads data from the data file and constructs a time series according 
- * to the given model. */
+/* This reads data from the data file and constructs a set of time series 
+ * according to the given model. */
 int read_timeseries(nip model, char* datafile, 
 		    time_series **results);
 
 
-/* This writes the time series data into a file. */
-int write_timeseries(time_series ts, char* filename);
+/* This writes a set of time series data into a file. */
+int write_timeseries(time_series *ts_set, int n_series, char* filename);
 
 
 /* A method for freeing the huge chunk of memory used by a time series. 

@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
   d = strtod(argv[2], &tailptr);
   n = (int)d;
   if(d <= 0 || d > 1000000  || tailptr == argv[2]){
-    printf("Specify a valid threshold value: %s?\n", argv[2]);
+    printf("Invalid time series length: %s?\n", argv[2]);
     free_model(model);
     return -1;
   }
@@ -53,14 +53,14 @@ int main(int argc, char *argv[]) {
   printf("Generating data... \n");
   ts = generate_data(model, n);
   if(!ts){
-    fprintf(stderr, "There were errors during data generation!\n");
+    fprintf(stderr, "There were errors during data sampling!\n");
     free_model(model);
     return -1;
   }
   printf("...done.\n");
 
   /* Write the results to the file */
-  i =  write_timeseries(ts, argv[3]);
+  i =  write_timeseries(&ts, 1, argv[3]);
   if(i != NO_ERROR){
     fprintf(stderr, "Failed to write the data into %s\n", argv[3]);
     report_error(__FILE__, __LINE__, i, 1);
