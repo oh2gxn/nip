@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.130 2006-06-21 13:08:40 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.131 2006-06-21 14:06:09 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -709,10 +709,11 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
   }
 
   /* Write names of the variables */
-  fprintf(f, "%s", get_symbol(observed[0]));
-  for(i = 1; i < n_observed; i++){
+  for(i = 0; i < n_observed; i++){
     v = observed[i];
-    fprintf(f, ", %s", get_symbol(v));
+    if(i > 0)
+      fputs(SEPARATOR, f);
+    fprintf(f, "%s", get_symbol(v));
   }
   fputs("\n", f);
 
