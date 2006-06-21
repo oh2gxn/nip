@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.128 2006-06-20 17:52:34 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.129 2006-06-21 07:23:24 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -725,6 +725,9 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
 	else
 	  fputs(", null", f);
       }
+      
+      /* -- */
+
       fputs("\n", f);
     }
     fputs("\n", f); /* TS separator */
