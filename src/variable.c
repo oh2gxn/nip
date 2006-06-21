@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.6 2006-06-20 17:52:34 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.7 2006-06-21 13:08:40 jatoivol Exp $
  */
 
 /* TODO:
@@ -593,8 +593,9 @@ int *mapper(variable *set, variable *subset, int nset, int nsubset){
   int *mapping = NULL;
   
   /* Check stuff */
-  if(!(set && subset && nset > 0 && nsubset > 0)){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+  if(!(set && subset && nset > 0 && nsubset > 0 && nset >= nsubset)){
+    if(nsubset != 0)
+      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 

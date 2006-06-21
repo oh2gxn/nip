@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.46 2006-06-20 17:52:34 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.47 2006-06-21 13:08:40 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -10,6 +10,7 @@
 #include "errorhandler.h"
 #include <stdlib.h>
 
+#define SEPARATOR ", "
 #define FORWARD  1
 #define BACKWARD 0
 #define HAD_A_PREVIOUS_TIMESLICE 1
@@ -64,8 +65,9 @@ typedef struct{
   variable *hidden;   /* An array containing the latent variables */
   int num_of_hidden;  /* Number of latent variables */
   variable *observed; /* An array containing the observed variables */
+  int num_of_observed; /* == model->num_of_vars - num_of_hidden */
 
-  int length;
+  int length;         /* Number of time steps */
   int **data;         /* The time series */
   /* JJ NOTE: Should there be a cache for extremely large time series? */
 }time_series_type;

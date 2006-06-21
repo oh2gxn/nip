@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.129 2006-06-21 07:23:24 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.130 2006-06-21 13:08:40 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -544,6 +544,7 @@ int read_timeseries(nip model, char* filename,
     
     /* Find out how many (totally) latent variables there are. */
     ts->num_of_hidden = model->num_of_vars - obs;
+    ts->num_of_observed = obs; /* Must be "final" */
     
     /* Allocate the array for the hidden variables. */
     ts->hidden = (variable *) calloc(ts->num_of_hidden, sizeof(variable));
@@ -641,7 +642,9 @@ int read_timeseries(nip model, char* filename,
 int write_timeseries(time_series *ts_set, int n_series, char *filename){
   int i, n, t;
   int d;
+  int *record;
   int n_observed;
+  int *map;
   variable v;
   variable *observed;
   variable *observed_more;
@@ -688,10 +691,20 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
     return ERROR_INVALID_ARGUMENT;
   }
 
+  /* Temporary space for a sorted record (time step) */
+  record = (int*) calloc(n_observed, sizeof(int));
+  if(!record){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(observed);
+    return ERROR_OUTOFMEMORY;
+  }
+
   /* Try to open the file for write */
   f = fopen(filename, "w");
   if(!f){
     report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    free(observed);
+    free(record);
     return ERROR_IO;
   }
 
@@ -704,35 +717,38 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
   fputs("\n", f);
 
   /* Write the data */
-  for(n = 0; n < n_series; n++){
+  for(n = 0; n < n_series; n++){ /* for each time series */
     ts = ts_set[n];
-    for(t = 0; t < ts->length; t++){
+    map = mapper(observed, ts->observed, n_observed, ts->num_of_observed);
 
-      /* TODO: choosing the variable is not that easy! */
+    for(t = 0; t < ts->length; t++){ /* for each time step */
 
-      v = ts->observed[0];
-      d = ts->data[t][0];
-      if(d >= 0)
-	fprintf(f, "%s", get_statename(v, d));
-      else
-	fputs("null", f);
-      
-      for(i = 1; i < n_observed; i++){
-	v = ts->observed[i];
-	d = ts->data[t][i];
+      /* Fill record with indicators of missing data */
+      for(i = 0; i < n_observed; i++)
+	record[i] = -1;
+
+      /* Extract data from the time series */
+      for(i = 0; i < ts->num_of_observed; i++)
+	record[map[i]] = ts->data[t][i];
+
+      /* Print the data */
+      for(i = 0; i < n_observed; i++){
+	v = observed[i];
+	d = record[i];
+	if(i > 0)
+	  fputs(SEPARATOR, f);
 	if(d >= 0)
-	  fprintf(f, ", %s", get_statename(v, d));      
+	  fprintf(f, "%s", get_statename(v, d));      
 	else
-	  fputs(", null", f);
+	  fputs("null", f);
       }
-      
-      /* -- */
-
       fputs("\n", f);
     }
     fputs("\n", f); /* TS separator */
+    free(map);
   }  
   free(observed);
+  free(record);
 
   /* Close the file */
   if(fclose(f)){
@@ -1498,6 +1514,7 @@ time_series mlss(variable vars[], int nvars, time_series ts){
 
   mlss->model = ts->model;
   mlss->num_of_hidden = ts->model->num_of_vars - nvars;
+  mlss->num_of_observed = nvars;
   mlss->hidden = (variable*) calloc(mlss->num_of_hidden, sizeof(variable));
   mlss->observed = (variable*) calloc(nvars, sizeof(variable));
   mlss->length = ts->length;
@@ -1585,7 +1602,7 @@ static int e_step(time_series ts, potential* parameters,
   double m1, m2;
 
   /* Reserve some memory for calculation */
-  nobserved = model->num_of_vars - ts->num_of_hidden;
+  nobserved = ts->num_of_observed;
   observed = (variable*) calloc(nobserved, sizeof(variable));
   data     = (int*) calloc(nobserved, sizeof(int));
   results = (potential*) calloc(model->num_of_vars, sizeof(potential));
@@ -2148,6 +2165,7 @@ time_series generate_data(nip model, int length){
   ts->model = model;
   ts->hidden = NULL;
   ts->num_of_hidden = model->num_of_vars - nvars;
+  ts->num_of_observed = nvars;
   ts->observed = vars;
   ts->length = length;
   ts->data = NULL;
