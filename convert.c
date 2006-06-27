@@ -220,7 +220,7 @@ int main(int argc, char *argv[]) {
     ; /* shouldn't happen */
   }
   if(k != NO_ERROR){
-    fprintf(stderr, "Failed to write the data into %s\n", argv[3]);
+    fprintf(stderr, "Failed to write the data into %s\n", argv[5]);
     report_error(__FILE__, __LINE__, k, 1);
     for(i = 0; i < n; i++)
       free_timeseries(ts_set[i]);
