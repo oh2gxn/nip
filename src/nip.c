@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.131 2006-06-21 14:06:09 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.132 2006-06-28 18:51:55 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -18,9 +18,9 @@
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
 
-/*
+/**/
 #define DEBUG_NIP
-*/
+
 
 /***********************************************************
  * The time slice concept features some major difficulties 
@@ -41,11 +41,10 @@
 /***** 
  * TODO: 
 
+ * - Likelihood computations are done wrong with DBNs!
+
  * - Refactorisation of variable_union(), variable_isect(), and
  *   mapper() by replacing a lot of copy-paste code with them...
-
- * - Should "time slice sepsets" be included in the computation of 
- *   likelihood of data?
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *   - another forward-like algorithm with elements of dynamic programming
@@ -1165,7 +1164,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 #ifdef DEBUG_NIP
     m1 = model_prob_mass(model);
 #endif
-    
+
     /* Put some data in */
     insert_ts_step(ts, t, model);
         
@@ -1185,7 +1184,8 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 
 #ifdef DEBUG_NIP
     m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
-    printf("Log.likelihood log(L(%d)) = %g\n", t, (log(m2) - log(m1)));
+    printf("Log.likelihood ln(L(%d)) = %g\n", t, (log(m2) - log(m1)));
+    printf("m1 = %g \t m2 = %g\n", m1, m2);
 #endif
 
     /* Write the results */
@@ -1236,6 +1236,11 @@ uncertain_series forward_backward_inference(time_series ts,
   clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
+
+  /* DEBUG */
+#ifdef DEBUG_NIP
+  double m1, m2;
+#endif
 
   /* Allocate an array for describing the dimensions of timeslice sepsets */
   if(model->outgoing_interface_size > 0){
@@ -1379,6 +1384,10 @@ uncertain_series forward_backward_inference(time_series ts,
   /* Backward phase */
   /******************/
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
+    /* DEBUG: to see how the new likelihood computation is doing... */
+#ifdef DEBUG_NIP
+    m1 = model_prob_mass(model);
+#endif
 
     /* Put some evidence in */
     insert_ts_step(ts, t, model);
@@ -1413,7 +1422,12 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* Do the inference */
     make_consistent(model);
-    
+
+#ifdef DEBUG_NIP
+    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
+    printf("Log.likelihood ln(L(%d)) = %g\n", t, (log(m2) - log(m1)));
+    printf("m1 = %g \t m2 = %g\n", m1, m2);
+#endif    
 
     /* THE CORE: Write the results */
     for(i = 0; i < results->num_of_vars; i++){
@@ -1602,7 +1616,7 @@ static int e_step(time_series ts, potential* parameters,
   nip model = ts->model;
   double m1, m2;
 
-  /* Reserve some memory for calculation */
+  /* Reserve some memory for computation */
   nobserved = ts->num_of_observed;
   observed = (variable*) calloc(nobserved, sizeof(variable));
   data     = (int*) calloc(nobserved, sizeof(int));
