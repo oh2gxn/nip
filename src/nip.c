@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.132 2006-06-28 18:51:55 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.133 2006-06-29 14:48:30 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -968,6 +968,7 @@ static int start_timeslice_message_pass(nip model, direction dir,
     c = model->out_clique;
   }
 
+  /* mapper() ? */
   mapping = (int*) calloc(nvars, sizeof(int));
   if(!mapping){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -1024,6 +1025,7 @@ static int finish_timeslice_message_pass(nip model, direction dir,
     c = model->in_clique;
   }
 
+  /* mapper() ? */
   mapping = (int*) calloc(nvars, sizeof(int));
   if(!mapping){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -1116,7 +1118,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       while(t > 0){
 	t--;
 	for(i = 0; i < nvars; i++)
-	  free(results->data[t][i]); /* Fixed 15.3.2005. Did it help? */
+	  free(results->data[t][i]);
 	free(results->data[t]);
       }
       free(results->data); /* t == -1 */
