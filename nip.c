@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.134 2006-07-03 15:55:31 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.135 2006-07-03 16:36:48 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1124,6 +1124,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
+
     /* DEBUG: to see how the new likelihood computation is doing... */
 #ifdef DEBUG_NIP
     m1 = model_prob_mass(model);
@@ -1131,7 +1132,14 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 
     /* Put some data in */
     insert_ts_step(ts, t, model);
-        
+
+#ifdef DEBUG_NIP
+    make_consistent(model);
+    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
+    printf("Log.likelihood ln(L(%d)) = %g\n", t, (log(m2) - log(m1)));
+    printf("m1 = %g \t m2 = %g\n", m1, m2);
+#endif
+
     if(t > 0){ /*  Fwd or Fwd1  */
       /*  clique_in = clique_in * alpha  */
       if(finish_timeslice_message_pass(model, forward, 
@@ -1142,15 +1150,9 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 	return NULL;
       }
     }
-
+    
     /* Do the inference */
     make_consistent(model); /* Collect to out_clique would be enough? */
-
-#ifdef DEBUG_NIP
-    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
-    printf("Log.likelihood ln(L(%d)) = %g\n", t, (log(m2) - log(m1)));
-    printf("m1 = %g \t m2 = %g\n", m1, m2);
-#endif
 
     /* Write the results */
     for(i = 0; i < results->num_of_vars; i++){      

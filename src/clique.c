@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.23 2006-03-20 09:55:32 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.24 2006-07-03 16:36:48 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -774,26 +774,12 @@ static int message_pass(clique c1, sepset s, clique c2){
   s->old = s->new;
   s->new = temp;
 
-  mapping = (int *) calloc(s->new->num_of_vars, sizeof(int));
-  if(!mapping){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-
   /*
    * Marginalise (projection).
    * First: select the variables. This takes O(n^2)
    */
-  for(i=0; i < c1->p->num_of_vars; i++){
-    if(k == s->new->num_of_vars)
-      break; /* all found */
-    for(j=0; j < s->new->num_of_vars; j++)
-      if(equal_variables((c1->variables)[i], (s->variables)[j])){
-	mapping[j] = i;
-	k++;
-	break;
-      }
-  }
+  mapping = mapper(c1->variables, s->variables, 
+		   c1->p->num_of_vars, s->new->num_of_vars);
 
   /* Information flows from clique c1 to sepset s. */
   retval = general_marginalise(c1->p, s->new, mapping);
