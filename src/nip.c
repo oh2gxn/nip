@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.133 2006-06-29 14:48:30 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.134 2006-07-03 15:55:31 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -95,7 +95,6 @@ void total_reset(nip model){
 }
 
 
-/* FIXME: Is this function totally useless? */
 void use_priors(nip model, int has_history){
   int i, retval;
   variable v;
@@ -946,12 +945,10 @@ int insert_ucs_step(uncertain_series ucs, int t, nip model){
 /* Starts a message pass between timeslices */
 static int start_timeslice_message_pass(nip model, direction dir,
 					potential alpha_or_gamma){
-  int i, j, k;
   int *mapping;
   clique c;
   int nvars = model->outgoing_interface_size;
   variable *vars;
-  variable v;
 
   /* What if there are no subsequent time slices? */
   if(nvars == 0){
@@ -968,26 +965,8 @@ static int start_timeslice_message_pass(nip model, direction dir,
     c = model->out_clique;
   }
 
-  /* mapper() ? */
-  mapping = (int*) calloc(nvars, sizeof(int));
-  if(!mapping){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-
-  k = 0;
-  for(i=0; i < c->p->num_of_vars; i++){
-    if(k == nvars)
-      break; /* all pointers found */
-    v = (c->variables)[i];
-    for(j=0; j < nvars; j++){
-      if(equal_variables(v, vars[j])){
-	mapping[j] = i;
-	k++;
-	break;
-      }
-    }
-  }    
+  /* map the variables */
+  mapping = mapper(c->variables, vars, c->p->num_of_vars, nvars);
 
   /* the marginalisation */
   general_marginalise(c->p, alpha_or_gamma, mapping);
@@ -1006,7 +985,6 @@ static int start_timeslice_message_pass(nip model, direction dir,
 /* Finishes the message pass between timeslices */
 static int finish_timeslice_message_pass(nip model, direction dir,
 					 potential num, potential den){
-  int i, j, k;
   int *mapping;
   clique c;
   int nvars = model->outgoing_interface_size;
@@ -1025,24 +1003,8 @@ static int finish_timeslice_message_pass(nip model, direction dir,
     c = model->in_clique;
   }
 
-  /* mapper() ? */
-  mapping = (int*) calloc(nvars, sizeof(int));
-  if(!mapping){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-  k = 0;
-  for(i=0; i < c->p->num_of_vars; i++){
-    if(k == nvars)
-      break; /* all pointers found */
-    for(j=0; j < nvars; j++){
-      if(equal_variables((c->variables)[i], vars[j])){
-	mapping[j] = i;
-	k++;
-	break;
-      }
-    }
-  }
+  /* map the variables */
+  mapping = mapper(c->variables, vars, c->p->num_of_vars, nvars);
 
   /* the multiplication (and division, if den != NULL) */
   update_potential(num, den, c->p, mapping);
