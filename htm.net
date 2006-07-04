@@ -38,22 +38,13 @@ class htm
     HR_Grid_Y = "40";
     HR_Grid_X = "40";
 
-    node A0
-    {
-	label = "A0";
-	position = (50 300);
-	states = ("a1" "a2" "a3");
-	HR_Desc = "";
-	HR_State_2 = "";
-	HR_State_1 = "";
-	HR_State_0 = "";
-    }
-
     node B0
     {
 	label = "B0";
 	position = (175 175);
 	states = ("b1" "b2" "b3");
+	HR_LinkMode_A0 = "0";
+	HR_LinkMode_B1 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
@@ -65,6 +56,8 @@ class htm
 	label = "S0";
 	position = (50 50);
 	states = ("s1" "s2" "s3");
+	HR_LinkMode_A0 = "0";
+	HR_LinkMode_S1 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
@@ -87,6 +80,8 @@ class htm
 	label = "B1";
 	position = (425 175);
 	states = ("b1" "b2" "b3");
+	HR_LinkMode_A1 = "0";
+	HR_LinkMode_B2 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
@@ -98,6 +93,9 @@ class htm
 	label = "S1";
 	position = (300 50);
 	states = ("s1" "s2" "s3");
+	HR_LinkMode_A1 = "0";
+	HR_LinkMode_B1 = "0";
+	HR_LinkMode_S2 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
@@ -120,6 +118,8 @@ class htm
 	label = "B2";
 	position = (675 175);
 	states = ("b1" "b2" "b3");
+	HR_LinkMode_A2 = "0";
+	HR_LinkMode_B3 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
@@ -131,6 +131,9 @@ class htm
 	label = "S2";
 	position = (550 50);
 	states = ("s1" "s2" "s3");
+	HR_LinkMode_A2 = "0";
+	HR_LinkMode_B2 = "0";
+	HR_LinkMode_S3 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
@@ -153,6 +156,7 @@ class htm
 	label = "B3";
 	position = (925 175);
 	states = ("b1" "b2" "b3");
+	HR_LinkMode_A3 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
@@ -164,23 +168,22 @@ class htm
 	label = "S3";
 	position = (800 50);
 	states = ("s1" "s2" "s3");
+	HR_LinkMode_A3 = "0";
+	HR_LinkMode_B3 = "0";
 	HR_Desc = "";
 	HR_State_2 = "";
 	HR_State_1 = "";
 	HR_State_0 = "";
     }
 
-    potential (A0 | B0 S0)
+    potential (B0)
     {
-	data = ((( 0.951 0.022 0.027 )	%  B0=b1  S0=s1
-		 ( 0.892 0.055 0.053 )	%  B0=b1  S0=s2
-		 ( 0.535 0.115 0.35 ))	%  B0=b1  S0=s3
-		(( 0.306 0.021 0.673 )	%  B0=b2  S0=s1
-		 ( 0.056 0.487 0.457 )	%  B0=b2  S0=s2
-		 ( 0.289 0.216 0.495 ))	%  B0=b2  S0=s3
-		(( 0.647 0.259 0.094 )	%  B0=b3  S0=s1
-		 ( 0.903 0.071 0.026 )	%  B0=b3  S0=s2
-		 ( 0.786 0.188 0.026 ))); %  B0=b3  S0=s3
+	data = ( 0.333333 0.333333 0.333333 );
+    }
+
+    potential (S0)
+    {
+	data = ( 1 1 1 );
     }
 
     potential (A1 | B1 S1)
@@ -193,36 +196,7 @@ class htm
 		 ( 0.289 0.216 0.495 ))	%  B1=b2  S1=s3
 		(( 0.647 0.259 0.094 )	%  B1=b3  S1=s1
 		 ( 0.903 0.071 0.026 )	%  B1=b3  S1=s2
-		 ( 0.786 0.188 0.026 ))); %  B1=b3  S1=s3
-    }
-
-    potential (B0 | S0)
-    {
-	data = (( 0.3333333333 0.3333333333 0.3333333333 )	%  S0=s1
-		( 0.3333333333 0.3333333333 0.3333333333 )	%  S0=s2
-		( 0.3333333333 0.3333333333 0.3333333333 ));	%  S0=s3
-
-%	data = (( 0.1283333333 0.0650 0.8066666667 )	%  S1=s1
-%		( 0.9033333333 0.0566666667 0.0400 )	%  S1=s2
-%		( 0.0793333333 0.5396666667 0.3810 ));	%  S1=s3
-    }
-
-    potential (S0)
-    {
-	data = ( 1 1 1 );
-    }
-
-    potential (A2 | B2 S2)
-    {
-	data = ((( 0.951 0.022 0.027 )	%  B2=b1  S2=s1
-		 ( 0.892 0.055 0.053 )	%  B2=b1  S2=s2
-		 ( 0.535 0.115 0.35 ))	%  B2=b1  S2=s3
-		(( 0.306 0.021 0.673 )	%  B2=b2  S2=s1
-		 ( 0.056 0.487 0.457 )	%  B2=b2  S2=s2
-		 ( 0.289 0.216 0.495 ))	%  B2=b2  S2=s3
-		(( 0.647 0.259 0.094 )	%  B2=b3  S2=s1
-		 ( 0.903 0.071 0.026 )	%  B2=b3  S2=s2
-		 ( 0.786 0.188 0.026 ))); %  B2=b3  S2=s3
+		 ( 0.786 0.188 0.026 )));	%  B1=b3  S1=s3
     }
 
     potential (B1 | S1 B0)
@@ -238,6 +212,26 @@ class htm
 		 ( 0.05 0.6 0.35 )));	%  S1=s3  B0=b3
     }
 
+    potential (S1 | S0)
+    {
+	data = (( 0.246 0.68 0.074 )	%  S0=s1
+		( 0.659 0.025 0.316 )	%  S0=s2
+		( 0.171 0.587 0.242 ));	%  S0=s3
+    }
+
+    potential (A2 | B2 S2)
+    {
+	data = ((( 0.951 0.022 0.027 )	%  B2=b1  S2=s1
+		 ( 0.892 0.055 0.053 )	%  B2=b1  S2=s2
+		 ( 0.535 0.115 0.35 ))	%  B2=b1  S2=s3
+		(( 0.306 0.021 0.673 )	%  B2=b2  S2=s1
+		 ( 0.056 0.487 0.457 )	%  B2=b2  S2=s2
+		 ( 0.289 0.216 0.495 ))	%  B2=b2  S2=s3
+		(( 0.647 0.259 0.094 )	%  B2=b3  S2=s1
+		 ( 0.903 0.071 0.026 )	%  B2=b3  S2=s2
+		 ( 0.786 0.188 0.026 )));	%  B2=b3  S2=s3
+    }
+
     potential (B2 | S2 B1)
     {
 	data = ((( 0.085 0.045 0.87 )	%  S2=s1  B1=b1
@@ -249,13 +243,6 @@ class htm
 		(( 0.088 0.519 0.393 )	%  S2=s3  B1=b1
 		 ( 0.1 0.5 0.4 )	%  S2=s3  B1=b2
 		 ( 0.05 0.6 0.35 )));	%  S2=s3  B1=b3
-    }
-
-    potential (S1 | S0)
-    {
-	data = (( 0.246 0.68 0.074 )	%  S0=s1
-		( 0.659 0.025 0.316 )	%  S0=s2
-		( 0.171 0.587 0.242 ));	%  S0=s3
     }
 
     potential (S2 | S1)
@@ -275,7 +262,7 @@ class htm
 		 ( 0.289 0.216 0.495 ))	%  B3=b2  S3=s3
 		(( 0.647 0.259 0.094 )	%  B3=b3  S3=s1
 		 ( 0.903 0.071 0.026 )	%  B3=b3  S3=s2
-		 ( 0.786 0.188 0.026 ))); %  B3=b3  S3=s3
+		 ( 0.786 0.188 0.026 )));	%  B3=b3  S3=s3
     }
 
     potential (B3 | S3 B2)
