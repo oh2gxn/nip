@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.135 2006-07-03 16:36:48 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.136 2006-07-05 13:25:39 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -481,6 +481,7 @@ void free_model(nip model){
   for(i = 0; i < model->num_of_vars; i++)
     free_variable(model->variables[i]);
   free(model->variables);
+
   free(model->next);
   free(model->previous);
   free(model->outgoing_interface);
@@ -973,11 +974,12 @@ static int start_timeslice_message_pass(nip model, direction dir,
   free(mapping); /* should mapping-array be a part of sepsets? */
 
   /* normalisation in order to avoid drifting towards zeros */
-  normalise(alpha_or_gamma->data, alpha_or_gamma->size_of_data);
-
-  /* Q: since potential arrays may be large, should the 
-   * sum of elements be normalised to N instead of 1..???     
+  /*normalise(alpha_or_gamma->data, alpha_or_gamma->size_of_data);*/
+  /*********
+   * JJ NOTE: alpha should NOT be normalised, or else the computation 
+   * of evidence likelihood fails!
    */
+
   return NO_ERROR;
 }
 
@@ -1133,13 +1135,6 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
     /* Put some data in */
     insert_ts_step(ts, t, model);
 
-#ifdef DEBUG_NIP
-    make_consistent(model);
-    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
-    printf("Log.likelihood ln(L(%d)) = %g\n", t, (log(m2) - log(m1)));
-    printf("m1 = %g \t m2 = %g\n", m1, m2);
-#endif
-
     if(t > 0){ /*  Fwd or Fwd1  */
       /*  clique_in = clique_in * alpha  */
       if(finish_timeslice_message_pass(model, forward, 
@@ -1153,6 +1148,12 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
     
     /* Do the inference */
     make_consistent(model); /* Collect to out_clique would be enough? */
+
+#ifdef DEBUG_NIP
+    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
+    printf("Log.likelihood ln(L(y(%d))) = %g\n", t, (log(m2) - log(m1)));
+    printf("L(y(%d)) = %g\n", t, m2/m1);
+#endif
 
     /* Write the results */
     for(i = 0; i < results->num_of_vars; i++){      
@@ -1393,7 +1394,7 @@ uncertain_series forward_backward_inference(time_series ts,
     m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
     printf("Log.likelihood ln(L(%d)) = %g\n", t, (log(m2) - log(m1)));
     printf("m1 = %g \t m2 = %g\n", m1, m2);
-#endif    
+#endif
 
     /* THE CORE: Write the results */
     for(i = 0; i < results->num_of_vars; i++){
@@ -1639,6 +1640,10 @@ static int e_step(time_series ts, potential* parameters,
   
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
+    m1 = model_prob_mass(model);
+
+    insert_ts_step(ts, t, model); /* Put some data in */
+
     if(t > 0)
       if(finish_timeslice_message_pass(model, forward, 
 				       alpha_gamma[t-1], NULL) != NO_ERROR){
@@ -1668,13 +1673,9 @@ static int e_step(time_series ts, potential* parameters,
     /* *loglikelihood = (*loglikelihood) +  */
     /* momentary_loglikelihood(model, observed, data, j); */
 
+    make_consistent(model); /* Do the inference */
+
     /* This computes the log likelihood (ratio of probability masses) */
-    make_consistent(model);       /* ## Make the model consistent ## */
-    m1 = model_prob_mass(model);
-
-    insert_ts_step(ts, t, model); /* ## Put some data in          ## */
-    make_consistent(model);       /* ## Do the inference          ## */
-
     m2 = model_prob_mass(model);
     *loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
     
