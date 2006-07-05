@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.136 2006-07-05 13:25:39 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.137 2006-07-05 14:41:10 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1135,6 +1135,15 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
     /* Put some data in */
     insert_ts_step(ts, t, model);
 
+#ifdef DEBUG_NIP
+    /* Q: Is this L(y(t) | y(0:t-1)) 
+     * A: Not quite... */
+    make_consistent(model);
+    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
+    printf("Log.likelihood ln(L(y(%d))) = %g\n", t, (log(m2) - log(m1)));
+    printf("L(y(%d)) = %g\n", t, m2/m1);
+#endif
+
     if(t > 0){ /*  Fwd or Fwd1  */
       /*  clique_in = clique_in * alpha  */
       if(finish_timeslice_message_pass(model, forward, 
@@ -1149,11 +1158,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
     /* Do the inference */
     make_consistent(model); /* Collect to out_clique would be enough? */
 
-#ifdef DEBUG_NIP
-    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
-    printf("Log.likelihood ln(L(y(%d))) = %g\n", t, (log(m2) - log(m1)));
-    printf("L(y(%d)) = %g\n", t, m2/m1);
-#endif
+    /* <place to compute L(y(0:t)) = mass / m1> */
 
     /* Write the results */
     for(i = 0; i < results->num_of_vars; i++){      
