@@ -67,7 +67,7 @@ node Y0
 node S1
 {
     label = "S(t)";
-    position = (240 160);
+    position = (240 180);
     states = ("State1" "State2" "State3");
     HR_LinkMode_Y1 = "0";
     HR_Group = "0";
@@ -82,7 +82,7 @@ node S1
 node S0
 {
     label = "S(t-1)";
-    position = (80 160);
+    position = (80 180);
     states = ("State1" "State2" "State3");
     NIP_next = "S1";
     HR_LinkMode_Y0 = "0";

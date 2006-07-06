@@ -80,7 +80,7 @@ node V2
 
 node V3
 {
-    label = "V(2)";
+    label = "V(3)";
     position = (560 280);
     states = ("State1" "State2" "State3");
     HR_LinkMode_C10 = "0";
@@ -319,12 +319,10 @@ potential (Y1 | S1 Y0)
 	 ( 0.1 0.8 0.1 )));	%  S1=State3  Y0=State3
 }
 
-potential (Y0 | S0)
+potential (Y0)
 {
     data
-     = (( 0.333333 0.333333 0.333333 )	%  S0=State1
-	( 0.333333 0.333333 0.333333 )	%  S0=State2
-	( 0.333333 0.333333 0.333333 ));%  S0=State3
+     = ( 1  1  1 );
 }
 
 potential (S3 | V3 S2)
@@ -369,12 +367,10 @@ potential (S1 | V1 S0)
 	 ( 0.1 0.8 0.1 )));	%  V1=State3  S0=State3
 }
 
-potential (S0 | V0)
+potential (S0)
 {
     data
-     = (( 0.333333 0.333333 0.333333 )	%  V0=State1
-	( 0.333333 0.333333 0.333333 )	%  V0=State2
-	( 0.333333 0.333333 0.333333 ));%  V0=State3
+     = ( 1  1  1 );
 }
 
 potential (V3 | V2)
@@ -403,5 +399,5 @@ potential (V1 | V0)
 
 potential (V0)
 {
-    data = ( 0.333333 0.333333 0.333333 );
+    data = ( 1  1  1 );
 }
