@@ -109,7 +109,7 @@ node V4
 node S0
 {
     label = "S(0)";
-    position = (80 160);
+    position = (80 180);
     states = ("State1" "State2" "State3");
     HR_Group = "0";
     HR_Desc = "";
@@ -123,7 +123,7 @@ node S0
 node S1
 {
     label = "S(1)";
-    position = (240 160);
+    position = (240 180);
     states = ("State1" "State2" "State3");
     HR_Group = "0";
     HR_Desc = "";
@@ -137,7 +137,7 @@ node S1
 node S2
 {
     label = "S(2)";
-    position = (400 160);
+    position = (400 180);
     states = ("State1" "State2" "State3");
     HR_Group = "0";
     HR_Desc = "";
@@ -151,7 +151,7 @@ node S2
 node S3
 {
     label = "S(3)";
-    position = (560 160);
+    position = (560 180);
     states = ("State1" "State2" "State3");
     HR_LinkMode_C12 = "0";
     HR_Group = "0";
@@ -165,7 +165,7 @@ node S3
 node S4
 {
     label = "S(4)";
-    position = (720 160);
+    position = (720 180);
     states = ("State1" "State2" "State3");
     HR_Group = "0";
     HR_Desc = "";

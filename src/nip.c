@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.138 2006-07-06 14:46:16 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.139 2006-07-07 15:33:41 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -41,7 +41,7 @@
 /***** 
  * TODO: 
 
- * - Likelihood computations are done wrong with DBNs!
+ * - Likelihood computations suffer from numerical problems!
 
  * - Refactorisation of variable_union(), variable_isect(), and
  *   mapper() by replacing a lot of copy-paste code with them...
@@ -1150,19 +1150,21 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
     make_consistent(model); /* Collect to out_clique would be enough? */
 
     /* <place to compute L(y(0:t)) = mass / m1> */
-#ifdef DEBUG_NIP
     /* Q: Is this L(y(0:t)) 
      * A: Yes... */
+#ifdef DEBUG_NIP
     m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
+    printf("L(y(%d)) = %g / %g = %g\n", t, m2, m1, m2/m1);
     printf("Log.likelihood ln(L(y(%d))) = %g\n", t, (log(m2) - log(m1)));
-    printf("L(y(%d)) = %g\n", t, m2/m1);
-
-    /* print alpha */
-    m1 = 0;
-    for(i = 0; i < alpha->size_of_data; i++)
-      m1 += alpha->data[i];
-    printf("Sum(alpha) = %g\n", m1);
 #endif
+#ifdef DEBUG_NIP
+    /* print alpha */
+    m2 = 0;
+    for(i = 0; i < alpha->size_of_data; i++)
+      m2 += alpha->data[i];
+    printf("Sum(alpha) = %g\n", m2);
+#endif
+
 
     /* Write the results */
     for(i = 0; i < results->num_of_vars; i++){      

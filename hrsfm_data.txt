@@ -1,9 +1,4 @@
-V1, hide_S1,     Y1
-
-State1,  State2,  State3
-null,    State2,  State1
-State1,  State1,  State1
-null,    State1,  State1
+hide_V1, hide_S1,     Y1
 
 State1,  State2,  State3
 State1,  State2,  State1
