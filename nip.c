@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.139 2006-07-07 15:33:41 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.140 2006-07-10 13:41:18 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -974,10 +974,10 @@ static int start_timeslice_message_pass(nip model, direction dir,
   free(mapping); /* should mapping-array be a part of sepsets? */
 
   /* normalisation in order to avoid drifting towards zeros */
-  /*normalise(alpha_or_gamma->data, alpha_or_gamma->size_of_data);*/
+  normalise(alpha_or_gamma->data, alpha_or_gamma->size_of_data);
   /*********
    * JJ NOTE: alpha should NOT be normalised, or else the computation 
-   * of evidence likelihood fails!
+   * of evidence likelihood fails! (under construction)
    */
 
   return NO_ERROR;
@@ -1127,13 +1127,13 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
 
-    /* DEBUG: to see how the new likelihood computation is doing... */
-#ifdef DEBUG_NIP
-    m1 = model_prob_mass(model);
-#endif
-
-    /* Put some data in */
-    insert_ts_step(ts, t, model);
+    /* Original order (pre-10.07.2006):
+     * - m1
+     * - evidence in
+     * - finish_timeslice_message_pass
+     * - make consistent
+     * - m2 
+     */
 
     if(t > 0){ /*  Fwd or Fwd1  */
       /*  clique_in = clique_in * alpha  */
@@ -1146,16 +1146,31 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       }
     }
     
-    /* Do the inference */
-    make_consistent(model); /* Collect to out_clique would be enough? */
+    /* DEBUG: to see how the new likelihood computation is doing... */
+#ifdef DEBUG_NIP
+    make_consistent(model);
+    m1 = model_prob_mass(model);
+#endif
 
-    /* <place to compute L(y(0:t)) = mass / m1> */
-    /* Q: Is this L(y(0:t)) 
+    /* Put some data in */
+    insert_ts_step(ts, t, model);
+
+    /* Do the inference */
+    make_consistent(model);
+
+    /* Q: Is this L(y(t) | y(0:t-1)) 
      * A: Yes... */
 #ifdef DEBUG_NIP
     m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
-    printf("L(y(%d)) = %g / %g = %g\n", t, m2, m1, m2/m1);
-    printf("Log.likelihood ln(L(y(%d))) = %g\n", t, (log(m2) - log(m1)));
+    if(t > 0){
+      printf("L(y(%d)|y(0:%d)) = %g / %g = %g\n", t, t-1, m2, m1, m2/m1);
+      printf("Log.likelihood ln(L(y(%d)|y(0:%d))) = %g\n", t, t-1, 
+	     (log(m2) - log(m1)));
+    }
+    else{
+      printf("L(y(0)) = %g / %g = %g\n", m2, m1, m2/m1);
+      printf("Log.likelihood ln(L(y(0))) = %g\n", (log(m2) - log(m1)));
+    }
 #endif
 #ifdef DEBUG_NIP
     /* print alpha */
@@ -1322,9 +1337,6 @@ uncertain_series forward_backward_inference(time_series ts,
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
-    /* Put some data in (Q: should this be AFTER message passing?) */
-    insert_ts_step(ts, t, model);    
-    
     if(t > 0)
       if(finish_timeslice_message_pass(model, forward, 
 				       alpha_gamma[t-1], NULL) != NO_ERROR){
@@ -1336,6 +1348,9 @@ uncertain_series forward_backward_inference(time_series ts,
 	return NULL;
       }
 
+    /* Put some data in (Q: should this be AFTER message passing?) */
+    insert_ts_step(ts, t, model);    
+    
     /* Do the inference */
     make_consistent(model);
 
@@ -1366,9 +1381,6 @@ uncertain_series forward_backward_inference(time_series ts,
 #ifdef DEBUG_NIP
     m1 = model_prob_mass(model);
 #endif
-
-    /* Put some evidence in */
-    insert_ts_step(ts, t, model);
     
     /* Pass the message from the past */
     if(t > 0)
@@ -1384,6 +1396,9 @@ uncertain_series forward_backward_inference(time_series ts,
 	return NULL;
       }
     
+    /* Put some evidence in */
+    insert_ts_step(ts, t, model);
+
     /* Pass the message from the future */
     if(t < ts->length - 1)
       if(finish_timeslice_message_pass(model, backward, 
@@ -1403,7 +1418,7 @@ uncertain_series forward_backward_inference(time_series ts,
 
 #ifdef DEBUG_NIP
     m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
-    printf("Log.likelihood ln(L(%d)) = %g\n", t, (log(m2) - log(m1)));
+    printf("Log.likelihood ln(L(y(0:%d))) = %g\n", t, (log(m2) - log(m1)));
     printf("m1 = %g \t m2 = %g\n", m1, m2);
 #endif
 
@@ -1651,11 +1666,7 @@ static int e_step(time_series ts, potential* parameters,
   
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
-    m1 = model_prob_mass(model);
-
-    insert_ts_step(ts, t, model); /* Put some data in */
-
-    if(t > 0)
+    if(t > 0){
       if(finish_timeslice_message_pass(model, forward, 
 				       alpha_gamma[t-1], NULL) != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -1670,6 +1681,12 @@ static int e_step(time_series ts, potential* parameters,
 	free(alpha_gamma);
 	return ERROR_GENERAL;
       }
+      make_consistent(model); /* propagate message */
+    }
+
+    m1 = model_prob_mass(model);
+
+    insert_ts_step(ts, t, model); /* Put some data in */
 
     /*** This used to compute the log likelihood ***/
     /* Watch out for missing data etc. */
@@ -1718,9 +1735,6 @@ static int e_step(time_series ts, potential* parameters,
   /******************/
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
 
-    /* Put some evidence in */
-    insert_ts_step(ts, t, model);
-    
     /* Pass the message from the past */
     if(t > 0)
       if(finish_timeslice_message_pass(model, forward, 
@@ -1738,6 +1752,9 @@ static int e_step(time_series ts, potential* parameters,
 	free(alpha_gamma);
 	return ERROR_GENERAL;
       }
+    
+    /* Put some evidence in */
+    insert_ts_step(ts, t, model);
     
     /* Pass the message from the future */
     if(t < ts->length - 1)
@@ -1779,7 +1796,7 @@ static int e_step(time_series ts, potential* parameters,
       /* 4. Normalisation */
       /********************/
       size = p->size_of_data;
-      k = number_of_values(temp);
+      k = number_of_values(temp); /* ? */
       normalise(p->data, size);
       /******************************************************************/
       /* JJ NOTE: Not so sure whether this is the correct way or not... */
