@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.140 2006-07-10 13:41:18 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.141 2006-08-04 13:23:20 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -975,10 +975,6 @@ static int start_timeslice_message_pass(nip model, direction dir,
 
   /* normalisation in order to avoid drifting towards zeros */
   normalise(alpha_or_gamma->data, alpha_or_gamma->size_of_data);
-  /*********
-   * JJ NOTE: alpha should NOT be normalised, or else the computation 
-   * of evidence likelihood fails! (under construction)
-   */
 
   return NO_ERROR;
 }
