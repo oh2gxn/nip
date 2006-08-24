@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.47 2006-06-21 13:08:40 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.48 2006-08-24 14:38:05 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -16,7 +16,7 @@
 #define HAD_A_PREVIOUS_TIMESLICE 1
 
 /* "How probable is the impossible" (0 < epsilon << 1) */
-#define EPSILON 0.00001
+/* #define EPSILON 0.00001 */
 
 enum direction_type {backward, forward};
 typedef enum direction_type direction;

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.141 2006-08-04 13:23:20 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.142 2006-08-24 14:38:04 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -40,8 +40,6 @@
 
 /***** 
  * TODO: 
-
- * - Likelihood computations suffer from numerical problems!
 
  * - Refactorisation of variable_union(), variable_isect(), and
  *   mapper() by replacing a lot of copy-paste code with them...
@@ -1684,19 +1682,6 @@ static int e_step(time_series ts, potential* parameters,
 
     insert_ts_step(ts, t, model); /* Put some data in */
 
-    /*** This used to compute the log likelihood ***/
-    /* Watch out for missing data etc. */
-    /* j = 0; */
-    /* for(i = 0; i < nobserved; i++){ */
-    /*   if(ts->data[t][i] >= 0){ */
-    /* 	   data[j] = ts->data[t][i]; */
-    /* 	   observed[j++] = ts->observed[i]; */
-    /*   } */
-    /* } */
-    /* make_consistent(model); */
-    /* *loglikelihood = (*loglikelihood) +  */
-    /* momentary_loglikelihood(model, observed, data, j); */
-
     make_consistent(model); /* Do the inference */
 
     /* This computes the log likelihood (ratio of probability masses) */
@@ -1792,11 +1777,7 @@ static int e_step(time_series ts, potential* parameters,
       /* 4. Normalisation */
       /********************/
       size = p->size_of_data;
-      k = number_of_values(temp); /* ? */
       normalise(p->data, size);
-      /******************************************************************/
-      /* JJ NOTE: Not so sure whether this is the correct way or not... */
-      /******************************************************************/
 
       /* 5. THE SUM of conditional probabilities over time */
       for(j = 0; j < size; j++)
@@ -1850,6 +1831,7 @@ static int m_step(potential* parameters, nip model){
   clique fam_clique = NULL;
   variable child = NULL;
 
+#ifdef EPSILON
   /* 0. Make sure there are no zero probabilities */
   for(i = 0; i < model->num_of_vars; i++){
     k = parameters[i]->size_of_data;
@@ -1859,13 +1841,16 @@ static int m_step(potential* parameters, nip model){
     /* Q: Should the tiny value be proportional to the number of zeros
      *    so that the added weight is constant? */
   }
+#endif
   
   /* 1. Normalise parameters by dividing with the sums over child variables */
   for(i = 0; i < model->num_of_vars; i++){
     k = number_of_values(model->variables[i]);
     for(j = 0; j < parameters[i]->size_of_data; j = j + k)
       normalise(&(parameters[i]->data[j]), k);
-    /* Maybe this works, maybe not... */
+      /******************************************************************/
+      /* JJ NOTE: Not so sure whether this is the correct way or not... */
+      /******************************************************************/
   }
 
   /* 2. Reset the clique potentials and everything */
@@ -1946,8 +1931,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     n = parameters[v]->size_of_data;
     for(j = 0; j < n; j++)
       parameters[v]->data[j] = drand48();
-    /* the M-step will take care of the normalisation and
-     * elimination of zeros */
+    /* the M-step will take care of the normalisation */
   }
 
   ts_steps = 0;
