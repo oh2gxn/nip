@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     printf(" - the original NET file, \n");
     printf(" - data file, \n"); 
     printf(" - threshold value (0...1), and \n");
-    printf(" - name for the resulting model, please!\n");
+    printf(" - file name for the resulting model, please!\n");
     return 0;
   }
   
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
   /* Write the results to a NET file */
   i =  write_model(model, argv[4]);
   if(i != NO_ERROR){
-    fprintf(stderr, "Failed to write the model into %s.net\n", argv[4]);
+    fprintf(stderr, "Failed to write the model into %s\n", argv[4]);
     report_error(__FILE__, __LINE__, i, 1);
     return -1;
   }
