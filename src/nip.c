@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.142 2006-08-24 14:38:04 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.143 2006-09-30 16:53:58 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -300,11 +300,10 @@ nip parse_model(char* file){
 }
 
 
-int write_model(nip model, char* name){
+int write_model(nip model, char* filename){
   int i, j, n;
   int x, y;
   FILE *f = NULL;
-  char *filename = NULL;
   variable v = NULL;
   int *temp = NULL;
   int *map = NULL;
@@ -318,20 +317,10 @@ int write_model(nip model, char* name){
   indent = "";
 #endif
 
-  /* form the filename */
-  filename = (char*) calloc(strlen(name) + 5, sizeof(char));
-  if(!filename){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-  strcpy(filename, name);   /* copy the model name */
-  strcat(filename, ".net"); /* append with the extension */
-
   /* open the stream */
   f = fopen(filename, "w");
   if(!f){
     report_error(__FILE__, __LINE__, ERROR_IO, 1);
-    free(filename);
     return ERROR_IO;
   }
 
@@ -418,7 +407,6 @@ int write_model(nip model, char* name){
     if(!temp){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       fclose(f);
-      free(filename);
       return ERROR_OUTOFMEMORY;
     }
 
@@ -459,10 +447,8 @@ int write_model(nip model, char* name){
   /* close the file */
   if(fclose(f)){
     report_error(__FILE__, __LINE__, ERROR_IO, 1);
-    free(filename);
     return ERROR_IO;
   }
-  free(filename);
   return NO_ERROR;
 }
 

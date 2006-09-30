@@ -5,10 +5,10 @@
  * given data file and writes the estimated model to the 
  * specified output file. 
  *
- * SYNOPSIS: EM_TEST <ORIGINAL.NET> <DATA.TXT> <THRESHOLD> <RESULT>
- * (resulting model will be written to the file <RESULT>.net) 
+ * SYNOPSIS: EM_TEST <ORIGINAL.NET> <DATA.TXT> <THRESHOLD> <RESULT.NET>
+ * (resulting model will be written to the file <RESULT.NET>) 
  *
- * EXAMPLE: ./em_test model1.net data.txt 0.00001 model2
+ * EXAMPLE: ./em_test model1.net data.txt 0.00001 model2.net
  */
 
 #include <stdlib.h>
