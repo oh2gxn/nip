@@ -176,6 +176,7 @@ int main(int argc, char *argv[]) {
   use_priors(model, 1); /* ? */
 
   /* read file formats */
+  /* Reminder: strcasecmp() is NOT ANSI C. */
   if(strcasecmp(argv[2], S_UNIVARIATE) == 0)
     iformat = UNIVARIATE;
   /* additional formats here */

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.143 2006-09-30 16:53:58 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.144 2006-10-02 12:48:57 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1916,7 +1916,8 @@ int em_learn(time_series *ts, int n_ts, double threshold){
   for(v = 0; v < model->num_of_vars; v++){
     n = parameters[v]->size_of_data;
     for(j = 0; j < n; j++)
-      parameters[v]->data[j] = drand48();
+      parameters[v]->data[j] = rand()/(double)RAND_MAX;
+    /*parameters[v]->data[j] = drand48(); NON-ANSI! */
     /* the M-step will take care of the normalisation */
   }
 
@@ -2248,7 +2249,8 @@ void random_seed(){
   seedvalue = aikap->tm_sec + 60 *aikap->tm_min
     + 3600 * aikap->tm_hour;
   seedvalue ^= (getpid() + (getpid() << 15));
-  srand48(seedvalue);
+  /*srand48(seedvalue); NON-ANSI! */
+  srand(seedvalue);
 }
 
 
@@ -2257,7 +2259,8 @@ void random_seed(){
 int lottery(double* distribution, int size){
   int i = 0;
   double sum = 0;
-  double r = drand48();
+  double r = rand()/(double)RAND_MAX;
+  /* double r = drand48(); NON-ANSI! */
   do{
     if(i >= size){
       report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
