@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
 
   time_series ts = NULL;
   time_series *ts_set = NULL;
-  uncertain_series ucs = NULL;
+  uncertain_series *ucs_set = NULL;
 
   /*****************************************/
   /* Parse the model from a Hugin NET file */
@@ -69,7 +69,15 @@ int main(int argc, char *argv[]){
     return -1;
   }
 
-  ts = ts_set[0];
+  ucs_set = (uncertain_series*) calloc(n_max, sizeof(uncertain_series));
+  if(!ucs_set){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    for(i = 0; i < n_max; i++)
+      free_timeseries(ts_set[i]);
+    free(ts_set);
+    free_model(model);
+    return -1;
+  }
 
   /****************/
   /* the variable */
@@ -81,53 +89,38 @@ int main(int argc, char *argv[]){
     for(i = 0; i < n_max; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
+    free(ucs_set);
     free_model(model);
     return -1;
   }
   
-/* if(ts->num_of_hidden == 0){ */
-/*     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1); */
-/*     fprintf(stderr, "No hidden variables to estimate.\n"); */
-/*     for(i = 0; i < n_max; i++) */
-/*       free_timeseries(ts_set[i]); */
-/*     free(ts_set); */
-/*     free_model(model); */
-/*     return -1; */
-/*   } */
-
-  /** DEBUG **/
-  printf("Observed variables:\n  ");
-  for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-    printf("%s ", ts->observed[i]->symbol);
-  printf("\nHidden variables:\n  ");
-  for(i = 0; i < ts->num_of_hidden; i++)
-    printf("%s ", ts->hidden[i]->symbol);
-  printf("\n");
-
-
   /*******************************************/
   /* The inference for the first time series */
   /*******************************************/
   printf("## Computing ##\n");  
 
-  /* the computation of posterior probabilities */
-  ucs = forward_backward_inference(ts, &v, 1);
+  for(i = 0; i < n_max; i++){
+    /* the computation of posterior probabilities */
+    ts = ts_set[i];
+    ucs_set[i] = forward_backward_inference(ts, &v, 1);
 
-  /* forget old evidence */
-  reset_model(model);
-  use_priors(model, 0);
+    /* forget old evidence */
+    reset_model(model);
+    use_priors(model, 0);
+  }
 
   /* write the output */
-  write_uncertainseries(ucs, v, argv[4]);
-  free_uncertainseries(ucs); /* remember to free ucs */
-
+  write_uncertainseries(ucs_set, n_max, v, argv[4]);
 
   printf("done.\n"); /* new line for the prompt */
 
   /* free some memory */
-  for(i = 0; i < n_max; i++)
+  for(i = 0; i < n_max; i++){
     free_timeseries(ts_set[i]);
+    free_uncertainseries(ucs_set[i]);
+  }
   free(ts_set);
+  free(ucs_set);
   free_model(model);
   
   return 0;

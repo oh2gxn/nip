@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.144 2006-10-02 12:48:57 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.145 2006-10-02 16:57:18 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -763,16 +763,26 @@ int timeseries_length(time_series ts){
 }
 
 
-int write_uncertainseries(uncertain_series ucs, variable v, char *filename){
-  int i, n, t;
+int write_uncertainseries(uncertain_series *ucs_set, int n_series, 
+			  variable v, char *filename){
+  int i, n, t, s;
   int v_index;
+  uncertain_series ucs;
   FILE *f = NULL;
 
   n = number_of_values(v);
-  if(!(n>0 && ucs && filename)){
+  if(!(n>0 && ucs_set && filename && n_series>0)){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
   }
+
+  /* TODO: 
+   * - <n_series> different series with possibly different set of variables
+   *   (copy the ideas in write_timeseries function)
+   */
+
+  /* Bubble gum - assumes all the ucs are the same kind */
+  ucs = ucs_set[0];
 
   v_index = -1; /* linear search */
   for(i=0; i < ucs->num_of_vars; i++){
@@ -800,14 +810,19 @@ int write_uncertainseries(uncertain_series ucs, variable v, char *filename){
   fputs("\n", f);
 
   /* Write the data: probabilities... */
-  for(t = 0; t < ucs->length; t++){ /* ...for each time step... */
+  for(s = 0; s < n_series; s++){ /* ...for each series... */
+    ucs = ucs_set[s];
 
-    fprintf(f, "%f", ucs->data[t][v_index][0]); /* ...for each state. */
-    for(i = 1; i < n; i++) 
-      fprintf(f, ", %f", ucs->data[t][v_index][i]);      
-    fputs("\n", f);
-  }
-  
+    for(t = 0; t < ucs->length; t++){ /* ...for each time step... */
+      
+      fprintf(f, "%f", ucs->data[t][v_index][0]); /* ...for each state. */
+      for(i = 1; i < n; i++) 
+	fprintf(f, ", %f", ucs->data[t][v_index][i]);      
+      fputs("\n", f);
+    }
+    fputs("\n", f); /* series separator */
+  }  
+
   /* Close the file */
   if(fclose(f)){
     report_error(__FILE__, __LINE__, ERROR_IO, 1);
