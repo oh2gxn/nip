@@ -82,7 +82,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
     return ERROR_INVALID_ARGUMENT;
   }
 
-  /** Actually this one cares only about the first observed variable! **/
+  /** NOTE: Actually this assumes there is only one observed variable! **/
 
   /* Temporary space for a sorted record (unary values) */
   v = observed[0];
@@ -102,7 +102,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
     return ERROR_IO;
   }
 
-  /* Write names of the variables */
+  /* Write names of the variable states */
   for(i = 0; i < number_of_values(v); i++){
     if(i > 0)
       fputs(SEPARATOR, f);
