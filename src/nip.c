@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.145 2006-10-02 16:57:18 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.146 2006-10-03 11:55:51 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -766,40 +766,45 @@ int timeseries_length(time_series ts){
 int write_uncertainseries(uncertain_series *ucs_set, int n_series, 
 			  variable v, char *filename){
   int i, n, t, s;
-  int v_index;
+  int *v_index;
   uncertain_series ucs;
   FILE *f = NULL;
 
+  /* Check stuff */
   n = number_of_values(v);
   if(!(n>0 && ucs_set && filename && n_series>0)){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
   }
 
-  /* TODO: 
-   * - <n_series> different series with possibly different set of variables
-   *   (copy the ideas in write_timeseries function)
-   */
+  v_index = (int*) calloc(n_series, sizeof(int));
+  if(!v_index){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
 
-  /* Bubble gum - assumes all the ucs are the same kind */
-  ucs = ucs_set[0];
-
-  v_index = -1; /* linear search */
-  for(i=0; i < ucs->num_of_vars; i++){
-    if(equal_variables(v, ucs->variables[i])){
-      v_index = i;
-      break;
+  /* Check that the variable exists in all UCS and which one is it */
+  for(s = 0; s < n_series; s++){
+    ucs = ucs_set[s];
+    v_index[s] = -1; /* linear search */
+    for(i=0; i < ucs->num_of_vars; i++){
+      if(equal_variables(v, ucs->variables[i])){
+	v_index[s] = i;
+	break;
+      }
+    }
+    if(v_index[s] < 0){ /* no such variable in the UCS */
+      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+      return ERROR_INVALID_ARGUMENT;
+      free(v_index);
     }
   }
-  if(v_index < 0){ /* no such variable in the UCS */
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
-  }
-
+  
   /* Try to open the file for write */
   f = fopen(filename, "w");
   if(!f){
     report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    free(v_index);
     return ERROR_IO;
   }
 
@@ -815,9 +820,9 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
 
     for(t = 0; t < ucs->length; t++){ /* ...for each time step... */
       
-      fprintf(f, "%f", ucs->data[t][v_index][0]); /* ...for each state. */
+      fprintf(f, "%f", ucs->data[t][v_index[s]][0]); /* ...for each state. */
       for(i = 1; i < n; i++) 
-	fprintf(f, ", %f", ucs->data[t][v_index][i]);      
+	fprintf(f, ", %f", ucs->data[t][v_index[s]][i]);
       fputs("\n", f);
     }
     fputs("\n", f); /* series separator */
@@ -826,8 +831,11 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
   /* Close the file */
   if(fclose(f)){
     report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    free(v_index);
     return ERROR_IO;
   }
+
+  free(v_index);
   return NO_ERROR;
 }
 
