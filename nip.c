@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.146 2006-10-03 11:55:51 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.147 2006-10-04 14:46:06 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -18,9 +18,7 @@
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
 
-/**/
-#define DEBUG_NIP
-
+/* #define DEBUG_NIP */
 
 /***********************************************************
  * The time slice concept features some major difficulties 
@@ -1988,7 +1986,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     }
     loglikelihood = loglikelihood / ts_steps; /* normalisation */
 
-    /* DEBUG */
+    /* This is a feature... Don't remove! */
     printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
            loglikelihood);
 
