@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.10 2006-06-20 17:52:34 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.11 2006-10-10 13:34:16 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -11,8 +11,13 @@
 #define VAR_STATENAME_LENGTH 20
 #define VAR_MIN_ID 1
 
-enum interface_type {none, incoming, outgoing};
-typedef enum interface_type interface_flag;
+#define INTERFACE_NONE 0x00
+#define INTERFACE_INCOMING 0x01
+#define INTERFACE_OUTGOING 0x02
+#define INTERFACE_OLD_OUTGOING 0x04
+
+/* enum interface_type {none, old_outgoing, outgoing};
+ * typedef enum interface_type interface_flag; */
 
 struct nip_var {
   char symbol[VAR_SYMBOL_LENGTH + 1]; /* Short symbol for the node */
@@ -31,7 +36,7 @@ struct nip_var {
   void *family_clique;      /* Possible reference to the family clique */
   int *family_mapping;      /* Maps the variables in the family to the
 			     * variables in the family clique */
-  interface_flag if_status; /* Belongs to incoming/outgoing/none interface */
+  char if_status; /* Which interfaces the variable belongs to */
   int pos_x; /* node position by Hugin */
   int pos_y;
   char mark; /* mark for some algorithms (like DFS and data generation) */

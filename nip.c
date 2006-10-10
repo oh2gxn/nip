@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.147 2006-10-04 14:46:06 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.148 2006-10-10 13:34:16 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -98,7 +98,7 @@ void use_priors(nip model, int has_history){
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
     if(v->prior != NULL && 
-       (!has_history || v->if_status != outgoing)){
+       (!has_history || !(v->if_status & INTERFACE_OLD_OUTGOING))){
       retval = enter_evidence(model->variables, model->num_of_vars, 
 			      model->cliques, model->num_of_cliques, 
 			      v, v->prior);
@@ -166,9 +166,9 @@ nip parse_model(char* file){
       new->num_of_nexts++;
     
     /* how many belong to the interfaces */
-    if(temp->if_status == incoming)
+    if(temp->if_status & INTERFACE_INCOMING)
       new->incoming_interface_size++;
-    else if(temp->if_status == outgoing)
+    if(temp->if_status & INTERFACE_OUTGOING)
       new->outgoing_interface_size++;
 
     /* how many have parents */
@@ -225,11 +225,12 @@ nip parse_model(char* file){
       j++;
     }
     
-    if(temp->if_status == incoming)
+    if(temp->if_status & INTERFACE_INCOMING)
       new->incoming_interface[k++] = temp;
-    else if(temp->if_status == outgoing){
-      new->outgoing_interface[m] = temp;
-      new->previous_outgoing_interface[m] = temp->previous;
+    else if(temp->if_status & INTERFACE_OLD_OUTGOING){
+      new->previous_outgoing_interface[m] = temp;
+      new->outgoing_interface[m] = temp->previous;
+      assert(temp->previous->if_status & INTERFACE_OUTGOING);
       m++;
     }
   }
@@ -243,11 +244,11 @@ nip parse_model(char* file){
     else
       new->independent[k++] = new->variables[i];
 
-  if(new->incoming_interface_size > 0){
+  if(new->outgoing_interface_size > 0){
     new->in_clique = find_clique(new->cliques, 
 				 new->num_of_cliques, 
-				 new->incoming_interface, 
-				 new->incoming_interface_size);
+				 new->previous_outgoing_interface, 
+				 new->outgoing_interface_size);
     assert(new->in_clique != NULL);
     new->out_clique = find_clique(new->cliques, 
 				  new->num_of_cliques, 
@@ -963,12 +964,12 @@ static int start_timeslice_message_pass(nip model, direction dir,
   }
 
   if(dir == forward){
-    vars = model->previous_outgoing_interface; 
-    c = model->in_clique;
+    vars = model->outgoing_interface; 
+    c = model->out_clique;
   }
   else{
-    vars = model->outgoing_interface;
-    c = model->out_clique;
+    vars = model->previous_outgoing_interface;
+    c = model->in_clique;
   }
 
   /* map the variables */
@@ -998,12 +999,12 @@ static int finish_timeslice_message_pass(nip model, direction dir,
 
   /* Find a suitable clique c */
   if(dir == forward){
-    vars = model->outgoing_interface;
-    c = model->out_clique;
-  }
-  else{
     vars = model->previous_outgoing_interface;
     c = model->in_clique;
+  }
+  else{
+    vars = model->outgoing_interface;
+    c = model->out_clique;
   }
 
   /* map the variables */

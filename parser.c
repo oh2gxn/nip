@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.109 2006-06-20 17:52:34 jatoivol Exp $
+ * $Id: parser.c,v 1.110 2006-10-10 13:34:16 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -14,17 +14,11 @@
 #include "fileio.h"
 #include "errorhandler.h"
 
-/*
-#define DEBUG_PARSER
-*/
+/* #define DEBUG_PARSER */
 
-/*
-#define PRINT_TOKENS
-*/
+/* #define PRINT_TOKENS */
 
-/*
-#define DEBUG_DATAFILE
-*/
+/* #define DEBUG_DATAFILE */
 
 static varlink nip_first_temp_var = NULL;
 static varlink nip_last_temp_var = NULL;
@@ -1136,7 +1130,7 @@ int time2Vars(){
   int i, m;
   variable v1, v2;
   time_init_link initlist = nip_first_timeinit;
-  variable_iterator it = get_first_variable();;
+  variable_iterator it = get_first_variable();
 
   /* Add time relations to variables. */
   while(initlist != NULL){
@@ -1155,8 +1149,8 @@ int time2Vars(){
 	}
       }
       /* the core */
-      v2->next = v1;
-      v1->previous = v2;
+      v2->next = v1;     /* v2 belongs to V(t)   */
+      v1->previous = v2; /* v1 belongs to V(t-1) */
     }
     else{
       fprintf(stderr, 
@@ -1172,16 +1166,31 @@ int time2Vars(){
   v2 = next_variable(&it); /* get a variable */
   while(v2 != NULL){
     m = 0;
+
     for(i = 0; i < v2->num_of_parents; i++){ /* for each parent */
       v1 = v2->parents[i];
+
       /* Condition for belonging to the incoming interface */
       if(v1->previous != NULL && 
 	 v2->previous == NULL){ 
 	/* v2 has the parent v1 in the previous time slice */
-	v1->if_status = outgoing;
-	v2->if_status = incoming; 
+	v1->if_status |= INTERFACE_OLD_OUTGOING;
+	v1->previous->if_status |= INTERFACE_OUTGOING;
+	v2->if_status |= INTERFACE_INCOMING;
 	m = 1;
-	break;
+	/* break; ?? */
+
+#ifdef DEBUG_PARSER
+	fprintf(stdout, 
+	      "NET parser: Node %s in I_{t}->\n",
+	      get_symbol(v1->previous));
+	fprintf(stdout, 
+	      "NET parser: Node %s in I_{t-1}->\n",
+	      get_symbol(v1));
+	fprintf(stdout, 
+	      "NET parser: Node %s in I_{t}<-\n",
+	      get_symbol(v2));
+#endif
       }
     }
     if(m){ /* parents of v2 in this time slice belong to incoming interface */
@@ -1189,7 +1198,13 @@ int time2Vars(){
 	v1 = v2->parents[i];
 	if(v1->previous == NULL){ 
 	  /* v1 (in time slice t) is married with someone in t-1 */
-	  v1->if_status = incoming;
+	  v1->if_status |= INTERFACE_INCOMING;
+
+#ifdef DEBUG_PARSER
+	fprintf(stdout, 
+	      "NET parser: Node %s in I_{t}<-\n",
+	      get_symbol(v1));
+#endif
 	}
       }
     }

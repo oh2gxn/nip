@@ -1,10 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.7 2006-06-21 13:08:40 jatoivol Exp $
- */
-
-/* TODO:
- * - Set operations for variables? (union, intersection etc.) 
- * - Mappings from ordered set to another?
+ * variable.c $Id: variable.c,v 1.8 2006-10-10 13:34:16 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -66,7 +61,7 @@ variable new_variable(const char* symbol, const char* name,
   v->num_of_parents = 0;
   v->family_clique = NULL;
   v->family_mapping = NULL;
-  v->if_status = none; /* initially it does not belong to either interface */
+  v->if_status = INTERFACE_NONE; /* does not belong to interfaces at first */
   v->pos_x = 100;
   v->pos_y = 100;
   v->mark = 0;

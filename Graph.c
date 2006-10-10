@@ -1,5 +1,5 @@
 /*
- * Graph.c $Id: Graph.c,v 1.48 2006-03-21 15:15:12 jatoivol Exp $
+ * Graph.c $Id: Graph.c,v 1.49 2006-10-10 13:34:16 jatoivol Exp $
  */
 
 #include <string.h>
@@ -263,8 +263,10 @@ Graph* add_interface_edges(Graph* G){
     for (j = i+1; j < n; j++) {
       v1 = G->variables[i];
       v2 = G->variables[j];
-      if ((v1->if_status == incoming && v2->if_status == incoming) ||
-	  (v1->if_status == outgoing && v2->if_status == outgoing)) {
+      if (((v1->if_status & INTERFACE_OLD_OUTGOING) && 
+	   (v2->if_status & INTERFACE_OLD_OUTGOING)) ||
+	  ((v1->if_status & INTERFACE_OUTGOING) && 
+	   (v2->if_status & INTERFACE_OUTGOING))) {
 	ADJM(Gi, i, j) = 1;
 	ADJM(Gi, j, i) = 1;
       }
