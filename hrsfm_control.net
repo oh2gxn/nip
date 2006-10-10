@@ -41,6 +41,7 @@ node V0
     label = "V(0)";
     position = (80 280);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_V1 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -55,6 +56,8 @@ node V1
     label = "V(1)";
     position = (240 280);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_S1 = "0";
+    HR_LinkMode_V2 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -69,6 +72,8 @@ node V2
     label = "V(2)";
     position = (400 280);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_S2 = "0";
+    HR_LinkMode_V3 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -83,6 +88,8 @@ node V3
     label = "V(3)";
     position = (560 280);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_V4 = "0";
+    HR_LinkMode_S3 = "0";
     HR_LinkMode_C10 = "0";
     HR_Group = "0";
     HR_Desc = "";
@@ -97,6 +104,7 @@ node V4
     label = "V(4)";
     position = (720 280);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_S4 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -111,6 +119,7 @@ node S0
     label = "S(0)";
     position = (80 180);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_S1 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -125,6 +134,8 @@ node S1
     label = "S(1)";
     position = (240 180);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_Y1 = "0";
+    HR_LinkMode_S2 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -139,6 +150,8 @@ node S2
     label = "S(2)";
     position = (400 180);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_Y2 = "0";
+    HR_LinkMode_S3 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -153,6 +166,8 @@ node S3
     label = "S(3)";
     position = (560 180);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_S4 = "0";
+    HR_LinkMode_Y3 = "0";
     HR_LinkMode_C12 = "0";
     HR_Group = "0";
     HR_Desc = "";
@@ -167,6 +182,7 @@ node S4
     label = "S(4)";
     position = (720 180);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_Y4 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -181,6 +197,7 @@ node Y0
     label = "Y(0)";
     position = (80 80);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_Y1 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -194,6 +211,7 @@ node Y1
     label = "Y(1)";
     position = (240 80);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_Y2 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -207,6 +225,7 @@ node Y2
     label = "Y(2)";
     position = (400 80);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_Y3 = "0";
     HR_Group = "0";
     HR_Desc = "";
     HR_State_2 = "";
@@ -220,6 +239,7 @@ node Y3
     label = "Y(3)";
     position = (560 80);
     states = ("State1" "State2" "State3");
+    HR_LinkMode_Y4 = "0";
     HR_LinkMode_C14 = "0";
     HR_Group = "0";
     HR_Desc = "";
@@ -241,144 +261,17 @@ node Y4
     HR_LinkMode_C15 = "0";
 }
 
-potential (Y4 | Y3 S4)
+potential (V0)
 {
-    data
-     = ((( 0.8 0.1 0.1 )	%  Y3=State1  S4=State1
-	 ( 0.1 0.8 0.1 )	%  Y3=State1  S4=State2
-	 ( 0.1 0.1 0.8 ))	%  Y3=State1  S4=State3
-	(( 0.1 0.8 0.1 )	%  Y3=State2  S4=State1
-	 ( 0.1 0.1 0.8 )	%  Y3=State2  S4=State2
-	 ( 0.8 0.1 0.1 ))	%  Y3=State2  S4=State3
-	(( 0.1 0.1 0.8 )	%  Y3=State3  S4=State1
-	 ( 0.8 0.1 0.1 )	%  Y3=State3  S4=State2
-	 ( 0.1 0.8 0.1 )));	%  Y3=State3  S4=State3
+    data = ( 1 1 1 );
 }
 
-potential (S4 | S3 V4)
+potential (V1 | V0)
 {
     data
-     = ((( 0.8 0.1 0.1 )	%  S3=State1  V4=State1
-	 ( 0.1 0.8 0.1 )	%  S3=State1  V4=State2
-	 ( 0.1 0.1 0.8 ))	%  S3=State1  V4=State3
-	(( 0.1 0.8 0.1 )	%  S3=State2  V4=State1
-	 ( 0.1 0.1 0.8 )	%  S3=State2  V4=State2
-	 ( 0.8 0.1 0.1 ))	%  S3=State2  V4=State3
-	(( 0.1 0.1 0.8 )	%  S3=State3  V4=State1
-	 ( 0.8 0.1 0.1 )	%  S3=State3  V4=State2
-	 ( 0.1 0.8 0.1 )));	%  S3=State3  V4=State3
-}
-
-potential (V4 | V3)
-{
-    data
-     = (( 0.99 0.005 0.005 )	%  V3=State1
-	( 0.005 0.99 0.005 )	%  V3=State2
-	( 0.005 0.005 0.99 ));	%  V3=State3
-}
-
-potential (Y3 | S3 Y2)
-{
-    data
-     = ((( 0.8 0.1 0.1 )	%  S3=State1  Y2=State1
-	 ( 0.1 0.8 0.1 )	%  S3=State1  Y2=State2
-	 ( 0.1 0.1 0.8 ))	%  S3=State1  Y2=State3
-	(( 0.1 0.8 0.1 )	%  S3=State2  Y2=State1
-	 ( 0.1 0.1 0.8 )	%  S3=State2  Y2=State2
-	 ( 0.8 0.1 0.1 ))	%  S3=State2  Y2=State3
-	(( 0.1 0.1 0.8 )	%  S3=State3  Y2=State1
-	 ( 0.8 0.1 0.1 )	%  S3=State3  Y2=State2
-	 ( 0.1 0.8 0.1 )));	%  S3=State3  Y2=State3
-}
-
-potential (Y2 | S2 Y1)
-{
-    data
-     = ((( 0.8 0.1 0.1 )	%  S2=State1  Y1=State1
-	 ( 0.1 0.8 0.1 )	%  S2=State1  Y1=State2
-	 ( 0.1 0.1 0.8 ))	%  S2=State1  Y1=State3
-	(( 0.1 0.8 0.1 )	%  S2=State2  Y1=State1
-	 ( 0.1 0.1 0.8 )	%  S2=State2  Y1=State2
-	 ( 0.8 0.1 0.1 ))	%  S2=State2  Y1=State3
-	(( 0.1 0.1 0.8 )	%  S2=State3  Y1=State1
-	 ( 0.8 0.1 0.1 )	%  S2=State3  Y1=State2
-	 ( 0.1 0.8 0.1 )));	%  S2=State3  Y1=State3
-}
-
-potential (Y1 | S1 Y0)
-{
-    data
-     = ((( 0.8 0.1 0.1 )	%  S1=State1  Y0=State1
-	 ( 0.1 0.8 0.1 )	%  S1=State1  Y0=State2
-	 ( 0.1 0.1 0.8 ))	%  S1=State1  Y0=State3
-	(( 0.1 0.8 0.1 )	%  S1=State2  Y0=State1
-	 ( 0.1 0.1 0.8 )	%  S1=State2  Y0=State2
-	 ( 0.8 0.1 0.1 ))	%  S1=State2  Y0=State3
-	(( 0.1 0.1 0.8 )	%  S1=State3  Y0=State1
-	 ( 0.8 0.1 0.1 )	%  S1=State3  Y0=State2
-	 ( 0.1 0.8 0.1 )));	%  S1=State3  Y0=State3
-}
-
-potential (Y0)
-{
-    data
-     = ( 1  1  1 );
-}
-
-potential (S3 | V3 S2)
-{
-    data
-     = ((( 0.8 0.1 0.1 )	%  V3=State1  S2=State1
-	 ( 0.1 0.8 0.1 )	%  V3=State1  S2=State2
-	 ( 0.1 0.1 0.8 ))	%  V3=State1  S2=State3
-	(( 0.1 0.8 0.1 )	%  V3=State2  S2=State1
-	 ( 0.1 0.1 0.8 )	%  V3=State2  S2=State2
-	 ( 0.8 0.1 0.1 ))	%  V3=State2  S2=State3
-	(( 0.1 0.1 0.8 )	%  V3=State3  S2=State1
-	 ( 0.8 0.1 0.1 )	%  V3=State3  S2=State2
-	 ( 0.1 0.8 0.1 )));	%  V3=State3  S2=State3
-}
-
-potential (S2 | V2 S1)
-{
-    data
-     = ((( 0.8 0.1 0.1 )	%  V2=State1  S1=State1
-	 ( 0.1 0.8 0.1 )	%  V2=State1  S1=State2
-	 ( 0.1 0.1 0.8 ))	%  V2=State1  S1=State3
-	(( 0.1 0.8 0.1 )	%  V2=State2  S1=State1
-	 ( 0.1 0.1 0.8 )	%  V2=State2  S1=State2
-	 ( 0.8 0.1 0.1 ))	%  V2=State2  S1=State3
-	(( 0.1 0.1 0.8 )	%  V2=State3  S1=State1
-	 ( 0.8 0.1 0.1 )	%  V2=State3  S1=State2
-	 ( 0.1 0.8 0.1 )));	%  V2=State3  S1=State3
-}
-
-potential (S1 | V1 S0)
-{
-    data
-     = ((( 0.8 0.1 0.1 )	%  V1=State1  S0=State1
-	 ( 0.1 0.8 0.1 )	%  V1=State1  S0=State2
-	 ( 0.1 0.1 0.8 ))	%  V1=State1  S0=State3
-	(( 0.1 0.8 0.1 )	%  V1=State2  S0=State1
-	 ( 0.1 0.1 0.8 )	%  V1=State2  S0=State2
-	 ( 0.8 0.1 0.1 ))	%  V1=State2  S0=State3
-	(( 0.1 0.1 0.8 )	%  V1=State3  S0=State1
-	 ( 0.8 0.1 0.1 )	%  V1=State3  S0=State2
-	 ( 0.1 0.8 0.1 )));	%  V1=State3  S0=State3
-}
-
-potential (S0)
-{
-    data
-     = ( 1  1  1 );
-}
-
-potential (V3 | V2)
-{
-    data
-     = (( 0.99 0.005 0.005 )	%  V2=State1
-	( 0.005 0.99 0.005 )	%  V2=State2
-	( 0.005 0.005 0.99 ));	%  V2=State3
+     = (( 0.99 0.005 0.005 )	%  V0=State1
+	( 0.005 0.99 0.005 )	%  V0=State2
+	( 0.005 0.005 0.99 ));	%  V0=State3
 }
 
 potential (V2 | V1)
@@ -389,15 +282,140 @@ potential (V2 | V1)
 	( 0.005 0.005 0.99 ));	%  V1=State3
 }
 
-potential (V1 | V0)
+potential (V3 | V2)
 {
     data
-     = (( 0.99 0.005 0.005 )	%  V1=State1
-	( 0.005 0.99 0.005 )	%  V1=State2
-	( 0.005 0.005 0.99 ));	%  V1=State3
+     = (( 0.99 0.005 0.005 )	%  V2=State1
+	( 0.005 0.99 0.005 )	%  V2=State2
+	( 0.005 0.005 0.99 ));	%  V2=State3
 }
 
-potential (V0)
+potential (V4 | V3)
 {
-    data = ( 1  1  1 );
+    data
+     = (( 0.99 0.005 0.005 )	%  V3=State1
+	( 0.005 0.99 0.005 )	%  V3=State2
+	( 0.005 0.005 0.99 ));	%  V3=State3
+}
+
+potential (S0)
+{
+    data = ( 1 1 1 );
+}
+
+potential (S1 | V1 S0)
+{
+    data
+     = ((( 0.77 0.12 0.11 )	%  V1=State1  S0=State1
+	 ( 0.1 0.75 0.1 )	%  V1=State1  S0=State2
+	 ( 0.1 0.08 0.82 ))	%  V1=State1  S0=State3
+	(( 0.15 0.8 0.05 )	%  V1=State2  S0=State1
+	 ( 0.11 0.13 0.76 )	%  V1=State2  S0=State2
+	 ( 0.82 0.08 0.1 ))	%  V1=State2  S0=State3
+	(( 0.1 0.01 0.89 )	%  V1=State3  S0=State1
+	 ( 0.75 0.13 0.12 )	%  V1=State3  S0=State2
+	 ( 0.1 0.8 0.1 )));	%  V1=State3  S0=State3
+}
+
+potential (S2 | V2 S1)
+{
+    data
+     = ((( 0.77 0.12 0.11 )	%  V2=State1  S1=State1
+	 ( 0.1 0.75 0.1 )	%  V2=State1  S1=State2
+	 ( 0.1 0.08 0.82 ))	%  V2=State1  S1=State3
+	(( 0.15 0.8 0.05 )	%  V2=State2  S1=State1
+	 ( 0.11 0.13 0.76 )	%  V2=State2  S1=State2
+	 ( 0.82 0.08 0.1 ))	%  V2=State2  S1=State3
+	(( 0.1 0.01 0.89 )	%  V2=State3  S1=State1
+	 ( 0.75 0.13 0.12 )	%  V2=State3  S1=State2
+	 ( 0.1 0.8 0.1 )));	%  V2=State3  S1=State3
+}
+
+potential (S3 | V3 S2)
+{
+    data
+     = ((( 0.77 0.12 0.11 )	%  V3=State1  S2=State1
+	 ( 0.1 0.75 0.1 )	%  V3=State1  S2=State2
+	 ( 0.1 0.08 0.82 ))	%  V3=State1  S2=State3
+	(( 0.15 0.8 0.05 )	%  V3=State2  S2=State1
+	 ( 0.11 0.13 0.76 )	%  V3=State2  S2=State2
+	 ( 0.82 0.08 0.1 ))	%  V3=State2  S2=State3
+	(( 0.1 0.01 0.89 )	%  V3=State3  S2=State1
+	 ( 0.75 0.13 0.12 )	%  V3=State3  S2=State2
+	 ( 0.1 0.8 0.1 )));	%  V3=State3  S2=State3
+}
+
+potential (S4 | V4 S3)
+{
+    data
+     = ((( 0.77 0.12 0.11 )	%  V4=State1  S3=State1
+	 ( 0.1 0.75 0.1 )	%  V4=State1  S3=State2
+	 ( 0.1 0.08 0.82 ))	%  V4=State1  S3=State3
+	(( 0.15 0.8 0.05 )	%  V4=State2  S3=State1
+	 ( 0.11 0.13 0.76 )	%  V4=State2  S3=State2
+	 ( 0.82 0.08 0.1 ))	%  V4=State2  S3=State3
+	(( 0.1 0.01 0.89 )	%  V4=State3  S3=State1
+	 ( 0.75 0.13 0.12 )	%  V4=State3  S3=State2
+	 ( 0.1 0.8 0.1 )));	%  V4=State3  S3=State3
+}
+
+potential (Y0)
+{
+    data = ( 1 1 1 );
+}
+
+potential (Y1 | S1 Y0)
+{
+    data
+     = ((( 0.75 0.15 0.1 )	%  S1=State1  Y0=State1
+	 ( 0.09 0.82 0.09 )	%  S1=State1  Y0=State2
+	 ( 0.08 0.07 0.85 ))	%  S1=State1  Y0=State3
+	(( 0.11 0.79 0.1 )	%  S1=State2  Y0=State1
+	 ( 0.2 0.1 0.7 )	%  S1=State2  Y0=State2
+	 ( 0.74 0.13 0.13 ))	%  S1=State2  Y0=State3
+	(( 0.09 0.08 0.83 )	%  S1=State3  Y0=State1
+	 ( 0.78 0.12 0.1 )	%  S1=State3  Y0=State2
+	 ( 0.05 0.9 0.05 )));	%  S1=State3  Y0=State3
+}
+
+potential (Y2 | S2 Y1)
+{
+    data
+     = ((( 0.75 0.15 0.1 )	%  S2=State1  Y1=State1
+	 ( 0.09 0.82 0.09 )	%  S2=State1  Y1=State2
+	 ( 0.08 0.07 0.85 ))	%  S2=State1  Y1=State3
+	(( 0.11 0.79 0.1 )	%  S2=State2  Y1=State1
+	 ( 0.2 0.1 0.7 )	%  S2=State2  Y1=State2
+	 ( 0.74 0.13 0.13 ))	%  S2=State2  Y1=State3
+	(( 0.09 0.08 0.83 )	%  S2=State3  Y1=State1
+	 ( 0.78 0.12 0.1 )	%  S2=State3  Y1=State2
+	 ( 0.05 0.9 0.05 )));	%  S2=State3  Y1=State3
+}
+
+potential (Y3 | S3 Y2)
+{
+    data
+     = ((( 0.75 0.15 0.1 )	%  S3=State1  Y2=State1
+	 ( 0.09 0.82 0.09 )	%  S3=State1  Y2=State2
+	 ( 0.08 0.07 0.85 ))	%  S3=State1  Y2=State3
+	(( 0.11 0.79 0.1 )	%  S3=State2  Y2=State1
+	 ( 0.2 0.1 0.7 )	%  S3=State2  Y2=State2
+	 ( 0.74 0.13 0.13 ))	%  S3=State2  Y2=State3
+	(( 0.09 0.08 0.83 )	%  S3=State3  Y2=State1
+	 ( 0.78 0.12 0.1 )	%  S3=State3  Y2=State2
+	 ( 0.05 0.9 0.05 )));	%  S3=State3  Y2=State3
+}
+
+potential (Y4 | S4 Y3)
+{
+    data
+     = ((( 0.75 0.15 0.1 )	%  S4=State1  Y3=State1
+	 ( 0.09 0.82 0.09 )	%  S4=State1  Y3=State2
+	 ( 0.08 0.07 0.85 ))	%  S4=State1  Y3=State3
+	(( 0.11 0.79 0.1 )	%  S4=State2  Y3=State1
+	 ( 0.2 0.1 0.7 )	%  S4=State2  Y3=State2
+	 ( 0.74 0.13 0.13 ))	%  S4=State2  Y3=State3
+	(( 0.09 0.08 0.83 )	%  S4=State3  Y3=State1
+	 ( 0.78 0.12 0.1 )	%  S4=State3  Y3=State2
+	 ( 0.05 0.9 0.05 )));	%  S4=State3  Y3=State3
 }

@@ -146,29 +146,29 @@ potential (Y0)
 potential (Y1 | S1 Y0)
 {
     data
-     = ((( 0.8 0.1 0.1 )	%  S1=State1  Y0=State1
-	 ( 0.1 0.8 0.1 )	%  S1=State1  Y0=State2
-	 ( 0.1 0.1 0.8 ))	%  S1=State1  Y0=State3
-	(( 0.1 0.8 0.1 )	%  S1=State2  Y0=State1
-	 ( 0.1 0.1 0.8 )	%  S1=State2  Y0=State2
-	 ( 0.8 0.1 0.1 ))	%  S1=State2  Y0=State3
-	(( 0.1 0.1 0.8 )	%  S1=State3  Y0=State1
-	 ( 0.8 0.1 0.1 )	%  S1=State3  Y0=State2
-	 ( 0.1 0.8 0.1 )));	%  S1=State3  Y0=State3
+     = ((( 0.75  0.15  0.1  )    %  S1=State1  Y0=State1
+	 ( 0.09  0.82  0.09 )    %  S1=State1  Y0=State2
+	 ( 0.08  0.07  0.85 ))   %  S1=State1  Y0=State3
+	(( 0.11  0.79  0.1  )    %  S1=State2  Y0=State1
+	 ( 0.2   0.1   0.7  )    %  S1=State2  Y0=State2
+	 ( 0.74  0.13  0.13 ))   %  S1=State2  Y0=State3
+	(( 0.09  0.08  0.83 )    %  S1=State3  Y0=State1
+	 ( 0.78  0.12  0.1  )    %  S1=State3  Y0=State2
+	 ( 0.05  0.9   0.05 ))); %  S1=State3  Y0=State3
 }
 
 potential (S1 | V1 S0)
 {
     data
-     = ((( 0.8 0.1 0.1 )	%  V1=State1  S0=State1
-	 ( 0.1 0.8 0.1 )	%  V1=State1  S0=State2
-	 ( 0.1 0.1 0.8 ))	%  V1=State1  S0=State3
-	(( 0.1 0.8 0.1 )	%  V1=State2  S0=State1
-	 ( 0.1 0.1 0.8 )	%  V1=State2  S0=State2
-	 ( 0.8 0.1 0.1 ))	%  V1=State2  S0=State3
-	(( 0.1 0.1 0.8 )	%  V1=State3  S0=State1
-	 ( 0.8 0.1 0.1 )	%  V1=State3  S0=State2
-	 ( 0.1 0.8 0.1 )));	%  V1=State3  S0=State3
+     = ((( 0.77  0.12  0.11 )	%  V1=State1  S0=State1
+	 ( 0.1   0.75  0.1  )	%  V1=State1  S0=State2
+	 ( 0.1   0.08  0.82 ))	%  V1=State1  S0=State3
+	(( 0.15  0.8   0.05 )	%  V1=State2  S0=State1
+	 ( 0.11  0.13  0.76 )	%  V1=State2  S0=State2
+	 ( 0.82  0.08  0.1  ))	%  V1=State2  S0=State3
+	(( 0.1   0.01  0.89 )	%  V1=State3  S0=State1
+	 ( 0.75  0.13  0.12 )	%  V1=State3  S0=State2
+	 ( 0.1   0.8   0.1  )));%  V1=State3  S0=State3
 }
 
 potential (V1 | V0)

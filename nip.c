@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.148 2006-10-10 13:34:16 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.149 2006-10-10 17:54:24 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -18,7 +18,8 @@
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
 
-/* #define DEBUG_NIP */
+/*  */
+#define DEBUG_NIP
 
 /***********************************************************
  * The time slice concept features some major difficulties 
@@ -97,8 +98,8 @@ void use_priors(nip model, int has_history){
 
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
-    if(v->prior != NULL && 
-       (!has_history || !(v->if_status & INTERFACE_OLD_OUTGOING))){
+    assert(v->prior != NULL);
+    if(!has_history || !(v->if_status & INTERFACE_OLD_OUTGOING)){
       retval = enter_evidence(model->variables, model->num_of_vars, 
 			      model->cliques, model->num_of_cliques, 
 			      v, v->prior);
@@ -964,7 +965,7 @@ static int start_timeslice_message_pass(nip model, direction dir,
   }
 
   if(dir == forward){
-    vars = model->outgoing_interface; 
+    vars = model->outgoing_interface;
     c = model->out_clique;
   }
   else{
