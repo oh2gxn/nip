@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.149 2006-10-10 17:54:24 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.150 2006-10-11 18:12:59 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -18,7 +18,6 @@
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
 
-/*  */
 #define DEBUG_NIP
 
 /***********************************************************
@@ -39,6 +38,9 @@
 
 /***** 
  * TODO: 
+
+ * - Normalisation of parsed parameter potentials is different from 
+ *   that of Hugin Lite... (This software does not normalise?)
 
  * - Refactorisation of variable_union(), variable_isect(), and
  *   mapper() by replacing a lot of copy-paste code with them...
@@ -228,14 +230,15 @@ nip parse_model(char* file){
     
     if(temp->if_status & INTERFACE_INCOMING)
       new->incoming_interface[k++] = temp;
-    else if(temp->if_status & INTERFACE_OLD_OUTGOING){
+    if(temp->if_status & INTERFACE_OLD_OUTGOING){
       new->previous_outgoing_interface[m] = temp;
       new->outgoing_interface[m] = temp->previous;
       assert(temp->previous->if_status & INTERFACE_OUTGOING);
       m++;
     }
   }
-  
+  assert(m == new->outgoing_interface_size); /* same amount of old & new? */
+
   /* Reminder: (Before I indexed the children with j, the program had 
    * funny crashes on Linux systems :) */
   j = 0; k = 0;
@@ -1175,14 +1178,6 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       printf("Log.likelihood ln(L(y(0))) = %g\n", (log(m2) - log(m1)));
     }
 #endif
-#ifdef DEBUG_NIP
-    /* print alpha */
-    m2 = 0;
-    for(i = 0; i < alpha->size_of_data; i++)
-      m2 += alpha->data[i];
-    printf("Sum(alpha) = %g\n", m2);
-#endif
-
 
     /* Write the results */
     for(i = 0; i < results->num_of_vars; i++){      
@@ -1210,6 +1205,14 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       free_potential(alpha);
       return NULL;
     }
+
+#ifdef DEBUG_NIP
+    /* print alpha */
+    m2 = 0;
+    for(i = 0; i < alpha->size_of_data; i++)
+      m2 += alpha->data[i];
+    printf("Sum(alpha) = %g\n", m2);
+#endif
    
     /* Forget old evidence */
     reset_model(model);
@@ -1982,7 +1985,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
       }
 
       /** DEBUG **/
-      assert(probe > -HUGE_VAL && probe <= 0.0);
+      assert(probe > -DBL_MAX && probe <= 0.0);
 
       loglikelihood += probe;
     }
@@ -1993,7 +1996,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
            loglikelihood);
 
     if(loglikelihood < old_loglikelihood ||
-       loglikelihood == -HUGE_VAL){ /* some "impossible" data */
+       loglikelihood == -DBL_MAX){ /* some "impossible" data */
       printf("WTF?\n");
       break;
     }

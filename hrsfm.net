@@ -130,17 +130,17 @@ node V0
 
 potential (V0)
 {
-    data = ( 1 1 1 );
+    data = ( 0.6  0.2  0.2 );
 }
 
 potential (S0)
 {
-    data = ( 1 1 1 );
+    data = ( 0.5  0.3  0.2 );
 }
 
 potential (Y0)
 {
-    data = ( 1 1 1 );
+    data = ( 0.4  0.3  0.3 );
 }
 
 potential (Y1 | S1 Y0)
@@ -161,7 +161,7 @@ potential (S1 | V1 S0)
 {
     data
      = ((( 0.77  0.12  0.11 )	%  V1=State1  S0=State1
-	 ( 0.1   0.75  0.1  )	%  V1=State1  S0=State2
+	 ( 0.15  0.75  0.1  )	%  V1=State1  S0=State2
 	 ( 0.1   0.08  0.82 ))	%  V1=State1  S0=State3
 	(( 0.15  0.8   0.05 )	%  V1=State2  S0=State1
 	 ( 0.11  0.13  0.76 )	%  V1=State2  S0=State2

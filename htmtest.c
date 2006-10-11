@@ -68,18 +68,13 @@ int main(int argc, char *argv[]){
   for(i = 0; i < ts->num_of_hidden; i++)
     printf("%s ", ts->hidden[i]->symbol);
   printf("\n");
+  /*print_cliques(model);*/
+  printf("\n");
 
   /*****************/
   /* Forward phase */
   /*****************/
 
-  /* Try this kind of iteration:
-   * + put data in
-   * + pass the message from previous sepset to the next one
-   * + print the result
-   * + reset model
-   */
-  
   printf("## Forward phase ##\n");  
 
   ucs = forward_inference(ts, ts->hidden, ts->num_of_hidden);
@@ -103,6 +98,7 @@ int main(int argc, char *argv[]){
   /******************/
   /* Backward phase */
   /******************/
+
   printf("## Backward phase ##\n");  
 
   free_uncertainseries(ucs); /* REMEMBER THIS */

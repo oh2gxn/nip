@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.67 2006-03-10 12:25:13 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.68 2006-10-11 18:12:59 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -502,6 +502,7 @@ value:         QUOTED_STRING { free($1); }
 
 
 dataList: token_data '=' '(' numbers ')' ';' {
+  /* Note: this doesn't normalise them in any way */
   double *doubles = make_double_array();
   if(!doubles){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
