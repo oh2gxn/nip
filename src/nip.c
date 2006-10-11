@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.150 2006-10-11 18:12:59 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.151 2006-10-11 18:14:09 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -18,7 +18,7 @@
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
 
-#define DEBUG_NIP
+/* #define DEBUG_NIP */
 
 /***********************************************************
  * The time slice concept features some major difficulties 
