@@ -1,10 +1,11 @@
 /*
- * nip.h $Id: nip.h,v 1.51 2006-10-10 13:34:16 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.52 2006-10-12 15:13:39 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
 #define __NIP_H__
 
+#include "parser.h"
 #include "clique.h"
 #include "variable.h"
 #include "errorhandler.h"
@@ -224,7 +225,8 @@ time_series mlss(variable vars[], int nvars, time_series ts);
  * EM-algorithm. Returns an error code as an integer. 
  * NOTE:  this is not implemented yet! 
  * NOTE2: the model is included in the time_series */
-int em_learn(time_series *ts, int n_ts, double threshold);
+int em_learn(time_series *ts, int n_ts, double threshold, 
+	     doublelink* learning_curve);
 
 
 /* Tells the likelihood of observations (not normalised). 

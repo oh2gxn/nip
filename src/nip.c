@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.151 2006-10-11 18:14:09 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.152 2006-10-12 15:13:39 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1898,20 +1898,25 @@ static int m_step(potential* parameters, nip model){
 
 /* Trains the given model (ts->model) according to the given time series 
  * (ts) with EM-algorithm. Returns an error code. */
-int em_learn(time_series *ts, int n_ts, double threshold){
+int em_learn(time_series *ts, int n_ts, double threshold,
+	     doublelink* learning_curve){
   int i, j, n, v;
   int *card;
   int ts_steps;
   double old_loglikelihood; 
   double loglikelihood = -DBL_MAX;
   double probe = 0;
-  potential *parameters;
+  doublelink first = NULL;
+  doublelink new;
+  doublelink last = NULL;
+  potential *parameters = NULL;
   nip model = ts[0]->model;
 
   /* Reserve some memory for calculation */
   parameters = (potential*) calloc(model->num_of_vars, sizeof(potential));
   if(!parameters){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    free(last);
     return ERROR_OUTOFMEMORY;
   }
 
@@ -1923,6 +1928,7 @@ int em_learn(time_series *ts, int n_ts, double threshold){
       while(v > 0)
 	free_potential(parameters[--v]);
       free(parameters);
+      free(last);
       return ERROR_OUTOFMEMORY;
     }
     /* The child MUST be the first variable in order to normalize
@@ -1961,6 +1967,15 @@ int em_learn(time_series *ts, int n_ts, double threshold){
      * into the model. */
     if(m_step(parameters, model) != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      for(v = 0; v < model->num_of_vars; v++){
+	free_potential(parameters[v]);
+      }
+      free(parameters);
+      while(first != NULL){
+	free(first->bwd);
+	first = first->fwd;
+      }
+      free(last);
       return ERROR_GENERAL;
     }
 
@@ -1981,6 +1996,15 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     for(n = 0; n < n_ts; n++){
       if(e_step(ts[n], parameters, &probe) != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	for(v = 0; v < model->num_of_vars; v++){
+	  free_potential(parameters[v]);
+	}
+	free(parameters);
+	while(first != NULL){
+	  free(first->bwd);
+	  first = first->fwd;
+	}
+	free(last);
 	return ERROR_GENERAL;
       }
 
@@ -1991,13 +2015,38 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     }
     loglikelihood = loglikelihood / ts_steps; /* normalisation */
 
-    /* This is a feature... Don't remove! */
-    printf("Iteration %d: \t average loglikelihood = %f\n", i++, 
-           loglikelihood);
+    /* Add an element to the linked list */
+    if(learning_curve != NULL){
+      new = (doublelink) malloc(sizeof(doubleelement));
+      if(!new){
+	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	for(v = 0; v < model->num_of_vars; v++){
+	  free_potential(parameters[v]);
+	}
+	free(parameters);
+	while(first != NULL){
+	  free(first->bwd);
+	  first = first->fwd;
+	}
+	free(last);
+	return ERROR_OUTOFMEMORY;
+      }
+      
+      new->data = loglikelihood;
+      new->fwd = NULL;
+      new->bwd = last;
+      if(first == NULL)
+	first = new;
+      else
+	last->fwd = new;
+      last = new; /* Update the last-pointer */
+    }
 
+    /* Check stuff */
     if(loglikelihood < old_loglikelihood ||
+       loglikelihood == DBL_MAX || 
        loglikelihood == -DBL_MAX){ /* some "impossible" data */
-      printf("WTF?\n");
+      /*printf("WTF?\n");*/
       break;
     }
 
@@ -2008,7 +2057,10 @@ int em_learn(time_series *ts, int n_ts, double threshold){
     free_potential(parameters[v]);
   }
   free(parameters);
-  
+
+  if(learning_curve != NULL)
+    *learning_curve = first; /* Return the list */
+
   return NO_ERROR;
 }
 
