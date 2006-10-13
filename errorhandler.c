@@ -33,6 +33,8 @@ void report_error(char *srcFile, int line, int errorcode, int verbose){
       fprintf(stderr, "An error encountered.\n"); break;
     case ERROR_FILENOTFOUND :
       fprintf(stderr, "Requested file not found.\n"); break;
+    case ERROR_BAD_LUCK :
+      fprintf(stderr, "Random model was born dead.\n"); break;
     default : fprintf(stderr, "Something went wrong.\n");
     }
   }

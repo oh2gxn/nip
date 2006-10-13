@@ -10,6 +10,7 @@
 #define ERROR_IO 5
 #define ERROR_GENERAL 6
 #define ERROR_FILENOTFOUND 7
+#define ERROR_BAD_LUCK 8
 
 /* Method for reporting an error. 
  * - srcFile is the source file (__FILE__)

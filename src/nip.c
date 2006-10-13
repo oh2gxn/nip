@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.152 2006-10-12 15:13:39 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.153 2006-10-13 17:11:53 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1698,7 +1698,24 @@ static int e_step(time_series ts, potential* parameters,
 
     /* This computes the log likelihood (ratio of probability masses) */
     m2 = model_prob_mass(model);
-    *loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
+    if((m1 > 0) && (m2 > 0)){
+      *loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
+    }
+
+    /* Check for anomalies */
+    if((m1 < 0) || 
+       (m2 < 0) || 
+       (*loglikelihood > 0)){
+      for(i = 0; i < model->num_of_vars; i++)
+	free_potential(results[i]);
+      free(results);
+      free(data);
+      free(observed);
+      for(i = 0; i <= ts->length; i++)
+	free_potential(alpha_gamma[i]);
+      free(alpha_gamma);
+      return ERROR_BAD_LUCK;
+    }
     
     /* Start a message pass between timeslices */
     if(start_timeslice_message_pass(model, forward,
@@ -1900,14 +1917,14 @@ static int m_step(potential* parameters, nip model){
  * (ts) with EM-algorithm. Returns an error code. */
 int em_learn(time_series *ts, int n_ts, double threshold,
 	     doublelink* learning_curve){
-  int i, j, n, v;
+  int e, i, j, n, v;
   int *card;
   int ts_steps;
   double old_loglikelihood; 
   double loglikelihood = -DBL_MAX;
   double probe = 0;
   doublelink first = NULL;
-  doublelink new;
+  doublelink new = NULL;
   doublelink last = NULL;
   potential *parameters = NULL;
   nip model = ts[0]->model;
@@ -1943,7 +1960,10 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     free(card);
   }
 
-  /* Randomize the parameters */
+  /* Randomize the parameters.
+   * NOTE: parameters near zero are a numerical problem... 
+   *       on the other hand, zeros are needed in some cases. 
+   *       How to identify a "bad" zero? */
   random_seed();
   for(v = 0; v < model->num_of_vars; v++){
     n = parameters[v]->size_of_data;
@@ -1965,8 +1985,9 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /* M-Step... or at least the last part of it. 
      * On the first iteration this enters the random parameters 
      * into the model. */
-    if(m_step(parameters, model) != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    e = m_step(parameters, model);
+    if(e != NO_ERROR){
+      report_error(__FILE__, __LINE__, e, 1);
       for(v = 0; v < model->num_of_vars; v++){
 	free_potential(parameters[v]);
       }
@@ -1976,7 +1997,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	first = first->fwd;
       }
       free(last);
-      return ERROR_GENERAL;
+      return e;
     }
 
     old_loglikelihood = loglikelihood;
@@ -1987,25 +2008,36 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     for(v = 0; v < model->num_of_vars; v++){
       n = parameters[v]->size_of_data;
       memset(parameters[v]->data, 0, n * sizeof(double));
-      /* the M-step will take care of the normalisation and 
-       * elimination of zeros */
+      /* the M-step will take care of the normalisation 
+       * and elimination of zeros (?) */
     }
 
     /* E-Step: Now this is the heavy stuff..! 
      * (for each time series separately to save memory) */
     for(n = 0; n < n_ts; n++){
-      if(e_step(ts[n], parameters, &probe) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      e = e_step(ts[n], parameters, &probe);
+      if(e != NO_ERROR){
+	if(e != ERROR_BAD_LUCK)
+	  report_error(__FILE__, __LINE__, e, 1);
+	/* don't report invalid random parameters */
 	for(v = 0; v < model->num_of_vars; v++){
 	  free_potential(parameters[v]);
 	}
 	free(parameters);
-	while(first != NULL){
-	  free(first->bwd);
-	  first = first->fwd;
+	if(e != ERROR_BAD_LUCK){
+	  while(first != NULL){
+	    free(first->bwd);
+	    first = first->fwd;
+	  }
+	  free(last);
 	}
-	free(last);
-	return ERROR_GENERAL;
+	else
+	  if(learning_curve != NULL)
+	    *learning_curve = first; /* Return the list */
+	
+	/* FIXME: why does this return at this point? */
+
+	return e;
       }
 
       /** DEBUG **/
@@ -2046,11 +2078,16 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     if(loglikelihood < old_loglikelihood ||
        loglikelihood == DBL_MAX || 
        loglikelihood == -DBL_MAX){ /* some "impossible" data */
-      /*printf("WTF?\n");*/
-      break;
+      for(v = 0; v < model->num_of_vars; v++){
+	free_potential(parameters[v]);
+      }
+      free(parameters);
+      if(learning_curve != NULL)
+	*learning_curve = first; /* Return the list */
+      return ERROR_BAD_LUCK;
     }
 
-  }while((loglikelihood - old_loglikelihood) > threshold || i < 3);
+  } while((loglikelihood - old_loglikelihood) > threshold || i < 3);
   /*** When should we stop? ***/
 
   for(v = 0; v < model->num_of_vars; v++){

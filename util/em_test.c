@@ -18,6 +18,7 @@
  * EXAMPLE: ./em_test model1.net data.txt 0.00001 -1.2 model2.net
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,7 +30,7 @@
 
 int main(int argc, char *argv[]) {
 
-  int i, n, t;
+  int i, n, t, e;
   nip model = NULL;
   time_series *ts_set = NULL;
   time_series ts;
@@ -116,11 +117,11 @@ int main(int argc, char *argv[]) {
     }
 
     /* EM algorithm */
-    i = em_learn(ts_set, n, threshold, &learning_curve);
-    
-    if(i != NO_ERROR){
+    e = em_learn(ts_set, n, threshold, &learning_curve);
+
+    if(!(e == NO_ERROR || e == ERROR_BAD_LUCK)){
       fprintf(stderr, "There were errors during learning:\n");
-      report_error(__FILE__, __LINE__, i, 1);
+      report_error(__FILE__, __LINE__, e, 1);
       for(i = 0; i < n; i++)
 	free_timeseries(ts_set[i]);
       free(ts_set);
@@ -128,13 +129,17 @@ int main(int argc, char *argv[]) {
       return -1;
     }
 
-    /* find out the last value */
+    /* find out the last value in learning curve */
+    assert(learning_curve != NULL);
     link = learning_curve;
     while(link->fwd != NULL)
       link = link->fwd;
     last = link->data;
     printf("Run %d reached %g \n", t++, last);
-  } while(last < min_log_likelihood);
+
+    /* Try again, if not satisfied with the result */
+  } while(last < min_log_likelihood || e == ERROR_BAD_LUCK);
+
   printf("...done.\n");
 
   /* Print the learning curve */
