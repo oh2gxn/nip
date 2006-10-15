@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.153 2006-10-13 17:11:53 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.154 2006-10-15 23:31:15 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -39,11 +39,15 @@
 /***** 
  * TODO: 
 
+ * - Refactor the list-implementations in parser.c (ADT, please)
+
  * - Normalisation of parsed parameter potentials is different from 
  *   that of Hugin Lite... (This software does not normalise?)
 
  * - Refactorisation of variable_union(), variable_isect(), and
  *   mapper() by replacing a lot of copy-paste code with them...
+
+ * - Get rid of copy-paste stuff in inference procedures... but how?
 
  * - Viterbi algorithm for the ML-estimate of the latent variables
  *   - another forward-like algorithm with elements of dynamic programming
@@ -62,7 +66,8 @@ static int start_timeslice_message_pass(nip model, direction dir,
 static int finish_timeslice_message_pass(nip model, direction dir,
 					 potential num, potential den);
 
-static int e_step(time_series ts, potential* results, double* loglikelihood);
+static int e_step(time_series ts, potential* parameters, 
+		  double* loglikelihood);
 static int m_step(potential* results, nip model);
 
 /* static double momentary_loglikelihood(nip model, variable* observed, 
@@ -1687,8 +1692,10 @@ static int e_step(time_series ts, potential* parameters,
 	free(alpha_gamma);
 	return ERROR_GENERAL;
       }
-      make_consistent(model); /* propagate message */
     }
+
+    /* Propagate message and make sure sepsets have correct weight */
+    make_consistent(model); 
 
     m1 = model_prob_mass(model);
 
@@ -1703,8 +1710,8 @@ static int e_step(time_series ts, potential* parameters,
     }
 
     /* Check for anomalies */
-    if((m1 < 0) || 
-       (m2 < 0) || 
+    if((m1 <= 0) || 
+       (m2 <= 0) || 
        (*loglikelihood > 0)){
       for(i = 0; i < model->num_of_vars; i++)
 	free_potential(results[i]);
@@ -2075,8 +2082,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     }
 
     /* Check stuff */
-    if(loglikelihood < old_loglikelihood ||
-       loglikelihood == DBL_MAX || 
+    /*if(loglikelihood < old_loglikelihood || FIXME */
+    if(loglikelihood == DBL_MAX || 
        loglikelihood == -DBL_MAX){ /* some "impossible" data */
       for(v = 0; v < model->num_of_vars; v++){
 	free_potential(parameters[v]);
