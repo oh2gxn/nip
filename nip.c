@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.154 2006-10-15 23:31:15 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.155 2006-10-16 14:35:10 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -2041,9 +2041,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	else
 	  if(learning_curve != NULL)
 	    *learning_curve = first; /* Return the list */
-	
-	/* FIXME: why does this return at this point? */
-
 	return e;
       }
 
@@ -2082,8 +2079,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     }
 
     /* Check stuff */
-    /*if(loglikelihood < old_loglikelihood || FIXME */
-    if(loglikelihood == DBL_MAX || 
+    if(loglikelihood < old_loglikelihood ||
+       loglikelihood == DBL_MAX || 
        loglikelihood == -DBL_MAX){ /* some "impossible" data */
       for(v = 0; v < model->num_of_vars; v++){
 	free_potential(parameters[v]);

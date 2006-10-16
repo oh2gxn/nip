@@ -114,6 +114,7 @@ int main(int argc, char *argv[]) {
 	free(learning_curve);
 	learning_curve = link;
       }
+      learning_curve = NULL;
     }
 
     /* EM algorithm */
