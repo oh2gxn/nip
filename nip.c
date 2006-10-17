@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.155 2006-10-16 14:35:10 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.156 2006-10-17 16:05:15 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -2008,7 +2008,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     }
 
     old_loglikelihood = loglikelihood;
-    loglikelihood = 0;
+    loglikelihood = 0.0;
 
     /* Initialise the parameter potentials to "zero" for  
      * accumulating the "average parameters" in the E-step */
@@ -2049,7 +2049,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 
       loglikelihood += probe;
     }
-    loglikelihood = loglikelihood / ts_steps; /* normalisation */
 
     /* Add an element to the linked list */
     if(learning_curve != NULL){
@@ -2068,7 +2067,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	return ERROR_OUTOFMEMORY;
       }
       
-      new->data = loglikelihood;
+      new->data = loglikelihood / ts_steps;
       new->fwd = NULL;
       new->bwd = last;
       if(first == NULL)
@@ -2078,20 +2077,29 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       last = new; /* Update the last-pointer */
     }
 
-    /* Check stuff */
-    if(loglikelihood < old_loglikelihood ||
+    /* Check if the parameters were valid in any sense */
+    if((ts_steps * threshold) < (old_loglikelihood - loglikelihood) ||
        loglikelihood == DBL_MAX || 
        loglikelihood == -DBL_MAX){ /* some "impossible" data */
+
       for(v = 0; v < model->num_of_vars; v++){
 	free_potential(parameters[v]);
       }
       free(parameters);
+
       if(learning_curve != NULL)
 	*learning_curve = first; /* Return the list */
+      
+      /* DEBUG */
+      if(loglikelihood < old_loglikelihood)
+	printf("  Delta = %g\n", 
+	       (loglikelihood - old_loglikelihood) / ts_steps);
+	
       return ERROR_BAD_LUCK;
     }
 
-  } while((loglikelihood - old_loglikelihood) > threshold || i < 3);
+  } while(fabs(loglikelihood - old_loglikelihood) > (ts_steps * threshold) || 
+	  i < 3);
   /*** When should we stop? ***/
 
   for(v = 0; v < model->num_of_vars; v++){
@@ -2112,30 +2120,6 @@ double model_prob_mass(nip model){
   m = probability_mass(model->cliques, model->num_of_cliques);
   return m;
 }
-
-
-/* This is just a naive idea I once had... */
-/* static double momentary_loglikelihood(nip model, variable* observed, */
-/* 				      int* indexed_data, int n_observed){ */
-/*   potential p; */
-/*   double likelihood; */
-/*   if(!observed || !n_observed) */
-/*     return -DBL_MAX; */
-/*   /\* NOTE: the potential array will be ordered according to the  */
-/*    * given variable-array, not the same way as clique potentials *\/ */
-/*  p = get_joint_probability(model, observed, n_observed);/\* EXPENSIVE *\/ */
-/*   if(!p){ */
-/*     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1); */
-/*     return -DBL_MAX; */
-/*   }   */
-/*   /\* we needed only one of the computed values *\/ */
-/*   likelihood = get_pvalue(p, indexed_data); */
-/*   free_potential(p); /\* Remember to free some memory *\/ */
-/*   if(likelihood > 0) */
-/*     return log(likelihood); /\* natural logarithm (a.k.a. ln) *\/ */
-/*   else */
-/*     return -DBL_MAX; */
-/* } */
 
 
 double *get_probability(nip model, variable v){
