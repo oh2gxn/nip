@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.156 2006-10-17 16:05:15 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.157 2006-10-17 22:57:24 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1884,9 +1884,6 @@ static int m_step(potential* parameters, nip model){
     k = number_of_values(model->variables[i]);
     for(j = 0; j < parameters[i]->size_of_data; j = j + k)
       normalise(&(parameters[i]->data[j]), k);
-      /******************************************************************/
-      /* JJ NOTE: Not so sure whether this is the correct way or not... */
-      /******************************************************************/
   }
 
   /* 2. Reset the clique potentials and everything */
@@ -2097,6 +2094,10 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	
       return ERROR_BAD_LUCK;
     }
+
+    /* Remember this! 
+     * (It helps if you insist having a minimum amount of iterations :) */
+    i++;
 
   } while(fabs(loglikelihood - old_loglikelihood) > (ts_steps * threshold) || 
 	  i < 3);
