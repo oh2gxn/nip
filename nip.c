@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.157 2006-10-17 22:57:24 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.158 2006-10-18 15:43:40 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -2075,7 +2075,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     }
 
     /* Check if the parameters were valid in any sense */
-    if((ts_steps * threshold) < (old_loglikelihood - loglikelihood) ||
+    if(old_loglikelihood > loglikelihood ||
        loglikelihood == DBL_MAX || 
        loglikelihood == -DBL_MAX){ /* some "impossible" data */
 
@@ -2099,7 +2099,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
      * (It helps if you insist having a minimum amount of iterations :) */
     i++;
 
-  } while(fabs(loglikelihood - old_loglikelihood) > (ts_steps * threshold) || 
+  } while((loglikelihood - old_loglikelihood) > (ts_steps * threshold) || 
 	  i < 3);
   /*** When should we stop? ***/
 
