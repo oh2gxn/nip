@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.158 2006-10-18 15:43:40 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.159 2006-10-18 16:11:30 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -2042,7 +2042,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       }
 
       /** DEBUG **/
-      assert(probe > -DBL_MAX && probe <= 0.0);
+      assert(probe > -DBL_MAX && probe <= 0.0 && probe == probe);
+      /* probe != probe, if probe == NaN ? */
 
       loglikelihood += probe;
     }
@@ -2075,8 +2076,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     }
 
     /* Check if the parameters were valid in any sense */
-    if(old_loglikelihood > loglikelihood ||
-       loglikelihood == DBL_MAX || 
+    /*if(old_loglikelihood > loglikelihood ||*/
+    if(loglikelihood == DBL_MAX || 
        loglikelihood == -DBL_MAX){ /* some "impossible" data */
 
       for(v = 0; v < model->num_of_vars; v++){
@@ -2087,11 +2088,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       if(learning_curve != NULL)
 	*learning_curve = first; /* Return the list */
       
-      /* DEBUG */
-      if(loglikelihood < old_loglikelihood)
-	printf("  Delta = %g\n", 
-	       (loglikelihood - old_loglikelihood) / ts_steps);
-	
       return ERROR_BAD_LUCK;
     }
 
