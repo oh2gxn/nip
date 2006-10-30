@@ -29,6 +29,8 @@ int main(int argc, char *argv[]){
 
   int i, n_max;
 
+  double probe, loglikelihood;
+
   nip model = NULL;
   variable v = NULL;
 
@@ -94,24 +96,30 @@ int main(int argc, char *argv[]){
     return -1;
   }
   
-  /*******************************************/
-  /* The inference for the first time series */
-  /*******************************************/
+  /*****************/
+  /* The inference */
+  /*****************/
   printf("## Computing ##\n");  
+  loglikelihood = 0; /* init */
 
   for(i = 0; i < n_max; i++){
     /* the computation of posterior probabilities */
     ts = ts_set[i];
-    ucs_set[i] = forward_backward_inference(ts, &v, 1);
+    ucs_set[i] = forward_backward_inference(ts, &v, 1, &probe);
+
+    /* Compute average log likelihood */
+    loglikelihood += probe / ts->length;
 
     /* forget old evidence */
     reset_model(model);
     use_priors(model, 0);
   }
+  loglikelihood /= n_max;
 
   /* write the output */
   write_uncertainseries(ucs_set, n_max, v, argv[4]);
 
+  printf("  Average log. likelihood = %g\n", loglikelihood);
   printf("done.\n"); /* new line for the prompt */
 
   /* free some memory */

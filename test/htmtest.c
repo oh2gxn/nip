@@ -21,6 +21,8 @@ int main(int argc, char *argv[]){
 
   int i, j, n, t = 0;
 
+  double loglikelihood = 0;
+
   nip model = NULL;
   variable temp = NULL;
 
@@ -77,7 +79,7 @@ int main(int argc, char *argv[]){
 
   printf("## Forward phase ##\n");  
 
-  ucs = forward_inference(ts, ts->hidden, ts->num_of_hidden);
+  ucs = forward_inference(ts, ts->hidden, ts->num_of_hidden, &loglikelihood);
 
   for(t = 0; t < ucs->length; t++){ /* FOR EVERY TIMESLICE */
     
@@ -94,6 +96,7 @@ int main(int argc, char *argv[]){
     }
   }  
 
+  printf("  Log. likelihood = %g\n\n", loglikelihood);
   
   /******************/
   /* Backward phase */
@@ -103,7 +106,7 @@ int main(int argc, char *argv[]){
 
   free_uncertainseries(ucs); /* REMEMBER THIS */
 
-  ucs = forward_backward_inference(ts, ts->hidden, ts->num_of_hidden);
+  ucs = forward_backward_inference(ts, ts->hidden, ts->num_of_hidden, NULL);
 
   /* forget old evidence */
   reset_model(model);

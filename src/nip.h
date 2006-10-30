@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.52 2006-10-12 15:13:39 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.53 2006-10-30 16:59:03 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -190,9 +190,12 @@ int insert_ucs_step(uncertain_series ucs, int t, nip model);
  * hidden variable and for every time step according to the timeseries.
  * It uses only forward propagation, so the result of time step t 
  * is not affected by the rest of the timeseries. 
- *  You'll have to specify the variables of interest in the vars array 
- * and the number of the variables. */
-uncertain_series forward_inference(time_series ts, variable vars[], int nvars);
+ * You'll have to specify the variables of interest in the vars array 
+ * and the number of the variables. 
+ * Returns also the average log. likelihood if <loglikelihood> is not NULL 
+ */
+uncertain_series forward_inference(time_series ts, variable vars[], int nvars, 
+				   double* loglikelihood);
 
 
 /* This one computes the probability distributions for every 
@@ -200,9 +203,12 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars);
  * It uses both forward and backward propagation, so the result of time 
  * step t is affected by the whole timeseries. 
  *  You'll have to specify the variables of interest in the vars array 
- * and the number of the variables. */
+ * and the number of the variables. 
+ * Returns also the average log. likelihood if <loglikelihood> is not NULL
+ */
 uncertain_series forward_backward_inference(time_series ts, 
-					   variable vars[], int nvars);
+					   variable vars[], int nvars,
+					    double* loglikelihood);
 
 
 /* Fetches you the variable with a given name. */

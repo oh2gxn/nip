@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.159 2006-10-18 16:11:30 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.160 2006-10-30 16:59:03 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1028,19 +1028,17 @@ static int finish_timeslice_message_pass(nip model, direction dir,
 
 /* forward-only inference consumes constant (1 time slice) amount of memory 
  * + the results (which is linear) */
-uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
+uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
+				   double* loglikelihood){
   int i, t;
   int *cardinalities = NULL;
+  double m1, m2;
   variable temp;
   potential alpha = NULL;
   clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
 
-  /* DEBUG */
-#ifdef DEBUG_NIP
-  double m1, m2;
-#endif
   
   /* Allocate an array */
   if(model->outgoing_interface_size > 0){
@@ -1135,6 +1133,8 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
   /*****************/
   reset_model(model);
   use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+  if(loglikelihood)
+    *loglikelihood = 0; /* init */
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
 
@@ -1157,11 +1157,11 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
       }
     }
     
-    /* DEBUG: to see how the new likelihood computation is doing... */
-#ifdef DEBUG_NIP
-    make_consistent(model);
-    m1 = model_prob_mass(model);
-#endif
+    /* Likelihood reference... */
+    if(loglikelihood){
+      make_consistent(model);
+      m1 = model_prob_mass(model);
+    }
 
     /* Put some data in */
     insert_ts_step(ts, t, model);
@@ -1169,20 +1169,32 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
     /* Do the inference */
     make_consistent(model);
 
-    /* Q: Is this L(y(t) | y(0:t-1)) 
-     * A: Yes... */
+    /* Compute loglikelihood if required */
+    if(loglikelihood){
+      /* Q: Is this L(y(t) | y(0:t-1)) 
+       * A: Yes... */
+      m2 = model_prob_mass(model);
+      if((m1 > 0) && (m2 > 0)){
+	*loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
+      }
+      /* Check for anomalies */
+      assert(*loglikelihood < 0.0);
+      assert(m2 >= 0.0);
+      if(m2 == 0){
+	*loglikelihood = -DBL_MAX; /* -infinity ? */
+      }
 #ifdef DEBUG_NIP
-    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
-    if(t > 0){
-      printf("L(y(%d)|y(0:%d)) = %g / %g = %g\n", t, t-1, m2, m1, m2/m1);
-      printf("Log.likelihood ln(L(y(%d)|y(0:%d))) = %g\n", t, t-1, 
-	     (log(m2) - log(m1)));
-    }
-    else{
-      printf("L(y(0)) = %g / %g = %g\n", m2, m1, m2/m1);
-      printf("Log.likelihood ln(L(y(0))) = %g\n", (log(m2) - log(m1)));
-    }
+      if(t > 0){
+	printf("L(y(%d)|y(0:%d)) = %g / %g = %g\n", t, t-1, m2, m1, m2/m1);
+	printf("Log.likelihood ln(L(y(%d)|y(0:%d))) = %g\n", t, t-1, 
+	       (log(m2) - log(m1)));
+      }
+      else{
+	printf("L(y(0)) = %g / %g = %g\n", m2, m1, m2/m1);
+	printf("Log.likelihood ln(L(y(0))) = %g\n", (log(m2) - log(m1)));
+      }
 #endif
+    }
 
     /* Write the results */
     for(i = 0; i < results->num_of_vars; i++){      
@@ -1232,19 +1244,16 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars){
 /* This consumes much more memory depending on the size of the 
  * sepsets between time slices. */
 uncertain_series forward_backward_inference(time_series ts,
-					   variable vars[], int nvars){
+					   variable vars[], int nvars,
+					    double* loglikelihood){
   int i, t;
   int *cardinalities = NULL;
+  double m1, m2;
   variable temp;
   potential *alpha_gamma = NULL;
   clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
-
-  /* DEBUG */
-#ifdef DEBUG_NIP
-  double m1, m2;
-#endif
 
   /* Allocate an array for describing the dimensions of timeslice sepsets */
   if(model->outgoing_interface_size > 0){
@@ -1345,6 +1354,8 @@ uncertain_series forward_backward_inference(time_series ts,
   /*****************/
   reset_model(model);
   use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+  if(loglikelihood)
+    *loglikelihood = 0; /* init */
 
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
@@ -1359,11 +1370,33 @@ uncertain_series forward_backward_inference(time_series ts,
 	return NULL;
       }
 
+    /* Likelihood reference... */
+    if(loglikelihood){
+      make_consistent(model);
+      m1 = model_prob_mass(model);
+    }
+
     /* Put some data in (Q: should this be AFTER message passing?) */
     insert_ts_step(ts, t, model);    
     
     /* Do the inference */
     make_consistent(model);
+
+    /* Compute loglikelihood if required */
+    if(loglikelihood){
+      /* Q: Is this L(y(t) | y(0:t-1)) 
+       * A: Yes... */
+      m2 = model_prob_mass(model);
+      if((m1 > 0) && (m2 > 0)){
+	*loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
+      }
+      /* Check for anomalies */
+      assert(*loglikelihood < 0.0);
+      assert(m2 >= 0.0);
+      if(m2 == 0){
+	*loglikelihood = -DBL_MAX; /* -infinity ? */
+      }
+    }
 
     /* Start a message pass between timeslices */
     if(start_timeslice_message_pass(model, forward,
@@ -1388,10 +1421,6 @@ uncertain_series forward_backward_inference(time_series ts,
   /* Backward phase */
   /******************/
   for(t = ts->length - 1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
-    /* DEBUG: to see how the new likelihood computation is doing... */
-#ifdef DEBUG_NIP
-    m1 = model_prob_mass(model);
-#endif
     
     /* Pass the message from the past */
     if(t > 0)
@@ -1426,12 +1455,6 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* Do the inference */
     make_consistent(model);
-
-#ifdef DEBUG_NIP
-    m2 = model_prob_mass(model); /* ...rest of the DEBUG code */
-    printf("Log.likelihood ln(L(y(0:%d))) = %g\n", t, (log(m2) - log(m1)));
-    printf("m1 = %g \t m2 = %g\n", m1, m2);
-#endif
 
     /* THE CORE: Write the results */
     for(i = 0; i < results->num_of_vars; i++){
@@ -1607,7 +1630,7 @@ time_series mlss(variable vars[], int nvars, time_series ts){
  * - some parts of the code could be transformed into separate procedures */
 static int e_step(time_series ts, potential* parameters, 
 		  double* loglikelihood){
-  int i, j, k, t, size;
+  int e, i, j, k, t, size;
   int *cardinalities = NULL;
   int nobserved;
   int *data = NULL;
@@ -1625,11 +1648,19 @@ static int e_step(time_series ts, potential* parameters,
   observed = (variable*) calloc(nobserved, sizeof(variable));
   data     = (int*) calloc(nobserved, sizeof(int));
   results = (potential*) calloc(model->num_of_vars, sizeof(potential));
-  if(!(results && data && observed)){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+  if(!(results && data && observed && loglikelihood)){
+    if(loglikelihood){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      e = ERROR_OUTOFMEMORY;
+    }
+    else{
+      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+      e = ERROR_INVALID_ARGUMENT;
+    }
     free(data);
     free(observed);
-    return ERROR_OUTOFMEMORY;
+    free(results);
+    return e;
   }
   for(i = 0; i < model->num_of_vars; i++){
     k = model->variables[i]->num_of_parents + 1;
