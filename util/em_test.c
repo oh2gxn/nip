@@ -136,7 +136,12 @@ int main(int argc, char *argv[]) {
     while(link->fwd != NULL)
       link = link->fwd;
     last = link->data;
-    printf("Run %d reached %g \n", t++, last);
+
+    if(link->bwd)
+      printf("Run %d reached %g  delta = %g \n", t++, last, 
+	     last - link->bwd->data);
+    else
+      printf("Run %d reached %g \n", t++, last);
 
     /* Try again, if not satisfied with the result */
   } while(last < min_log_likelihood || e == ERROR_BAD_LUCK);

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.161 2006-11-01 18:51:17 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.162 2006-11-02 07:51:41 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1835,6 +1835,10 @@ static int e_step(time_series ts, potential* parameters,
 
       /* 1. Decide which variable you are interested in */
       temp = model->variables[i];
+
+      /* JJT 02.11.2006: Skip old interface variables for t > 0 */
+      if(t > 0 && (temp->if_status & INTERFACE_OLD_OUTGOING))
+	continue;
       
       /* 2. Find the clique that contains the family of 
        *    the interesting variable */
@@ -1927,10 +1931,11 @@ static int m_step(potential* parameters, nip model){
   /* 3. Initialise the model with the new parameters */
   for(i = 0; i < model->num_of_vars; i++){
     child = model->variables[i];
-    fam_clique = find_family(model->cliques, model->num_of_cliques, child);
-    fam_map = find_family_mapping(fam_clique, child);
 
     if(child->num_of_parents > 0){
+      fam_clique = find_family(model->cliques, model->num_of_cliques, child);
+      fam_map = find_family_mapping(fam_clique, child);
+
       /* Update the conditional probability distributions (dependencies) */
       j = init_potential(parameters[i], fam_clique->p, fam_map);
       k = init_potential(parameters[i], fam_clique->original_p, fam_map);
