@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.162 2006-11-02 07:51:41 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.163 2006-11-03 17:17:54 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -2116,8 +2116,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     }
 
     /* Check if the parameters were valid in any sense */
-    /*if(old_loglikelihood > loglikelihood ||*/
-    if(loglikelihood == DBL_MAX || 
+    if(old_loglikelihood > loglikelihood + (ts_steps * threshold) ||
+       loglikelihood == DBL_MAX || 
        loglikelihood == -DBL_MAX){ /* some "impossible" data */
 
       for(v = 0; v < model->num_of_vars; v++){
@@ -2136,7 +2136,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     i++;
 
   } while((loglikelihood - old_loglikelihood) > (ts_steps * threshold) || 
-	  i < 3);
+	  i < 20);
   /*** When should we stop? ***/
 
   for(v = 0; v < model->num_of_vars; v++){
