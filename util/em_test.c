@@ -40,6 +40,7 @@ int main(int argc, char *argv[]) {
   doublelink learning_curve = NULL;
   doublelink link = NULL;
   char* tailptr = NULL;
+  long seed;
 
   if(argc < 6){
     printf("You must specify: \n"); 
@@ -103,6 +104,10 @@ int main(int argc, char *argv[]) {
 
   /* THE algorithm (may take a while) */
   printf("Computing... \n");
+
+  seed = random_seed(NULL);
+  printf("  Random seed = %ld\n", seed);
+
   learning_curve = NULL;
   t = 0;
   do{

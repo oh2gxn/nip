@@ -73,7 +73,7 @@ class hmm_timeslice
 
     potential (S0)
     {
-	data = ( 1 1 1 1 1 );
+	data = ( 0.4 0.2 0.2 0.1 0.1 );
     }
 
     potential (St | S0)

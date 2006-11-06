@@ -20,6 +20,7 @@ int main(int argc, char *argv[]) {
   time_series ts = NULL;
   double d = 0;
   char* tailptr = NULL;
+  long seed;
 
   /** <Some experimental code> **/
   ;
@@ -62,6 +63,10 @@ int main(int argc, char *argv[]) {
 
   /* THE algorithm (may take a while) */
   printf("Generating data... \n");
+
+  seed = random_seed(NULL);
+  printf("  Random seed = %ld\n", seed);
+
   ts_set = (time_series*) calloc(n, sizeof(time_series));
   if(!ts_set){
     fprintf(stderr, "Ran out of memory!\n");    

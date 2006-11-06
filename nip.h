@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.53 2006-10-30 16:59:03 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.54 2006-11-06 17:01:54 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -229,7 +229,7 @@ time_series mlss(variable vars[], int nvars, time_series ts);
 
 /* Teaches the given model according to the given time series with 
  * EM-algorithm. Returns an error code as an integer. 
- * NOTE:  this is not implemented yet! 
+ * NOTE:  call random_seed() before this!
  * NOTE2: the model is included in the time_series */
 int em_learn(time_series *ts, int n_ts, double threshold, 
 	     doublelink* learning_curve);
@@ -269,12 +269,19 @@ double *get_probability(nip model, variable v);
 potential get_joint_probability(nip model, variable *vars, int num_of_vars);
 
 
-/* Generates time series data according to a model. */
+/* Generates time series data according to a model. 
+ * NOTE: call random_seed() before this! 
+ * (and take care it is not done more often than once per second) */
 time_series generate_data(nip model, int length);
 
 
-/* Sets the seed number for drand48 & co. */
-void random_seed();
+/* Sets the seed number for rand & co. 
+ * If seedpointer is NULL, this shuffles the value from time of day.
+ * Returns the value of seed number.
+ *
+ * NOTE: don't call this more often than once per second! 
+ * (unless you want the same random seed as last time) */
+long random_seed(long* seedpointer);
 
 /* For generating single observations. */
 int lottery(double* distribution, int size);

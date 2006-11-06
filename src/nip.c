@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.164 2006-11-06 09:00:17 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.165 2006-11-06 17:01:54 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -2004,7 +2004,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
    * NOTE: parameters near zero are a numerical problem... 
    *       on the other hand, zeros are needed in some cases. 
    *       How to identify a "bad" zero? */
-  random_seed();
+  /*random_seed(NULL);*/
   for(v = 0; v < model->num_of_vars; v++){
     n = parameters[v]->size_of_data;
     for(j = 0; j < n; j++)
@@ -2320,7 +2320,7 @@ time_series generate_data(nip model, int length){
   free(cardinalities);
   
   /* new seed number for rand and clear the previous evidence */
-  random_seed();
+  /*random_seed(NULL);*/
   reset_model(model);
   use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
@@ -2371,22 +2371,27 @@ time_series generate_data(nip model, int length){
 }
 
 
-/* This one is borrowed from Jaakko Hollmen. */
-void random_seed(){
+/* Most of this is borrowed from Jaakko Hollmen. */
+long random_seed(long* seedpointer){
   struct tm aika, *aikap;
   time_t aika2;
   long seedvalue;
 
-  /* The time since midnight in seconds in the seed for
-     the random number generator */
-  aika2 = time(NULL);
-  aikap = &aika;
-  aikap = localtime(&aika2);
-  seedvalue = aikap->tm_sec + 60 *aikap->tm_min
-    + 3600 * aikap->tm_hour;
-  seedvalue ^= (getpid() + (getpid() << 15));
+  if(seedpointer == NULL){
+    /* The time since midnight in seconds in the seed for
+       the random number generator */
+    aika2 = time(NULL);
+    aikap = &aika;
+    aikap = localtime(&aika2);
+    seedvalue = aikap->tm_sec + 60 *aikap->tm_min
+      + 3600 * aikap->tm_hour;
+    seedvalue ^= (getpid() + (getpid() << 15));
+  }
+  else
+    seedvalue = *seedpointer;
   /*srand48(seedvalue); NON-ANSI! */
   srand(seedvalue);
+  return seedvalue;
 }
 
 
