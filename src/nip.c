@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.163 2006-11-03 17:17:54 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.164 2006-11-06 09:00:17 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -38,10 +38,6 @@
 
 /***** 
  * TODO: 
-
- * - FIXME: EM algorithm computes priors of interface variables 
- *          by summing over the entire time series, when it should 
- *          count only the first time slice!
 
  * - Refactor the list-implementations in parser.c (ADT, please)
 
