@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.165 2006-11-06 17:01:54 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.166 2006-11-07 13:45:45 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -17,6 +17,8 @@
 
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
+
+#define MIN_EM_ITERATIONS  3
 
 /* #define DEBUG_NIP */
 
@@ -2132,7 +2134,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     i++;
 
   } while((loglikelihood - old_loglikelihood) > (ts_steps * threshold) || 
-	  i < 20);
+	  i < MIN_EM_ITERATIONS);
   /*** When should we stop? ***/
 
   for(v = 0; v < model->num_of_vars; v++){
