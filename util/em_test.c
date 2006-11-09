@@ -111,6 +111,9 @@ int main(int argc, char *argv[]) {
   learning_curve = NULL;
   t = 0;
   do{
+    t++;
+    last = 0; /* init */
+
     /* free the list if necessary */
     if(learning_curve != NULL){
       link = learning_curve;
@@ -136,20 +139,28 @@ int main(int argc, char *argv[]) {
     }
 
     /* find out the last value in learning curve */
-    assert(learning_curve != NULL);
-    link = learning_curve;
-    while(link->fwd != NULL)
-      link = link->fwd;
-    last = link->data;
-
-    if(link->bwd)
-      printf("Run %d reached %g  delta = %g \n", t++, last, 
-	     last - link->bwd->data);
-    else
-      printf("Run %d reached %g \n", t++, last);
+    if(learning_curve == NULL){
+      printf("Run %d failed 0.0  with 0 iterations, delta = 0.0 \n", t);
+    }
+    else{
+      i = 1;
+      link = learning_curve;
+      while(link->fwd != NULL){
+	link = link->fwd;
+	i++;
+      }
+      last = link->data;
+      
+      if(link->bwd)
+	printf("Run %d reached %g  with %d iterations, delta = %g \n", 
+	       t, last, i, last - link->bwd->data);
+      else
+	printf("Run %d reached %g  with %d iterations, delta = 0.0 \n", 
+	       t, last, i);
+    }
 
     /* Try again, if not satisfied with the result */
-  } while(last < min_log_likelihood || e == ERROR_BAD_LUCK);
+  } while(e == ERROR_BAD_LUCK || last < min_log_likelihood);
 
   printf("...done.\n");
 

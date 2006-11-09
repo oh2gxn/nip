@@ -1,9 +1,13 @@
 /*
- * potential.h $Id: potential.h,v 1.31 2005-07-05 12:07:31 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.32 2006-11-09 16:45:12 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
 #define __POTENTIAL_H__
+
+#ifndef HUGE_VAL
+#define HUGE_VAL (1.0/0.0)
+#endif
 
 typedef struct pot_array_t {
   int size_of_data;
