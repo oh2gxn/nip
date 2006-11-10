@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.167 2006-11-09 16:45:12 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.168 2006-11-10 09:26:47 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -18,7 +18,7 @@
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
 
-#define MIN_EM_ITERATIONS  100
+#define MIN_EM_ITERATIONS 3
 
 /* #define DEBUG_NIP */
 
