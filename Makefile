@@ -1,18 +1,18 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.48 2006-09-27 14:37:09 jatoivol Exp $
+# $Id: Makefile,v 1.49 2006-11-10 12:57:18 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
 POT_SRCS=potential.c errorhandler.c
-CLI_SRCS=$(POT_SRCS) variable.c clique.c
-GRPH_SRCS=$(CLI_SRCS) cls2clq.c Heap.c Graph.c
+CLI_SRCS=$(POT_SRCS) variable.c clique.c Heap.c
+GRPH_SRCS=$(CLI_SRCS) cls2clq.c Graph.c
 PAR_SRCS=$(GRPH_SRCS) fileio.c parser.c
 HUG_DEFS=huginnet.y
 HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
 BIS_SRCS=$(HUG_SRCS) $(PAR_SRCS)
 IO_SRCS=fileio.c errorhandler.c
 DF_SRCS=$(PAR_SRCS)
-HMM_SRCS=nip.c $(BIS_SRCS)
+HMM_SRCS=nip.c $(HUG_SRCS) $(PAR_SRCS)
 HTM_SRCS=$(HMM_SRCS)
 JNT_SRCS=$(HMM_SRCS)
 EM_SRCS=$(HMM_SRCS)
@@ -85,6 +85,26 @@ OBJS=$(HTM_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o \
 bisontest.o iotest.o datafiletest.o hmmtest.o memleaktest.o joint_test.o \
 em_test.o gen_test.o maptest.o inftest.o convert.o
 
+# Headers
+POT_HDRS=$(POT_SRCS:.c=.h)
+CLI_HDRS=$(GRPH_SRCS:.c=.h) # had to put the Graph srcs
+PAR_HDRS=$(PAR_SRCS:.c=.h)
+GRPH_HDRS=$(GRPH_SRCS:.c=.h)
+#HUG_HDRS - no such thing
+BIS_HDRS=$(BIS_SRCS:.c=.h)
+IO_HDRS=$(IO_SRCS:.c=.h)
+DF_HDRS=$(DF_SRCS:.c=.h)
+HMM_HDRS=$(HMM_SRCS:.c=.h)
+HTM_HDRS=$(HTM_SRCS:.c=.h)
+MLT_HDRS=$(MLT_SRCS:.c=.h)
+JNT_HDRS=$(JNT_SRCS:.c=.h)
+EM_HDRS=$(EM_SRCS:.c=.h)
+GEN_HDRS=$(GEN_SRCS:.c=.h)
+MAP_HDRS=$(MAP_SRCS:.c=.h)
+INF_HDRS=$(INF_SRCS:.c=.h)
+CONV_HDRS=$(CONV_SRCS:.c=.h)
+
+
 # Rules for make
 # The first rule tells make what to do by default: compile the program
 # given by the variable TARGET (which was set above).
@@ -95,6 +115,41 @@ all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) \
 $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) $(MLT_TARGET) \
 $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET) \
 $(CONV_TARGET)
+
+# Object files depend on headers also
+$(POT_OBJS): $(POT_SRCS) $(POT_HDRS)
+
+$(CLI_OBJS): $(CLI_SRCS) $(CLI_HDRS)
+
+$(PAR_OBJS): $(PAR_SRCS) $(PAR_HDRS)
+
+$(GRPH_OBJS): $(GRPH_SRCS) $(GRPH_HDRS)
+
+$(HUG_OBJS): $(HUG_SRCS)
+
+$(BIS_OBJS): $(BIS_SRCS) $(BIS_HDRS)
+
+$(IO_OBJS): $(IO_SRCS) $(IO_HDRS)
+
+$(DF_OBJS): $(DF_SRCS) $(DF_HDRS)
+
+$(HMM_OBJS): $(HMM_SRCS) $(HMM_HDRS)
+
+$(HTM_OBJS): $(HTM_SRCS) $(HTM_HDRS)
+
+$(MLT_OBJS): $(MLT_SRCS) $(MLT_HDRS)
+
+$(JNT_OBJS): $(JNT_SRCS) $(JNT_HDRS)
+
+$(EM_OBJS): $(EM_SRCS) $(EM_HDRS)
+
+$(GEN_OBJS): $(GEN_SRCS) $(GEN_HDRS)
+
+$(MAP_OBJS): $(MAP_SRCS) $(MAP_HDRS)
+
+$(INF_OBJS): $(INF_SRCS) $(INF_HDRS)
+
+$(CONV_OBJS): $(CONV_SRCS) $(CONV_HDRS)
 
 # The program depends on the object files in $(OBJS). Make knows how
 # to compile a .c file into an object (.o) file; this rule tells it

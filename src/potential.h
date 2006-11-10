@@ -1,12 +1,15 @@
 /*
- * potential.h $Id: potential.h,v 1.33 2006-11-09 16:55:04 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.34 2006-11-10 12:57:18 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
 #define __POTENTIAL_H__
 
+#include <math.h>
+
 #ifndef HUGE_VAL
-#define HUGE_VAL (double)(1.0/0.0)
+/* #define HUGE_VAL (1.0/0.0)  Not good enough for Mac OS X */
+#define HUGE_VAL INFINITY
 #endif
 
 typedef struct pot_array_t {

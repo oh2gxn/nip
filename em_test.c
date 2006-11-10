@@ -168,6 +168,7 @@ int main(int argc, char *argv[]) {
   /* Print the learning curve */
   link = learning_curve; t = 0;
   while(link != NULL){
+    /* Reminder: rint() is NOT ANSI C. */
     printf("Iteration %d: \t average loglikelihood = %g\n", t++, 
 	   rint(link->data / threshold) * threshold);
     link = link->fwd;
