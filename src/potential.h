@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.35 2006-11-10 13:04:44 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.36 2006-11-10 14:43:09 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -7,12 +7,11 @@
 
 #include <math.h>
 
-#ifndef HUGE_VAL
-#error "HUGE_VAL not defined!"
-#define HUGE_VAL (1.0/0.0)
-/*#define HUGE_VAL INFINITY*/
-/*#define HUGE_VAL DBL_MAX+DBL_MAX*/
-#endif
+/* Mac OS X had invalid HUGE_VAL ! */
+#ifndef HUGE_DOUBLE
+  /*#error "HUGE_VAL not defined!"*/
+#define HUGE_DOUBLE (1.0/0.0)
+#endif /* HUGE_DOUBLE */
 
 typedef struct pot_array_t {
   int size_of_data;

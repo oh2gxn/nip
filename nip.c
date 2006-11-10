@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.168 2006-11-10 09:26:47 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.169 2006-11-10 14:43:09 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -2093,7 +2093,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       }
 
       /** DEBUG **/
-      assert(-HUGE_VAL < probe  &&  probe <= 0.0  && 
+      assert(-HUGE_DOUBLE < probe  &&  probe <= 0.0  && 
 	     probe == probe);
       /* probe != probe, if probe == NaN ? */
 
@@ -2130,7 +2130,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /* Check if the parameters were valid in any sense */
     if(old_loglikelihood > loglikelihood + (ts_steps * threshold) ||
        loglikelihood > 0 || 
-       loglikelihood == -HUGE_VAL){ /* some "impossible" data */
+       loglikelihood == -HUGE_DOUBLE){ /* some "impossible" data */
 
       for(v = 0; v < model->num_of_vars; v++){
 	free_potential(parameters[v]);
