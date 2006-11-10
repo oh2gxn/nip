@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.49 2006-11-10 12:57:18 jatoivol Exp $
+# $Id: Makefile,v 1.50 2006-11-10 18:04:42 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -7,8 +7,10 @@ POT_SRCS=potential.c errorhandler.c
 CLI_SRCS=$(POT_SRCS) variable.c clique.c Heap.c
 GRPH_SRCS=$(CLI_SRCS) cls2clq.c Graph.c
 PAR_SRCS=$(GRPH_SRCS) fileio.c parser.c
+
 HUG_DEFS=huginnet.y
 HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
+
 BIS_SRCS=$(HUG_SRCS) $(PAR_SRCS)
 IO_SRCS=fileio.c errorhandler.c
 DF_SRCS=$(PAR_SRCS)
@@ -46,6 +48,7 @@ $(INF_TARGET) $(CONV_TARGET)
 
 # Sets the name and some flags for the C compiler and linker
 CC=gcc
+CCFLAGS=-c
 #CFLAGS=-O2 -Wall
 CFLAGS=-g -pedantic-errors -Wall
 #CFLAGS=-Os -g -Wall -ansi -pedantic-errors
@@ -56,7 +59,7 @@ LD=gcc
 LDFLAGS=
 #LDFLAGS=-v
 YY=bison
-YYFLAGS=
+YYFLAGS=-d
 
 # Link the math library in with the program, in case you use the
 # functions in <math.h>
@@ -117,39 +120,12 @@ $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET) \
 $(CONV_TARGET)
 
 # Object files depend on headers also
-$(POT_OBJS): $(POT_SRCS) $(POT_HDRS)
+%.o: %.c %.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
-$(CLI_OBJS): $(CLI_SRCS) $(CLI_HDRS)
-
-$(PAR_OBJS): $(PAR_SRCS) $(PAR_HDRS)
-
-$(GRPH_OBJS): $(GRPH_SRCS) $(GRPH_HDRS)
-
-$(HUG_OBJS): $(HUG_SRCS)
-
-$(BIS_OBJS): $(BIS_SRCS) $(BIS_HDRS)
-
-$(IO_OBJS): $(IO_SRCS) $(IO_HDRS)
-
-$(DF_OBJS): $(DF_SRCS) $(DF_HDRS)
-
-$(HMM_OBJS): $(HMM_SRCS) $(HMM_HDRS)
-
-$(HTM_OBJS): $(HTM_SRCS) $(HTM_HDRS)
-
-$(MLT_OBJS): $(MLT_SRCS) $(MLT_HDRS)
-
-$(JNT_OBJS): $(JNT_SRCS) $(JNT_HDRS)
-
-$(EM_OBJS): $(EM_SRCS) $(EM_HDRS)
-
-$(GEN_OBJS): $(GEN_SRCS) $(GEN_HDRS)
-
-$(MAP_OBJS): $(MAP_SRCS) $(MAP_HDRS)
-
-$(INF_OBJS): $(INF_SRCS) $(INF_HDRS)
-
-$(CONV_OBJS): $(CONV_SRCS) $(CONV_HDRS)
+# How to use Bison parser generator
+%.tab.c %.tab.h: %.y
+	$(YY) $(YYFLAGS) $<
 
 # The program depends on the object files in $(OBJS). Make knows how
 # to compile a .c file into an object (.o) file; this rule tells it
@@ -202,13 +178,11 @@ $(INF_TARGET): $(INF_OBJS) $(HUG_OBJS)
 $(CONV_TARGET): $(CONV_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(CONV_OBJS) $(LIBS)
 
-$(HUG_SRCS): $(HUG_DEFS)
-	$(YY) $(YYFLAGS) $(HUG_DEFS)
 
 # With these lines, executing "make clean" removes the .o files that
 # are not needed after the program is compiled.
 clean:
-	rm -f $(HUG_SRCS) *.o *.i *.s
+	rm -f huginnet.tab.c huginnet.tab.h *.o *.i *.s
 
 # "make realclean" does the same as "make clean", and also removes the
 # compiled program and a possible "core" file.

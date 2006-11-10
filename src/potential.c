@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.62 2006-11-09 16:45:12 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.63 2006-11-10 18:04:43 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -422,8 +422,9 @@ int init_potential(potential probs, potential target, int mapping[]){
     inverse_mapping(target, i, target_indices);
     choose_indices(target_indices, probs_indices, 
 		   mapping, probs->num_of_vars);    
-    potvalue =
-      get_ppointer(probs, probs_indices);
+
+    potvalue = get_ppointer(probs, probs_indices);
+
     target->data[i] *= *potvalue;  /* THE multiplication */
   }
   

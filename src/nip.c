@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.169 2006-11-10 14:43:09 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.170 2006-11-10 18:04:43 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -41,6 +41,8 @@
 /***** 
  * TODO: 
 
+ * - EM algorithm is broken?
+
  * - Refactor the list-implementations in parser.c (ADT, please)
 
  * - Normalisation of parsed parameter potentials is different from 
@@ -78,7 +80,6 @@ static int m_step(potential* results, nip model);
 
 void reset_model(nip model){
   int i, retval;
-
   for(i = 0; i < model->num_of_vars; i++)
     reset_likelihood(model->variables[i]);
   retval = global_retraction(model->variables, model->num_of_vars, 
@@ -97,6 +98,7 @@ void total_reset(nip model){
       c->original_p->data[j] = 1;
     }
   }
+  /* Q: Reset priors? */
   reset_model(model); /* Could that be enough? */
 }
 
@@ -1645,6 +1647,8 @@ static int e_step(time_series ts, potential* parameters,
   nip model = ts->model;
   double m1, m2;
 
+  /* FIXME: bugs? */
+
   /* Reserve some memory for computation */
   nobserved = ts->num_of_observed;
   observed = (variable*) calloc(nobserved, sizeof(variable));
@@ -1754,6 +1758,17 @@ static int e_step(time_series ts, potential* parameters,
       for(i = 0; i <= ts->length; i++)
 	free_potential(alpha_gamma[i]);
       free(alpha_gamma);
+
+
+      printf("t = %d\n", t);
+      printf("m1 = %g\n", m1);
+      printf("m2 = %g\n", m2);
+      printf("ll = %g\n", *loglikelihood);
+      for(i = 0; i < model->num_of_cliques; i++){
+	print_clique(model->cliques[i]);
+	print_potential(model->cliques[i]->p);
+      }
+
       return ERROR_BAD_LUCK;
     }
     
@@ -1825,7 +1840,6 @@ static int e_step(time_series ts, potential* parameters,
 
     /* Do the inference */
     make_consistent(model);
-    
 
     /*** THE CORE: Write the results of inference ***/
     for(i = 0; i < model->num_of_vars; i++){
@@ -1960,7 +1974,7 @@ static int m_step(potential* parameters, nip model){
  * (ts) with EM-algorithm. Returns an error code. */
 int em_learn(time_series *ts, int n_ts, double threshold,
 	     doublelink* learning_curve){
-  int e, i, n, v;
+  int e, i, j, n, v;
   int *card;
   int ts_steps;
   double old_loglikelihood; 
@@ -1971,11 +1985,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
   doublelink last = NULL;
   potential *parameters = NULL;
   nip model = ts[0]->model;
-
-  /* FIXME: change back to randomized parameters */
-#ifdef FOO_BAR
-  int j;
-#endif
 
   /* Reserve some memory for calculation */
   parameters = (potential*) calloc(model->num_of_vars, sizeof(potential));
@@ -2008,8 +2017,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     free(card);
   }
 
-  /* DEBUG */
-#ifdef FOO_BAR
   /* Randomize the parameters.
    * NOTE: parameters near zero are a numerical problem... 
    *       on the other hand, zeros are needed in some cases. 
@@ -2022,8 +2029,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /*parameters[v]->data[j] = drand48(); NON-ANSI! */
     /* the M-step will take care of the normalisation */
   }
-#endif
-
 
   ts_steps = 0;
   for(n = 0; n < n_ts; n++)
@@ -2035,7 +2040,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
   i = 0;
   do{
 
-#ifdef FOO_BAR
     /* M-Step... or at least the last part of it. 
      * On the first iteration this enters the random parameters 
      * into the model. */
@@ -2053,7 +2057,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       free(last);
       return e;
     }
-#endif
 
     old_loglikelihood = loglikelihood;
     loglikelihood = 0.0;
@@ -2062,7 +2065,10 @@ int em_learn(time_series *ts, int n_ts, double threshold,
      * accumulating the "average parameters" in the E-step */
     for(v = 0; v < model->num_of_vars; v++){
       n = parameters[v]->size_of_data;
-      memset(parameters[v]->data, 0, n * sizeof(double));
+      for(j = 0; j < n; j++)
+	parameters[v]->data[j] = 0.0;
+      /*memset(parameters[v]->data, 0, n * sizeof(double));*/
+
       /* the M-step will take care of the normalisation 
        * and elimination of zeros (?) */
     }
@@ -2089,13 +2095,16 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	else
 	  if(learning_curve != NULL)
 	    *learning_curve = first; /* Return the list */
+
+	printf("n = %d\n", n); /* DEBUG */
+
 	return e;
       }
 
       /** DEBUG **/
       assert(-HUGE_DOUBLE < probe  &&  probe <= 0.0  && 
 	     probe == probe);
-      /* probe != probe, if probe == NaN ? */
+      /* probe != probe  =>  probe == NaN  */
 
       loglikelihood += probe;
     }
@@ -2136,7 +2145,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	free_potential(parameters[v]);
       }
       free(parameters);
-
       if(learning_curve != NULL)
 	*learning_curve = first; /* Return the list */
       
@@ -2146,26 +2154,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /* Remember this! 
      * (It helps if you insist having a minimum amount of iterations :) */
     i++;
-
-#ifndef FOO_BAR
-    /* M-Step... or at least the last part of it. 
-     * On the first iteration this enters the random parameters 
-     * into the model. */
-    e = m_step(parameters, model);
-    if(e != NO_ERROR){
-      report_error(__FILE__, __LINE__, e, 1);
-      for(v = 0; v < model->num_of_vars; v++){
-	free_potential(parameters[v]);
-      }
-      free(parameters);
-      while(first != NULL){
-	free(first->bwd);
-	first = first->fwd;
-      }
-      free(last);
-      return e;
-    }
-#endif
 
   } while((loglikelihood - old_loglikelihood) > (ts_steps * threshold) || 
 	  i < MIN_EM_ITERATIONS);

@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Try again, if not satisfied with the result */
-  } while(/*e == ERROR_BAD_LUCK || */
+  } while(e == ERROR_BAD_LUCK || 
 	  last < min_log_likelihood);
 
   printf("...done.\n");
