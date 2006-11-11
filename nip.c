@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.170 2006-11-10 18:04:43 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.171 2006-11-11 14:55:20 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -74,8 +74,6 @@ static int e_step(time_series ts, potential* parameters,
 		  double* loglikelihood);
 static int m_step(potential* results, nip model);
 
-/* static double momentary_loglikelihood(nip model, variable* observed, 
-   int* indexed_data, int n_observed); */
 
 
 void reset_model(nip model){
@@ -1631,7 +1629,8 @@ time_series mlss(variable vars[], int nvars, time_series ts){
  * Any ideas how to avoid repeating the same parts of code?
  * - function pointers are pretty much out of the question in this case, 
  *   because they can't deliver the results without global variables
- * - some parts of the code could be transformed into separate procedures */
+ * - some parts of the code could be (and have been) transformed into 
+ *   separate procedures */
 static int e_step(time_series ts, potential* parameters, 
 		  double* loglikelihood){
   int e, i, j, k, t, size;
