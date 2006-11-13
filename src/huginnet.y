@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.68 2006-10-11 18:12:59 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.69 2006-11-13 17:59:24 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -9,10 +9,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lists.h"
+#include "parser.h"
 #include "clique.h"
 #include "variable.h"
-#include "parser.h"
 #include "errorhandler.h"
+
+static doublelist nip_parsed_doubles = NULL;
 
 static int
 yylex (void);
@@ -32,7 +35,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
   variable variable;
 }
 
-/******************************************************************/
+/***********************/
 /* NOTE ABOUT STRINGS! ********************************************/
 /* The memory for the strings is allocated in yylex() and should  */
 /* be freed if the string is copied or not used!                  */
@@ -405,7 +408,6 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 					 doubles),
 			vars[0], parents);
   free(doubles); /* the data was copied at create_potential */
-  reset_doubles();
   reset_symbols();
   free(vars);
   if(retval != NO_ERROR){
@@ -420,7 +422,6 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   vars[0] = $3;
   retval = add_initData(create_potential(vars, 1, doubles), vars[0], NULL); 
   free(doubles); /* the data was copied at create_potential */
-  reset_doubles();
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
@@ -481,7 +482,12 @@ numbers:     /* end of list */
 
 num:       NUMBER {
 	     int retval;
-	     retval = add_double($1);
+
+	     /* If the list is not created yet */
+	     if(nip_parsed_doubles == NULL)
+	       nip_parsed_doubles = make_doublelist();
+
+	     retval = append_double(nip_parsed_doubles, $1);
 	     if(retval != NO_ERROR){
 	       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	       YYABORT;
@@ -503,7 +509,9 @@ value:         QUOTED_STRING { free($1); }
 
 dataList: token_data '=' '(' numbers ')' ';' {
   /* Note: this doesn't normalise them in any way */
-  double *doubles = make_double_array();
+  double *doubles = list_to_double_array(nip_parsed_doubles);
+  empty_doublelist(nip_parsed_doubles); 
+  free(nip_parsed_doubles); nip_parsed_doubles = NULL;
   if(!doubles){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;

@@ -1,16 +1,17 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.110 2006-10-10 13:34:16 jatoivol Exp $
+ * $Id: parser.c,v 1.111 2006-11-13 17:59:24 jatoivol Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "parser.h"
 #include "Graph.h"
 #include "clique.h"
+#include "lists.h"
 #include "variable.h"
-#include "parser.h"
 #include "fileio.h"
 #include "errorhandler.h"
 
@@ -26,9 +27,14 @@ static int nip_symbols_parsed = 0;
 
 static Graph *nip_graph = NULL;
 
+/*
 static doublelink nip_first_double = NULL;
 static doublelink nip_last_double = NULL;
 static int nip_doubles_parsed = 0;
+
+TODO: Move the rest of the global variables into huginnet.y also...
+      (with new implementations in lists.c)
+*/
 
 static stringlink nip_first_string = NULL;
 static stringlink nip_last_string = NULL;
@@ -826,28 +832,6 @@ int add_time_init(variable var, char* name){
   return NO_ERROR;
 }
 
-/* correctness? */
-int add_double(double d){
-  doublelink new = (doublelink) malloc(sizeof(doubleelement));
-
-  if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-
-  new->data = d;
-  new->fwd = NULL;
-  new->bwd = nip_last_double;
-  if(nip_first_double == NULL)
-    nip_first_double = new;
-  else
-    nip_last_double->fwd = new;
-
-  nip_last_double = new;
-  nip_doubles_parsed++;
-  return NO_ERROR;
-}
-
 
 int add_string(char* string){
   stringlink new = (stringlink) malloc(sizeof(stringelement));
@@ -953,26 +937,6 @@ variable* make_variable_array(){
 }
 
 
-/* Creates an array from the double values in the list. 
- * The size will be doubles_parsed. */
-double* make_double_array(){
-  int i;
-  doublelink ln = nip_first_double;
-  double* new = (double*) calloc(nip_doubles_parsed, sizeof(double));
-
-  if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-
-  for(i = 0; i < nip_doubles_parsed; i++){
-    new[i] = ln->data; /* the data is copied here (=> not lost in reset) */
-    ln = ln->fwd;
-  }
-  return new;
-}
-
-
 /* Creates an array from the strings in the list. 
  * The size will be strings_parsed. */
 char** make_string_array(){
@@ -990,24 +954,6 @@ char** make_string_array(){
     ln = ln->fwd;
   }
   return new;
-}
-
-
-/* Removes everything from the list of doubles. This is likely to be used 
- * after the parser has parsed doubles to the list, created an array out 
- * of it and wants to reset the list for future use. 
- */
-void reset_doubles(){
-  doublelink ln = nip_last_double;
-  nip_last_double = NULL;
-  while(ln != NULL){
-    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
-    ln = ln->bwd;
-  }
-  free(nip_first_double);
-  nip_first_double = NULL;
-  nip_doubles_parsed = 0;
-  return;
 }
 
 

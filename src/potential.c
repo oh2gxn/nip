@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.63 2006-11-10 18:04:43 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.64 2006-11-13 17:59:24 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -190,7 +190,7 @@ int general_marginalise(potential source, potential destination,
 
   /* Remove old garbage */
   for(i = 0; i < destination->size_of_data; i++)
-    destination->data[i] = 0;
+    destination->data[i] = 0.0;
 
   /* Linear traverse through array for easy access */
   for(i = 0; i < source->size_of_data; i++){

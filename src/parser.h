@@ -5,7 +5,7 @@
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.45 2006-10-12 15:13:39 jatoivol Exp $
+ * $Id: parser.h,v 1.46 2006-11-13 17:59:24 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -19,48 +19,12 @@
 #define COMMENT_CHAR '%'
 
 #include "clique.h"
+#include "lists.h"
 #include "variable.h"
 #include "potential.h"
 #include "Graph.h"
 #include <stdio.h>
 
-struct doublelist {
-  double data;
-  struct doublelist *fwd;
-  struct doublelist *bwd;
-};
-
-typedef struct doublelist doubleelement;
-typedef doubleelement *doublelink;
-
-struct stringlist {
-  char* data;
-  struct stringlist *fwd;
-  struct stringlist *bwd;
-};
-
-typedef struct stringlist stringelement;
-typedef stringelement *stringlink;
-
-struct initDataList {
-  potential data;
-  variable child;
-  variable* parents;
-  struct initDataList *fwd;
-  struct initDataList *bwd;
-};
-
-typedef struct initDataList initDataElement;
-typedef initDataElement *initDataLink;
-
-struct time_init_list {
-  variable var;
-  char* previous;
-  struct time_init_list *fwd;
-};
-
-typedef struct time_init_list time_init_element;
-typedef time_init_element *time_init_link;
 
 typedef struct {
   char *name;
@@ -169,10 +133,6 @@ int add_initData(potential p, variable child, variable* parents);
 int add_time_init(variable var, char* name);
 
 
-/* Adds a number into the list of parsed numbers. */
-int add_double(double d);
-
-
 /* Adds a string into the list of parsed strings. */
 int add_string(char* string);
 
@@ -182,20 +142,9 @@ int add_string(char* string);
 variable* make_variable_array();
 
 
-/* Creates an array from the double values in the list. 
- * The size will be doubles_parsed. */
-double* make_double_array();
-
-
 /* Creates an array from the strings in the list. 
  * The size will be strings_parsed. */
 char** make_string_array();
-
-
-/* Removes everything from the list of doubles. This is likely to be used 
- * after the parser has parsed doubles to the list, created an array out 
- * of it and wants to reset the list for future use. */
-void reset_doubles();
 
 
 /* Removes everything from the list of strings and resets the counter. */

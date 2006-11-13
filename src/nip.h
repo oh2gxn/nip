@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.56 2006-11-13 01:24:34 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.57 2006-11-13 17:59:24 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -227,12 +227,15 @@ void make_consistent(nip model);
 time_series mlss(variable vars[], int nvars, time_series ts);
 
 
-/* Teaches the given model according to the given time series with 
- * EM-algorithm. Returns an error code as an integer. 
- * NOTE:  call random_seed() before this!
- * NOTE2: the model is included in the time_series */
+/* Teaches the given model according to the given time series with
+ * EM-algorithm. Returns an error code as an integer.  
+ * NOTE: call random_seed() before this!  
+ * NOTE2: the model is included in the time_series 
+ * <learning_curve> can be NULL: if it isn't, it will be
+ * emptied and filled with average log. likelihood values for each
+ * iteration... */
 int em_learn(time_series *ts, int n_ts, double threshold, 
-	     doublelink* learning_curve);
+	     doublelist learning_curve);
 
 
 /* Tells the likelihood of observations (not normalised). 

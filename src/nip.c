@@ -1,9 +1,9 @@
 /*
- * nip.c $Id: nip.c,v 1.172 2006-11-13 01:24:34 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.173 2006-11-13 17:59:24 jatoivol Exp $
  */
 
 #include "nip.h"
-#include "parser.h"
+#include "lists.h"
 #include "clique.h"
 #include "variable.h"
 #include "errorhandler.h"
@@ -1640,6 +1640,7 @@ static int e_step(time_series ts, potential* parameters,
   int *cardinalities = NULL;
   int nobserved;
   int *data = NULL;
+  int *mapping;
   variable* observed = NULL;
   variable v;
   potential *alpha_gamma = NULL;
@@ -1648,8 +1649,6 @@ static int e_step(time_series ts, potential* parameters,
   clique c = NULL;
   nip model = ts->model;
   double m1, m2;
-
-  /* FIXME: bugs? */
 
   /* Reserve some memory for computation */
   nobserved = ts->num_of_observed;
@@ -1673,10 +1672,7 @@ static int e_step(time_series ts, potential* parameters,
   for(i = 0; i < model->num_of_vars; i++){
     p = parameters[i];
     results[i] = make_potential(p->cardinality, p->num_of_vars, NULL);
-    /* Initialise the sum by setting to zero: USELESS? */
-    for(j = 0; j < p->size_of_data; j++)
-      results[i]->data[j] = 0.0;
-    /*memset(p->data, 0, p->size_of_data * sizeof(double));*/
+    /* in principle, make_potential can return NULL */
   }  
 
   /* Allocate some space for the intermediate potentials between timeslices */
@@ -1864,8 +1860,24 @@ static int e_step(time_series ts, potential* parameters,
       assert(c != NULL);
       
       /* 3. General Marginalisation from the timeslice */
-      general_marginalise(c->p, p, find_family_mapping(c, v));
+      mapping = find_family_mapping(c, v);
+      general_marginalise(c->p, p, mapping);
+
+
+#ifdef DEBUG_NIP
+      /* DEBUG */
+      printf("Marginalising the family of %s ", v->symbol);
+      for(j = 0; j < p->num_of_vars - 1; j++)
+	printf("%s ", v->parents[j]->symbol);
+      printf("from \n");
+      print_clique(c);
+      printf("with mapping [");
+      for(j = 0; j < p->num_of_vars; j++)
+	printf("%d,", mapping[j]);
+      printf("]\n");
       /* FIXME: correct mapping??? */
+#endif
+
       
       /********************/
       /* 4. Normalisation */
@@ -1985,24 +1997,26 @@ static int m_step(potential* parameters, nip model){
 /* Trains the given model (ts->model) according to the given time series 
  * (ts) with EM-algorithm. Returns an error code. */
 int em_learn(time_series *ts, int n_ts, double threshold,
-	     doublelink* learning_curve){
+	     doublelist learning_curve){
   int e, i, j, n, v;
   int *card;
   int ts_steps;
   double old_loglikelihood; 
   double loglikelihood = -DBL_MAX;
   double probe = 0;
-  doublelink first = NULL;
-  doublelink new = NULL;
-  doublelink last = NULL;
   potential *parameters = NULL;
   nip model = ts[0]->model;
+
+  if(learning_curve != NULL){
+    /* Take care it's empty */
+    if(learning_curve->length > 0)
+      empty_doublelist(learning_curve);
+  }
 
   /* Reserve some memory for calculation */
   parameters = (potential*) calloc(model->num_of_vars, sizeof(potential));
   if(!parameters){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(last);
     return ERROR_OUTOFMEMORY;
   }
 
@@ -2014,7 +2028,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       while(v > 0)
 	free_potential(parameters[--v]);
       free(parameters);
-      free(last);
       return ERROR_OUTOFMEMORY;
     }
     /* The child MUST be the first variable in order to normalize
@@ -2062,11 +2075,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	free_potential(parameters[v]);
       }
       free(parameters);
-      while(first != NULL){
-	free(first->bwd);
-	first = first->fwd;
-      }
-      free(last);
+      if(learning_curve != NULL)
+	empty_doublelist(learning_curve);
       return e;
     }
 
@@ -2098,15 +2108,10 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	}
 	free(parameters);
 	if(e != ERROR_BAD_LUCK){
-	  while(first != NULL){
-	    free(first->bwd);
-	    first = first->fwd;
-	  }
-	  free(last);
-	}
-	else
 	  if(learning_curve != NULL)
-	    *learning_curve = first; /* Return the list */
+	    empty_doublelist(learning_curve);
+	}
+	/* else let the list be */
 
 	printf("n = %d\n", n); /* DEBUG */
 
@@ -2123,29 +2128,16 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 
     /* Add an element to the linked list */
     if(learning_curve != NULL){
-      new = (doublelink) malloc(sizeof(doubleelement));
-      if(!new){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      e = append_double(learning_curve, loglikelihood / ts_steps);
+      if(e != NO_ERROR){
+	report_error(__FILE__, __LINE__, e, 1);
 	for(v = 0; v < model->num_of_vars; v++){
 	  free_potential(parameters[v]);
 	}
 	free(parameters);
-	while(first != NULL){
-	  free(first->bwd);
-	  first = first->fwd;
-	}
-	free(last);
-	return ERROR_OUTOFMEMORY;
+	empty_doublelist(learning_curve);
+	return e;
       }
-      
-      new->data = loglikelihood / ts_steps;
-      new->fwd = NULL;
-      new->bwd = last;
-      if(first == NULL)
-	first = new;
-      else
-	last->fwd = new;
-      last = new; /* Update the last-pointer */
     }
 
     /* Check if the parameters were valid in any sense */
@@ -2157,9 +2149,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	free_potential(parameters[v]);
       }
       free(parameters);
-      if(learning_curve != NULL)
-	*learning_curve = first; /* Return the list */
-      
+      /* Return the list as it is */
       return ERROR_BAD_LUCK;
     }
 
@@ -2175,9 +2165,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     free_potential(parameters[v]);
   }
   free(parameters);
-
-  if(learning_curve != NULL)
-    *learning_curve = first; /* Return the list */
 
   return NO_ERROR;
 }

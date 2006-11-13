@@ -25,7 +25,7 @@
 #include <float.h>
 #include <math.h>
 #include "nip.h"
-#include "parser.h"
+#include "lists.h"
 #include "variable.h"
 
 int main(int argc, char *argv[]) {
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
   double threshold = 0;
   double min_log_likelihood = 0;
   double last = 0;
-  doublelink learning_curve = NULL;
+  doublelist learning_curve = NULL;
   doublelink link = NULL;
   char* tailptr = NULL;
   long seed;
@@ -108,25 +108,19 @@ int main(int argc, char *argv[]) {
   seed = random_seed(NULL);
   printf("  Random seed = %ld\n", seed);
 
-  learning_curve = NULL;
+  learning_curve = make_doublelist();
   t = 0;
   do{
     t++;
     last = 0; /* init */
 
     /* free the list if necessary */
-    if(learning_curve != NULL){
-      link = learning_curve;
-      while(link != NULL){
-	link = link->fwd;
-	free(learning_curve);
-	learning_curve = link;
-      }
-      learning_curve = NULL;
+    if(learning_curve->length > 0){
+      empty_doublelist(learning_curve);
     }
 
     /* EM algorithm */
-    e = em_learn(ts_set, n, threshold, &learning_curve);
+    e = em_learn(ts_set, n, threshold, learning_curve);
 
     if(!(e == NO_ERROR || e == ERROR_BAD_LUCK)){
       fprintf(stderr, "There were errors during learning:\n");
@@ -135,16 +129,20 @@ int main(int argc, char *argv[]) {
 	free_timeseries(ts_set[i]);
       free(ts_set);
       free_model(model);
+      empty_doublelist(learning_curve);
+      free(learning_curve);
       return -1;
     }
 
     /* find out the last value in learning curve */
-    if(learning_curve == NULL){
+    if(learning_curve->length == 0){
       printf("Run %d failed 0.0  with 0 iterations, delta = 0.0 \n", t);
     }
     else{
       i = 1;
-      link = learning_curve;
+
+      /* Hack hack. This breaks the list abstraction... */
+      link = learning_curve->first;
       while(link->fwd != NULL){
 	link = link->fwd;
 	i++;
@@ -166,7 +164,7 @@ int main(int argc, char *argv[]) {
   printf("...done.\n");
 
   /* Print the learning curve */
-  link = learning_curve; t = 0;
+  link = learning_curve->first; t = 0;
   while(link != NULL){
     /* Reminder: rint() is NOT ANSI C. */
     printf("Iteration %d: \t average loglikelihood = %g\n", t++, 
@@ -179,14 +177,8 @@ int main(int argc, char *argv[]) {
   if(i != NO_ERROR){
     fprintf(stderr, "Failed to write the model into %s\n", argv[5]);
     report_error(__FILE__, __LINE__, i, 1);
-    if(learning_curve != NULL){
-      link = learning_curve;
-      while(link != NULL){
-	link = link->fwd;
-	free(learning_curve);
-	learning_curve = link;
-      }
-    }
+    empty_doublelist(learning_curve);
+    free(learning_curve);
     for(i = 0; i < n; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
@@ -194,14 +186,8 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  if(learning_curve != NULL){
-    link = learning_curve;
-    while(link != NULL){
-      link = link->fwd;
-      free(learning_curve);
-      learning_curve = link;
-    }
-  }
+  empty_doublelist(learning_curve);
+  free(learning_curve);
   for(i = 0; i < n; i++)
     free_timeseries(ts_set[i]);
   free(ts_set);
