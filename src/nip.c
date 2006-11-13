@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.171 2006-11-11 14:55:20 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.172 2006-11-13 01:24:34 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -42,6 +42,7 @@
  * TODO: 
 
  * - EM algorithm is broken?
+ *   - general_marginalise() assumes zero potential?!?!
 
  * - Refactor the list-implementations in parser.c (ADT, please)
 
@@ -1633,12 +1634,14 @@ time_series mlss(variable vars[], int nvars, time_series ts){
  *   separate procedures */
 static int e_step(time_series ts, potential* parameters, 
 		  double* loglikelihood){
-  int e, i, j, k, t, size;
+  int i, j, t;
+  int error;
+  int size;
   int *cardinalities = NULL;
   int nobserved;
   int *data = NULL;
   variable* observed = NULL;
-  variable temp;
+  variable v;
   potential *alpha_gamma = NULL;
   potential *results = NULL;
   potential p;
@@ -1656,23 +1659,24 @@ static int e_step(time_series ts, potential* parameters,
   if(!(results && data && observed && loglikelihood)){
     if(loglikelihood){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      e = ERROR_OUTOFMEMORY;
+      error = ERROR_OUTOFMEMORY;
     }
     else{
       report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-      e = ERROR_INVALID_ARGUMENT;
+      error = ERROR_INVALID_ARGUMENT;
     }
     free(data);
     free(observed);
     free(results);
-    return e;
+    return error;
   }
   for(i = 0; i < model->num_of_vars; i++){
-    k = model->variables[i]->num_of_parents + 1;
     p = parameters[i];
-    results[i] = make_potential(p->cardinality, k, NULL);
-    /* Initialise the sum by setting to zero */
-    memset(p->data, 0, p->size_of_data * sizeof(double));
+    results[i] = make_potential(p->cardinality, p->num_of_vars, NULL);
+    /* Initialise the sum by setting to zero: USELESS? */
+    for(j = 0; j < p->size_of_data; j++)
+      results[i]->data[j] = 0.0;
+    /*memset(p->data, 0, p->size_of_data * sizeof(double));*/
   }  
 
   /* Allocate some space for the intermediate potentials between timeslices */
@@ -1759,14 +1763,18 @@ static int e_step(time_series ts, potential* parameters,
       free(alpha_gamma);
 
 
-      printf("t = %d\n", t);
+      /* DEBUG */
+#ifdef DEBUG_NIP
+      printf("t  = %d\n", t);
       printf("m1 = %g\n", m1);
       printf("m2 = %g\n", m2);
       printf("ll = %g\n", *loglikelihood);
       for(i = 0; i < model->num_of_cliques; i++){
 	print_clique(model->cliques[i]);
-	print_potential(model->cliques[i]->p);
+	print_potential(model->cliques[i]->original_p);
       }
+#endif
+
 
       return ERROR_BAD_LUCK;
     }
@@ -1803,8 +1811,7 @@ static int e_step(time_series ts, potential* parameters,
     if(t > 0)
       if(finish_timeslice_message_pass(model, forward, 
 				       alpha_gamma[t-1], 
-				       NULL)                   != NO_ERROR){
-
+				       NULL)            != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
@@ -1845,19 +1852,20 @@ static int e_step(time_series ts, potential* parameters,
       p = results[i];
 
       /* 1. Decide which variable you are interested in */
-      temp = model->variables[i];
+      v = model->variables[i];
 
       /* JJT 02.11.2006: Skip old interface variables for t > 0 */
-      if(t > 0 && (temp->if_status & INTERFACE_OLD_OUTGOING))
+      if(t > 0 && (v->if_status & INTERFACE_OLD_OUTGOING))
 	continue;
       
       /* 2. Find the clique that contains the family of 
        *    the interesting variable */
-      c = find_family(model->cliques, model->num_of_cliques, temp);
+      c = find_family(model->cliques, model->num_of_cliques, v);
       assert(c != NULL);
       
       /* 3. General Marginalisation from the timeslice */
-      general_marginalise(c->p, p, find_family_mapping(c, temp));
+      general_marginalise(c->p, p, find_family_mapping(c, v));
+      /* FIXME: correct mapping??? */
       
       /********************/
       /* 4. Normalisation */
@@ -1868,6 +1876,9 @@ static int e_step(time_series ts, potential* parameters,
       /* 5. THE SUM of expected counts over time */
       for(j = 0; j < size; j++)
 	parameters[i]->data[j] += p->data[j];
+
+      /*** FIXME: some of the parameters become zero somewhere here ***/
+
     }
     /*** Finished writing results for this timestep ***/
 
@@ -1922,10 +1933,12 @@ static int m_step(potential* parameters, nip model){
   for(i = 0; i < model->num_of_vars; i++){
     k = parameters[i]->size_of_data;
     for(j = 0; j < k; j++)
-      if(parameters[i]->data[j] < EPSILON)
-	parameters[i]->data[j] = EPSILON;
-    /* Q: Should the tiny value be proportional to the number of zeros
-     *    so that the added weight is constant? */
+      if(parameters[i]->data[j] < PARAMETER_EPSILON){
+	/*assert(parameters[i]->data[j] > 0.0);*/
+	parameters[i]->data[j] = PARAMETER_EPSILON;
+    /* Q: Should the tiny value be (inversely) proportional to the number 
+     *    of zeros so that the added weight is constant? */
+      }
   }
 #endif
   
