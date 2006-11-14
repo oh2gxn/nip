@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.174 2006-11-14 15:55:20 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.175 2006-11-14 16:22:29 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -2114,8 +2114,6 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	    empty_doublelist(learning_curve);
 	}
 	/* else let the list be */
-
-	printf("n = %d\n", n); /* DEBUG */
 
 	return e;
       }
