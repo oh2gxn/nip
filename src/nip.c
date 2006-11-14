@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.173 2006-11-13 17:59:24 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.174 2006-11-14 15:55:20 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -41,13 +41,14 @@
 /***** 
  * TODO: 
 
- * - EM algorithm is broken?
- *   - general_marginalise() assumes zero potential?!?!
-
  * - Refactor the list-implementations in parser.c (ADT, please)
+ *   + doublelist refactored already (see lists.[ch])
 
  * - Normalisation of parsed parameter potentials is different from 
  *   that of Hugin Lite... (This software does not normalise?)
+
+ * - Parse and preserve other fields specified in Hugin Net files
+ *   (currently this program ignores them)
 
  * - Refactorisation of variable_union(), variable_isect(), and
  *   mapper() by replacing a lot of copy-paste code with them...
@@ -2042,7 +2043,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     free(card);
   }
 
-  /* Randomize the parameters.
+  /* Randomize the parameters. (TODO: move this operation to potential.c?)
    * NOTE: parameters near zero are a numerical problem... 
    *       on the other hand, zeros are needed in some cases. 
    *       How to identify a "bad" zero? */
@@ -2055,6 +2056,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /* the M-step will take care of the normalisation */
   }
 
+  /* Compute total number of time steps */
   ts_steps = 0;
   for(n = 0; n < n_ts; n++)
     ts_steps += timeseries_length(ts[n]);  
@@ -2092,7 +2094,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       /*memset(parameters[v]->data, 0, n * sizeof(double));*/
 
       /* the M-step will take care of the normalisation 
-       * and elimination of zeros (?) */
+       * (and elimination of zeros ?) */
     }
 
     /* E-Step: Now this is the heavy stuff..! 
