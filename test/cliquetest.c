@@ -60,6 +60,7 @@ int main(){
 
   variable set_of_variables[3];
 
+  /* State names for the variables */
   statesA[0] = "a1";
   statesA[1] = "a2";
   statesA[2] = "a3";
@@ -75,19 +76,23 @@ int main(){
   statesE[0] = "e1";
   statesE[1] = "e2";
 
-  /* Create the variables (without statenames) */
+  /* Create the variables */
   variables[0] = new_variable("A", nameA, statesA, 3);
   variables[1] = new_variable("B", nameB, statesB, 4);
   variables[2] = new_variable("C", nameC, statesC, 2); /* note1 */
   variables[3] = new_variable("D", nameD, statesD, 3);
   variables[4] = new_variable("E", nameE, statesE, 2);
 
+  /* Create cliques */
   clique_pile[0] = make_clique(variables, 3);
   clique_pile[1] = make_clique(&(variables[1]), 3);
   clique_pile[2] = make_clique(&(variables[3]), 2);
 
+  /* Create separator sets */
   sepset_pile[0] = make_sepset(&(variables[1]), 2, &(clique_pile[0]));
   sepset_pile[1] = make_sepset(&(variables[3]), 1, &(clique_pile[1]));
+
+  /* Create the join tree */
   add_sepset(clique_pile[0], sepset_pile[0]);
   add_sepset(clique_pile[1], sepset_pile[0]);
   add_sepset(clique_pile[1], sepset_pile[1]);
@@ -114,16 +119,18 @@ int main(){
   set_of_variables[2] = variables[3];
   model[3] = create_potential(set_of_variables, 3, potentialC2);
 
-  /* A test */
+  /* A test about reordering a potential */
   for(i = 0; i < 24; i++)
     printf("Correct=%f, Reordered=%f\n", model[1]->data[i], model[3]->data[i]);
 
+  /* Set parents of the variables */
   parentsA[0] = variables[1]; parentsA[1] = variables[2];
   parentsC[0] = variables[1]; parentsC[1] = variables[3];
   parentsE[0] = variables[3];
   set_parents(variables[0], parentsA, 2);
   set_parents(variables[2], parentsC, 2);
   set_parents(variables[4], parentsE, 1);
+
   initialise(clique_pile[0], variables[0], model[0], 0);
   initialise(clique_pile[1], variables[2], model[1], 0);
   initialise(clique_pile[2], variables[4], model[2], 0);
@@ -131,7 +138,7 @@ int main(){
   /* DEBUG */
   /* printf("BCD before evidence:\n"); */
   /* for(i = 0; i < 24; i++) */ /* note1 */
-  /*  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]); */
+  /*   printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]); */
 
   /* observation entry: This information is from the given data. */
   /* data please? anyone? */
@@ -143,13 +150,18 @@ int main(){
   /* for(i = 0; i < 24; i++) */ /* note1 */
   /*  printf("potential[%d] = %f\n", i, clique_pile[1]->p->data[i]);*/
 
-  /* propagation: some action */
+  /* propagation: here's some action */
   for(i = 0; i < 3; i++)
-    unmark_clique(clique_pile[i]);
-  collect_evidence(NULL, NULL, clique_pile[1]);
+    unmark_clique(clique_pile[i]); /* Unmark all cliques */
+
+  /* collect evidence to arbitrary clique */
+  collect_evidence(NULL, NULL, clique_pile[1]); 
+
 
   for(i = 0; i < 3; i++)
-    unmark_clique(clique_pile[i]);
+    unmark_clique(clique_pile[i]); /* Unmark all cliques */
+
+  /* distribute evidence from the same clique */
   distribute_evidence(clique_pile[1]);
 
   /* DEBUG */
