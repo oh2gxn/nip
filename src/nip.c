@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.175 2006-11-14 16:22:29 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.176 2006-11-23 16:32:16 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -394,8 +394,14 @@ int write_model(nip model, char* filename){
     fprintf(f, "%spotential (%s)\n", indent, get_symbol(v));
     fprintf(f, "%s{\n", indent);
     fprintf(f, "%s    data = ( ", indent);
-    for(j = 0; j < n; j++)
+    for(j = 0; j < n; j++){
+
+      /* TODO: 
+	 if ((j%6) == 5) 
+	   fprintf(f, "\n%s             ", indent); */
+
       fprintf(f, "%f  ", v->prior[j]);
+    }
     fprintf(f, "%f );\n", v->prior[n]);
     fprintf(f, "%s}\n", indent);
     fflush(f);
@@ -441,6 +447,9 @@ int write_model(nip model, char* filename){
 
     /* print the stuff */
     for(j = 0; j < p->size_of_data; j++){
+
+      /* TODO: cut long lines and print comments about parent values */
+
       if(j > 0 && j % n == 0)
 	fprintf(f, "\n%s            ", indent);
       fprintf(f, " %f ", p->data[j]);
