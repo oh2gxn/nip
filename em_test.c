@@ -69,9 +69,7 @@ int main(int argc, char *argv[]) {
   }
 
 
-  /** EXPERIMENT **/
-#ifdef FOO_BAR  
-
+#ifndef PRETTY_PRINT_CONVERTER_SKIPS_EM
 
 
   /* print a summary about the variables */
@@ -178,8 +176,10 @@ int main(int argc, char *argv[]) {
     link = link->fwd;
   }
 
-#endif
-  /** /EXPERIMENT **/
+
+
+#endif /* PRETTY_PRINT_CONVERTER_SKIPS_EM */
+
   
 
   /* Write the results to a NET file */
