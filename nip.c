@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.176 2006-11-23 16:32:16 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.177 2006-11-24 17:05:03 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -17,6 +17,8 @@
 
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
+
+#define POTENTIAL_ELEMENTS_PER_LINE 7
 
 #define MIN_EM_ITERATIONS 3
 
@@ -43,6 +45,8 @@
 
  * - Refactor the list-implementations in parser.c (ADT, please)
  *   + doublelist refactored already (see lists.[ch])
+
+ * - Printing potential tables should be contained in potential.c
 
  * - Normalisation of parsed parameter potentials is different from 
  *   that of Hugin Lite... (This software does not normalise?)
@@ -312,9 +316,11 @@ nip parse_model(char* file){
 }
 
 
+/* NOTE: part of this stuff should be moved to potential.c etc. */
 int write_model(nip model, char* filename){
   int i, j, n;
   int x, y;
+  int nparents, nvalues;
   FILE *f = NULL;
   variable v = NULL;
   int *temp = NULL;
@@ -388,7 +394,7 @@ int write_model(nip model, char* filename){
   /** the priors **/
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
-    n = number_of_values(v) - 1;
+    n = number_of_values(v);
     fputs("\n", f);
     /* independent variables have priors */
     fprintf(f, "%spotential (%s)\n", indent, get_symbol(v));
@@ -396,13 +402,17 @@ int write_model(nip model, char* filename){
     fprintf(f, "%s    data = ( ", indent);
     for(j = 0; j < n; j++){
 
-      /* TODO: 
-	 if ((j%6) == 5) 
-	   fprintf(f, "\n%s             ", indent); */
+      /* limit the length of lines */
+      if (j > 0 && (j % POTENTIAL_ELEMENTS_PER_LINE) == 0) 
+	fprintf(f, "\n%s             ", indent);
 
+      /* Print the value: change to %g if trailing zeros disturb you */
       fprintf(f, "%f  ", v->prior[j]);
+
+      /* NOTE: fprintf() returns the number of printed characters,
+       * and you could use it for limiting the line length smarter. */
     }
-    fprintf(f, "%f );\n", v->prior[n]);
+    fputs(");\n", f);
     fprintf(f, "%s}\n", indent);
     fflush(f);
   }
@@ -410,18 +420,21 @@ int write_model(nip model, char* filename){
   /** the potentials **/
   for(i = 0; i < model->num_of_children; i++){
     v = model->children[i];
-    n = number_of_parents(v) - 1;
+
+    nvalues  = number_of_values(v);
+    nparents = number_of_parents(v);
     fputs("\n", f);
     /* child variables have conditional distributions */
     fprintf(f, "%spotential (%s | ", indent, get_symbol(v));
-    for(j = n; j > 0; j--) /* Hugin fellas put parents in reverse order */
+    for(j = nparents-1; j > 0; j--){ 
+      /* Hugin fellas put parents in reverse order */
       fprintf(f, "%s ", get_symbol(v->parents[j]));
+    }
     fprintf(f, "%s)\n", get_symbol(v->parents[0]));
     fprintf(f, "%s{ \n", indent);
     fprintf(f, "%s    data = (", indent);
 
-    n++; /* number of parents */
-    temp = (int*) calloc(n+1, sizeof(int));
+    temp = (int*) calloc(nparents+1, sizeof(int));
     if(!temp){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       fclose(f);
@@ -429,30 +442,48 @@ int write_model(nip model, char* filename){
     }
 
     /* form the potential */
-    temp[0] = v->cardinality; /* child must be the first... */
+    temp[0] = nvalues; /* child must be the first... */
     /* ...then the parents */
-    for(j = 0; j < n; j++)
+    for(j = 0; j < nparents; j++)
       temp[j+1] = v->parents[j]->cardinality;
-    p = make_potential(temp, n+1, NULL);
+    p = make_potential(temp, nparents+1, NULL);
 
     /* compute the distribution */
     c = find_family(model->cliques, model->num_of_cliques, v);
     map = find_family_mapping(c, v);
     general_marginalise(c->original_p, p, map);
 
-    /* normalisation */
-    n = number_of_values(v);    
-    for(j = 0; j < p->size_of_data; j += n)
-      normalise(&(p->data[j]), n);
+    /* normalisation (NOTE: should be part of potential.c) */
+    for(j = 0; j < p->size_of_data; j += nvalues)
+      normalise(&(p->data[j]), nvalues);
 
     /* print the stuff */
+    y = 0; /* counter for number of values printed on a line */
     for(j = 0; j < p->size_of_data; j++){
 
-      /* TODO: cut long lines and print comments about parent values */
-
-      if(j > 0 && j % n == 0)
+      /* cut long lines and between change in parent values */
+      n = (j % nvalues == 0); /* new combination of parent values? */
+      if(j > 0 && 
+	 (n || (nvalues > POTENTIAL_ELEMENTS_PER_LINE && 
+		y % POTENTIAL_ELEMENTS_PER_LINE == 0))){
+	if(n){
+	  /* print comments about parent values for previous line 
+	   * NOTE: the last comment is left out */
+	  fputs(" % ", f);
+	  inverse_mapping(p, j-1, temp);
+	  for(x = nparents-1; x >= 0; x--){
+	    fprintf(f, "%s=%s ", get_symbol(v->parents[x]),
+		    get_statename(v->parents[x], temp[x+1]));
+	  }
+	}
+	/* cut the line and indent */
 	fprintf(f, "\n%s            ", indent);
+	y = 0;
+      }
+      
+      /* Print the value... */
       fprintf(f, " %f ", p->data[j]);
+      y++;
     }
     fputs(");\n", f);
     fprintf(f, "%s}\n", indent);

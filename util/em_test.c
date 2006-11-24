@@ -68,6 +68,12 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+
+  /** EXPERIMENT **/
+#ifdef FOO_BAR  
+
+
+
   /* print a summary about the variables */
   ts = ts_set[0];
   printf("Hidden variables are:\n");
@@ -171,6 +177,10 @@ int main(int argc, char *argv[]) {
 	   rint(link->data / threshold) * threshold);
     link = link->fwd;
   }
+
+#endif
+  /** /EXPERIMENT **/
+  
 
   /* Write the results to a NET file */
   i =  write_model(model, argv[5]);
