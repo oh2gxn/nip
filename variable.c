@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.8 2006-10-10 13:34:16 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.9 2006-12-18 17:08:45 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -13,17 +13,31 @@ static varlink nip_first_var = NULL;
 static varlink nip_last_var = NULL;
 static int nip_vars_parsed = 0;
 
-static int variable_name(variable v, const char *name);
+static int set_variable_text(char** record, const char *name);
 
 
 /*
- * Gives the variable a verbose name.
+ * Gives the variable a verbose name, symbol etc.
  */
-static int variable_name(variable v, const char *name){
-  if(!name)
-    return ERROR_NULLPOINTER; /* possibly a normal situation */
-  strncpy(v->name, name, VAR_NAME_LENGTH);
-  v->name[VAR_NAME_LENGTH] = '\0';
+static int set_variable_text(char** record, const char *name){
+  int len;
+
+  if(!record || !name)
+    return ERROR_NULLPOINTER; /* possibly a normal situation? */
+
+  len = strlen(name);
+  if(len > VAR_TEXT_LENGTH)
+    len = VAR_TEXT_LENGTH;
+
+  if(*record)
+    free(*record); /* Although free(NULL) would be fine? */
+
+  *record = (char*) calloc(len+1, sizeof(char));
+  if(!(*record))
+    return ERROR_OUTOFMEMORY;
+
+  strncpy(*record, name, len);
+  (*record)[len] = '\0'; /* null termination */
   return NO_ERROR;
 }
 
@@ -65,13 +79,12 @@ variable new_variable(const char* symbol, const char* name,
   v->pos_x = 100;
   v->pos_y = 100;
   v->mark = 0;
- 
-  strncpy(v->symbol, symbol, VAR_SYMBOL_LENGTH);
-  v->symbol[VAR_SYMBOL_LENGTH] = '\0';
 
-  if(variable_name(v, name) == ERROR_NULLPOINTER)
+  set_variable_text(&(v->symbol), symbol);
+
+  if(set_variable_text(&(v->name), name) == ERROR_NULLPOINTER)
     /* DANGER! The name can be omitted and consequently be NULL */
-    v->name[0] = '\0';
+    v->name = NULL;
 
   if(states){
     v->statenames = (char **) calloc(cardinality, sizeof(char *));
@@ -82,9 +95,8 @@ variable new_variable(const char* symbol, const char* name,
       return NULL;
     }
     for(i = 0; i < cardinality; i++){
-      v->statenames[i] = (char *) calloc(strlen(states[i]) + 1, 
-					   sizeof(char));
-      if(!(v->statenames[i])){
+      if(set_variable_text(&(v->statenames[i]), states[i]) == 
+	 ERROR_OUTOFMEMORY){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	for(j = 0; j < i; j++)
 	  free(v->statenames[j]);
@@ -92,7 +104,6 @@ variable new_variable(const char* symbol, const char* name,
 	free(v);
 	free(new);
       }
-      strcpy(v->statenames[i], states[i]);
     }
   }
   else
@@ -125,8 +136,10 @@ variable new_variable(const char* symbol, const char* name,
 }
 
 
+/* Useful? Get rid of this function? */
 variable copy_variable(variable v){
   int i;
+  int len;
   variable copy;
 
   if(v == NULL)
@@ -141,8 +154,9 @@ variable copy_variable(variable v){
   copy->cardinality = v->cardinality;
   copy->id = v->id;
 
-  strncpy(copy->name, v->name, VAR_NAME_LENGTH);
-  copy->name[VAR_NAME_LENGTH] = '\0';
+  len = strlen(v->name);
+  set_variable_text(&(copy->name), v->name);
+  /* symbol etc? */
 
   copy->num_of_parents = v->num_of_parents;
   if(v->parents){
@@ -178,6 +192,8 @@ void free_variable(variable v){
   int i;
   if(v == NULL)
     return;
+  free(v->symbol);
+  free(v->name);
   if(v->statenames)
     for(i = 0; i < v->cardinality; i++)
       free(v->statenames[i]);

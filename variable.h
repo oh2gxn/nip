@@ -1,14 +1,13 @@
 /*
- * variable.h $Id: variable.h,v 1.12 2006-10-10 17:54:24 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.13 2006-12-18 17:08:45 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
 #define __VARIABLE_H__
 
 #include "potential.h"
-#define VAR_SYMBOL_LENGTH 20
-#define VAR_NAME_LENGTH 40
-#define VAR_STATENAME_LENGTH 20
+/* The name, symbol, statename etc. can be at most 40 characters long... */
+#define VAR_TEXT_LENGTH 40
 #define VAR_MIN_ID 1
 
 #define INTERFACE_NONE          0
@@ -20,8 +19,8 @@
  * typedef enum interface_type interface_flag; */
 
 struct nip_var {
-  char symbol[VAR_SYMBOL_LENGTH + 1]; /* Short symbol for the node */
-  char name[VAR_NAME_LENGTH + 1];     /* Label in the Net language*/
+  char *symbol;       /* Short symbol for the node */
+  char *name;         /* Label in the Net language*/
   char **statenames;  /* A string array with <cardinality> strings */
   int cardinality;    /* Number of possible values */
   unsigned long id;   /* Unique id for every variable */

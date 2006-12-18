@@ -1,5 +1,5 @@
 /*
- * Timeslice.c $Id: Timeslice.c,v 1.5 2004-06-21 06:12:12 mvkorpel Exp $
+ * Timeslice.c $Id: Timeslice.c,v 1.6 2006-12-18 17:08:45 jatoivol Exp $
  */
 
 #include <string.h>
@@ -81,7 +81,7 @@ Graph* ts_unroll(Timeslice ts, unsigned T)
     Graph* G;
     Variable newvar;
     Variable* vars, *oldvars;
-    char *symbol, itertag[VAR_SYMBOL_LENGTH+1];
+    char *symbol, itertag[VAR_TEXT_LENGTH+1];
     int tag_len, s_len;
     
     n_orig = get_size(ts->G);
@@ -99,9 +99,9 @@ Graph* ts_unroll(Timeslice ts, unsigned T)
         {
             newvar = copy_variable(oldvars[i]); /* Cro-Fra 2-1!!!!! */
             /*symbol = get_symbol(newvar);
-            s_len = strnlen(symbol, VAR_SYMBOL_LENGTH);
-            snprintf(itertag, VAR_SYMBOL_LENGTH, "-%i", iter);
-            strcpy(symbol+s_len-tag_len, itertag, VAR_SYMBOL_LENGTH);*/
+            s_len = strnlen(symbol, VAR_TEXT_LENGTH);
+            snprintf(itertag, VAR_TEXT_LENGTH, "-%i", iter);
+            strcpy(symbol+s_len-tag_len, itertag, VAR_TEXT_LENGTH);*/
             
             vars[iter*n_orig + i] = newvar;
             add_variable(G, newvar);    

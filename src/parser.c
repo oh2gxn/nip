@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.111 2006-11-13 17:59:24 jatoivol Exp $
+ * $Id: parser.c,v 1.112 2006-12-18 17:08:45 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -34,11 +34,13 @@ static int nip_doubles_parsed = 0;
 
 TODO: Move the rest of the global variables into huginnet.y also...
       (with new implementations in lists.c)
-*/
 
 static stringlink nip_first_string = NULL;
 static stringlink nip_last_string = NULL;
 static int nip_strings_parsed = 0;
+*/
+
+static stringlist nip_strings = NULL;
 
 static initDataLink nip_first_initData = NULL;
 static initDataLink nip_last_initData = NULL;
@@ -834,23 +836,10 @@ int add_time_init(variable var, char* name){
 
 
 int add_string(char* string){
-  stringlink new = (stringlink) malloc(sizeof(stringelement));
+  if(nip_strings == NULL)
+    nip_strings = make_stringlist();
 
-  if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-
-  new->data = string;
-  new->fwd = NULL;
-  new->bwd = nip_last_string;
-  if(nip_first_string == NULL)
-    nip_first_string = new;
-  else
-    nip_last_string->fwd = new;
-
-  nip_last_string = new;
-  nip_strings_parsed++;
+  append_string(nip_strings, string);
 
   return NO_ERROR;
 }
@@ -861,7 +850,7 @@ int add_string(char* string){
  * Pointer s is altered so that it points to the new beginning of the list.
  */
 static int add_to_stringlink(stringlink *s, char* string){
-  stringlink new = (stringlink) malloc(sizeof(stringelement));
+  stringlink new = (stringlink) malloc(sizeof(stringlinkstruct));
 
 #ifdef DEBUG_DATAFILE
   printf("add_to_stringlink called\n");
@@ -940,42 +929,16 @@ variable* make_variable_array(){
 /* Creates an array from the strings in the list. 
  * The size will be strings_parsed. */
 char** make_string_array(){
-  int i;
-  stringlink ln = nip_first_string;
-  char** new = (char**) calloc(nip_strings_parsed, sizeof(char*));
-
-  if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-
-  for(i = 0; i < nip_strings_parsed; i++){
-    new[i] = ln->data; /* char[] references copied */
-    ln = ln->fwd;
-  }
-  return new;
+  return list_to_string_array(nip_strings);
 }
 
 
 /* Removes everything from the list of strings and resets the counter. 
  * The actual memory for the strings is not freed also. */
 void reset_strings(){
-  int i;
-  stringlink ln = nip_last_string;
-  nip_last_string = NULL;
-  while(ln != NULL){
-    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
-    ln = ln->bwd;
-  }
-  free(nip_first_string);
-  nip_first_string = NULL;
 
-  for(i = 0; i < nip_strings_parsed; i++)
-    free(nip_statenames[i]);
-  free(nip_statenames);
-  nip_statenames = NULL;
+  empty_stringlist(nip_strings);
 
-  nip_strings_parsed = 0;  
   return;
 }
 
@@ -1367,7 +1330,7 @@ int get_nip_symbols_parsed(){
 
 
 int get_nip_strings_parsed(){
-  return nip_strings_parsed;
+  return nip_strings->length;
 }
 
 

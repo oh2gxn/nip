@@ -30,8 +30,8 @@ Graph* test1(void)
     Graph *G;
     variable v[4];
     variable *w;
-    char symbol[VAR_SYMBOL_LENGTH]; /* MVK: Must reserve some memory (?)*/
-    char name[VAR_NAME_LENGTH];     /* AR: True. IRIX has a black magic sprintf. */
+    char symbol[VAR_TEXT_LENGTH]; /* MVK: Must reserve some memory (?)*/
+    char name[VAR_TEXT_LENGTH];   /* AR: True. IRIX has a black magic sprintf. */
     /* char *symbol, *name; */
     
     int i;
