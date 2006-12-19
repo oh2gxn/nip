@@ -1,7 +1,7 @@
 /*
  * Various linked list data structures used e.g. in parser
  *
- * $Id: lists.h,v 1.2 2006-12-18 17:08:45 jatoivol Exp $
+ * $Id: lists.h,v 1.3 2006-12-19 17:54:43 jatoivol Exp $
  */
 
 #ifndef __LISTS_H__
@@ -51,16 +51,6 @@ struct stringlisttype {
 typedef struct stringlisttype stringliststruct;
 typedef stringliststruct *stringlist;
 
-
-/* OLD STUFF
-struct stringlist {
-  char* data;
-  struct stringlist *fwd;
-  struct stringlist *bwd;
-};
-typedef struct stringlist stringelement;
-typedef stringelement *stringlink;
-*/
 
 /* List for storing parsed potentials while constructing the graph etc. */
 struct initDataList {

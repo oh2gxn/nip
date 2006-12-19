@@ -5,7 +5,7 @@
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.46 2006-11-13 17:59:24 jatoivol Exp $
+ * $Id: parser.h,v 1.47 2006-12-19 17:54:43 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -133,22 +133,9 @@ int add_initData(potential p, variable child, variable* parents);
 int add_time_init(variable var, char* name);
 
 
-/* Adds a string into the list of parsed strings. */
-int add_string(char* string);
-
-
 /* Creates an array from the variable references in the temp list. 
  * The size will be symbols_parsed. */
 variable* make_variable_array();
-
-
-/* Creates an array from the strings in the list. 
- * The size will be strings_parsed. */
-char** make_string_array();
-
-
-/* Removes everything from the list of strings and resets the counter. */
-void reset_strings();
 
 
 /* Removes everything from the temporary list of variables. */
@@ -205,9 +192,6 @@ void set_nip_persistence(char *name);
 char* get_nip_persistence();
 
 int get_nip_symbols_parsed();
-
-int get_nip_strings_parsed();
-
 
 int get_num_of_cliques();
 

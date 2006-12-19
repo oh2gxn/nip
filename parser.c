@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.112 2006-12-18 17:08:45 jatoivol Exp $
+ * $Id: parser.c,v 1.113 2006-12-19 17:54:43 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -40,7 +40,6 @@ static stringlink nip_last_string = NULL;
 static int nip_strings_parsed = 0;
 */
 
-static stringlist nip_strings = NULL;
 
 static initDataLink nip_first_initData = NULL;
 static initDataLink nip_last_initData = NULL;
@@ -835,16 +834,6 @@ int add_time_init(variable var, char* name){
 }
 
 
-int add_string(char* string){
-  if(nip_strings == NULL)
-    nip_strings = make_stringlist();
-
-  append_string(nip_strings, string);
-
-  return NO_ERROR;
-}
-
-
 /*
  * Adds a string to the beginning of the list s.
  * Pointer s is altered so that it points to the new beginning of the list.
@@ -923,23 +912,6 @@ variable* make_variable_array(){
     pointer = pointer->bwd;
   }
   return vars1;
-}
-
-
-/* Creates an array from the strings in the list. 
- * The size will be strings_parsed. */
-char** make_string_array(){
-  return list_to_string_array(nip_strings);
-}
-
-
-/* Removes everything from the list of strings and resets the counter. 
- * The actual memory for the strings is not freed also. */
-void reset_strings(){
-
-  empty_stringlist(nip_strings);
-
-  return;
 }
 
 
@@ -1326,11 +1298,6 @@ char* get_nip_persistence(){
 
 int get_nip_symbols_parsed(){
   return nip_symbols_parsed;
-}
-
-
-int get_nip_strings_parsed(){
-  return nip_strings->length;
 }
 
 
