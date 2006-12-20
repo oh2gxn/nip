@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.71 2006-12-20 11:50:53 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.72 2006-12-20 15:57:29 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -14,14 +14,22 @@
 #include "clique.h"
 #include "variable.h"
 #include "errorhandler.h"
-  
+#include "Graph.h"
+
 static doublelist nip_parsed_doubles = NULL;
 static int        nip_data_size      = 0;
+
 static stringlist nip_parsed_strings = NULL;
 static char**     nip_statenames = NULL;
 static int        nip_n_statenames = 0;
+
 static char*      nip_label;       /* node label contents */
 static char*      nip_persistence; /* NIP_next contents   */
+
+static variablelist nip_parsed_vars   = NULL;
+static variablelist nip_parent_vars   = NULL;
+
+static Graph* nip_graph = NULL;
 
 static int
 yylex (void);
@@ -39,6 +47,7 @@ yyerror (const char *s);  /* Called by yyparse on error */
   char *name;
   char **stringarray;
   variable variable;
+  /* list of X to save global variables? */
 }
 
 /***********************/
@@ -75,11 +84,11 @@ yyerror (const char *s);  /* Called by yyparse on error */
 
 %%
 input:  nodes potentials {
-  if(parsedVars2Graph() != NO_ERROR){
+  if(parsedVars2Graph(nip_parsed_vars, nip_graph) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-  if(time2Vars() != NO_ERROR){
+  if(time2Vars(nip_parsed_vars) != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
@@ -99,11 +108,11 @@ input:  nodes potentials {
 
 /* optional net block */
 |  netDeclaration nodes potentials {
-  if(parsedVars2Graph() != NO_ERROR){
+  if(parsedVars2Graph(nip_parsed_vars, nip_graph) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-  if(time2Vars() != NO_ERROR){
+  if(time2Vars(nip_parsed_vars) != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
@@ -125,11 +134,11 @@ input:  nodes potentials {
 /* possible old class statement */
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
   free($2); /* the classname is useless */
-  if(parsedVars2Graph() != NO_ERROR){
+  if(parsedVars2Graph(nip_parsed_vars, nip_graph) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-  if(time2Vars() != NO_ERROR){
+  if(time2Vars(nip_parsed_vars) != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
@@ -150,7 +159,7 @@ input:  nodes potentials {
 ;
 
 
-nodes:    /* empty */ { init_new_Graph(); }
+nodes:    /* empty */ { nip_graph = new_graph(nip_parsed_vars->length); }
 |         nodeDeclaration nodes {/* a variable added */}
 ;
 
@@ -195,6 +204,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   }
   set_variable_position(v); /* sets the parsed position values */
   set_parser_node_position(0, 0); /* reset */
+  append_variable(nip_parsed_vars, v);
 
   if(nip_persistence != NULL){
     retval = add_time_init(v, nip_persistence);
@@ -256,6 +266,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   }
   set_variable_position(v); /* sets the parsed position values */
   set_parser_node_position(0, 0); /* reset */
+  append_variable(nip_parsed_vars, v);
 
   if(nip_persistence != NULL){
     retval = add_time_init(v, nip_persistence);
@@ -405,33 +416,49 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' { free($1); }
 
 potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}' { 
   int i;
-  int retval;
-  variable *vars = (variable*) calloc(get_nip_symbols_parsed() + 1,
-				      sizeof(variable));
-  variable *parents = make_variable_array();
+  int retval, size;
+  int nparents = nip_parent_vars->length;
+  variable *family = (variable*) calloc(nparents + 1, sizeof(variable));
+  variable *parents = list_to_variable_array(nip_parent_vars);
   double *doubles = $8;
+  char* error = NULL;
 
-  if(!(parents && vars)){
-    free(vars);
+  if(!(parents && family)){
+    free(family);
+    free(parents);
+    free(doubles);
     YYABORT;
   }
 
 #ifdef DEBUG_BISON
-  printf("nip_symbols_parsed = %d\n", get_nip_symbols_parsed());
+  printf("nip_symbols_parsed = %d\n", nparents);
 #endif
 
-  vars[0] = $3; 
-  for(i = 0; i < get_nip_symbols_parsed(); i++)
-    vars[i + 1] = parents[i];
+  family[0] = $3;
+  size = number_of_values(family[0]);
+  for(i = 0; i < nparents; i++){
+    family[i + 1] = parents[i];
+    size = size * number_of_values(parents[i]);
+  }
+  /* check that nip_data_size >= product of variable cardinalities! */
+  if(size > nip_data_size){
+    /* too few elements in the specified potential */
+    asprintf(&error, 
+	     "NET parser: Not enough elements in potential( %s... )!", 
+	     get_symbol(family[0]));
+    yyerror(error);
+    free(family);
+    free(parents);
+    free(doubles);
+    YYABORT;
+  }
 
-  /* TODO: check that nip_data_size >= product of variable cardinalities! */
-
-  retval = add_initData(create_potential(vars, get_nip_symbols_parsed() + 1,
-					 doubles),
-			vars[0], parents);
+  retval = add_initData(create_potential(family, nparents + 1, doubles),
+			family[0], parents);
   free(doubles); /* the data was copied at create_potential */
-  reset_symbols();
-  free(vars);
+  empty_variablelist(nip_parent_vars);
+  free(family);
+  free(parents);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
@@ -439,10 +466,21 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 }
 |                     token_potential '(' child ')' '{' dataList '}' {
   int retval;
-  variable vars[1];
+  variable *family;
   double *doubles = $6;
-  vars[0] = $3;
-  retval = add_initData(create_potential(vars, 1, doubles), vars[0], NULL); 
+  char* error = NULL;
+  if(number_of_values($3) > nip_data_size){
+    /* too few elements in the specified potential */
+    asprintf(&error, 
+	     "NET parser: Not enough elements in potential( %s )!", 
+	     get_symbol($3));
+    yyerror(error);
+    free(doubles);
+    YYABORT;
+  }
+  family = &$3;
+  retval = add_initData(create_potential(family, 1, doubles), 
+			family[0], NULL); 
   free(doubles); /* the data was copied at create_potential */
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -451,9 +489,10 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 }
 |                     token_potential '(' child ')' '{' '}' {
   int retval;
-  variable vars[1];
-  vars[0] = $3;
-  retval = add_initData(create_potential(vars, 1, NULL), vars[0], NULL); 
+  variable* family;
+  family = &$3;
+  retval = add_initData(create_potential(family, 1, NULL), 
+			family[0], NULL); 
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
@@ -461,7 +500,11 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 }
 ;
 
-child:        UNQUOTED_STRING { $$ = get_parser_variable($1); free($1); }
+
+child:        UNQUOTED_STRING { 
+  $$ = get_parser_variable(nip_parsed_vars, $1);
+  /* NOTE: you could check unrecognized child variables here */
+  free($1); }
 ;
 
 
@@ -471,8 +514,11 @@ symbols:       /* end of list */
 
 
 symbol:       UNQUOTED_STRING { 
-	       int retval = add_symbol(get_parser_variable($1));
+	       /* NOTE: inverted list takes care of the correct order... */
+	       int retval = prepend_variable(nip_parent_vars, 
+			      get_parser_variable(nip_parsed_vars, $1));
 	       if(retval != NO_ERROR){
+		 /* NOTE: you could check unrecognized parent variables here */
 		 report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 		 YYABORT;
 	       }

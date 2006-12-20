@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.13 2006-12-18 17:08:45 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.14 2006-12-20 15:57:29 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -44,7 +44,7 @@ struct nip_var {
 typedef struct nip_var vtype;
 typedef vtype *variable;
 
-
+/* OLD STUFF
 struct varlist {
   variable data;
   struct varlist *fwd;
@@ -54,6 +54,7 @@ struct varlist {
 typedef struct varlist varelement;
 typedef varelement *varlink;
 typedef varlink variable_iterator;
+*/
 
 /* Creates a new variable:
  * - symbol is a short name e.g. A (= array [A, \0])
@@ -108,27 +109,6 @@ int get_stateindex(variable v, char *state);
 /* The reciprocal of the function above... 
  */
 char* get_statename(variable v, int index);
-
-/* Tells the length of the list of variables. */
-int total_num_of_vars();
-
-
-/* Call this before searching through the list of variables. */
-varlink get_first_variable();
-varlink get_last_variable();
-
-
-/* Call this after a model is parsed from a file and is ready. */
-void reset_variable_list();
-
-
-/* Gives the next variable in the list of variables. Returns NULL when 
- * the end of list is reached. */
-variable next_variable(variable_iterator *it);
-
-
-/* Gets the variable according to the symbol (when parsing). */
-variable get_parser_variable(char *symbol);
 
 
 /* Gets the parsed variable according to the symbol. */

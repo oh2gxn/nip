@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.10 2006-12-20 11:50:53 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.11 2006-12-20 15:57:29 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -9,12 +9,7 @@
 #include "potential.h"
 #include "errorhandler.h"
 
-static varlink nip_first_var = NULL;
-static varlink nip_last_var = NULL;
-static int nip_vars_parsed = 0;
-
 static int set_variable_text(char** record, const char *name);
-
 
 /*
  * Gives the variable a verbose name, symbol etc.
@@ -50,18 +45,10 @@ variable new_variable(const char* symbol, const char* name,
   int i, j;
   double *dpointer;
   variable v;
-  varlink new;
 
   v = (variable) malloc(sizeof(vtype));
   if(!v){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-
-  new = (varlink) malloc(sizeof(varelement));
-  if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(v);
     return NULL;
   }
 
@@ -93,7 +80,6 @@ variable new_variable(const char* symbol, const char* name,
     if(!(v->statenames)){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free(v);
-      free(new);
       return NULL;
     }
     for(i = 0; i < cardinality; i++){
@@ -104,7 +90,6 @@ variable new_variable(const char* symbol, const char* name,
 	  free(v->statenames[j]);
 	free(v->statenames);
 	free(v);
-	free(new);
       }
     }
   }
@@ -118,21 +103,10 @@ variable new_variable(const char* symbol, const char* name,
       free(v->statenames[i]);
     free(v->statenames);
     free(v);
-    free(new);
   }
 
   /* initialise likelihoods to 1 */
   for(dpointer=v->likelihood, i=0; i < cardinality; *dpointer++ = 1, i++);
-
-  new->data = v;
-  new->fwd = NULL;
-  new->bwd = nip_last_var;
-  if(nip_first_var == NULL)
-    nip_first_var = new;
-  else
-    nip_last_var->fwd = new;
-  nip_last_var = new;
-  nip_vars_parsed++;
 
   return v;
 }
@@ -264,61 +238,6 @@ char* get_statename(variable v, int index){
 }
 
 
-int total_num_of_vars(){
-  return nip_vars_parsed;
-}
-
-
-varlink get_first_variable(){
-  return nip_first_var;
-}
-
-
-varlink get_last_variable(){
-  return nip_last_var;
-}
-
-
-void reset_variable_list(){
-  nip_first_var = NULL;
-  nip_last_var = NULL;
-  nip_vars_parsed = 0;
-}
-
-
-variable next_variable(variable_iterator* it){
-  variable v;
-  if(*it){
-    v = (*it)->data;
-    *it = (*it)->fwd;
-  }
-  else
-    v = NULL;
-  return v;
-}
-
-
-variable get_parser_variable(char *symbol){
-
-  variable v; 
-  variable_iterator it = nip_first_var; /* a private copy */
-  v = next_variable(&it);
-
-  if(v == NULL)
-    return NULL; /* didn't find the variable (possibly normal) */
-  
-  /* search for the variable reference */
-  while(strcmp(symbol, v->symbol) != 0){
-    v = next_variable(&it);
-    if(v == NULL){
-      return NULL; /* didn't find the variable (a normal situation) */
-    }
-  }
-
-  return v;
-
-}
-
 variable get_variable(variable* vars, int nvars, char *symbol){
 
   int i;
@@ -407,7 +326,7 @@ int set_parents(variable v, variable *parents, int nparents){
     return ERROR_NULLPOINTER;
   }
 
-  free(v->parents); /* in case it previously had parents */
+  free(v->parents); /* in case it previously had another array */
   
   if(nparents > 0){
     v->parents = (variable *) calloc(nparents, sizeof(variable));

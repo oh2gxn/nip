@@ -2,11 +2,12 @@
  * Functions for using list structures
  * (a C++ implementation would use STL)
  *
- * $Id: lists.c,v 1.2 2006-12-18 17:08:45 jatoivol Exp $
+ * $Id: lists.c,v 1.3 2006-12-20 15:57:29 jatoivol Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "lists.h"
 #include "errorhandler.h"
 
@@ -31,6 +32,15 @@ stringlist make_stringlist(){
   sl->first  = NULL;
   sl->last   = NULL;
   return sl;
+}
+
+variablelist make_variablelist(){
+  variablelist vl = (variablelist) malloc(sizeof(variableliststruct));
+  /* Q: What if NULL was returned? */
+  vl->length = 0;
+  vl->first  = NULL;
+  vl->last   = NULL;
+  return vl;
 }
 
 
@@ -78,6 +88,32 @@ int append_string(stringlist l, char* s){
   }
 
   new->data = s;
+  new->fwd = NULL;
+  new->bwd = l->last;
+  if(l->first == NULL)
+    l->first = new;
+  else
+    l->last->fwd = new;
+
+  l->last = new;
+  l->length++;
+  return NO_ERROR;
+}
+
+int append_variable(variablelist l, variable v){
+  variablelink new = (variablelink) malloc(sizeof(variablelinkstruct));
+
+  if(!l || !v){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->data = v;
   new->fwd = NULL;
   new->bwd = l->last;
   if(l->first == NULL)
@@ -147,6 +183,32 @@ int prepend_string(stringlist l, char* s){
   return NO_ERROR;
 }
 
+int prepend_variable(variablelist l, variable v){
+  variablelink new = (variablelink) malloc(sizeof(variablelinkstruct));
+
+  if(!l || !v){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->data = v;
+  new->bwd = NULL;
+  new->fwd = l->first;
+  if(l->last == NULL)
+    l->last = new;
+  else
+    l->first->bwd = new;
+
+  l->first = new;
+  l->length++;
+  return NO_ERROR;
+}
+
 
 /*
  * list_to_<T>_array conversions
@@ -154,7 +216,7 @@ int prepend_string(stringlist l, char* s){
 
 double* list_to_double_array(doublelist dl){
   int i;
-  doublelink ln = dl->first;
+  doublelink ln;
   double* new;
   
   if(!dl){
@@ -171,6 +233,7 @@ double* list_to_double_array(doublelist dl){
     return NULL;
   }
 
+  ln = dl->first;
   for(i = 0; i < dl->length; i++){
     new[i] = ln->data; /* the data is copied here */
     ln = ln->fwd;
@@ -180,7 +243,7 @@ double* list_to_double_array(doublelist dl){
 
 char** list_to_string_array(stringlist sl){
   int i;
-  stringlink ln = sl->first;
+  stringlink ln;
   char** new;
   
   if(!sl){
@@ -197,7 +260,35 @@ char** list_to_string_array(stringlist sl){
     return NULL;
   }
 
+  ln = sl->first;
   for(i = 0; i < sl->length; i++){
+    new[i] = ln->data; /* the pointer is copied here */
+    ln = ln->fwd;
+  }
+  return new;
+}
+
+variable* list_to_variable_array(variablelist vl){
+  int i;
+  variablelink ln;
+  variable* new;
+  
+  if(!vl){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return NULL;
+  }
+
+  if(vl->length == 0)
+    return NULL;
+
+  new = (variable*) calloc(vl->length, sizeof(variable));
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  ln = vl->first;
+  for(i = 0; i < vl->length; i++){
     new[i] = ln->data; /* the pointer is copied here */
     ln = ln->fwd;
   }
@@ -246,3 +337,60 @@ void empty_stringlist(stringlist sl){
   sl->length = 0;
   return;
 }
+
+void empty_variablelist(variablelist vl){
+  variablelink ln;
+
+  if(!vl)
+    return;
+  
+  ln = vl->last;
+
+  vl->last = NULL;
+  while(ln != NULL){
+    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
+    ln = ln->bwd;
+  }
+  free(vl->first);
+  vl->first = NULL;
+  vl->length = 0;
+  return;
+}
+
+
+/*
+ * Iterator
+ */
+variable next_variable(variable_iterator* it){
+  variable v;
+  if(*it){
+    v = (*it)->data;
+    *it = (*it)->fwd;
+  }
+  else
+    v = NULL;
+  return v;
+}
+
+
+/*
+ * Search method
+ */
+variable get_parser_variable(variablelist vl, char *symbol){
+  variable v; 
+  variable_iterator it = vl->first; /* a private copy */
+  v = next_variable(&it);
+
+  if(v == NULL)
+    return NULL; /* didn't find the variable (possibly normal) */
+  
+  /* search for the variable reference */
+  while(strcmp(symbol, v->symbol) != 0){
+    v = next_variable(&it);
+    if(v == NULL){
+      return NULL; /* didn't find the variable (a normal situation) */
+    }
+  }
+  return v;
+}
+

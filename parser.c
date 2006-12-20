@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.114 2006-12-20 11:50:53 jatoivol Exp $
+ * $Id: parser.c,v 1.115 2006-12-20 15:57:29 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -21,25 +21,9 @@
 
 /* #define DEBUG_DATAFILE */
 
-static varlink nip_first_temp_var = NULL;
-static varlink nip_last_temp_var = NULL;
-static int nip_symbols_parsed = 0;
-
 static Graph *nip_graph = NULL;
 
 /*
-static doublelink nip_first_double = NULL;
-static doublelink nip_last_double = NULL;
-static int nip_doubles_parsed = 0;
-
-static stringlink nip_first_string = NULL;
-static stringlink nip_last_string = NULL;
-static int nip_strings_parsed = 0;
-
-static char** nip_statenames;
-static char* nip_label;
-static char* nip_persistence;
-
 TODO: Move the rest of the global variables into huginnet.y also...
       (with new implementations in lists.c)
 */
@@ -734,39 +718,6 @@ char *next_token(int *token_length){
 }
 
 
-/* Adds a variable into a temporary list for creating an array. 
- * The variable is chosen from THE list of variables 
- * according to the given symbol. */
-int add_symbol(variable v){
-  varlink new;
-
-  if(v == NULL){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-    return ERROR_NULLPOINTER;
-  }
-
-  new = (varlink) malloc(sizeof(varelement));
-  if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-
-  new->data = v;
-  new->fwd = NULL;
-  new->bwd = nip_last_temp_var;
-
-  if(nip_first_temp_var == NULL)
-    nip_first_temp_var = new;
-  else
-    nip_last_temp_var->fwd = new;
-    
-  nip_last_temp_var = new;
-  nip_symbols_parsed++;
-
-  return NO_ERROR;
-}
-
-
 void set_parser_node_position(double x, double y){
   parser_node_position_x = abs((int)x);
   parser_node_position_y = abs((int)y);
@@ -894,41 +845,6 @@ static int search_stringlinks(stringlink s, char* string){
   return 0;
 }
 
-/* Creates an array from the variable in the list. 
- * NOTE: because of misunderstanding, the list is backwards. 
- * (Can't understand Hugin fellows...) */
-variable* make_variable_array(){
-  int i;
-  variable* vars1 = (variable*) calloc(nip_symbols_parsed, sizeof(variable));
-  varlink pointer = nip_last_temp_var;
-
-  if(!vars1){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-
-  for(i = 0; i < nip_symbols_parsed; i++){
-    vars1[i] = pointer->data;
-    pointer = pointer->bwd;
-  }
-  return vars1;
-}
-
-
-/* Removes everything from the temporary list of variables. */
-void reset_symbols(){
-  varlink ln = nip_last_temp_var;
-  nip_last_temp_var = NULL;
-  while(ln != NULL){
-    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
-    ln = ln->bwd;
-  }
-  free(nip_first_temp_var);
-  nip_first_temp_var = NULL;
-  nip_symbols_parsed = 0;
-  return;
-}
-
 
 /* Frees some memory after parsing. */
 void reset_initData(){
@@ -963,23 +879,19 @@ void reset_timeinit(){
 }
 
 
-void init_new_Graph(){
-  nip_graph = new_graph(total_num_of_vars());
-}
-
-
-int parsedVars2Graph(){
+int parsedVars2Graph(variablelist vl, Graph* g){
   int i, retval;
   variable v;
   variable_iterator it;
   initDataLink initlist = nip_first_initData;
 
-  it = get_first_variable();
+  /*assert(vl != NULL);*/
+  it = vl->first;
   v = next_variable(&it);
   
   /* Add parsed variables to the graph. */
   while(v != NULL){
-    retval = add_variable(nip_graph, v);
+    retval = add_variable(g, v);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       return ERROR_GENERAL;
@@ -990,7 +902,7 @@ int parsedVars2Graph(){
   /* Add child - parent relations to the graph. */
   while(initlist != NULL){  
     for(i = 0; i < initlist->data->num_of_vars - 1; i++){
-      retval = add_child(nip_graph, initlist->parents[i], initlist->child);
+      retval = add_child(g, initlist->parents[i], initlist->child);
       if(retval != NO_ERROR){
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
@@ -1007,16 +919,18 @@ int parsedVars2Graph(){
 }
 
 
-int time2Vars(){
+int time2Vars(variablelist vl){
   int i, m;
   variable v1, v2;
   time_init_link initlist = nip_first_timeinit;
-  variable_iterator it = get_first_variable();
+  variable_iterator it = NULL;
+
+  it = vl->first;
 
   /* Add time relations to variables. */
   while(initlist != NULL){
     v1 = initlist->var;
-    v2 = get_parser_variable(initlist->previous);
+    v2 = get_parser_variable(vl, initlist->previous);
     if(v1->cardinality == v2->cardinality){
       /* check one thing */
       for(i = 0; i < v1->cardinality; i++){
@@ -1120,7 +1034,7 @@ int Graph2JTree(){
 }
 
 
-int parsedPots2JTree(){
+int parsedPots2JTree(variablelist vl){
   int i, nvars; 
   int retval;
   initDataLink initlist = nip_first_initData;
@@ -1130,7 +1044,7 @@ int parsedPots2JTree(){
   clique fam_clique = NULL;;
 
   /* <ugly patch> */
-  nvars = total_num_of_vars();
+  nvars = vl->length;
   vars = (variable*) calloc(nvars, sizeof(variable));
   if(!vars){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -1138,7 +1052,7 @@ int parsedPots2JTree(){
   }
 
   i = 0;
-  it = get_first_variable();
+  it = vl->first;
   var = next_variable(&it);
   while(var){
     vars[i++] = var;
@@ -1263,11 +1177,6 @@ void print_parsed_stuff(){
     free(temp_array);
     free(variables);
   }
-}
-
-
-int get_nip_symbols_parsed(){
-  return nip_symbols_parsed;
 }
 
 

@@ -73,16 +73,17 @@
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 36 "huginnet.y"
+#line 44 "huginnet.y"
 typedef union YYSTYPE {
   double numval;
   double *doublearray;
   char *name;
   char **stringarray;
   variable variable;
+  /* list of X to save global variables? */
 } YYSTYPE;
 /* Line 1447 of yacc.c.  */
-#line 86 "huginnet.tab.h"
+#line 87 "huginnet.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

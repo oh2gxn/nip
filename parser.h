@@ -5,7 +5,7 @@
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.48 2006-12-20 11:50:53 jatoivol Exp $
+ * $Id: parser.h,v 1.49 2006-12-20 15:57:29 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -104,11 +104,6 @@ int nextline_tokens(datafile *f, char separator, char ***tokens);
 char *next_token(int *token_length);
 
 
-/* Adds a variable into a list for creating an array. The variable is 
- * chosen from THE list of variables according to the given symbol. */
-int add_symbol(variable v);
-
-
 /* Saves two positive integers by truncating and taking absolute value. */
 void set_parser_node_position(double x, double y);
 
@@ -133,15 +128,6 @@ int add_initData(potential p, variable child, variable* parents);
 int add_time_init(variable var, char* name);
 
 
-/* Creates an array from the variable references in the temp list. 
- * The size will be symbols_parsed. */
-variable* make_variable_array();
-
-
-/* Removes everything from the temporary list of variables. */
-void reset_symbols();
-
-
 /* Frees some memory after parsing. */
 void reset_initData();
 
@@ -150,18 +136,14 @@ void reset_initData();
 void reset_timeinit();
 
 
-/* Initialises a new graph. */
-void init_new_Graph();
-
-
 /* Inserts the parsed variables and their relations into the graph.
  * Returns an error code. (0 is O.K.) */
-int parsedVars2Graph();
+int parsedVars2Graph(variablelist vl, Graph* g);
 
 
 /* Adds time relations to variables.
  */
-int time2Vars();
+int time2Vars(variablelist vl);
 
 
 /* Constructs the join tree from the graph (which is hopefully ready)
@@ -179,7 +161,6 @@ int parsedPots2JTree();
 /* Some debug printing about what was parsed. */
 void print_parsed_stuff();
 
-int get_nip_symbols_parsed();
 
 int get_num_of_cliques();
 

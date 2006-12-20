@@ -1,7 +1,7 @@
 /*
  * Various linked list data structures used e.g. in parser
  *
- * $Id: lists.h,v 1.3 2006-12-19 17:54:43 jatoivol Exp $
+ * $Id: lists.h,v 1.4 2006-12-20 15:57:29 jatoivol Exp $
  */
 
 #ifndef __LISTS_H__
@@ -52,6 +52,27 @@ typedef struct stringlisttype stringliststruct;
 typedef stringliststruct *stringlist;
 
 
+/* List for storing variables */
+struct variablelinktype {
+  variable data;
+  struct variablelinktype *fwd;
+  struct variablelinktype *bwd;
+};
+
+typedef struct variablelinktype variablelinkstruct;
+typedef variablelinkstruct *variablelink;
+typedef variablelink variable_iterator;
+
+struct variablelisttype {
+  int length;
+  variablelink first;
+  variablelink last;
+};
+
+typedef struct variablelisttype variableliststruct;
+typedef variableliststruct *variablelist;
+
+
 /* List for storing parsed potentials while constructing the graph etc. */
 struct initDataList {
   potential data;
@@ -79,24 +100,28 @@ typedef time_init_element *time_init_link;
 /* Creates an empty list of <T> */
 doublelist make_doublelist();
 stringlist make_stringlist();
+variablelist make_variablelist();
 
 /* Adds a <T> to the end of the list 
  * NOTE: If <T> is pointer, only the pointer is copied, not the content 
  */
 int append_double(doublelist l, double d);
 int append_string(stringlist l, char* s);
+int append_variable(variablelist l, variable v);
 
 /* Adds a <T> to the beginning of the list 
  * NOTE: If <T> is pointer, only the pointer is copied, not the content 
  */
 int prepend_double(doublelist l, double d);
 int prepend_string(stringlist l, char*  s);
+int prepend_variable(variablelist l, variable v);
 
 /* Creates a <T> array out of the list of <T>. 
  * NOTE: If <T> is pointer, only the pointer is copied, not the content 
  * Remember to free it (and the list too) */
 double* list_to_double_array(doublelist dl);
 char**  list_to_string_array(stringlist sl);
+variable* list_to_variable_array(variablelist vl);
 
 /* Makes a list of doubles empty, free it with free(dl) 
  * NOTE: Only the list is deleted, not the content. If you had a list 
@@ -104,6 +129,10 @@ char**  list_to_string_array(stringlist sl);
  */
 void empty_doublelist(doublelist dl);
 void empty_stringlist(stringlist sl);
+void empty_variablelist(variablelist vl);
 
+/* Some helper functions */
+variable next_variable(variable_iterator* it);
+variable get_parser_variable(variablelist vl, char *symbol);
 
 #endif /* __LISTS_H__ */
