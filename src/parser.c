@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.113 2006-12-19 17:54:43 jatoivol Exp $
+ * $Id: parser.c,v 1.114 2006-12-20 11:50:53 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -32,12 +32,16 @@ static doublelink nip_first_double = NULL;
 static doublelink nip_last_double = NULL;
 static int nip_doubles_parsed = 0;
 
-TODO: Move the rest of the global variables into huginnet.y also...
-      (with new implementations in lists.c)
-
 static stringlink nip_first_string = NULL;
 static stringlink nip_last_string = NULL;
 static int nip_strings_parsed = 0;
+
+static char** nip_statenames;
+static char* nip_label;
+static char* nip_persistence;
+
+TODO: Move the rest of the global variables into huginnet.y also...
+      (with new implementations in lists.c)
 */
 
 
@@ -46,10 +50,6 @@ static initDataLink nip_last_initData = NULL;
 static int nip_initData_parsed = 0;
 
 static time_init_link nip_first_timeinit = NULL;
-
-static char** nip_statenames;
-static char* nip_label;
-static char* nip_persistence; /* The name included in the NIP_next field */
 
 /* Should a new line be read in when the next token is requested? */
 static int nip_read_line = 1;
@@ -1263,36 +1263,6 @@ void print_parsed_stuff(){
     free(temp_array);
     free(variables);
   }
-}
-
-
-void set_nip_statenames(char **states){
-  nip_statenames = states;
-}
-
-
-char** get_nip_statenames(){
-  return nip_statenames;
-}
-
-
-void set_nip_label(char *label){
-  nip_label = label;
-}
-
-
-char* get_nip_label(){
-  return nip_label;
-}
-
-
-void set_nip_persistence(char *name){
-  nip_persistence = name;
-}
-
-
-char* get_nip_persistence(){
-  return nip_persistence;
 }
 
 

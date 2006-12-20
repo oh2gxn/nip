@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.9 2006-12-18 17:08:45 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.10 2006-12-20 11:50:53 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -80,11 +80,13 @@ variable new_variable(const char* symbol, const char* name,
   v->pos_y = 100;
   v->mark = 0;
 
+  v->symbol = NULL;
   set_variable_text(&(v->symbol), symbol);
 
-  if(set_variable_text(&(v->name), name) == ERROR_NULLPOINTER)
-    /* DANGER! The name can be omitted and consequently be NULL */
-    v->name = NULL;
+  v->name = NULL;
+  if(name)
+    set_variable_text(&(v->name), name);
+  /* DANGER! The name can be omitted and consequently be NULL */
 
   if(states){
     v->statenames = (char **) calloc(cardinality, sizeof(char *));

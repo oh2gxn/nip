@@ -5,7 +5,7 @@
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.47 2006-12-19 17:54:43 jatoivol Exp $
+ * $Id: parser.h,v 1.48 2006-12-20 11:50:53 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -178,18 +178,6 @@ int parsedPots2JTree();
 
 /* Some debug printing about what was parsed. */
 void print_parsed_stuff();
-
-
-void set_nip_statenames(char **states);
-char** get_nip_statenames();
-
-
-void set_nip_label(char *label);
-char* get_nip_label();
-
-
-void set_nip_persistence(char *name);
-char* get_nip_persistence();
 
 int get_nip_symbols_parsed();
 

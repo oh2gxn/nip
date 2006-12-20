@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.70 2006-12-19 17:54:43 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.71 2006-12-20 11:50:53 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -162,8 +162,7 @@ potentials:    /* empty */ {/* list of initialisation data ready */}
 
 nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   int i,retval;
-  char *nip_persistence = get_nip_persistence();
-  char *label = get_nip_label();
+  char *label = nip_label;
   char **states = nip_statenames;
   variable v = NULL;
   
@@ -172,30 +171,26 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     asprintf(&label, " "); /* default label is empty */
 
   if(states == NULL){
-    free(label);
-    set_nip_label(NULL);
+    free(label); nip_label = NULL;
     asprintf(&label, "NIP parser: The states field is missing (node %s)", $2);
     yyerror(label);
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free($2);
     free(label);
-    free(nip_persistence);
-    set_nip_persistence(NULL);
+    free(nip_persistence); nip_persistence = NULL;
     YYABORT;
   }
 
-  v = new_variable($2, label, states, nip_parsed_strings->length);
+  v = new_variable($2, label, states, nip_n_statenames);
 
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free($2);
-    free(label);
-    set_nip_label(NULL);
-    free(nip_persistence);
-    set_nip_persistence(NULL);
+    free(label); nip_label = NULL;
+    free(nip_persistence); nip_persistence = NULL;
     for(i = 0; i < nip_n_statenames; i++)
       free(nip_statenames[i]);
-    free(nip_statenames); nip_statenames = NULL;
+    free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
     YYABORT;
   }
   set_variable_position(v); /* sets the parsed position values */
@@ -206,13 +201,11 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free($2);
-      free(label);
-      set_nip_label(NULL);
-      free(nip_persistence);
-      set_nip_persistence(NULL);
+      free(label); nip_label = NULL;
+      free(nip_persistence); nip_persistence = NULL;
       for(i = 0; i < nip_n_statenames; i++)
 	free(nip_statenames[i]);
-      free(nip_statenames); nip_statenames = NULL;
+      free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
       free_variable(v);
       YYABORT;
     }
@@ -222,14 +215,13 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   free(label);
   for(i = 0; i < nip_n_statenames; i++)
     free(nip_statenames[i]);
-  free(nip_statenames); nip_statenames = NULL;
-  set_nip_persistence(NULL);
+  free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
+  nip_persistence = NULL;
   $$ = v;}
 
 |    token_discrete token_node UNQUOTED_STRING '{' node_params '}' {
   int i,retval;
-  char *nip_persistence = get_nip_persistence();
-  char *label = get_nip_label();
+  char *label = nip_label;
   char **states = nip_statenames;
   variable v = NULL;
   
@@ -239,29 +231,27 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
 
   if(states == NULL){
     free(label);
-    set_nip_label(NULL);
+    nip_label = NULL;
     asprintf(&label, "NIP parser: The states field is missing (node %s)", $3);
     yyerror(label);
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free($3);
     free(label);
-    free(nip_persistence);
-    set_nip_persistence(NULL);
+    free(nip_persistence); nip_persistence = NULL;
     YYABORT;
   }
 
-  v = new_variable($3, label, states, nip_parsed_strings->length);
+  v = new_variable($3, label, states, nip_n_statenames);
 
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     free($3);
     free(label);
-    set_nip_label(NULL);
-    free(nip_persistence);
-    set_nip_persistence(NULL);
+    nip_label = NULL;
+    free(nip_persistence); nip_persistence = NULL;
     for(i = 0; i < nip_n_statenames; i++)
       free(nip_statenames[i]);
-    free(nip_statenames); nip_statenames = NULL;
+    free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
     YYABORT;
   }
   set_variable_position(v); /* sets the parsed position values */
@@ -272,13 +262,11 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free($3);
-      free(label);
-      set_nip_label(NULL);
-      free(nip_persistence);
-      set_nip_persistence(NULL);
+      free(label); nip_label = NULL;
+      free(nip_persistence); nip_persistence = NULL;
       for(i = 0; i < nip_n_statenames; i++)
 	free(nip_statenames[i]);
-      free(nip_statenames); nip_statenames = NULL;
+      free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
       free_variable(v);
       YYABORT;
     }
@@ -288,91 +276,77 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   free(label);
   for(i = 0; i < nip_n_statenames; i++)
     free(nip_statenames[i]);
-  free(nip_statenames); nip_statenames = NULL;
-  set_nip_persistence(NULL);
+  free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
+  nip_persistence = NULL;
   $$ = v;}
 
 | token_continuous token_node UNQUOTED_STRING '{' ignored_params '}' { 
   int i;
-  char *nip_persistence = get_nip_persistence();
-  char *label = get_nip_label();
-  free(label);
-  set_nip_label(NULL);
+  char *label = nip_label;
+  free(label); nip_label = NULL;
   asprintf(&label, "NET parser: Continuous variables (node %s) %s", $3, 
 	   "are not supported.");
   yyerror(label);
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   free($3);
   free(label);
-  free(nip_persistence);
-  set_nip_persistence(NULL);
+  free(nip_persistence); nip_persistence = NULL;
   for(i = 0; i < nip_n_statenames; i++)
     free(nip_statenames[i]);
-  free(nip_statenames); nip_statenames = NULL;
+  free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
   YYABORT;
   $$=NULL;}
 
 | token_utility UNQUOTED_STRING '{' ignored_params '}' { 
   int i;
-  char *nip_persistence = get_nip_persistence();
-  char *label = get_nip_label();
-  free(label);
-  set_nip_label(NULL);
+  char *label = nip_label;
+  free(label); nip_label = NULL;
   asprintf(&label, "NET parser: Utility nodes (node %s) %s", $2, 
 	   "are not supported.");
   yyerror(label);
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   free($2);
   free(label);
-  free(nip_persistence);
-  set_nip_persistence(NULL);
+  free(nip_persistence); nip_persistence = NULL;
   for(i = 0; i < nip_n_statenames; i++)
     free(nip_statenames[i]);
-  free(nip_statenames); nip_statenames = NULL;
+  free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
   YYABORT;
   $$=NULL;}
 
 | token_decision UNQUOTED_STRING '{' ignored_params '}' { 
   int i;
-  char *nip_persistence = get_nip_persistence();
-  char *label = get_nip_label();
-  free(label);
-  set_nip_label(NULL);
+  char *label = nip_label;
+
+  free(label); nip_label = NULL;
   asprintf(&label, "NET parser: Decision nodes (node %s) %s", $2, 
 	   "are not supported.");
   yyerror(label);
   report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
   free($2);
   free(label);
-  free(nip_persistence);
-  set_nip_persistence(NULL);
+  free(nip_persistence); nip_persistence = NULL;
   for(i = 0; i < nip_n_statenames; i++)
     free(nip_statenames[i]);
-  free(nip_statenames); nip_statenames = NULL;
+  free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
   YYABORT;
   $$=NULL;}
 ;
 
 ignored_params: /* end of list */
 |            unknownDeclaration ignored_params
-|            statesDeclaration ignored_params { 
-  nip_statenames = $1; 
-  nip_n_statenames = nip_parsed_strings->length;
-}
-|            labelDeclaration ignored_params { set_nip_label($1); }
-|            persistenceDeclaration ignored_params { set_nip_persistence($1); }
+|            statesDeclaration ignored_params { /*nip_statenames = $1;*/ }
+|            labelDeclaration ignored_params { nip_label = $1; }
+|            persistenceDeclaration ignored_params { nip_persistence = $1; }
 |            positionDeclaration ignored_params
 ;
 
 
 node_params: /* end of definitions */
 |            unknownDeclaration node_params
-|            statesDeclaration node_params { 
-  nip_statenames = $1; 
-  nip_n_statenames = nip_parsed_strings->length;
-}
-|            labelDeclaration node_params { set_nip_label($1); }
-|            persistenceDeclaration node_params { set_nip_persistence($1); }
+|            statesDeclaration node_params { /*nip_statenames = $1;*/ }
+|            labelDeclaration node_params { nip_label = $1; }
+|            persistenceDeclaration node_params { nip_persistence = $1; }
 |            positionDeclaration node_params
 ;
 
