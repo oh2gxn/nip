@@ -5,7 +5,7 @@
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.49 2006-12-20 15:57:29 jatoivol Exp $
+ * $Id: parser.h,v 1.50 2006-12-21 17:16:16 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -104,20 +104,6 @@ int nextline_tokens(datafile *f, char separator, char ***tokens);
 char *next_token(int *token_length);
 
 
-/* Saves two positive integers by truncating and taking absolute value. */
-void set_parser_node_position(double x, double y);
-
-/* Saves two positive integers by truncating and taking absolute value. */
-void set_parser_node_size(double x, double y);
-
-/* Sets variable position (node position by Hugin) according to 
- * the two position values saved by set_parser_node_position */
-void set_variable_position(variable v);
-
-/* Sets two values according to the node size values parsed last. */
-void get_parser_node_size(int* x, int* y);
-
-
 /* Adds a potential and the correspondent variable references into a list.
  * The "ownership" of the vars[] array changes! */
 int add_initData(potential p, variable child, variable* parents);
@@ -146,26 +132,15 @@ int parsedVars2Graph(variablelist vl, Graph* g);
 int time2Vars(variablelist vl);
 
 
-/* Constructs the join tree from the graph (which is hopefully ready)
- * Returns an error code. (0 is O.K.) */
-int Graph2JTree();
-
-
 /* Initialises the join tree (clique array) with parsed potentials. 
  * NOTE: the priors of independent variables are not entered into the 
  * join tree (as evidence), but are stored into the variable though.
  * Returns an error code. (0 is O.K.) */
-int parsedPots2JTree();
+int parsedPots2JTree(clique* cliques, int ncliques);
 
 
 /* Some debug printing about what was parsed. */
 void print_parsed_stuff();
 
-
-int get_num_of_cliques();
-
-clique **get_cliques_pointer();
-
-void reset_clique_array();
 
 #endif /* __PARSER_H__ */

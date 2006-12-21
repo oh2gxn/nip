@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.177 2006-11-24 17:05:03 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.178 2006-12-21 17:16:16 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -7,6 +7,7 @@
 #include "clique.h"
 #include "variable.h"
 #include "errorhandler.h"
+#include "huginnet.tab.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -70,6 +71,9 @@
  *****/
 
 extern int yyparse();
+extern variablelist get_parsed_variables();
+extern int get_cliques(clique** clique_array_pointer);
+extern void get_parsed_node_size(int* x, int* y);
 
 static int start_timeslice_message_pass(nip model, direction dir, 
 					potential sepset);
@@ -128,7 +132,7 @@ void use_priors(nip model, int has_history){
 nip parse_model(char* file){
   int i, j, k, m, retval;
   variable temp;
-  variable_iterator it;
+  variablelist vl;
   nip new = (nip) malloc(sizeof(nip_type));
 
   if(!new){
@@ -150,25 +154,12 @@ nip parse_model(char* file){
     return NULL;
 
   /* 2. Get the parsed stuff and make a model out of them */
-  new->num_of_cliques = get_num_of_cliques();
-  new->num_of_vars = total_num_of_vars();
-  new->cliques = *get_cliques_pointer();
+  new->num_of_cliques = get_cliques(&(new->cliques));
+  vl = get_parsed_variables();
+  new->num_of_vars = vl->length;
+  new->variables = list_to_variable_array(vl);
+  empty_variablelist(vl); /* free the list? */
 
-  new->variables = (variable*) calloc(new->num_of_vars, sizeof(variable));
-  if(!(new->variables)){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    free(new);
-    return NULL;
-  }
-    
-  it = get_first_variable();
-  temp = next_variable(&it);
-  i = 0;
-  while(temp != NULL){
-    new->variables[i++] = temp;
-    temp = next_variable(&it);
-  }
-  
   /* count the number of various kinds of "special" variables */
   new->num_of_nexts = 0;
   new->num_of_children = 0;
@@ -277,21 +268,14 @@ nip parse_model(char* file){
     new->in_clique = NULL;
     new->out_clique = NULL;
   }
-  get_parser_node_size(&(new->node_size_x), &(new->node_size_y));
+  get_parsed_node_size(&(new->node_size_x), &(new->node_size_y));
 
   /* Let's check one detail */
   for(i = 0; i < new->num_of_vars - new->num_of_children; i++)  
     assert(new->independent[i]->num_of_parents == 0);
 
-  /* 4. Reset parser globals */
-  it = get_last_variable(); /* free the list structure */
-  while(it->bwd){
-    it = it->bwd;
-    free(it->fwd);
-  }
-  free(it);
-  reset_variable_list();
-  reset_clique_array();
+  /* 4. Reset parser globals? */
+  /*empty_variablelist(vl);*/
 
 #ifdef DEBUG_NIP
   if(new->out_clique){

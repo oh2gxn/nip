@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.72 2006-12-20 15:57:29 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.73 2006-12-21 17:16:16 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -16,6 +16,11 @@
 #include "errorhandler.h"
 #include "Graph.h"
 
+static int nip_node_position_x = 100;
+static int nip_node_position_y = 100;
+static int nip_node_size_x = 80;
+static int nip_node_size_y = 60;
+
 static doublelist nip_parsed_doubles = NULL;
 static int        nip_data_size      = 0;
 
@@ -31,12 +36,22 @@ static variablelist nip_parent_vars   = NULL;
 
 static Graph* nip_graph = NULL;
 
+static clique* nip_cliques = NULL;
+static int   nip_n_cliques = 0;
+
 static int
 yylex (void);
 
 static void
 yyerror (const char *s);  /* Called by yyparse on error */
 
+/* Gives you the list of variables after yylex() */
+variablelist get_parsed_variables (void);
+
+/* Gives you the array of cliques after yylex() */
+int get_cliques (clique** clique_array_pointer);
+
+void get_parsed_node_size(int* x, int* y);
 %}
 
 /* BISON Declarations */
@@ -88,16 +103,22 @@ input:  nodes potentials {
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
+
   if(time2Vars(nip_parsed_vars) != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
   reset_timeinit();
-  if(Graph2JTree() != NO_ERROR){
+
+  nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
+  free_graph(nip_graph); /* Get rid of the graph (?) */
+  nip_graph = NULL;
+  if(nip_n_cliques < 0){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-  if(parsedPots2JTree() != NO_ERROR){
+
+  if(parsedPots2JTree(nip_cliques, nip_n_cliques) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
@@ -112,17 +133,22 @@ input:  nodes potentials {
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
+
   if(time2Vars(nip_parsed_vars) != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
   reset_timeinit();
 
-  if(Graph2JTree() != NO_ERROR){
+  nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
+  free_graph(nip_graph); /* Get rid of the graph (?) */
+  nip_graph = NULL;
+  if(nip_n_cliques < 0){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-  if(parsedPots2JTree() != NO_ERROR){
+
+  if(parsedPots2JTree(nip_cliques, nip_n_cliques) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
@@ -138,17 +164,22 @@ input:  nodes potentials {
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
+
   if(time2Vars(nip_parsed_vars) != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
   reset_timeinit();
 
-  if(Graph2JTree() != NO_ERROR){
+  nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
+  free_graph(nip_graph); /* Get rid of the graph (?) */
+  nip_graph = NULL;
+  if(nip_n_cliques < 0){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
-  if(parsedPots2JTree() != NO_ERROR){
+
+  if(parsedPots2JTree(nip_cliques, nip_n_cliques) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
@@ -202,8 +233,12 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
     YYABORT;
   }
-  set_variable_position(v); /* sets the parsed position values */
-  set_parser_node_position(0, 0); /* reset */
+  /* set the parsed position values */
+  set_position(v, nip_node_position_x, nip_node_position_y);
+  nip_node_position_x = 100; nip_node_position_y = 100; /* reset */
+
+  if(nip_parsed_vars == NULL)
+    nip_parsed_vars = make_variablelist();
   append_variable(nip_parsed_vars, v);
 
   if(nip_persistence != NULL){
@@ -264,8 +299,12 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
     YYABORT;
   }
-  set_variable_position(v); /* sets the parsed position values */
-  set_parser_node_position(0, 0); /* reset */
+  /* set the parsed position values */
+  set_position(v, nip_node_position_x, nip_node_position_y);
+  nip_node_position_x = 100; nip_node_position_y = 100; /* reset */
+
+  if(nip_parsed_vars == NULL)
+    nip_parsed_vars = make_variablelist();
   append_variable(nip_parsed_vars, v);
 
   if(nip_persistence != NULL){
@@ -401,12 +440,14 @@ statesDeclaration:    token_states '=' '(' strings ')' ';' {
 
 
 positionDeclaration:  token_position '=' '(' NUMBER NUMBER ')' ';' {
-  set_parser_node_position($4, $5);}
+  nip_node_position_x = abs((int)$4); 
+  nip_node_position_y = abs((int)$5);}
 ;
 
 
 nodeSizeDeclaration:  token_node_size '=' '(' NUMBER NUMBER ')' ';' {
-  set_parser_node_size($4, $5);}
+  nip_node_size_x = abs((int)$4); 
+  nip_node_size_y = abs((int)$5);}
 ;
 
 
@@ -418,12 +459,15 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   int i;
   int retval, size;
   int nparents = nip_parent_vars->length;
-  variable *family = (variable*) calloc(nparents + 1, sizeof(variable));
-  variable *parents = list_to_variable_array(nip_parent_vars);
+  variable *family = NULL;
+  variable *parents = NULL;
   double *doubles = $8;
   char* error = NULL;
 
-  if(!(parents && family)){
+  family = (variable*) calloc(nparents + 1, sizeof(variable));
+  parents = list_to_variable_array(nip_parent_vars);
+
+  if(!parents || !family){
     free(family);
     free(parents);
     free(doubles);
@@ -458,7 +502,6 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   free(doubles); /* the data was copied at create_potential */
   empty_variablelist(nip_parent_vars);
   free(family);
-  free(parents);
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
@@ -515,8 +558,11 @@ symbols:       /* end of list */
 
 symbol:       UNQUOTED_STRING { 
 	       /* NOTE: inverted list takes care of the correct order... */
-	       int retval = prepend_variable(nip_parent_vars, 
-			      get_parser_variable(nip_parsed_vars, $1));
+	       int retval;
+	       if(nip_parent_vars == NULL)
+		 nip_parent_vars = make_variablelist();
+	       retval = prepend_variable(nip_parent_vars, 
+			  get_parser_variable(nip_parsed_vars, $1));
 	       if(retval != NO_ERROR){
 		 /* NOTE: you could check unrecognized parent variables here */
 		 report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
@@ -806,8 +852,28 @@ yylex (void)
 
 }
 
+
 static void
 yyerror (const char *s)  /* Called by yyparse on error */
 {
   printf ("%s\n", s);
+}
+
+
+/* Gives you the list of variables after yylex() */
+variablelist get_parsed_variables (void){
+  return nip_parsed_vars;
+}
+
+
+/* Gives you the array of cliques after yylex() */
+int get_cliques (clique** clique_array_pointer){
+  *clique_array_pointer = nip_cliques;
+  return nip_n_cliques;
+}
+
+
+void get_parsed_node_size(int* x, int* y){
+  *x = nip_node_size_x;
+  *y = nip_node_size_y;
 }

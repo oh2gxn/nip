@@ -6,6 +6,7 @@
 #include "Graph.h"
 #include "variable.h"
 #include "potential.h"
+#include "lists.h"
 #include "parser.h"
 #include "nip.h"
 
@@ -25,7 +26,8 @@ int main(int argc, char *argv[]){
     0.2, 3.7, 9.8, 1.4, 5.5, 17, 918, 4798.28, 1111
   };
   variable vars[3];
-  varlink first, last;
+  variablelist varlist;
+  variable* vararray = NULL;
   char **symbols;
   char **names;
   char ***states;
@@ -101,24 +103,22 @@ int main(int argc, char *argv[]){
   strncpy(states[2][2], "c3", 3);
 
   printf("\nAllocating and freeing variables:\n");
+  varlist = make_variablelist();
   for(i = 0; i < n; i++){
     /* Create variables */
-    new_variable(symbols[0], names[0], states[0], cardinality[0]);
-    new_variable(symbols[1], names[1], states[1], cardinality[1]);
-    new_variable(symbols[2], names[2], states[2], cardinality[2]);
+    append_variable(varlist, 
+	  new_variable(symbols[0], names[0], states[0], cardinality[0]));
+    append_variable(varlist, 
+	  new_variable(symbols[1], names[1], states[1], cardinality[1]));
+    append_variable(varlist, 
+	  new_variable(symbols[2], names[2], states[2], cardinality[2]));
     printf("\rIteration %d of %d                               ", i + 1, n);
     /* Free variables */
-    first = get_first_variable();
-    last = get_last_variable();
-    reset_variable_list();
-    while(first != NULL){
-      free_variable(first->data);
-      first = first->fwd;
-      if(first)
-	free(first->bwd);
-    }
-    free(last);
+    vararray = list_to_variable_array(varlist);
+    empty_variablelist(varlist);
+    free(vararray);
   }
+  free(varlist);
   printf("\rDone.                                             \n");
 
   vars[0] = new_variable(symbols[0], names[0], states[0], cardinality[0]);
@@ -159,16 +159,8 @@ int main(int argc, char *argv[]){
   printf("\rDone.                                             \n");
 
   /* Free some memory */
-  first = get_first_variable();
-  last = get_last_variable();
-  reset_variable_list();
-  while(first != NULL){
-    free_variable(first->data);
-    first = first->fwd;
-    if(first)
-      free(first->bwd);
-  }
-  free(last);
+  for(i = 0; i < 3; i++)
+    free_variable(vars[i]);
   
   for(i = 0; i < 3; i++){
     free(states[i][0]);

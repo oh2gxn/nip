@@ -1,9 +1,10 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.115 2006-12-20 15:57:29 jatoivol Exp $
+ * $Id: parser.c,v 1.116 2006-12-21 17:16:16 jatoivol Exp $
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,8 +21,6 @@
 /* #define PRINT_TOKENS */
 
 /* #define DEBUG_DATAFILE */
-
-static Graph *nip_graph = NULL;
 
 /*
 TODO: Move the rest of the global variables into huginnet.y also...
@@ -43,13 +42,6 @@ static FILE *nip_yyparse_infile = NULL;
 
 /* Is there a hugin net file open? 0 if no, 1 if yes. */
 static int nip_yyparse_infile_open = 0;
-
-static clique *nip_cliques = NULL;
-static int nip_num_of_cliques = 0;
-static int parser_node_position_x = 100;
-static int parser_node_position_y = 100;
-static int parser_node_size_x = 80;
-static int parser_node_size_y = 60;
 
 static int add_to_stringlink(stringlink *s, char* string);
 
@@ -718,29 +710,6 @@ char *next_token(int *token_length){
 }
 
 
-void set_parser_node_position(double x, double y){
-  parser_node_position_x = abs((int)x);
-  parser_node_position_y = abs((int)y);
-}
-
-
-void set_variable_position(variable v){
-  set_position(v, parser_node_position_x, parser_node_position_y);
-}
-
-
-void set_parser_node_size(double x, double y){
-  parser_node_size_x = abs((int)x);
-  parser_node_size_y = abs((int)y);
-}
-
-
-void get_parser_node_size(int* x, int* y){
-  *x = parser_node_size_x;
-  *y = parser_node_size_y;
-}
-
-
 /* correctness? */
 int add_initData(potential p, variable child, variable* parents){
   initDataLink new = (initDataLink) malloc(sizeof(initDataElement));
@@ -904,6 +873,15 @@ int parsedVars2Graph(variablelist vl, Graph* g){
     for(i = 0; i < initlist->data->num_of_vars - 1; i++){
       retval = add_child(g, initlist->parents[i], initlist->child);
       if(retval != NO_ERROR){
+
+	if(g == NULL)
+	  printf("DEBUG\n");
+
+	assert(initlist->parents[i] != NULL); /* FAILS! */
+
+	printf("Child:  %s\n", initlist->child->symbol);
+	printf("Parent: %s\n", initlist->parents[i]->symbol);
+
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	return ERROR_GENERAL;
       }
@@ -1010,59 +988,13 @@ int time2Vars(variablelist vl){
 }
 
 
-int Graph2JTree(){
-  int num_of_cliques;
-  clique **cliques = &nip_cliques;
-
-  /* Construct the cliques. */
-  num_of_cliques = find_cliques(nip_graph, cliques);
-
-  /* Error check */
-  if(num_of_cliques < 0){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    free_graph(nip_graph);
-    nip_graph = NULL;
-    return ERROR_GENERAL;
-  }
-
-  nip_num_of_cliques = num_of_cliques;
-
-  free_graph(nip_graph); /* Get rid of the graph (?) */
-  nip_graph = NULL;
-
-  return NO_ERROR; 
-}
-
-
-int parsedPots2JTree(variablelist vl){
-  int i, nvars; 
+int parsedPots2JTree(clique* cliques, int ncliques){
   int retval;
   initDataLink initlist = nip_first_initData;
-  variable* vars;
-  variable var;
-  variable_iterator it;
-  clique fam_clique = NULL;;
-
-  /* <ugly patch> */
-  nvars = vl->length;
-  vars = (variable*) calloc(nvars, sizeof(variable));
-  if(!vars){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-
-  i = 0;
-  it = vl->first;
-  var = next_variable(&it);
-  while(var){
-    vars[i++] = var;
-    var = next_variable(&it);
-  }
-  /* <\ugly patch> */
+  clique fam_clique = NULL;
 
   while(initlist != NULL){    
-    fam_clique = find_family(nip_cliques, nip_num_of_cliques,
-			     initlist->child);
+    fam_clique = find_family(cliques, ncliques, initlist->child);
 
     if(fam_clique != NULL){
       if(initlist->data->num_of_vars > 1){
@@ -1072,7 +1004,6 @@ int parsedPots2JTree(variablelist vl){
 			    initlist->data, 0); /* THE job */
 	if(retval != NO_ERROR){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	  free(vars);
 	  return ERROR_GENERAL;
 	}
       }
@@ -1081,11 +1012,10 @@ int parsedPots2JTree(variablelist vl){
 	 * itself, but NOT entered into the model YET. */
 	/*retval = enter_evidence(vars, nvars, nip_cliques, 
 	 *			nip_num_of_cliques, initlist->child, 
-	 *			initlist->data->data);*/
+	 *			initlist->data->data); OLD STUFF */
 	retval = set_prior(initlist->child, initlist->data->data);
 	if(retval != NO_ERROR){
 	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	  free(vars);
 	  return ERROR_GENERAL;
 	}
       }
@@ -1096,7 +1026,6 @@ int parsedPots2JTree(variablelist vl){
     initlist = initlist->fwd;
   }
 
-  free(vars);
   return NO_ERROR;
 }
 
@@ -1177,19 +1106,4 @@ void print_parsed_stuff(){
     free(temp_array);
     free(variables);
   }
-}
-
-
-int get_num_of_cliques(){
-  return nip_num_of_cliques;
-}
-
-
-clique **get_cliques_pointer(){
-  return &nip_cliques;
-}
-
-void reset_clique_array(){
-  nip_cliques = NULL;
-  nip_num_of_cliques = 0;
 }

@@ -4,6 +4,7 @@
 #include "variable.h"
 #include "potential.h"
 #include "errorhandler.h"
+#include "huginnet.tab.h"
 
 /*
 #define PRINT_POTENTIALS
@@ -13,7 +14,7 @@
 #define DEBUG_BISONTEST
 */
 
-#define EVIDENCE
+/*#define EVIDENCE*/
 
 /*
 #define EVIDENCE1
@@ -30,6 +31,8 @@
 */
 
 extern int yyparse();
+extern variablelist get_parsed_variables();
+extern int get_cliques(clique** clique_array_pointer);
 
 /*
  * Calculate the probability distribution of variable "var".
@@ -81,13 +84,13 @@ static void test_evidence(variable* vars, int nvars, clique* cliques,
 #endif
 
 #ifndef DEBUG_BISONTEST
-  /* FIXME (copy some code from parser.c line 1080-1090) */
+  /* FIXME (copy some code from parser.c) */
   enter_evidence(vars, nvars, cliques, num_of_cliques, 
 		 observed, data);
 #endif
 
 #ifdef DEBUG_BISONTEST
-  /* FIXME (copy some code from parser.c line 1080-1090) */
+  /* FIXME (copy some code from parser.c) */
   evidence_retval = enter_evidence(vars, nvars, cliques, num_of_cliques, 
 				   observed, data);
   printf("\n\nEntered evidence into ");
@@ -112,7 +115,8 @@ int main(int argc, char *argv[]){
 
   variable interesting;
   variable* vars;
-  variable_iterator nip_first_var;
+  variablelist var_list;
+  variable_iterator it;
 
 #ifdef PRINT_POTENTIALS
   int j;
@@ -180,14 +184,14 @@ int main(int argc, char *argv[]){
     return retval;
   /* The input file has been parsed. -- */
 
-  nip_cliques = *get_cliques_pointer();
-  nip_num_of_cliques = get_num_of_cliques();
-  nip_first_var = get_first_variable();
-  nvars = total_num_of_vars();
+  nip_num_of_cliques = get_cliques(&nip_cliques);
+  var_list = get_parsed_variables();
+  it = var_list->first;
+  nvars = var_list->length;
   vars = (variable*) calloc(nvars, sizeof(variable));
   
   for(i = 0; i < nvars; i++)
-    vars[i] = next_variable(&nip_first_var);
+    vars[i] = next_variable(&it);
 
 #ifdef PRINT_JOINTREE
   jtree_dfs(nip_cliques[0], print_clique, print_Sepset);
