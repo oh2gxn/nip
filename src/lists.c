@@ -2,7 +2,7 @@
  * Functions for using list structures
  * (a C++ implementation would use STL)
  *
- * $Id: lists.c,v 1.3 2006-12-20 15:57:29 jatoivol Exp $
+ * $Id: lists.c,v 1.4 2007-01-03 17:42:30 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -41,6 +41,24 @@ variablelist make_variablelist(){
   vl->first  = NULL;
   vl->last   = NULL;
   return vl;
+}
+
+potentialList make_potentialList(){
+  potentialList pl = (potentialList) malloc(sizeof(potentialListStruct));
+  /* Q: What if NULL was returned? */
+  pl->length = 0;
+  pl->first  = NULL;
+  pl->last   = NULL;
+  return pl;
+}
+
+interfaceList make_interfaceList(){
+  interfaceList l = (interfaceList) malloc(sizeof(interfaceListStruct));
+  /* Q: What if NULL was returned? */
+  l->length = 0;
+  l->first  = NULL;
+  l->last   = NULL;
+  return l;
 }
 
 
@@ -126,6 +144,64 @@ int append_variable(variablelist l, variable v){
   return NO_ERROR;
 }
 
+int append_potential(potentialList l, potential p, 
+		     variable child, variable* parents){
+  potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
+
+  if(!l || !p){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->data = p;
+  new->child = child;
+  /* The "ownership" of the parents[] array changes! */
+  new->parents = parents;
+  new->fwd = NULL;
+  new->bwd = l->last;
+  if(l->first == NULL)
+    l->first = new;
+  else
+    l->last->fwd = new;
+
+  l->last = new;
+  l->length++;
+  return NO_ERROR;
+}
+
+int append_interface(interfaceList l, variable var, char* next){
+  interfaceLink new = (interfaceLink) malloc(sizeof(interfaceLinkStruct));
+
+  if(!l || !var){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->var = var;
+  new->next = next;
+  /* The ownership of the "next" string changes! */
+  new->fwd = NULL;
+  new->bwd = l->last;
+  if(l->first == NULL)
+    l->first = new;
+  else
+    l->last->fwd = new;
+
+  l->last = new;
+  l->length++;
+  return NO_ERROR;
+}
+
 
 /*
  * prepend_<T> operations
@@ -197,6 +273,62 @@ int prepend_variable(variablelist l, variable v){
   }
 
   new->data = v;
+  new->bwd = NULL;
+  new->fwd = l->first;
+  if(l->last == NULL)
+    l->last = new;
+  else
+    l->first->bwd = new;
+
+  l->first = new;
+  l->length++;
+  return NO_ERROR;
+}
+
+int prepend_potential(potentialList l, potential p, 
+		      variable child, variable* parents){
+  potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
+
+  if(!l || !p){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->data = p;
+  new->child = child;
+  new->parents = parents;
+  new->bwd = NULL;
+  new->fwd = l->first;
+  if(l->last == NULL)
+    l->last = new;
+  else
+    l->first->bwd = new;
+
+  l->first = new;
+  l->length++;
+  return NO_ERROR;
+}
+
+int prepend_interface(interfaceList l, variable var, char* next){
+  interfaceLink new = (interfaceLink) malloc(sizeof(interfaceLinkStruct));
+
+  if(!l || !var){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->var = var;
+  new->next = next;
   new->bwd = NULL;
   new->fwd = l->first;
   if(l->last == NULL)
@@ -354,6 +486,66 @@ void empty_variablelist(variablelist vl){
   free(vl->first);
   vl->first = NULL;
   vl->length = 0;
+  return;
+}
+
+
+void free_potentialList(potentialList pl){
+  potentialLink ln;
+
+  if(!pl)
+    return;
+  
+  ln = pl->last;
+
+  pl->last = NULL;
+  while(ln != NULL){
+    if(ln->fwd != NULL){
+      free_potential(ln->fwd->data);
+      free(ln->fwd->parents);
+      free(ln->fwd);
+    }
+    ln = ln->bwd;
+  }
+  if(pl->first != NULL){
+    free_potential(pl->first->data);
+    free(pl->first->parents);
+    free(pl->first);
+    pl->first = NULL;
+  }
+  pl->length = 0;
+
+  free(pl);
+  pl = NULL;
+  return;
+}
+
+
+void free_interfaceList(interfaceList l){
+  interfaceLink ln;
+
+  if(!l)
+    return;
+  
+  ln = l->last;
+
+  l->last = NULL;
+  while(ln != NULL){
+    if(ln->fwd != NULL){
+      free(ln->fwd->next);
+      free(ln->fwd);
+    }
+    ln = ln->bwd;
+  }
+  if(l->first != NULL){
+    free(l->first->next);
+    free(l->first);
+    l->first = NULL;
+  }
+  l->length = 0;
+
+  free(l);
+  l = NULL;
   return;
 }
 

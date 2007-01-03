@@ -73,7 +73,7 @@
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 59 "huginnet.y"
+#line 77 "huginnet.y"
 typedef union YYSTYPE {
   double numval;
   double *doublearray;

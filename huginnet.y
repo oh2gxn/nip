@@ -1,10 +1,12 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.73 2006-12-21 17:16:16 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.74 2007-01-03 17:42:30 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
 %{
 #define _GNU_SOURCE
+
+#include <assert.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +38,10 @@ static variablelist nip_parent_vars   = NULL;
 
 static Graph* nip_graph = NULL;
 
+static potentialList nip_parsed_potentials = NULL;
+
+static interfaceList nip_interface_relations = NULL;
+
 static clique* nip_cliques = NULL;
 static int   nip_n_cliques = 0;
 
@@ -45,17 +51,29 @@ yylex (void);
 static void
 yyerror (const char *s);  /* Called by yyparse on error */
 
+static int parsed_vars_to_graph(variablelist vl, Graph* g);
+
+static int parsed_potentials_to_jtree(potentialList potentials, 
+				      clique* cliques, int ncliques);
+
+static int interface_to_vars(interfaceList il, variablelist vl);
+
+static void print_parsed_stuff(potentialList pl);
+
 /* Gives you the list of variables after yylex() */
 variablelist get_parsed_variables (void);
 
 /* Gives you the array of cliques after yylex() */
 int get_cliques (clique** clique_array_pointer);
 
+/* Gives you the global parameters of the whole network 
+ * (node size is the only mandatory field...) */
 void get_parsed_node_size(int* x, int* y);
 %}
 
 /* BISON Declarations */
-/* These are the data types for semantic values. */
+/* These are the data types for semantic values. 
+ * NOTE: there could be more of these to get rid of global variables... */
 %union {
   double numval;
   double *doublearray;
@@ -99,16 +117,16 @@ void get_parsed_node_size(int* x, int* y);
 
 %%
 input:  nodes potentials {
-  if(parsedVars2Graph(nip_parsed_vars, nip_graph) != NO_ERROR){
+  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
 
-  if(time2Vars(nip_parsed_vars) != NO_ERROR){
+  if(interface_to_vars(nip_interface_relations, nip_parsed_vars) != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
-  reset_timeinit();
+  free_interfaceList(nip_interface_relations);
 
   nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
   free_graph(nip_graph); /* Get rid of the graph (?) */
@@ -118,27 +136,29 @@ input:  nodes potentials {
     YYABORT;
   }
 
-  if(parsedPots2JTree(nip_cliques, nip_n_cliques) != NO_ERROR){
+  if(parsed_potentials_to_jtree(nip_parsed_potentials, 
+				nip_cliques, nip_n_cliques) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
 #ifdef DEBUG_BISON
-  print_parsed_stuff();
+  print_parsed_stuff(nip_parsed_potentials);
 #endif
-  reset_initData();}
+  free_potentialList(nip_parsed_potentials); /* frees potentials also */
+}
 
 /* optional net block */
 |  netDeclaration nodes potentials {
-  if(parsedVars2Graph(nip_parsed_vars, nip_graph) != NO_ERROR){
+  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
 
-  if(time2Vars(nip_parsed_vars) != NO_ERROR){
+  if(interface_to_vars(nip_interface_relations, nip_parsed_vars) != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
-  reset_timeinit();
+  free_interfaceList(nip_interface_relations);
 
   nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
   free_graph(nip_graph); /* Get rid of the graph (?) */
@@ -148,28 +168,30 @@ input:  nodes potentials {
     YYABORT;
   }
 
-  if(parsedPots2JTree(nip_cliques, nip_n_cliques) != NO_ERROR){
+  if(parsed_potentials_to_jtree(nip_parsed_potentials, 
+				nip_cliques, nip_n_cliques) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
 #ifdef DEBUG_BISON
-  print_parsed_stuff();
+  print_parsed_stuff(nip_parsed_potentials);
 #endif
-  reset_initData();}
+  free_potentialList(nip_parsed_potentials); /* frees potentials also */
+}
 
 /* possible old class statement */
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
   free($2); /* the classname is useless */
-  if(parsedVars2Graph(nip_parsed_vars, nip_graph) != NO_ERROR){
+  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
 
-  if(time2Vars(nip_parsed_vars) != NO_ERROR){
+  if(interface_to_vars(nip_interface_relations, nip_parsed_vars) != NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
-  reset_timeinit();
+  free_interfaceList(nip_interface_relations);
 
   nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
   free_graph(nip_graph); /* Get rid of the graph (?) */
@@ -179,15 +201,16 @@ input:  nodes potentials {
     YYABORT;
   }
 
-  if(parsedPots2JTree(nip_cliques, nip_n_cliques) != NO_ERROR){
+  if(parsed_potentials_to_jtree(nip_parsed_potentials, 
+				nip_cliques, nip_n_cliques) != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
   }
 #ifdef DEBUG_BISON
-  print_parsed_stuff();
+  print_parsed_stuff(nip_parsed_potentials);
 #endif
-  reset_initData();}
-;
+  free_potentialList(nip_parsed_potentials); /* frees potentials also */
+};
 
 
 nodes:    /* empty */ { nip_graph = new_graph(nip_parsed_vars->length); }
@@ -242,7 +265,11 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   append_variable(nip_parsed_vars, v);
 
   if(nip_persistence != NULL){
-    retval = add_time_init(v, nip_persistence);
+    
+    if(nip_interface_relations == NULL)
+      nip_interface_relations = make_interfaceList();
+    retval = append_interface(nip_interface_relations, v, nip_persistence);
+
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free($2);
@@ -308,7 +335,10 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   append_variable(nip_parsed_vars, v);
 
   if(nip_persistence != NULL){
-    retval = add_time_init(v, nip_persistence);
+
+    if(nip_interface_relations == NULL)
+      nip_interface_relations = make_interfaceList();
+    retval = append_interface(nip_interface_relations, v, nip_persistence);
     if(retval != NO_ERROR){
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
       free($3);
@@ -497,13 +527,18 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
     YYABORT;
   }
 
-  retval = add_initData(create_potential(family, nparents + 1, doubles),
-			family[0], parents);
+  if(nip_parsed_potentials == NULL)
+    nip_parsed_potentials = make_potentialList();
+
+  retval = append_potential(nip_parsed_potentials, 
+			    create_potential(family, nparents + 1, doubles),
+			    family[0], parents);
+
   free(doubles); /* the data was copied at create_potential */
   empty_variablelist(nip_parent_vars);
   free(family);
   if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    report_error(__FILE__, __LINE__, retval, 1);
     YYABORT;
   }
 }
@@ -522,11 +557,14 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
     YYABORT;
   }
   family = &$3;
-  retval = add_initData(create_potential(family, 1, doubles), 
-			family[0], NULL); 
+  if(nip_parsed_potentials == NULL)
+    nip_parsed_potentials = make_potentialList();
+  retval = append_potential(nip_parsed_potentials, 
+			    create_potential(family, 1, doubles), 
+			    family[0], NULL); 
   free(doubles); /* the data was copied at create_potential */
   if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    report_error(__FILE__, __LINE__, retval, 1);
     YYABORT;
   }
 }
@@ -534,8 +572,12 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   int retval;
   variable* family;
   family = &$3;
-  retval = add_initData(create_potential(family, 1, NULL), 
-			family[0], NULL); 
+
+  if(nip_parsed_potentials == NULL)
+    nip_parsed_potentials = make_potentialList();
+  retval = append_potential(nip_parsed_potentials, 
+			    create_potential(family, 1, NULL), 
+			    family[0], NULL); 
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     YYABORT;
@@ -858,6 +900,271 @@ yyerror (const char *s)  /* Called by yyparse on error */
 {
   printf ("%s\n", s);
 }
+
+
+/* Puts the variables into the graph */
+static int parsed_vars_to_graph(variablelist vl, Graph* g){
+  int i, retval;
+  variable v;
+  variable_iterator it;
+  potentialLink initlist = nip_parsed_potentials->first;
+
+  /*assert(vl != NULL);*/
+  it = vl->first;
+  v = next_variable(&it);
+  
+  /* Add parsed variables to the graph. */
+  while(v != NULL){
+    retval = add_variable(g, v);
+    if(retval != NO_ERROR){
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
+    v = next_variable(&it);
+  }
+
+  /* Add child - parent relations to the graph. */
+  while(initlist != NULL){  
+    for(i = 0; i < initlist->data->num_of_vars - 1; i++){
+      retval = add_child(g, initlist->parents[i], initlist->child);
+      if(retval != NO_ERROR){
+
+	if(g == NULL)
+	  printf("DEBUG\n");
+
+	assert(initlist->parents[i] != NULL); /* FAILS! */
+
+	printf("Child:  %s\n", initlist->child->symbol);
+	printf("Parent: %s\n", initlist->parents[i]->symbol);
+
+	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	return ERROR_GENERAL;
+      }
+    }
+    
+    /* Add child - parent relations to variables themselves also */
+    set_parents(initlist->child, initlist->parents, 
+		initlist->data->num_of_vars - 1);
+
+    initlist = initlist->fwd;
+  }
+  return NO_ERROR;
+}
+
+
+/* Initialises the join tree (clique array) with parsed potentials. 
+ * NOTE: the priors of independent variables are not entered into the 
+ * join tree (as evidence), but are stored into the variable though.
+ * Returns an error code. (0 is O.K.) */
+static int parsed_potentials_to_jtree(potentialList potentials, 
+				      clique* cliques, int ncliques){
+  int retval;
+  potentialLink initlist = potentials->first;
+  clique fam_clique = NULL;
+
+  while(initlist != NULL){
+    fam_clique = find_family(cliques, ncliques, initlist->child);
+
+    if(fam_clique != NULL){
+      if(initlist->data->num_of_vars > 1){
+	/* Conditional probability distributions are initialised into
+	 * the jointree potentials */
+	retval = initialise(fam_clique, initlist->child, 
+			    initlist->data, 0); /* THE job */
+	if(retval != NO_ERROR){
+	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	  return ERROR_GENERAL;
+	}
+      }
+      else{ 
+	/* Priors of the independent variables are stored into the variable 
+	 * itself, but NOT entered into the model YET. */
+	/*retval = enter_evidence(vars, nvars, nip_cliques, 
+	 *			nip_num_of_cliques, initlist->child, 
+	 *			initlist->data->data); OLD STUFF */
+	retval = set_prior(initlist->child, initlist->data->data);
+	if(retval != NO_ERROR){
+	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	  return ERROR_GENERAL;
+	}
+      }
+    }
+    else
+      fprintf(stderr, "In %s (%d): find_family failed!\n", __FILE__, __LINE__);
+    initlist = initlist->fwd;
+  }
+  return NO_ERROR;
+}
+
+
+static int interface_to_vars(interfaceList il, variablelist vl){
+  int i, m;
+  variable v1, v2;
+  interfaceLink initlist = il->first;
+  variable_iterator it = NULL;
+
+  it = vl->first;
+
+  /* Add time relations to variables. */
+  while(initlist != NULL){
+    v1 = initlist->var;
+    v2 = get_parser_variable(vl, initlist->next);
+    if(v1->cardinality == v2->cardinality){
+      /* check one thing */
+      for(i = 0; i < v1->cardinality; i++){
+	if(strcmp(get_statename(v1, i), get_statename(v2, i))){
+	  fprintf(stderr, 
+		  "Warning: Corresponding variables %s and %s\n", 
+		  get_symbol(v1), get_symbol(v2));
+	  fprintf(stderr, 
+		  "have different kind of states %s and %s!\n", 
+		  get_statename(v1,i), get_statename(v2,i));
+	}
+      }
+      /* the core */
+      v2->next = v1;     /* v2 belongs to V(t)   */
+      v1->previous = v2; /* v1 belongs to V(t-1) */
+    }
+    else{
+      fprintf(stderr, 
+	      "NET parser: Invalid 'NIP_next' field for node %s!\n",
+	      get_symbol(v1));
+      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      return ERROR_GENERAL;
+    }
+    initlist = initlist->fwd;
+  }
+
+  /* Find out which variables belong to incoming/outgoing interfaces */
+  v2 = next_variable(&it); /* get a variable */
+  while(v2 != NULL){
+    m = 0;
+
+    for(i = 0; i < v2->num_of_parents; i++){ /* for each parent */
+      v1 = v2->parents[i];
+
+      /* Condition for belonging to the incoming interface */
+      if(v1->previous != NULL && 
+	 v2->previous == NULL){ 
+	/* v2 has the parent v1 in the previous time slice */
+	v1->if_status |= INTERFACE_OLD_OUTGOING;
+	v1->previous->if_status |= INTERFACE_OUTGOING;
+	v2->if_status |= INTERFACE_INCOMING;
+	m = 1;
+	/* break; ?? */
+
+#ifdef DEBUG_BISON
+	fprintf(stdout, 
+	      "NET parser: Node %s in I_{t}->\n",
+	      get_symbol(v1->previous));
+	fprintf(stdout, 
+	      "NET parser: Node %s in I_{t-1}->\n",
+	      get_symbol(v1));
+	fprintf(stdout, 
+	      "NET parser: Node %s in I_{t}<-\n",
+	      get_symbol(v2));
+#endif
+      }
+    }
+    if(m){ /* parents of v2 in this time slice belong to incoming interface */
+      for(i = 0; i < v2->num_of_parents; i++){
+	v1 = v2->parents[i];
+	if(v1->previous == NULL){ 
+	  /* v1 (in time slice t) is married with someone in t-1 */
+	  v1->if_status |= INTERFACE_INCOMING;
+
+#ifdef DEBUG_BISON
+	fprintf(stdout, 
+	      "NET parser: Node %s in I_{t}<-\n",
+	      get_symbol(v1));
+#endif
+	}
+      }
+    }
+    v2 = next_variable(&it);
+  }
+  return NO_ERROR;
+}
+
+
+static void print_parsed_stuff(potentialList pl){
+  int i, j;
+  unsigned long temp;
+  potentialLink list = pl->first;
+
+  /* Traverse through the list of parsed potentials. */
+  while(list != NULL){
+    int *indices; 
+    int *temp_array;
+    variable *variables;
+
+    if((indices = (int *) calloc(list->data->num_of_vars,
+				 sizeof(int))) == NULL){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      return;
+    }
+
+    if((temp_array = (int *) calloc(list->data->num_of_vars,
+				    sizeof(int))) == NULL){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(indices);
+      return;
+    }
+
+    if((variables = (variable *) calloc(list->data->num_of_vars,
+					sizeof(variable))) == NULL){
+      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      free(indices);
+      free(temp_array);
+      return;
+    }
+    
+    variables[0] = list->child;
+    for(i = 1; i < list->data->num_of_vars; i++)
+      variables[i] = (list->parents)[i - 1];
+
+    /* reorder[i] is the place of i:th variable (in the sense of this program) 
+     * in the array variables[] */
+    
+    /* init (needed?) */
+    for(i = 0; i < list->data->num_of_vars; i++)
+      temp_array[i] = 0;
+    
+    /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
+     * Note the temporary use of indices array. */
+    for(i = 0; i < list->data->num_of_vars; i++){
+      temp = get_id(variables[i]);
+      for(j = 0; j < list->data->num_of_vars; j++){
+	if(get_id(variables[j]) > temp)
+	  temp_array[j]++; /* counts how many greater variables there are */
+      }
+    }
+    
+    /* Go through every number in the potential array. */
+    for(i = 0; i < list->data->size_of_data; i++){
+      
+      inverse_mapping(list->data, i, indices);
+
+      printf("P( %s = %s", list->child->symbol, 
+	     (list->child->statenames)[indices[temp_array[0]]]);
+
+      if(list->data->num_of_vars > 1)
+	printf(" |");
+
+      for(j = 0; j < list->data->num_of_vars - 1; j++)
+	printf(" %s = %s", ((list->parents)[j])->symbol,
+	       (((list->parents)[j])->statenames)[indices[temp_array[j + 1]]]);
+      
+      printf(" ) = %.2f \n", (list->data->data)[i]);
+    }
+    list = list->fwd;
+    
+    free(indices);
+    free(temp_array);
+    free(variables);
+  }
+}
+
 
 
 /* Gives you the list of variables after yylex() */

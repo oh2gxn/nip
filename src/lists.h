@@ -1,7 +1,7 @@
 /*
  * Various linked list data structures used e.g. in parser
  *
- * $Id: lists.h,v 1.4 2006-12-20 15:57:29 jatoivol Exp $
+ * $Id: lists.h,v 1.5 2007-01-03 17:42:30 jatoivol Exp $
  */
 
 #ifndef __LISTS_H__
@@ -73,34 +73,59 @@ typedef struct variablelisttype variableliststruct;
 typedef variableliststruct *variablelist;
 
 
+
 /* List for storing parsed potentials while constructing the graph etc. */
-struct initDataList {
+struct potentialLinkType {
   potential data;
   variable child;
   variable* parents;
-  struct initDataList *fwd;
-  struct initDataList *bwd;
+  struct potentialLinkType *fwd;
+  struct potentialLinkType *bwd;
 };
 
-typedef struct initDataList initDataElement;
-typedef initDataElement *initDataLink;
+typedef struct potentialLinkType potentialLinkStruct;
+typedef potentialLinkStruct *potentialLink;
+
+struct potentialListType {
+  int length;
+  potentialLink first;
+  potentialLink last;
+};
+
+typedef struct potentialListType potentialListStruct;
+typedef potentialListStruct *potentialList;
+
 
 
 /* List for storing "NIP_next" relations */
-struct time_init_list {
+struct interfaceLinkType {
   variable var;
-  char* previous;
-  struct time_init_list *fwd;
+  char* next;
+  struct interfaceLinkType *fwd;
+  struct interfaceLinkType *bwd;
 };
 
-typedef struct time_init_list time_init_element;
-typedef time_init_element *time_init_link;
+typedef struct interfaceLinkType interfaceLinkStruct;
+typedef interfaceLinkStruct *interfaceLink;
+
+struct interfaceListType {
+  int length;
+  interfaceLink first;
+  interfaceLink last;
+};
+
+typedef struct interfaceListType interfaceListStruct;
+typedef interfaceListStruct *interfaceList;
+
 
 
 /* Creates an empty list of <T> */
 doublelist make_doublelist();
 stringlist make_stringlist();
 variablelist make_variablelist();
+potentialList make_potentialList();
+interfaceList make_interfaceList();
+
 
 /* Adds a <T> to the end of the list 
  * NOTE: If <T> is pointer, only the pointer is copied, not the content 
@@ -108,6 +133,10 @@ variablelist make_variablelist();
 int append_double(doublelist l, double d);
 int append_string(stringlist l, char* s);
 int append_variable(variablelist l, variable v);
+int append_potential(potentialList l, potential p, 
+		     variable child, variable* parents);
+int append_interface(interfaceList l, variable var, char* next);
+
 
 /* Adds a <T> to the beginning of the list 
  * NOTE: If <T> is pointer, only the pointer is copied, not the content 
@@ -115,6 +144,10 @@ int append_variable(variablelist l, variable v);
 int prepend_double(doublelist l, double d);
 int prepend_string(stringlist l, char*  s);
 int prepend_variable(variablelist l, variable v);
+int prepend_potential(potentialList l, potential p, 
+		      variable child, variable* parents);
+int prepend_interface(interfaceList l, variable var, char* next);
+
 
 /* Creates a <T> array out of the list of <T>. 
  * NOTE: If <T> is pointer, only the pointer is copied, not the content 
@@ -123,13 +156,23 @@ double* list_to_double_array(doublelist dl);
 char**  list_to_string_array(stringlist sl);
 variable* list_to_variable_array(variablelist vl);
 
-/* Makes a list of doubles empty, free it with free(dl) 
+
+/* Makes a list empty, free it with free(x) 
  * NOTE: Only the list is deleted, not the content. If you had a list 
  *       of dynamically allocated stuff, you just leaked memory.
  */
 void empty_doublelist(doublelist dl);
 void empty_stringlist(stringlist sl);
 void empty_variablelist(variablelist vl);
+
+
+/* Frees the memory allocated to a potentialList.
+ * NOTE: this frees also the actual potentials and parent variable arrays! 
+ * (variables themselves are kept intact) */
+void free_potentialList(potentialList pl);
+
+/* Frees the list structure and the strings stored into it. */
+void free_interfaceList(interfaceList l);
 
 /* Some helper functions */
 variable next_variable(variable_iterator* it);

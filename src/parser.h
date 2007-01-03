@@ -5,7 +5,7 @@
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.50 2006-12-21 17:16:16 jatoivol Exp $
+ * $Id: parser.h,v 1.51 2007-01-03 17:42:31 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -102,45 +102,6 @@ int nextline_tokens(datafile *f, char separator, char ***tokens);
  * If token_length == 0, there are no more tokens.
  */
 char *next_token(int *token_length);
-
-
-/* Adds a potential and the correspondent variable references into a list.
- * The "ownership" of the vars[] array changes! */
-int add_initData(potential p, variable child, variable* parents);
-
-
-/* Adds information about the time relations between "time slices".
- */
-int add_time_init(variable var, char* name);
-
-
-/* Frees some memory after parsing. */
-void reset_initData();
-
-
-/* Frees some memory after information is no longer needed. */
-void reset_timeinit();
-
-
-/* Inserts the parsed variables and their relations into the graph.
- * Returns an error code. (0 is O.K.) */
-int parsedVars2Graph(variablelist vl, Graph* g);
-
-
-/* Adds time relations to variables.
- */
-int time2Vars(variablelist vl);
-
-
-/* Initialises the join tree (clique array) with parsed potentials. 
- * NOTE: the priors of independent variables are not entered into the 
- * join tree (as evidence), but are stored into the variable though.
- * Returns an error code. (0 is O.K.) */
-int parsedPots2JTree(clique* cliques, int ncliques);
-
-
-/* Some debug printing about what was parsed. */
-void print_parsed_stuff();
 
 
 #endif /* __PARSER_H__ */
