@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.57 2006-11-13 17:59:24 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.58 2007-01-04 16:26:42 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -10,6 +10,9 @@
 #include "variable.h"
 #include "errorhandler.h"
 #include <stdlib.h>
+
+#define TIME_SERIES_LENGTH(ts) ( (ts)->length )
+#define UNCERTAIN_SERIES_LENGTH(ucs) ( (ucs)->length )
 
 #define SEPARATOR ", "
 #define FORWARD  1

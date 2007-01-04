@@ -2,7 +2,7 @@
  * Functions for using list structures
  * (a C++ implementation would use STL)
  *
- * $Id: lists.c,v 1.4 2007-01-03 17:42:30 jatoivol Exp $
+ * $Id: lists.c,v 1.5 2007-01-04 16:26:42 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -346,81 +346,81 @@ int prepend_interface(interfaceList l, variable var, char* next){
  * list_to_<T>_array conversions
  */
 
-double* list_to_double_array(doublelist dl){
+double* list_to_double_array(doublelist l){
   int i;
   doublelink ln;
   double* new;
   
-  if(!dl){
+  if(!l){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
-  if(dl->length == 0)
+  if(l->length == 0)
     return NULL;
 
-  new = (double*) calloc(dl->length, sizeof(double));
+  new = (double*) calloc(l->length, sizeof(double));
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
-  ln = dl->first;
-  for(i = 0; i < dl->length; i++){
+  ln = l->first;
+  for(i = 0; i < l->length; i++){
     new[i] = ln->data; /* the data is copied here */
     ln = ln->fwd;
   }
   return new;
 }
 
-char** list_to_string_array(stringlist sl){
+char** list_to_string_array(stringlist l){
   int i;
   stringlink ln;
   char** new;
   
-  if(!sl){
+  if(!l){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
-  if(sl->length == 0)
+  if(l->length == 0)
     return NULL;
 
-  new = (char**) calloc(sl->length, sizeof(char*));
+  new = (char**) calloc(l->length, sizeof(char*));
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
-  ln = sl->first;
-  for(i = 0; i < sl->length; i++){
+  ln = l->first;
+  for(i = 0; i < l->length; i++){
     new[i] = ln->data; /* the pointer is copied here */
     ln = ln->fwd;
   }
   return new;
 }
 
-variable* list_to_variable_array(variablelist vl){
+variable* list_to_variable_array(variablelist l){
   int i;
   variablelink ln;
   variable* new;
   
-  if(!vl){
+  if(!l){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
-  if(vl->length == 0)
+  if(l->length == 0)
     return NULL;
 
-  new = (variable*) calloc(vl->length, sizeof(variable));
+  new = (variable*) calloc(l->length, sizeof(variable));
   if(!new){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
-  ln = vl->first;
-  for(i = 0; i < vl->length; i++){
+  ln = l->first;
+  for(i = 0; i < l->length; i++){
     new[i] = ln->data; /* the pointer is copied here */
     ln = ln->fwd;
   }
@@ -432,60 +432,60 @@ variable* list_to_variable_array(variablelist vl){
  * empty_<T>list operations... don't free the dynamically allocated contents
  */
 
-void empty_doublelist(doublelist dl){
+void empty_doublelist(doublelist l){
   doublelink ln;
 
-  if(!dl)
+  if(!l)
     return;
   
-  ln = dl->last;
+  ln = l->last;
 
-  dl->last = NULL;
+  l->last = NULL;
   while(ln != NULL){
     free(ln->fwd); /* free(NULL) is O.K. at the beginning */
     ln = ln->bwd;
   }
-  free(dl->first);
-  dl->first = NULL;
-  dl->length = 0;
+  free(l->first);
+  l->first = NULL;
+  l->length = 0;
   return;
 }
 
-void empty_stringlist(stringlist sl){
+void empty_stringlist(stringlist l){
   stringlink ln;
 
-  if(!sl)
+  if(!l)
     return;
   
-  ln = sl->last;
+  ln = l->last;
 
-  sl->last = NULL;
+  l->last = NULL;
   while(ln != NULL){
     free(ln->fwd); /* free(NULL) is O.K. at the beginning */
     ln = ln->bwd;
   }
-  free(sl->first);
-  sl->first = NULL;
-  sl->length = 0;
+  free(l->first);
+  l->first = NULL;
+  l->length = 0;
   return;
 }
 
-void empty_variablelist(variablelist vl){
+void empty_variablelist(variablelist l){
   variablelink ln;
 
-  if(!vl)
+  if(!l)
     return;
   
-  ln = vl->last;
+  ln = l->last;
 
-  vl->last = NULL;
+  l->last = NULL;
   while(ln != NULL){
     free(ln->fwd); /* free(NULL) is O.K. at the beginning */
     ln = ln->bwd;
   }
-  free(vl->first);
-  vl->first = NULL;
-  vl->length = 0;
+  free(l->first);
+  l->first = NULL;
+  l->length = 0;
   return;
 }
 
@@ -568,16 +568,16 @@ variable next_variable(variable_iterator* it){
 /*
  * Search method
  */
-variable get_parser_variable(variablelist vl, char *symbol){
+variable get_parser_variable(variablelist l, char *symbol){
   variable v; 
-  variable_iterator it = vl->first; /* a private copy */
+  variable_iterator it = l->first; /* a private copy */
   v = next_variable(&it);
 
   if(v == NULL)
     return NULL; /* didn't find the variable (possibly normal) */
   
   /* search for the variable reference */
-  while(strcmp(symbol, v->symbol) != 0){
+  while(strcmp(symbol, get_symbol(v)) != 0){
     v = next_variable(&it);
     if(v == NULL){
       return NULL; /* didn't find the variable (a normal situation) */

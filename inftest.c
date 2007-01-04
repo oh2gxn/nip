@@ -108,7 +108,7 @@ int main(int argc, char *argv[]){
     ucs_set[i] = forward_backward_inference(ts, &v, 1, &probe);
 
     /* Compute average log likelihood */
-    loglikelihood += probe / ts->length;
+    loglikelihood += probe / TIME_SERIES_LENGTH(ts);
 
     /* forget old evidence */
     reset_model(model);

@@ -127,7 +127,7 @@ int main(int argc, char *argv[]){
     reset_model(model);
     use_priors(model, 0);
     
-    for(t = 0; t < ucs->length; t++){ /* FOR EVERY TIMESLICE */
+    for(t = 0; t < UNCERTAIN_SERIES_LENGTH(ucs); t++){ /* FOR EACH TIMESLICE */
       
       /* Print the final results */
       for(i = 0; i < ucs->num_of_vars - 1; i++){

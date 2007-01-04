@@ -67,7 +67,7 @@ static void test_probability(double **result, int *size_of_result,
   marginalise(clique_of_interest, var, *result);
 
   /* normalisation */
-  normalise(*result, *size_of_result);
+  normalise_array(*result, *size_of_result);
 
 }
 
@@ -187,7 +187,7 @@ int main(int argc, char *argv[]){
   nip_num_of_cliques = get_cliques(&nip_cliques);
   var_list = get_parsed_variables();
   it = var_list->first;
-  nvars = var_list->length;
+  nvars = LIST_LENGTH(var_list);
   vars = (variable*) calloc(nvars, sizeof(variable));
   
   for(i = 0; i < nvars; i++)

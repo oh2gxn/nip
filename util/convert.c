@@ -114,7 +114,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
   for(n = 0; n < n_series; n++){ /* for each time series */
     ts = ts_set[n];
 
-    for(t = 0; t < ts->length; t++){ /* for each time step */
+    for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* for each time step */
 
       /* Fill record with indicators of missing data */
       for(i = 0; i < number_of_values(v); i++)

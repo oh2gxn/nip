@@ -179,7 +179,7 @@ int main(){
   /*  printf("result[%d] = %f\n", i, result[i]); */
 
   /* normalization */
-  normalise(result, 3); /* note1 */
+  normalise_array(result, 3); /* note1 */
 
   /* DEBUG */
   /* printf("ABC after propagation:\n"); */

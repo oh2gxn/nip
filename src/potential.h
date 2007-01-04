@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.36 2006-11-10 14:43:09 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.37 2007-01-04 16:26:42 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -7,7 +7,7 @@
 
 #include <math.h>
 
-/* Mac OS X had invalid HUGE_VAL ! */
+/* Mac OS X had invalid HUGE_VAL ? */
 #ifndef HUGE_DOUBLE
   /*#error "HUGE_VAL not defined!"*/
 #define HUGE_DOUBLE (1.0/0.0)
@@ -29,6 +29,13 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]);
 
 /* Free the memory used by potential p. */
 void free_potential(potential p);
+
+/* Sets all the elements to the specified value (usually 0 or 1) */
+void uniform_potential(potential p, double value);
+
+/* Randomize potential elements (values between 0 and 1 inclusive) 
+ * Remember to set the seed value first (with srand(X)) */
+void random_potential(potential p);
 
 /* Gets a value from the potential p. Syntactic sugar. */
 double get_pvalue(potential p, int indices[]);
@@ -67,6 +74,40 @@ int general_marginalise(potential source, potential destination,
  * -variable: the index of the variable of interest 
  */
 int total_marginalise(potential source, double destination[], int variable);
+
+
+/* Normalises an array. Divides every member by their sum.
+ * The function modifies the given array.
+ * NOTE: zero array is left intact
+ */
+void normalise_array(double result[], int array_size);
+
+
+/* Normalises a potential so that the sum of all elements is one. 
+ * (except when all of the elements are zero)
+ * Returns an error code.
+ */
+int normalise_potential(potential p);
+
+
+/* Normalises a potential so that it is a valid conditional probability 
+ * distribution (CPD). This assumes that the first variable (dimension) 
+ * is the child. (faster than normalise_dimension(p, 0) ) 
+ * Returns an error code. 
+ */
+int normalise_cpd(potential p);
+
+
+/* A more general way of normalising a potential along any single dimension. 
+ * ( normalise_cpd(p) <==> normalise_dimension(p, 0) )
+ */
+int normalise_dimension(potential p, int dimension);
+
+
+/* Method for counting a sum of potentials: 
+ * "sum += increment" for potential tables. */
+int sum_potential(potential sum, potential increment);
+
 
 /* Method for updating target potential by multiplying with numerator 
  * potential and dividing with denominator potential. Useful in message 
@@ -107,6 +148,7 @@ int update_evidence(double numerator[], double denominator[],
  */
 int init_potential(potential probs, potential target, int mapping[]);
 
+/* TODO: make "fprintf_potential" ! */
 void print_potential(potential p);
 
 #endif

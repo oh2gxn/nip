@@ -65,14 +65,14 @@ int main(int argc, char *argv[]){
   ts = ts_set[0];
 
   /* Allocate some space for filtering */
-  result = (double***) calloc(ts->length + 1, sizeof(double**));
+  result = (double***) calloc(TIME_SERIES_LENGTH(ts) + 1, sizeof(double**));
   quotient = (double**) calloc(ts->num_of_hidden, sizeof(double*));
   if(!(result && quotient)){
     free_model(model);
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return 1;
   }
-  for(t = 0; t < ts->length + 1; t++){
+  for(t = 0; t < TIME_SERIES_LENGTH(ts) + 1; t++){
     result[t] = (double**) calloc(ts->num_of_hidden, sizeof(double*));
     if(!result[t]){
       free_model(model);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]){
   /*****************/
   printf("## Forward phase ##\n");  
 
-  for(t = 0; t <= ts->length; t++){ /* FOR EVERY TIMESLICE */
+  for(t = 0; t <= TIME_SERIES_LENGTH(ts); t++){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t);
         
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]){
       marginalise(clique_of_interest, interesting, result[t][i]);
 
       /* 4. Normalisation */
-      normalise(result[t][i], number_of_values(interesting));    
+      normalise_array(result[t][i], number_of_values(interesting));    
 
       /* 5. Print the result */
       for(j = 0; j < number_of_values(interesting); j++)
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]){
       printf("\n");
     }
 
-    if(t < ts->length){
+    if(t < TIME_SERIES_LENGTH(ts)){
       /* forget old evidence */
       reset_model(model);
       use_priors(model, 1);
@@ -188,7 +188,7 @@ int main(int argc, char *argv[]){
   reset_model(model);
   use_priors(model, 1); /* JJT: Not sure... */
 
-  for(t = ts->length; t >= 0; t--){ /* FOR EVERY TIMESLICE */
+  for(t = TIME_SERIES_LENGTH(ts); t >= 0; t--){ /* FOR EVERY TIMESLICE */
 
     printf("-- t = %d --\n", t);
 
@@ -212,7 +212,7 @@ int main(int argc, char *argv[]){
       }
     }
     
-    if(t < ts->length){
+    if(t < TIME_SERIES_LENGTH(ts)){
       
       for(i = 0; i < ts->num_of_hidden; i++){
 	temp = ts->hidden[i];
@@ -263,7 +263,7 @@ int main(int argc, char *argv[]){
       marginalise(clique_of_interest, interesting, result[t][i]);
       
       /* 4. Normalisation */
-      normalise(result[t][i], number_of_values(interesting));
+      normalise_array(result[t][i], number_of_values(interesting));
       
       /* 5. Print the result */
       for(j = 0; j < number_of_values(interesting); j++)
@@ -277,7 +277,7 @@ int main(int argc, char *argv[]){
     use_priors(model, 1);
   }
   
-  for(t = 0; t < ts->length + 1; t++){
+  for(t = 0; t < TIME_SERIES_LENGTH(ts) + 1; t++){
     for(i = 0; i < ts->num_of_hidden; i++)
       free(result[t][i]);
     free(result[t]);

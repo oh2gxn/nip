@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.64 2006-11-13 17:59:24 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.65 2007-01-04 16:26:42 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -113,6 +113,27 @@ void free_potential(potential p){
     free(p->cardinality);
     free(p->data);
     free(p);
+  }
+  return;
+}
+
+
+void uniform_potential(potential p, double value){
+  int i;
+  if(p){
+    for(i = 0; i < p->size_of_data; i++)
+      p->data[i] = value;
+  }
+  return;
+}
+
+
+void random_potential(potential p){
+  int i;
+  if(p){
+    for(i = 0; i < p->size_of_data; i++)
+      p->data[i] = rand()/(double)RAND_MAX;
+    /*p->data[i] = drand48(); NON-ANSI! */
   }
   return;
 }
@@ -256,6 +277,100 @@ int total_marginalise(potential source, double destination[], int variable){
     destination[index] += source->data[i]; 
   }
   free(source_indices);
+  return NO_ERROR;
+}
+
+
+void normalise_array(double result[], int array_size){
+  int i;
+  double sum = 0;
+  for(i = 0; i < array_size; i++)
+    sum += result[i];
+  if(sum == 0)
+    return;
+  for(i = 0; i < array_size; i++)
+    result[i] /= sum;
+  return;
+}
+
+
+/* wrapper */
+int normalise_potential(potential p){
+  if(!p){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+  normalise_array(p->data, p->size_of_data);
+  return NO_ERROR;
+}
+
+
+/* Makes the potential a valid conditional probability distribution
+ * assuming that the first variable is the (only) child */
+int normalise_cpd(potential p){
+  int i, n;
+  if(!p){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+  n = p->cardinality[0]; /* first dimension */
+  for(i = 0; i < p->size_of_data; i += n)
+    normalise_array(&(p->data[i]), n);
+  return NO_ERROR;
+}
+
+
+/* NOT TESTED... */
+int normalise_dimension(potential p, int dimension){
+  int i, n;
+  int* map = NULL; /* cardinality / mapping array */
+  potential denom = NULL;
+
+  if(!p || dimension < 0 || dimension >= p->num_of_vars){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  map = (int*) calloc(p->num_of_vars - 1, sizeof(int));
+  if(!map){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  n = 0;
+  for(i = 0; i < p->num_of_vars; i++)
+    if(i != dimension)
+      map[n++] = p->cardinality[i];
+
+  denom = make_potential(map, p->num_of_vars - 1, NULL);
+
+  n = 0;
+  for(i = 0; i < p->num_of_vars; i++)
+    if(i != dimension)
+      map[n++] = i;
+
+  /* the hard way */
+  general_marginalise(p, denom, map);    /* marginalise */
+  update_potential(NULL, denom, p, map); /* divide      */
+  
+  free_potential(denom);
+  free(map);
+  return NO_ERROR;
+}
+
+
+int sum_potential(potential sum, potential increment){
+  int i;
+  
+  if(!sum || !increment || sum->size_of_data != increment->size_of_data){
+    /* check for different geometry? */
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+  
+  for(i = 0; i < sum->size_of_data; i++)
+    sum->data[i] += increment->data[i];
+
   return NO_ERROR;
 }
 
@@ -435,6 +550,7 @@ int init_potential(potential probs, potential target, int mapping[]){
 }
 
 
+/* TODO: fprintf_potential... */
 void print_potential(potential p){
 
   int big_index, i;

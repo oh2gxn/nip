@@ -1,7 +1,7 @@
 /*
  * Various linked list data structures used e.g. in parser
  *
- * $Id: lists.h,v 1.5 2007-01-03 17:42:30 jatoivol Exp $
+ * $Id: lists.h,v 1.6 2007-01-04 16:26:42 jatoivol Exp $
  */
 
 #ifndef __LISTS_H__
@@ -10,6 +10,10 @@
 #include "variable.h"
 #include "potential.h"
 #include <stdio.h>
+
+
+#define LIST_LENGTH(l)   ( (l)->length )
+#define LIST_ITERATOR(l) ( (l)->first  )
 
 
 /* List of doubles for parsing potential tables etc. */
@@ -152,30 +156,30 @@ int prepend_interface(interfaceList l, variable var, char* next);
 /* Creates a <T> array out of the list of <T>. 
  * NOTE: If <T> is pointer, only the pointer is copied, not the content 
  * Remember to free it (and the list too) */
-double* list_to_double_array(doublelist dl);
-char**  list_to_string_array(stringlist sl);
-variable* list_to_variable_array(variablelist vl);
+double* list_to_double_array(doublelist l);
+char**  list_to_string_array(stringlist l);
+variable* list_to_variable_array(variablelist l);
 
 
 /* Makes a list empty, free it with free(x) 
  * NOTE: Only the list is deleted, not the content. If you had a list 
  *       of dynamically allocated stuff, you just leaked memory.
  */
-void empty_doublelist(doublelist dl);
-void empty_stringlist(stringlist sl);
-void empty_variablelist(variablelist vl);
+void empty_doublelist(doublelist l);
+void empty_stringlist(stringlist l);
+void empty_variablelist(variablelist l);
 
 
 /* Frees the memory allocated to a potentialList.
  * NOTE: this frees also the actual potentials and parent variable arrays! 
  * (variables themselves are kept intact) */
-void free_potentialList(potentialList pl);
+void free_potentialList(potentialList l);
 
 /* Frees the list structure and the strings stored into it. */
 void free_interfaceList(interfaceList l);
 
 /* Some helper functions */
 variable next_variable(variable_iterator* it);
-variable get_parser_variable(variablelist vl, char *symbol);
+variable get_parser_variable(variablelist l, char *symbol);
 
 #endif /* __LISTS_H__ */

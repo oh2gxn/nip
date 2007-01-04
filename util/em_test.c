@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
     last = 0; /* init */
 
     /* free the list if necessary */
-    if(learning_curve->length > 0){
+    if(LIST_LENGTH(learning_curve) > 0){
       empty_doublelist(learning_curve);
     }
 
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* find out the last value in learning curve */
-    if(learning_curve->length == 0){
+    if(LIST_LENGTH(learning_curve) == 0){
       printf("Run %d failed 0.0  with 0 iterations, delta = 0.0 \n", t);
     }
     else{

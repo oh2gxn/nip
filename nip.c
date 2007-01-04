@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.178 2006-12-21 17:16:16 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.179 2007-01-04 16:26:42 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,8 +44,10 @@
 /***** 
  * TODO: 
 
- * - Refactor the list-implementations in parser.c (ADT, please)
- *   + doublelist refactored already (see lists.[ch])
+ * - Refactor the list implementations (ADT, please)
+ *   + only the search function for string lists left to do (?)
+
+ * - Hide time_series and uncertain_series implementations better?
 
  * - Printing potential tables should be contained in potential.c
 
@@ -98,13 +100,11 @@ void reset_model(nip model){
 
 
 void total_reset(nip model){
-  int i, j;
+  int i;
   clique c;
   for(i = 0; i < model->num_of_cliques; i++){
     c = model->cliques[i];
-    for(j = 0; j < c->p->size_of_data; j++){
-      c->original_p->data[j] = 1;
-    }
+    uniform_potential(c->original_p, 1.0);
   }
   /* Q: Reset priors? */
   reset_model(model); /* Could that be enough? */
@@ -156,7 +156,7 @@ nip parse_model(char* file){
   /* 2. Get the parsed stuff and make a model out of them */
   new->num_of_cliques = get_cliques(&(new->cliques));
   vl = get_parsed_variables();
-  new->num_of_vars = vl->length;
+  new->num_of_vars = LIST_LENGTH(vl);
   new->variables = list_to_variable_array(vl);
   empty_variablelist(vl); /* free the list? */
 
@@ -438,10 +438,9 @@ int write_model(nip model, char* filename){
     general_marginalise(c->original_p, p, map);
 
     /* normalisation (NOTE: should be part of potential.c) */
-    for(j = 0; j < p->size_of_data; j += nvalues)
-      normalise(&(p->data[j]), nvalues);
+    normalise_cpd(p);
 
-    /* print the stuff */
+    /* print the stuff (TODO: hide the access to private data?) */
     y = 0; /* counter for number of values printed on a line */
     for(j = 0; j < p->size_of_data; j++){
 
@@ -794,6 +793,7 @@ void free_timeseries(time_series ts){
 }
 
 
+/* Replace this with the macro TIME_SERIES_LENGTH() */
 int timeseries_length(time_series ts){
   return ts->length;
 }
@@ -996,7 +996,7 @@ static int start_timeslice_message_pass(nip model, direction dir,
 
   /* What if there are no subsequent time slices? */
   if(nvars == 0){
-    alpha_or_gamma->data[0] = 1.0;
+    uniform_potential(alpha_or_gamma, 1.0);
     return NO_ERROR;
   }
 
@@ -1017,7 +1017,7 @@ static int start_timeslice_message_pass(nip model, direction dir,
   free(mapping); /* should mapping-array be a part of sepsets? */
 
   /* normalisation in order to avoid drifting towards zeros */
-  normalise(alpha_or_gamma->data, alpha_or_gamma->size_of_data);
+  normalise_potential(alpha_or_gamma);
 
   return NO_ERROR;
 }
@@ -1239,7 +1239,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
       marginalise(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
-      normalise(results->data[t][i], number_of_values(temp));
+      normalise_array(results->data[t][i], number_of_values(temp));
     } 
 
     /* Start a message pass between time slices (compute new alpha) */
@@ -1501,7 +1501,7 @@ uncertain_series forward_backward_inference(time_series ts,
       marginalise(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
-      normalise(results->data[t][i], number_of_values(temp));
+      normalise_array(results->data[t][i], number_of_values(temp));
     }
     /* End of the CORE */
 
@@ -1659,9 +1659,8 @@ time_series mlss(variable vars[], int nvars, time_series ts){
  *   separate procedures */
 static int e_step(time_series ts, potential* parameters, 
 		  double* loglikelihood){
-  int i, j, t;
+  int i, t;
   int error;
-  int size;
   int *cardinalities = NULL;
   int nobserved;
   int *data = NULL;
@@ -1907,15 +1906,10 @@ static int e_step(time_series ts, potential* parameters,
       /********************/
       /* 4. Normalisation */
       /********************/
-      size = p->size_of_data;
-      normalise(p->data, size); /* Does this cause numerical problems? */
+      normalise_potential(p); /* Does this cause numerical problems? */
 
       /* 5. THE SUM of expected counts over time */
-      for(j = 0; j < size; j++)
-	parameters[i]->data[j] += p->data[j];
-
-      /*** FIXME: some of the parameters become zero somewhere here ***/
-
+      sum_potential(parameters[i], p); /* "parameters[i] += p" */
     }
     /*** Finished writing results for this timestep ***/
 
@@ -1966,7 +1960,8 @@ static int m_step(potential* parameters, nip model){
   variable child = NULL;
 
 #ifdef PARAMETER_EPSILON
-  /* 0. Make sure there are no zero probabilities */
+  /* 0. Make sure there are no zero probabilities 
+   * TODO: hide the access to private data... */
   for(i = 0; i < model->num_of_vars; i++){
     k = parameters[i]->size_of_data;
     for(j = 0; j < k; j++)
@@ -1981,9 +1976,9 @@ static int m_step(potential* parameters, nip model){
   
   /* 1. Normalise parameters by dividing with the sums over child variables */
   for(i = 0; i < model->num_of_vars; i++){
-    k = number_of_values(model->variables[i]);
-    for(j = 0; j < parameters[i]->size_of_data; j = j + k)
-      normalise(&(parameters[i]->data[j]), k);
+    /* k = number_of_values(model->variables[i]); */
+    /* child is the first variable in the potential? */
+    normalise_cpd(parameters[i]);
     /** JJT: Not so sure if this is correct! **/
   }
 
@@ -2010,8 +2005,9 @@ static int m_step(potential* parameters, nip model){
     }
     else{
       /* Update the priors of independent variables */
-      for(j = 0; j < number_of_values(child); j++)
-	child->prior[j] = parameters[i]->data[j];
+      total_marginalise(parameters[i], child->prior, 0); /* correct? */
+      /*for(j = 0; j < number_of_values(child); j++)
+	  child->prior[j] = parameters[i]->data[j];*/
     }
   }
 
@@ -2023,7 +2019,7 @@ static int m_step(potential* parameters, nip model){
  * (ts) with EM-algorithm. Returns an error code. */
 int em_learn(time_series *ts, int n_ts, double threshold,
 	     doublelist learning_curve){
-  int e, i, j, n, v;
+  int e, i, n, v;
   int *card;
   int ts_steps;
   double old_loglikelihood; 
@@ -2034,7 +2030,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 
   if(learning_curve != NULL){
     /* Take care it's empty */
-    if(learning_curve->length > 0)
+    if(LIST_LENGTH(learning_curve) > 0)
       empty_doublelist(learning_curve);
   }
 
@@ -2073,10 +2069,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
    *       How to identify a "bad" zero? */
   /*random_seed(NULL);*/
   for(v = 0; v < model->num_of_vars; v++){
-    n = parameters[v]->size_of_data;
-    for(j = 0; j < n; j++)
-      parameters[v]->data[j] = rand()/(double)RAND_MAX;
-    /*parameters[v]->data[j] = drand48(); NON-ANSI! */
+    random_potential(parameters[v]);
     /* the M-step will take care of the normalisation */
   }
 
@@ -2112,10 +2105,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /* Initialise the parameter potentials to "zero" for  
      * accumulating the "average parameters" in the E-step */
     for(v = 0; v < model->num_of_vars; v++){
-      n = parameters[v]->size_of_data;
-      for(j = 0; j < n; j++)
-	parameters[v]->data[j] = 0.0;
-      /*memset(parameters[v]->data, 0, n * sizeof(double));*/
+      uniform_potential(parameters[v], 0.0);
+      /*memset(parameters[v]->data, 0, n * sizeof(double)); BS */
 
       /* the M-step will take care of the normalisation 
        * (and elimination of zeros ?) */
@@ -2234,7 +2225,7 @@ double *get_probability(nip model, variable v){
   marginalise(clique_of_interest, v, result);
 
   /* 3. Normalisation */
-  normalise(result, cardinality);
+  normalise_array(result, cardinality);
 
   /* 4. Return the result */
   return result;
@@ -2257,7 +2248,7 @@ potential get_joint_probability(nip model, variable *vars, int num_of_vars){
   }
   
   /* Normalisation (???) */
-  normalise(p->data, p->size_of_data);
+  normalise_potential(p);
   return p;
 }
 

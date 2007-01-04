@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.24 2006-07-03 16:36:48 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.25 2007-01-04 16:26:41 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -900,19 +900,6 @@ int marginalise(clique c, variable v, double r[]){
 }
 
 
-void normalise(double result[], int array_size){
-  int i;
-  double sum = 0;
-  for(i = 0; i < array_size; i++)
-    sum += result[i];
-  if(sum == 0)
-    return;
-  for(i = 0; i < array_size; i++)
-    result[i] /= sum;
-  return;
-}
-
-
 int global_retraction(variable* vars, int nvars, clique* cliques, 
 		      int ncliques){
   int i, index;
@@ -1659,7 +1646,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   
   /* 4.4 Normalise (?) */
   /* Q: is this a good idea at this point? */
-  /*normalise(sum->data, sum->size_of_data);*/
+  /*normalise_potential(sum);*/
 
   free(mapping);
   return sum;

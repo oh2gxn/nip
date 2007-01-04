@@ -81,7 +81,7 @@ int main(int argc, char *argv[]){
 
   ucs = forward_inference(ts, ts->hidden, ts->num_of_hidden, &loglikelihood);
 
-  for(t = 0; t < ucs->length; t++){ /* FOR EVERY TIMESLICE */
+  for(t = 0; t < UNCERTAIN_SERIES_LENGTH(ucs); t++){ /* FOR EACH TIMESLICE */
     
     printf("-- t = %d --\n", t+1);
 
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]){
   reset_model(model);
   use_priors(model, 0);
  
-  for(t = 0; t < ucs->length; t++){ /* FOR EVERY TIMESLICE */
+  for(t = 0; t < UNCERTAIN_SERIES_LENGTH(ucs); t++){ /* FOR EACH TIMESLICE */
     
     printf("-- t = %d --\n", t+1);
     

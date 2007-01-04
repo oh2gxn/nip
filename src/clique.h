@@ -1,5 +1,5 @@
 /*
- * clique.h $Id: clique.h,v 1.5 2005-08-17 14:04:59 jatoivol Exp $
+ * clique.h $Id: clique.h,v 1.6 2007-01-04 16:26:41 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -139,18 +139,11 @@ int initialise(clique c, variable child, potential p, int transient);
 int marginalise(clique c, variable v, double r[]);
 
 
-/*
- * Normalises the array. Divides every member by their sum.
- * The function modifies the given array.
- */
-void normalise(double result[], int array_size);
-
-
 /* Method for backing away from impossibilities in observation. */
 int global_retraction(variable* vars, int nvars, clique* cliques, 
 		      int ncliques);
 
-/* ### Under construction... ### */
+/* Computes the so called probability mass of a clique tree */
 double probability_mass(clique* cliques, int ncliques);
 
 /*
