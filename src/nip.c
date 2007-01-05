@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.179 2007-01-04 16:26:42 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.180 2007-01-05 13:57:36 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,15 +44,10 @@
 /***** 
  * TODO: 
 
- * - Refactor the list implementations (ADT, please)
- *   + only the search function for string lists left to do (?)
-
- * - Hide time_series and uncertain_series implementations better?
+ * + Normalisation of parsed parameter potentials may be different from 
+ *   that of Hugin Lite... (This software did not normalise?)
 
  * - Printing potential tables should be contained in potential.c
-
- * - Normalisation of parsed parameter potentials is different from 
- *   that of Hugin Lite... (This software does not normalise?)
 
  * - Parse and preserve other fields specified in Hugin Net files
  *   (currently this program ignores them)
@@ -70,6 +65,12 @@
  * - Online forward_inference (+ refactor offline forward_inference?)
 
  * - Online fixed_lag_smoothing...
+
+ * - Refactor the list implementations (ADT, please)
+ *   + only the search function for string lists left to do (?)
+
+ * - Hide time_series and uncertain_series implementations better
+ *   - more useful operations for them?
  *****/
 
 extern int yyparse();

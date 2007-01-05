@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.74 2007-01-03 17:42:30 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.75 2007-01-05 13:57:36 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -493,6 +493,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   variable *parents = NULL;
   double *doubles = $8;
   char* error = NULL;
+  potential p = NULL;
 
   family = (variable*) calloc(nparents + 1, sizeof(variable));
   parents = list_to_variable_array(nip_parent_vars);
@@ -530,9 +531,9 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   if(nip_parsed_potentials == NULL)
     nip_parsed_potentials = make_potentialList();
 
-  retval = append_potential(nip_parsed_potentials, 
-			    create_potential(family, nparents + 1, doubles),
-			    family[0], parents);
+  p = create_potential(family, nparents + 1, doubles);
+  normalise_cpd(p); /* useless? */
+  retval = append_potential(nip_parsed_potentials, p, family[0], parents);
 
   free(doubles); /* the data was copied at create_potential */
   empty_variablelist(nip_parent_vars);
@@ -547,6 +548,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   variable *family;
   double *doubles = $6;
   char* error = NULL;
+  potential p = NULL;
   if(number_of_values($3) > nip_data_size){
     /* too few elements in the specified potential */
     asprintf(&error, 
@@ -559,9 +561,9 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   family = &$3;
   if(nip_parsed_potentials == NULL)
     nip_parsed_potentials = make_potentialList();
-  retval = append_potential(nip_parsed_potentials, 
-			    create_potential(family, 1, doubles), 
-			    family[0], NULL); 
+  p = create_potential(family, 1, doubles);
+  normalise_potential(p); /* <=> normalise_cpd(p) in this case */
+  retval = append_potential(nip_parsed_potentials, p, family[0], NULL); 
   free(doubles); /* the data was copied at create_potential */
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, retval, 1);

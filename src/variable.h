@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.14 2006-12-20 15:57:29 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.15 2007-01-05 13:57:36 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -14,6 +14,8 @@
 #define INTERFACE_INCOMING      1
 #define INTERFACE_OUTGOING     (1<<1)
 #define INTERFACE_OLD_OUTGOING (1<<2)
+
+#define CARDINALITY(v) ( (v)->cardinality )
 
 /* enum interface_type {none, old_outgoing, outgoing};
  * typedef enum interface_type interface_flag; */
@@ -125,7 +127,8 @@ int update_likelihood(variable v, double likelihood[]);
 void reset_likelihood(variable v);
 
 
-/* Returns the number of possible values in the variable v. (-1 if v == NULL)
+/* Returns the number of possible values in the variable v. 
+ * (-1 if v == NULL) (replace with a macro?)
  */
 int number_of_values(variable v);
 
