@@ -1,7 +1,7 @@
 /*
  * Various linked list data structures used e.g. in parser
  *
- * $Id: lists.h,v 1.6 2007-01-04 16:26:42 jatoivol Exp $
+ * $Id: lists.h,v 1.7 2007-01-05 16:58:42 jatoivol Exp $
  */
 
 #ifndef __LISTS_H__
@@ -169,6 +169,8 @@ void empty_doublelist(doublelist l);
 void empty_stringlist(stringlist l);
 void empty_variablelist(variablelist l);
 
+/* Frees the list AND its contents */
+void free_stringlist(stringlist l);
 
 /* Frees the memory allocated to a potentialList.
  * NOTE: this frees also the actual potentials and parent variable arrays! 
@@ -179,6 +181,7 @@ void free_potentialList(potentialList l);
 void free_interfaceList(interfaceList l);
 
 /* Some helper functions */
+int stringlist_contains(stringlist l, char* string);
 variable next_variable(variable_iterator* it);
 variable get_parser_variable(variablelist l, char *symbol);
 

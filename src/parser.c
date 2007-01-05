@@ -1,7 +1,7 @@
 /*
  * Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.117 2007-01-03 17:42:30 jatoivol Exp $
+ * $Id: parser.c,v 1.118 2007-01-05 16:58:42 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -22,50 +22,9 @@
 
 /* #define DEBUG_DATAFILE */
 
-/*
-TODO: Move the rest of the global variables into huginnet.y also..?
-*/
-
-/* Should a new line be read in when the next token is requested? */
-static int nip_read_line = 1;
-
-/* The current input file */
-static FILE *nip_yyparse_infile = NULL;
-
-/* Is there a hugin net file open? 0 if no, 1 if yes. */
-static int nip_yyparse_infile_open = 0;
-
-static int add_to_stringlink(stringlink *s, char* string);
-
-static int search_stringlinks(stringlink s, char* string);
-
 static int nullobservation(char *token);
 
 static void free_datafile(datafile *f);
-
-int open_yyparse_infile(const char *filename){
-  if(!nip_yyparse_infile_open){
-    nip_yyparse_infile = fopen(filename,"r");
-    if (!nip_yyparse_infile){
-      report_error(__FILE__, __LINE__, ERROR_IO, 1);
-      return ERROR_IO; /* fopen(...) failed */
-    }
-    else{
-      nip_yyparse_infile_open = 1;
-      nip_read_line = 1;
-    }
-  }
-  return NO_ERROR;
-}
-
-
-void close_yyparse_infile(){
-  if(nip_yyparse_infile_open){
-    fclose(nip_yyparse_infile);
-    nip_yyparse_infile_open = 0;
-  }
-}
-
 
 datafile *open_datafile(char *filename, char separator,
 			int write, int nodenames){
@@ -80,8 +39,7 @@ datafile *open_datafile(char *filename, char separator,
   int dividend;
   int i, j, state;
   int empty_lines_read = 0;
-  stringlink *statenames = NULL;
-  stringlink temp, temp2;
+  stringlist *statenames = NULL;
   datafile *f = NULL;
 
   f = (datafile *) malloc(sizeof(datafile));
@@ -240,7 +198,7 @@ datafile *open_datafile(char *filename, char separator,
 	  return NULL;
 	}
 
-	statenames = (stringlink *) calloc(num_of_tokens, sizeof(stringlink));
+	statenames = (stringlist *) calloc(num_of_tokens, sizeof(stringlist));
 
 	if(!statenames){
 	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -248,6 +206,9 @@ datafile *open_datafile(char *filename, char separator,
 	  free(token_bounds);
 	  return NULL;
 	}
+
+	for(i = 0; i < f->num_of_nodes; i++)
+	  statenames[i] = make_stringlist();
 
 	f->num_of_states = (int *) calloc(num_of_tokens, sizeof(int));
 
@@ -343,19 +304,21 @@ datafile *open_datafile(char *filename, char separator,
 
 	  token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
 
-	  /* If the string has not yet been observed, add it to a list */
-	  if(!(search_stringlinks(statenames[i], token) ||
+	  /* If the string has not yet been observed, add it to a list 
+	   * (ownership is passed on, string is not freed here) */
+	  if(!(stringlist_contains(statenames[i], token) ||
 	       nullobservation(token))){
-	    if(add_to_stringlink(&(statenames[i]), token) != NO_ERROR){
+	    if(prepend_string(statenames[i], token) != NO_ERROR){
 	      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
 	      close_datafile(f);
+	      for(i = 0; i < f->num_of_nodes; i++)
+		free_stringlist(statenames[i]);
 	      free(statenames);
 	      free(token_bounds);
 	      free(token);
 	      return NULL;
 	    }
 	  }
-	  free(token);
 	}
       }
       free(token_bounds);
@@ -363,54 +326,18 @@ datafile *open_datafile(char *filename, char separator,
 
     /* Count number of states in each variable. */
     for(i = 0; i < f->num_of_nodes; i++){
-      j = 0;
-      temp = statenames[i];
-      while(temp != NULL){
-	j++;
-	temp = temp->fwd;
-      }
-      f->num_of_states[i] = j;
+      f->num_of_states[i] = LIST_LENGTH(statenames[i]);
     }
 
     for(i = 0; i < f->num_of_nodes; i++){
-      f->node_states[i] =
-	(char **) calloc(f->num_of_states[i], sizeof(char *));
-
-      if(!f->node_states[i]){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-	/* JJT: Added 16.8.2004 because of possible memory leaks. */
-	for(j = 0; j < f->num_of_nodes; j++){
-	  temp = statenames[j];
-	  while(temp != NULL){
-	    temp2 = temp->fwd;
-	    free(temp->data);
-	    free(temp);
-	    temp = temp2;
-	  }
-	}
-	free(statenames);
-	close_datafile(f);
-	return NULL;
-      }
-
-      /* Copy statenames from the list */
-      temp = statenames[i];
-      for(j = 0; j < f->num_of_states[i]; j++){
-	f->node_states[i][j] = temp->data;
-	temp = temp->fwd;
-      }
+      f->node_states[i] = list_to_string_array(statenames[i]);
     }
   }
 
-  /* JJT: Added 13.8.2004 because of possible memory leaks. */
+  /* JJT: Added 13.8.2004 because of possible memory leaks. 
+   * JJT: Updated 5.1.2007 with the new stringlist implementation */
   for(i = 0; i < f->num_of_nodes; i++){
-    temp = statenames[i];
-    while(temp != NULL){
-      temp2 = temp->fwd;
-      /* free(temp->data); */
-      free(temp);
-      temp = temp2;
-    }
+    empty_stringlist(statenames[i]);
   }
   free(statenames);
 
@@ -577,7 +504,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
 }
 
 
-char *next_token(int *token_length){
+char *next_token(int *token_length, FILE *f){
 
   /* The last line read from the file */
   static char last_line[MAX_LINELENGTH];
@@ -591,6 +518,10 @@ char *next_token(int *token_length){
   /* Pointer to the index array of token boundaries
    * (not incremented, we need this for free() ) */
   static int *indexarray_original = NULL;
+
+  /* Should a new line be read in when the next token is requested? */
+  static int nip_read_line = 1; 
+  /* FIXME: this should be a part of the given file struct? */
 
   /* The token we return */
   char *token;
@@ -607,7 +538,7 @@ char *next_token(int *token_length){
   }
 
   /* Return if input file is not open */
-  if(!nip_yyparse_infile_open){
+  if(f == NULL){
     if(indexarray_original){
       free(indexarray_original);
       indexarray = NULL;
@@ -620,7 +551,7 @@ char *next_token(int *token_length){
   /* Read new line if needed and do other magic... */
   while(nip_read_line){
     /* Read the line and check for EOF */
-    if(!(fgets(last_line, MAX_LINELENGTH, nip_yyparse_infile))){
+    if(!(fgets(last_line, MAX_LINELENGTH, f))){
 
       if(indexarray_original){
 	free(indexarray_original);
@@ -699,65 +630,4 @@ char *next_token(int *token_length){
 #endif
 
   return token;
-}
-
-
-/*
- * Adds a string to the beginning of the list s.
- * Pointer s is altered so that it points to the new beginning of the list.
- */
-static int add_to_stringlink(stringlink *s, char* string){
-  stringlink new = (stringlink) malloc(sizeof(stringlinkstruct));
-
-#ifdef DEBUG_DATAFILE
-  printf("add_to_stringlink called\n");
-#endif
-
-  if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
-  }
-
-  if(s == NULL){
-    free(new);
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-    return ERROR_NULLPOINTER;
-  }
-
-  /*  new->data = string; */ /* Let's copy the string instead */
-  if(string){
-    new->data = (char *) calloc(strlen(string) + 1, sizeof(char));
-    if(!(new->data)){
-      free(new);
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      return ERROR_OUTOFMEMORY;
-    }
-    strcpy(new->data, string);
-  }
-
-  new->fwd = *s;
-  new->bwd = NULL;
-
-  if(*s != NULL)
-    (*s)->bwd = new;
-
-  *s = new;
-
-  return NO_ERROR;
-}
-
-
-/*
- * Checks if the given string is in the list s (search forward).
- */
-static int search_stringlinks(stringlink s, char* string){
-
-  while(s != NULL){
-    if(strcmp(string, s->data) == 0){
-      return 1;
-    }
-    s = s->fwd;
-  }
-
-  return 0;
 }

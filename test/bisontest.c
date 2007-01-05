@@ -30,6 +30,8 @@
 #define PRINT_JOINTREE
 */
 
+extern FILE *open_net_file(const char *filename);
+extern void close_net_file();
 extern int yyparse();
 extern variablelist get_parsed_variables();
 extern int get_cliques(clique** clique_array_pointer);
@@ -173,12 +175,12 @@ int main(int argc, char *argv[]){
     printf("Give a file name please!\n");
     return 0;
   }
-  else if(open_yyparse_infile(argv[1]) != NO_ERROR)
+  else if(open_net_file(argv[1]) == NULL)
     return -1;
 
   retval = yyparse();
 
-  close_yyparse_infile();
+  close_net_file();
 
   if(retval != 0)
     return retval;

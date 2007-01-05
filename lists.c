@@ -2,7 +2,7 @@
  * Functions for using list structures
  * (a C++ implementation would use STL)
  *
- * $Id: lists.c,v 1.5 2007-01-04 16:26:42 jatoivol Exp $
+ * $Id: lists.c,v 1.6 2007-01-05 16:58:42 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -490,15 +490,44 @@ void empty_variablelist(variablelist l){
 }
 
 
-void free_potentialList(potentialList pl){
-  potentialLink ln;
+void free_stringlist(stringlist l){
+  stringlink ln;
 
-  if(!pl)
+  if(!l)
     return;
   
-  ln = pl->last;
+  ln = l->last;
 
-  pl->last = NULL;
+  l->last = NULL;
+  while(ln != NULL){
+    if(ln->fwd != NULL){
+      free(ln->fwd->data);
+      free(ln->fwd);
+    }
+    ln = ln->bwd;
+  }
+  if(l->first != NULL){
+    free(l->first->data);
+    free(l->first);
+    l->first = NULL;
+  }
+  l->length = 0;
+
+  free(l);
+  l = NULL;
+  return;
+}
+
+
+void free_potentialList(potentialList l){
+  potentialLink ln;
+
+  if(!l)
+    return;
+  
+  ln = l->last;
+
+  l->last = NULL;
   while(ln != NULL){
     if(ln->fwd != NULL){
       free_potential(ln->fwd->data);
@@ -507,16 +536,16 @@ void free_potentialList(potentialList pl){
     }
     ln = ln->bwd;
   }
-  if(pl->first != NULL){
-    free_potential(pl->first->data);
-    free(pl->first->parents);
-    free(pl->first);
-    pl->first = NULL;
+  if(l->first != NULL){
+    free_potential(l->first->data);
+    free(l->first->parents);
+    free(l->first);
+    l->first = NULL;
   }
-  pl->length = 0;
+  l->length = 0;
 
-  free(pl);
-  pl = NULL;
+  free(l);
+  l = NULL;
   return;
 }
 
@@ -547,6 +576,24 @@ void free_interfaceList(interfaceList l){
   free(l);
   l = NULL;
   return;
+}
+
+
+/* Checks if the given string is in the list */
+int stringlist_contains(stringlist l, char* string){
+  stringlink s = NULL;
+
+  if(!l || !string)
+    return 0;
+
+  s = l->first;
+  while(s != NULL){
+    if(strcmp(string, s->data) == 0){
+      return 1;
+    }
+    s = s->fwd;
+  }
+  return 0;
 }
 
 

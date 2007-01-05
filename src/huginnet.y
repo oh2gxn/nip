@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.75 2007-01-05 13:57:36 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.76 2007-01-05 16:58:42 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -18,6 +18,13 @@
 #include "errorhandler.h"
 #include "Graph.h"
 
+/* The current input file (TODO: get rid of this global variable...) */
+static FILE *nip_net_file = NULL;
+
+/* Is there a hugin net file open? 0 if no, 1 if yes. */
+static int nip_net_file_open = 0;
+
+/* Global variables for relaying results... */
 static int nip_node_position_x = 100;
 static int nip_node_position_y = 100;
 static int nip_node_size_x = 80;
@@ -60,6 +67,17 @@ static int interface_to_vars(interfaceList il, variablelist vl);
 
 static void print_parsed_stuff(potentialList pl);
 
+
+/* Opens an input file. Returns 0 if file was opened or if some file was
+ * already open. Returns ERROR_GENERAL if an error occurred
+ * opening the file.
+ */
+FILE *open_net_file(const char *filename);
+
+/* Closes the current input file (if there is one).
+ */
+void close_net_file();
+
 /* Gives you the list of variables after yylex() */
 variablelist get_parsed_variables (void);
 
@@ -79,7 +97,7 @@ void get_parsed_node_size(int* x, int* y);
   double *doublearray;
   char *name;
   char **stringarray;
-  variable variable;
+  variable var;
   /* list of X to save global variables? */
 }
 
@@ -110,7 +128,7 @@ void get_parsed_node_size(int* x, int* y);
 %token <numval> NUMBER
 %type <stringarray> statesDeclaration
 %type <doublearray> dataList
-%type <variable> nodeDeclaration child
+%type <var> nodeDeclaration child
 %type <name> labelDeclaration persistenceDeclaration
 
 /* Grammar follows */
@@ -697,7 +715,7 @@ yylex (void)
 {
   int tokenlength;
   int retval = 0;
-  char *token = next_token(&tokenlength);
+  char *token = next_token(&tokenlength, nip_net_file);
   char *nullterminated;
   char *endptr;
   double numval;
@@ -1168,14 +1186,37 @@ static void print_parsed_stuff(potentialList pl){
 }
 
 
+FILE *open_net_file(const char *filename){
+  if(!nip_net_file_open){
+    nip_net_file = fopen(filename,"r");
+    if (!nip_net_file){
+      report_error(__FILE__, __LINE__, ERROR_IO, 1);
+      return NULL; /* fopen(...) failed */
+    }
+    else{
+      nip_net_file_open = 1;
+      /* nip_read_line = 1; Was this necessary? JJT 5.1.2007 */
+    }
+  }
+  return nip_net_file;
+}
 
-/* Gives you the list of variables after yylex() */
+
+void close_net_file(){
+  if(nip_net_file_open){
+    fclose(nip_net_file);
+    nip_net_file_open = 0;
+  }
+}
+
+
+/* Gives you the list of variables after yyparse() */
 variablelist get_parsed_variables (void){
   return nip_parsed_vars;
 }
 
 
-/* Gives you the array of cliques after yylex() */
+/* Gives you the array of cliques after yyparse() */
 int get_cliques (clique** clique_array_pointer){
   *clique_array_pointer = nip_cliques;
   return nip_n_cliques;

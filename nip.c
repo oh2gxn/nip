@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.180 2007-01-05 13:57:36 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.181 2007-01-05 16:58:42 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,9 +44,6 @@
 /***** 
  * TODO: 
 
- * + Normalisation of parsed parameter potentials may be different from 
- *   that of Hugin Lite... (This software did not normalise?)
-
  * - Printing potential tables should be contained in potential.c
 
  * - Parse and preserve other fields specified in Hugin Net files
@@ -73,6 +70,8 @@
  *   - more useful operations for them?
  *****/
 
+extern FILE *open_net_file(const char *filename);
+extern void close_net_file();
 extern int yyparse();
 extern variablelist get_parsed_variables();
 extern int get_cliques(clique** clique_array_pointer);
@@ -142,14 +141,14 @@ nip parse_model(char* file){
   }
   
   /* 1. Parse */
-  if(open_yyparse_infile(file) != NO_ERROR){
+  if(open_net_file(file) == NULL){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return NULL;
   }
 
   retval = yyparse(); /* Reminder: priors not entered yet! */
 
-  close_yyparse_infile();
+  close_net_file();
 
   if(retval != 0)
     return NULL;

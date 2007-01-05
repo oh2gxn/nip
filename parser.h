@@ -5,7 +5,7 @@
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.51 2007-01-03 17:42:31 jatoivol Exp $
+ * $Id: parser.h,v 1.52 2007-01-05 16:58:42 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -50,18 +50,6 @@ typedef struct {
 } datafile;
 
 
-/* Opens an input file. Returns 0 if file was opened or if some file was
- * already open. Returns ERROR_GENERAL if an error occurred
- * opening the file.
- */
-int open_yyparse_infile(const char *filename);
-
-
-/* Closes the current input file (if there is one).
- */
-void close_yyparse_infile();
-
-
 /*
  * Opens a file by creating a datafile struct. The struct can be used 
  * for reading or writing after opening.
@@ -75,7 +63,6 @@ void close_yyparse_infile();
  */
 datafile *open_datafile(char *filename, char separator,
 			int write, int nodenames);
-
 
 /*
  * Closes a file described by the datafile struct.
@@ -101,7 +88,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens);
  * After the token has been used, PLEASE free the memory allocated for it.
  * If token_length == 0, there are no more tokens.
  */
-char *next_token(int *token_length);
+char *next_token(int *token_length, FILE *f);
 
 
 #endif /* __PARSER_H__ */

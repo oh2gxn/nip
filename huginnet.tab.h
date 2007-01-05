@@ -73,13 +73,13 @@
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 77 "huginnet.y"
+#line 95 "huginnet.y"
 typedef union YYSTYPE {
   double numval;
   double *doublearray;
   char *name;
   char **stringarray;
-  variable variable;
+  variable var;
   /* list of X to save global variables? */
 } YYSTYPE;
 /* Line 1447 of yacc.c.  */
