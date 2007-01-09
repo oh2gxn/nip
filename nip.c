@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.181 2007-01-05 16:58:42 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.182 2007-01-09 16:49:26 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,7 +44,12 @@
 /***** 
  * TODO: 
 
+ * - Consistent conventions in naming functions, variables, 
+ *   and data structures?
+ *   - foo_bar(), dataType, etc.?
+
  * - Printing potential tables should be contained in potential.c
+ *   - Problem: how to include comments about parent values?
 
  * - Parse and preserve other fields specified in Hugin Net files
  *   (currently this program ignores them)
@@ -63,8 +68,7 @@
 
  * - Online fixed_lag_smoothing...
 
- * - Refactor the list implementations (ADT, please)
- *   + only the search function for string lists left to do (?)
+ * - Refactor the list implementations (ADTs, almost done?)
 
  * - Hide time_series and uncertain_series implementations better
  *   - more useful operations for them?

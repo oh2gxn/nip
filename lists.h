@@ -1,7 +1,7 @@
 /*
  * Various linked list data structures used e.g. in parser
  *
- * $Id: lists.h,v 1.7 2007-01-05 16:58:42 jatoivol Exp $
+ * $Id: lists.h,v 1.8 2007-01-09 16:49:26 jatoivol Exp $
  */
 
 #ifndef __LISTS_H__
@@ -54,6 +54,28 @@ struct stringlisttype {
 
 typedef struct stringlisttype stringliststruct;
 typedef stringliststruct *stringlist;
+
+
+/* List of strings for parsing <fieldname> = "<value>" pairs. 
+ * (NIP_next = "<variable name>" gets handled differently) */
+struct stringpairlinktype {
+  char* name;
+  char* value;
+  struct stringpairlinktype *fwd;
+  struct stringpairlinktype *bwd;
+};
+
+typedef struct stringpairlinktype stringpairlinkstruct;
+typedef stringpairlinkstruct *stringpairlink;
+
+struct stringpairlisttype {
+  int length;
+  stringpairlink first;
+  stringpairlink last;
+};
+
+typedef struct stringpairlisttype stringpairliststruct;
+typedef stringpairliststruct *stringpairlist;
 
 
 /* List for storing variables */
@@ -126,6 +148,7 @@ typedef interfaceListStruct *interfaceList;
 /* Creates an empty list of <T> */
 doublelist make_doublelist();
 stringlist make_stringlist();
+stringpairlist make_stringpairlist();
 variablelist make_variablelist();
 potentialList make_potentialList();
 interfaceList make_interfaceList();
@@ -136,6 +159,7 @@ interfaceList make_interfaceList();
  */
 int append_double(doublelist l, double d);
 int append_string(stringlist l, char* s);
+int append_stringpair(stringpairlist l, char* name, char* value);
 int append_variable(variablelist l, variable v);
 int append_potential(potentialList l, potential p, 
 		     variable child, variable* parents);
@@ -147,6 +171,7 @@ int append_interface(interfaceList l, variable var, char* next);
  */
 int prepend_double(doublelist l, double d);
 int prepend_string(stringlist l, char*  s);
+int prepend_stringpair(stringpairlist l, char* name, char* value);
 int prepend_variable(variablelist l, variable v);
 int prepend_potential(potentialList l, potential p, 
 		      variable child, variable* parents);
@@ -171,6 +196,7 @@ void empty_variablelist(variablelist l);
 
 /* Frees the list AND its contents */
 void free_stringlist(stringlist l);
+void free_stringpairlist(stringpairlist l);
 
 /* Frees the memory allocated to a potentialList.
  * NOTE: this frees also the actual potentials and parent variable arrays! 
@@ -182,6 +208,7 @@ void free_interfaceList(interfaceList l);
 
 /* Some helper functions */
 int stringlist_contains(stringlist l, char* string);
+char* stringpair_value(stringpairlist l, char* name);
 variable next_variable(variable_iterator* it);
 variable get_parser_variable(variablelist l, char *symbol);
 

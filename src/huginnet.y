@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.76 2007-01-05 16:58:42 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.77 2007-01-09 16:49:26 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -21,10 +21,15 @@
 /* The current input file (TODO: get rid of this global variable...) */
 static FILE *nip_net_file = NULL;
 
-/* Is there a hugin net file open? 0 if no, 1 if yes. */
+/* Is there a hugin net file open? 0 if no, 1 if yes. 
+ * NOTE: could "nip_net_file == NULL" be used for representing the same info? 
+ */
 static int nip_net_file_open = 0;
 
-/* Global variables for relaying results... */
+/* Global variables for relaying results:
+ * Some of the results are returned via global variables and some 
+ * as the semantic values of net language constructs. 
+ * The functional paradigm would be more elegant... */
 static int nip_node_position_x = 100;
 static int nip_node_position_y = 100;
 static int nip_node_size_x = 80;
@@ -36,6 +41,10 @@ static int        nip_data_size      = 0;
 static stringlist nip_parsed_strings = NULL;
 static char**     nip_statenames = NULL;
 static int        nip_n_statenames = 0;
+
+/* All the unrecognized 'MY_field = "value";' constructs */
+static stringlist nip_ignored_fields = NULL;
+static stringlist nip_ignored_values = NULL;
 
 static char*      nip_label;       /* node label contents */
 static char*      nip_persistence; /* NIP_next contents   */
@@ -98,7 +107,7 @@ void get_parsed_node_size(int* x, int* y);
   char *name;
   char **stringarray;
   variable var;
-  /* list of X to save global variables? */
+  /* list of X to get rid of global variables? */
 }
 
 /***********************/

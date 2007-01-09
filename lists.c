@@ -2,7 +2,7 @@
  * Functions for using list structures
  * (a C++ implementation would use STL)
  *
- * $Id: lists.c,v 1.6 2007-01-05 16:58:42 jatoivol Exp $
+ * $Id: lists.c,v 1.7 2007-01-09 16:49:26 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -27,6 +27,15 @@ doublelist make_doublelist(){
 
 stringlist make_stringlist(){
   stringlist sl = (stringlist) malloc(sizeof(stringliststruct));
+  /* Q: What if NULL was returned? */
+  sl->length = 0;
+  sl->first  = NULL;
+  sl->last   = NULL;
+  return sl;
+}
+
+stringpairlist make_stringpairlist(){
+  stringpairlist sl = (stringpairlist) malloc(sizeof(stringpairliststruct));
   /* Q: What if NULL was returned? */
   sl->length = 0;
   sl->first  = NULL;
@@ -106,6 +115,33 @@ int append_string(stringlist l, char* s){
   }
 
   new->data = s;
+  new->fwd = NULL;
+  new->bwd = l->last;
+  if(l->first == NULL)
+    l->first = new;
+  else
+    l->last->fwd = new;
+
+  l->last = new;
+  l->length++;
+  return NO_ERROR;
+}
+
+int append_stringpair(stringpairlist l, char* name, char* value){
+  stringpairlink new = (stringpairlink) malloc(sizeof(stringpairlinkstruct));
+
+  if(!l || !name || !value){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->name = name;
+  new->value = value;
   new->fwd = NULL;
   new->bwd = l->last;
   if(l->first == NULL)
@@ -247,6 +283,33 @@ int prepend_string(stringlist l, char* s){
   }
 
   new->data = s;
+  new->bwd = NULL;
+  new->fwd = l->first;
+  if(l->last == NULL)
+    l->last = new;
+  else
+    l->first->bwd = new;
+
+  l->first = new;
+  l->length++;
+  return NO_ERROR;
+}
+
+int prepend_stringpair(stringpairlist l, char* name, char* value){
+  stringpairlink new = (stringpairlink) malloc(sizeof(stringpairlinkstruct));
+
+  if(!l || !name | !value){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->name = name;
+  new->value = value;
   new->bwd = NULL;
   new->fwd = l->first;
   if(l->last == NULL)
@@ -518,6 +581,36 @@ void free_stringlist(stringlist l){
   return;
 }
 
+void free_stringpairlist(stringpairlist l){
+  stringpairlink ln;
+
+  if(!l)
+    return;
+  
+  ln = l->last;
+
+  l->last = NULL;
+  while(ln != NULL){
+    if(ln->fwd != NULL){
+      free(ln->fwd->name); /* both strings freed */
+      free(ln->fwd->value);
+      free(ln->fwd);
+    }
+    ln = ln->bwd;
+  }
+  if(l->first != NULL){
+    free(l->first->name);
+    free(l->first->value);
+    free(l->first);
+    l->first = NULL;
+  }
+  l->length = 0;
+
+  free(l);
+  l = NULL;
+  return;
+}
+
 
 void free_potentialList(potentialList l){
   potentialLink ln;
@@ -589,11 +682,29 @@ int stringlist_contains(stringlist l, char* string){
   s = l->first;
   while(s != NULL){
     if(strcmp(string, s->data) == 0){
-      return 1;
+      return 1; /* found */
     }
     s = s->fwd;
   }
-  return 0;
+  return 0; /* not found */
+}
+
+/* Searches the list for a certain field name and returns the corresponding
+ * value string (or NULL, if not found) */
+char* stringpair_value(stringpairlist l, char* name){
+  stringpairlink s = NULL;
+
+  if(!l || !name)
+    return NULL;
+
+  s = l->first;
+  while(s != NULL){
+    if(strcmp(name, s->name) == 0){
+      return s->value; /* found */
+    }
+    s = s->fwd;
+  }
+  return NULL; /* not found */
 }
 
 
