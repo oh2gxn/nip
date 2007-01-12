@@ -1,5 +1,5 @@
 /*
- * clique.h $Id: clique.h,v 1.6 2007-01-04 16:26:41 jatoivol Exp $
+ * clique.h $Id: clique.h,v 1.7 2007-01-12 16:56:42 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -35,6 +35,30 @@ typedef struct {
 } sepsettype;
 
 typedef sepsettype *sepset;
+
+
+/* List for storing parsed potentials while constructing the graph etc. */
+struct potentialLinkType {
+  potential data;
+  variable child;
+  variable* parents;
+  struct potentialLinkType *fwd;
+  struct potentialLinkType *bwd;
+};
+
+typedef struct potentialLinkType potentialLinkStruct;
+typedef potentialLinkStruct *potentialLink;
+
+struct potentialListType {
+  int length;
+  potentialLink first;
+  potentialLink last;
+};
+
+typedef struct potentialListType potentialListStruct;
+typedef potentialListStruct *potentialList;
+
+
 
 /* Method for creating cliques (without pointers to sepsets).
  * vars[] can be in any order.
@@ -241,5 +265,25 @@ void print_sepset(sepset s);
  * Returns an error code.
  */
 int clique_intersection(clique cl1, clique cl2, variable **vars, int *n);
+
+
+/* Creates an empty list for storing potentials and corresponding variables 
+ */
+potentialList make_potentialList();
+
+
+/* Adds potentials to the list */
+int append_potential(potentialList l, potential p, 
+		     variable child, variable* parents);
+int prepend_potential(potentialList l, potential p, 
+		      variable child, variable* parents);
+
+
+/* Frees the memory allocated to a potentialList.
+ * NOTE: this frees also the actual potentials and parent variable arrays! 
+ * (variables themselves are kept intact) */
+void free_potentialList(potentialList l);
+
+
 
 #endif /* __CLIQUE_H__ */

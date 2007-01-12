@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.15 2007-01-05 13:57:36 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.16 2007-01-12 16:56:42 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -41,22 +41,58 @@ struct nip_var {
   int pos_x; /* node position by Hugin */
   int pos_y;
   char mark; /* mark for some algorithms (like DFS and data generation) */
+
+  /* TODO: stringpairlist application_specific_properties; */
 };
 
 typedef struct nip_var vtype;
 typedef vtype *variable;
 
-/* OLD STUFF
-struct varlist {
+
+/* List for storing variables */
+struct variablelinktype {
   variable data;
-  struct varlist *fwd;
-  struct varlist *bwd;
+  struct variablelinktype *fwd;
+  struct variablelinktype *bwd;
 };
 
-typedef struct varlist varelement;
-typedef varelement *varlink;
-typedef varlink variable_iterator;
-*/
+typedef struct variablelinktype variablelinkstruct;
+typedef variablelinkstruct *variablelink;
+typedef variablelink variable_iterator;
+
+struct variablelisttype {
+  int length;
+  variablelink first;
+  variablelink last;
+};
+
+typedef struct variablelisttype variableliststruct;
+typedef variableliststruct *variablelist;
+
+
+
+/* List for storing "NIP_next" relations or other strings, 
+ * while other variables are yet to be parsed... */
+struct interfaceLinkType {
+  variable var;
+  char* next;
+  struct interfaceLinkType *fwd;
+  struct interfaceLinkType *bwd;
+};
+
+typedef struct interfaceLinkType interfaceLinkStruct;
+typedef interfaceLinkStruct *interfaceLink;
+
+struct interfaceListType {
+  int length;
+  interfaceLink first;
+  interfaceLink last;
+};
+
+typedef struct interfaceListType interfaceListStruct;
+typedef interfaceListStruct *interfaceList;
+
+
 
 /* Creates a new variable:
  * - symbol is a short name e.g. A (= array [A, \0])
@@ -191,5 +227,45 @@ variable *variable_isect(variable *a, variable *b, int na, int nb, int* nc);
 /* Returns a mapping array which tells the location of subset variables in 
  * the (ordered) set. (free the result somewhere) */
 int *mapper(variable *set, variable *subset, int nset, int nsubset);
+
+
+/* Creates new (empty) lists of variables. 
+ */
+variablelist make_variablelist();
+interfaceList make_interfaceList();
+
+
+/* Methods for adding stuff to the end of the lists 
+ */
+int append_variable(variablelist l, variable v);
+int append_interface(interfaceList l, variable var, char* next);
+
+
+/* Methods for adding stuff to the beginning of the lists 
+ */
+int prepend_variable(variablelist l, variable v);
+int prepend_interface(interfaceList l, variable var, char* next);
+
+
+/* Turns the list into an array. (Allocates memory, free it when necessary)
+ */
+variable* list_to_variable_array(variablelist l);
+
+
+/* Makes the list of variables empty, 
+ * without freeing the variables themselves.
+ */
+void empty_variablelist(variablelist l);
+
+
+/* Frees the list structure and the strings stored into it, 
+ * but doesn't free the variables 
+ */
+void free_interfaceList(interfaceList l);
+
+
+/* Functions for iterating and searching... */
+variable next_variable(variable_iterator* it);
+variable get_parser_variable(variablelist l, char *symbol);
 
 #endif /* __VARIABLE_H__ */

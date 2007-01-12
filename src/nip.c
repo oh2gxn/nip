@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.182 2007-01-09 16:49:26 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.183 2007-01-12 16:56:42 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -69,6 +69,9 @@
  * - Online fixed_lag_smoothing...
 
  * - Refactor the list implementations (ADTs, almost done?)
+ *   - potentialList needs to be "hidden" better?
+ *   - still massive amounts of copy-paste stuff... let it be?
+ *   + Next time: make a general void* list
 
  * - Hide time_series and uncertain_series implementations better
  *   - more useful operations for them?

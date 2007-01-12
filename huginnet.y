@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.77 2007-01-09 16:49:26 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.78 2007-01-12 16:56:42 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -42,9 +42,10 @@ static stringlist nip_parsed_strings = NULL;
 static char**     nip_statenames = NULL;
 static int        nip_n_statenames = 0;
 
-/* All the unrecognized 'MY_field = "value";' constructs */
-static stringlist nip_ignored_fields = NULL;
-static stringlist nip_ignored_values = NULL;
+/* All the unrecognized MY_field = "value" pairs */
+static stringpairlist nip_ignored_net_fields = NULL;
+static stringpairlist nip_ignored_node_fields = NULL;
+static stringpairlist nip_ignored_potential_fields = NULL;
 
 static char*      nip_label;       /* node label contents */
 static char*      nip_persistence; /* NIP_next contents   */

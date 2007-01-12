@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.25 2007-01-04 16:26:41 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.26 2007-01-12 16:56:42 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1705,3 +1705,106 @@ int clique_intersection(clique cl1, clique cl2, variable **vars, int *n){
   return NO_ERROR;
 }
 
+
+potentialList make_potentialList(){
+  potentialList pl = (potentialList) malloc(sizeof(potentialListStruct));
+  /* Q: What if NULL was returned? */
+  pl->length = 0;
+  pl->first  = NULL;
+  pl->last   = NULL;
+  return pl;
+}
+
+
+int append_potential(potentialList l, potential p, 
+		     variable child, variable* parents){
+  potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
+
+  if(!l || !p){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->data = p;
+  new->child = child;
+  /* The "ownership" of the parents[] array changes! */
+  new->parents = parents;
+  new->fwd = NULL;
+  new->bwd = l->last;
+  if(l->first == NULL)
+    l->first = new;
+  else
+    l->last->fwd = new;
+
+  l->last = new;
+  l->length++;
+  return NO_ERROR;
+}
+
+
+int prepend_potential(potentialList l, potential p, 
+		      variable child, variable* parents){
+  potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
+
+  if(!l || !p){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    return ERROR_OUTOFMEMORY;
+  }
+
+  new->data = p;
+  new->child = child;
+  new->parents = parents;
+  new->bwd = NULL;
+  new->fwd = l->first;
+  if(l->last == NULL)
+    l->last = new;
+  else
+    l->first->bwd = new;
+
+  l->first = new;
+  l->length++;
+  return NO_ERROR;
+}
+
+
+void free_potentialList(potentialList l){
+  potentialLink ln;
+
+  if(!l)
+    return;
+  
+  ln = l->last;
+
+  l->last = NULL;
+  while(ln != NULL){
+    if(ln->fwd != NULL){
+      free_potential(ln->fwd->data);
+      free(ln->fwd->parents);
+      free(ln->fwd);
+    }
+    ln = ln->bwd;
+  }
+  if(l->first != NULL){
+    free_potential(l->first->data);
+    free(l->first->parents);
+    free(l->first);
+    l->first = NULL;
+  }
+  l->length = 0;
+
+  free(l);
+  l = NULL;
+  return;
+}
+
+/* More operations for the potentialLists? */

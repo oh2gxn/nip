@@ -1,5 +1,5 @@
 /*
- * potential.h $Id: potential.h,v 1.37 2007-01-04 16:26:42 jatoivol Exp $
+ * potential.h $Id: potential.h,v 1.38 2007-01-12 16:56:42 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -18,6 +18,8 @@ typedef struct pot_array_t {
   int *cardinality;
   int num_of_vars;
   double *data;
+
+  /* TODO: stringpairlist application_specific_properties; ? */
 } ptype;
 
 /* typedef struct pot_array ptype; */
