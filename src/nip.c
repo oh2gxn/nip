@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.183 2007-01-12 16:56:42 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.184 2007-01-18 15:34:28 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,15 +44,17 @@
 /***** 
  * TODO: 
 
+ * - Parse and preserve other fields specified in Hugin Net files
+ *   (currently this program ignores them)
+ *   - How to store potential-specific fields?
+ *   - What are net{input/output}-fields?
+
  * - Consistent conventions in naming functions, variables, 
  *   and data structures?
  *   - foo_bar(), dataType, etc.?
 
  * - Printing potential tables should be contained in potential.c
  *   - Problem: how to include comments about parent values?
-
- * - Parse and preserve other fields specified in Hugin Net files
- *   (currently this program ignores them)
 
  * - Refactorisation of variable_union(), variable_isect(), and
  *   mapper() by replacing a lot of copy-paste code with them...
