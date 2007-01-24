@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.184 2007-01-18 15:34:28 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.185 2007-01-24 16:07:09 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -43,6 +43,8 @@
 
 /***** 
  * TODO: 
+
+ * - ./inftest fruitbasket.net fruitdata.txt F temp.txt => SEG.FAULT!
 
  * - Parse and preserve other fields specified in Hugin Net files
  *   (currently this program ignores them)
