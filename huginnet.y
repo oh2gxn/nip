@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.78 2007-01-12 16:56:42 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.79 2007-01-25 09:49:39 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -1030,12 +1030,19 @@ static int parsed_potentials_to_jtree(potentialList potentials,
 static int interface_to_vars(interfaceList il, variablelist vl){
   int i, m;
   variable v1, v2;
-  interfaceLink initlist = il->first;
+  interfaceLink initlist = NULL;
   variable_iterator it = NULL;
+  
+  if(il == NULL)
+    return NO_ERROR;
 
-  it = vl->first;
+  if(vl == NULL){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
 
   /* Add time relations to variables. */
+  initlist = LIST_ITERATOR(il);
   while(initlist != NULL){
     v1 = initlist->var;
     v2 = get_parser_variable(vl, initlist->next);
@@ -1066,6 +1073,7 @@ static int interface_to_vars(interfaceList il, variablelist vl){
   }
 
   /* Find out which variables belong to incoming/outgoing interfaces */
+  it = LIST_ITERATOR(vl);
   v2 = next_variable(&it); /* get a variable */
   while(v2 != NULL){
     m = 0;
