@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.58 2007-01-04 16:26:42 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.59 2007-01-31 16:22:52 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -14,7 +14,7 @@
 #define TIME_SERIES_LENGTH(ts) ( (ts)->length )
 #define UNCERTAIN_SERIES_LENGTH(ucs) ( (ucs)->length )
 
-#define SEPARATOR ", "
+#define FIELD_SEPARATOR ' '
 #define FORWARD  1
 #define BACKWARD 0
 #define HAD_A_PREVIOUS_TIMESLICE 1

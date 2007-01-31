@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.186 2007-01-25 09:49:39 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.187 2007-01-31 16:22:52 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -530,7 +530,7 @@ int read_timeseries(nip model, char* filename,
   datafile* df = NULL;
   variable v = NULL;
   
-  df = open_datafile(filename, ',', 0, 1);
+  df = open_datafile(filename, FIELD_SEPARATOR, 0, 1);
 
   if(df == NULL){
     report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
@@ -739,7 +739,7 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
   for(i = 0; i < n_observed; i++){
     v = observed[i];
     if(i > 0)
-      fputs(SEPARATOR, f);
+      fprintf(f, "%c", FIELD_SEPARATOR);
     fprintf(f, "%s", get_symbol(v));
   }
   fputs("\n", f);
@@ -764,7 +764,7 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
 	v = observed[i];
 	d = record[i];
 	if(i > 0)
-	  fputs(SEPARATOR, f);
+	  fprintf(f, "%c", FIELD_SEPARATOR);
 	if(d >= 0)
 	  fprintf(f, "%s", get_statename(v, d));      
 	else

@@ -105,7 +105,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
   /* Write names of the variable states */
   for(i = 0; i < number_of_values(v); i++){
     if(i > 0)
-      fputs(SEPARATOR, f);
+      fprintf(f, "%c", FIELD_SEPARATOR);
     fprintf(f, "%s", get_statename(v, i));
   }
   fputs("\n", f);
@@ -128,7 +128,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
       /* Print the data */
       for(i = 0; i < number_of_values(v); i++){
 	if(i > 0)
-	  fputs(SEPARATOR, f);
+	  fprintf(f, "%c", FIELD_SEPARATOR);
 	if(record[i])
 	  fputs("1", f);
 	else
