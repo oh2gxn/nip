@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.187 2007-01-31 16:22:52 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.188 2007-02-23 15:12:29 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -43,6 +43,17 @@
 
 /***** 
  * TODO: 
+
+ * - Implement some sort of structural learning algorithm?
+ *   - NIP_potential_parents = "P1 P2 P3"; ?
+ *   - There is a static set of edges and defined 
+ *     set of possible additional edges in a graph
+ *   - The graph has to be stored in the nip struct ?
+ *     - nip struct       <=> net file
+ *     - variable struct  <=> node() definition
+ *     - potential struct <=> potential() definition???
+ *   - What about graphs without any static edges?
+ *     - Net file without any potential() definitions?
 
  * - Parse and preserve other fields specified in Hugin Net files
  *   (currently this program ignores them)
