@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.188 2007-02-23 15:12:29 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.189 2007-03-05 17:12:41 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,6 +44,10 @@
 /***** 
  * TODO: 
 
+ * - Use separate structure for the first time step
+ *   - How to create the graph for it automatically?
+ *   - How to use the new piece for inference in the first step?
+
  * - Implement some sort of structural learning algorithm?
  *   - NIP_potential_parents = "P1 P2 P3"; ?
  *   - There is a static set of edges and defined 
@@ -54,6 +58,8 @@
  *     - potential struct <=> potential() definition???
  *   - What about graphs without any static edges?
  *     - Net file without any potential() definitions?
+ *       (or only priors)
+ *     - nip struct == a set of graphs and their clique trees?
 
  * - Parse and preserve other fields specified in Hugin Net files
  *   (currently this program ignores them)
