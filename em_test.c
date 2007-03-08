@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
   /* read the model */
   model = parse_model(argv[1]);
   if(!model){
-    printf("Unable to parse the NET file: %s?\n", argv[1]);
+    fprintf(stderr, "Unable to parse the NET file: %s?\n", argv[1]);
     return -1;
   }
   use_priors(model, 1);
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
   /* read the data */
   n = read_timeseries(model, argv[2], &ts_set);
   if(n == 0){
-    printf("Unable to parse the data file: %s?\n", argv[2]);
+    fprintf(stderr, "Unable to parse the data file: %s?\n", argv[2]);
     free_model(model);
     return -1;
   }
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
   /* read the threshold value */
   threshold = strtod(argv[3], &tailptr);
   if(threshold <= 0.0 || threshold > 1  || tailptr == argv[3]){
-    printf("Specify a valid threshold value: %s?\n", argv[3]);
+    fprintf(stderr, "Specify a valid threshold value: %s?\n", argv[3]);
     for(i = 0; i < n; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
@@ -97,8 +97,8 @@ int main(int argc, char *argv[]) {
   tailptr = NULL;
   min_log_likelihood = strtod(argv[4], &tailptr);
   if(min_log_likelihood >= 0.0 || tailptr == argv[4]){
-    printf("Specify a valid value for minimum log. likelihood");
-    printf(" / time step: %s?\n", argv[4]);
+    fprintf(stderr, "Specify a valid value for minimum log. likelihood");
+    fprintf(stderr, " / time step: %s?\n", argv[4]);
     for(i = 0; i < n; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);

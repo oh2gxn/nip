@@ -1,5 +1,5 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.52 2007-01-05 16:58:41 jatoivol Exp $
+# $Id: Makefile,v 1.53 2007-03-08 16:32:58 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
@@ -23,6 +23,7 @@ GEN_SRCS=$(HMM_SRCS)
 MAP_SRCS=$(HMM_SRCS)
 INF_SRCS=$(HMM_SRCS)
 CONV_SRCS=$(HMM_SRCS)
+LIKE_SRCS=$(HMM_SRCS)
 
 # XXX Replace "cliquetest" below with the name you want for your program!
 POT_TARGET=potentialtest
@@ -41,10 +42,11 @@ GEN_TARGET=gen_test
 MAP_TARGET=maptest
 INF_TARGET=inftest
 CONV_TARGET=convert
+LIKE_TARGET=likelihood
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
 $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
 $(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) \
-$(INF_TARGET) $(CONV_TARGET)
+$(INF_TARGET) $(CONV_TARGET) $(LIKE_TARGET)
 
 # Sets the name and some flags for the C compiler and linker
 CC=gcc
@@ -84,9 +86,10 @@ GEN_OBJS=$(GEN_SRCS:.c=.o) gen_test.o
 MAP_OBJS=$(MAP_SRCS:.c=.o) maptest.o
 INF_OBJS=$(INF_SRCS:.c=.o) inftest.o
 CONV_OBJS=$(CONV_SRCS:.c=.o) convert.o
+LIKE_OBJS=$(LIKE_SRCS:.c=.o) likelihood.o
 OBJS=$(HTM_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o \
 bisontest.o iotest.o datafiletest.o hmmtest.o memleaktest.o joint_test.o \
-em_test.o gen_test.o maptest.o inftest.o convert.o
+em_test.o gen_test.o maptest.o inftest.o convert.o likelihood.o
 
 # Headers
 POT_HDRS=$(POT_SRCS:.c=.h)
@@ -106,6 +109,7 @@ GEN_HDRS=$(GEN_SRCS:.c=.h)
 MAP_HDRS=$(MAP_SRCS:.c=.h)
 INF_HDRS=$(INF_SRCS:.c=.h)
 CONV_HDRS=$(CONV_SRCS:.c=.h)
+LIKE_HDRS=$(LIKE_SRCS:.c=.h)
 
 
 # Rules for make
@@ -117,7 +121,7 @@ CONV_HDRS=$(CONV_SRCS:.c=.h)
 all: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) $(BIS_TARGET) \
 $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) $(MLT_TARGET) \
 $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET) \
-$(CONV_TARGET)
+$(CONV_TARGET) $(LIKE_TARGET)
 
 # Object files depend on headers also
 %.o: %.c %.h
@@ -177,6 +181,9 @@ $(INF_TARGET): $(INF_OBJS) $(HUG_OBJS)
 
 $(CONV_TARGET): $(CONV_OBJS) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(CONV_OBJS) $(LIBS)
+
+$(LIKE_TARGET): $(LIKE_OBJS) $(HUG_OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(LIKE_OBJS) $(LIBS)
 
 
 # With these lines, executing "make clean" removes the .o files that

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.189 2007-03-05 17:12:41 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.190 2007-03-08 16:32:58 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -43,6 +43,15 @@
 
 /***** 
  * TODO: 
+
+ * - A program for computing conditional likelihoods
+ *   - command line parameters:
+ *     - "-model foo.net"
+ *     - "-vars D E F", at least one variable!
+ *     - "-given A B C", default to empty set
+ *     - "-data bar.txt"
+ *   - output: the likelihood value "p (d e f | a b c)"
+ *   - the same for DBN models???
 
  * - Use separate structure for the first time step
  *   - How to create the graph for it automatically?
