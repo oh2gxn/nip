@@ -1,6 +1,0 @@
-field1,field2,field3
-true,true,false
-N/A,true,true
-false,false,true
-false,true,false
-false,N/A,false

@@ -1,2 +1,0 @@
-hide_Y0,    Y1,     Y2,     Y3,     Y4, hide_S0, hide_S1, hide_S2, hide_S3, hide_S4, hide_V0, hide_V1, hide_V2, hide_V3, hide_V4
-State3, State3, State2, State1, State1,  State2,  State2,  State2, State1,   State1,  State1,  State1,  State2,  State3,  State1
