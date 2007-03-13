@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
   nip model = NULL;
   time_series *ts_set = NULL;
   time_series ts = NULL;
+  double m1, m2;
   double log_likelihood = 0;
   variable v = NULL;
 
@@ -89,15 +90,15 @@ int main(int argc, char *argv[]) {
       use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
       insert_ts_step(ts, t, model, MARK_OFF); /* Only unmarked variables */
-      make_consistent(model);
-
-      log_likelihood = -log( model_prob_mass(model) ); /* reference mass */
+      make_consistent(model);      
+      m1 = model_prob_mass(model); /* the reference mass */
 
       insert_ts_step(ts, t, model, MARK_ON); /* Only marked variables */
       make_consistent(model);
+      m2 = model_prob_mass(model); /* the final mass */
 
       /* log_likelihood == ln p( marked | unmarked ) */
-      log_likelihood += log( model_prob_mass(model) ); 
+      log_likelihood = log(m2) - log(m1);
 
       printf("%g\n", log_likelihood); /* One of the results */
     }

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.191 2007-03-13 16:48:03 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.192 2007-03-13 17:14:33 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1002,11 +1002,12 @@ int insert_ts_step(time_series ts, int t, nip model, char mark_mask){
     
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++){
     v = ts->observed[i];
-    if(MARK(v) & mark_mask) /* Only the suitably marked variables */
+    if(MARK(v) & mark_mask){ /* Only the suitably marked variables */
       if(ts->data[t][i] >= 0)
 	enter_i_observation(model->variables, model->num_of_vars, 
 			    model->cliques, model->num_of_cliques, 
 			    v, ts->data[t][i]);
+    }
   }
   return NO_ERROR;
 }
