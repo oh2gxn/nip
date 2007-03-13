@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.79 2007-01-25 09:49:39 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.80 2007-03-13 16:48:03 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -538,10 +538,10 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 #endif
 
   family[0] = $3;
-  size = number_of_values(family[0]);
+  size = CARDINALITY(family[0]);
   for(i = 0; i < nparents; i++){
     family[i + 1] = parents[i];
-    size = size * number_of_values(parents[i]);
+    size = size * CARDINALITY(parents[i]);
   }
   /* check that nip_data_size >= product of variable cardinalities! */
   if(size > nip_data_size){
@@ -577,7 +577,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   double *doubles = $6;
   char* error = NULL;
   potential p = NULL;
-  if(number_of_values($3) > nip_data_size){
+  if(CARDINALITY($3) > nip_data_size){
     /* too few elements in the specified potential */
     asprintf(&error, 
 	     "NET parser: Not enough elements in potential( %s )!", 

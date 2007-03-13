@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.59 2007-01-31 16:22:52 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.60 2007-03-13 16:48:03 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -179,14 +179,19 @@ int insert_hard_evidence(nip model, char* varname, char* observation);
 int insert_soft_evidence(nip model, char* varname, double* distribution);
 
 
-/* Method for inserting all the evidence at a specified step <t> in 
- * a time series <ts> into the (time slice) model <ts->model>. */
-int insert_ts_step(time_series ts, int t, nip model);
+/* Method for inserting part of the evidence at a specified step <t> in a
+ * time series <ts> into the (time slice) model <ts->model>. 
+ * Only the variables marked with <mark_mask> will be considered. 
+ * mark_mask == MARK_BOTH  => all suitable evidence of the time step is used
+ * mark_mask == MARK_OFF   => only unmarked variables are used
+ * mark_mask == MARK_ON    => only marked variables are used */
+int insert_ts_step(time_series ts, int t, nip model, char mark_mask);
 
 
-/* Method for inserting all the evidence at a specified step <t> in 
- * an uncertain time series <ucs> into the model <ucs->model>. */
-int insert_ucs_step(uncertain_series ucs, int t, nip model);
+/* Method for inserting part of the evidence at a specified step <t> in 
+ * an uncertain time series <ucs> into the model <ucs->model>. 
+ * Only the variables marked with <mark_mask> will be considered. */
+int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask);
 
 
 /* This algorithm computes the probability distributions for every 

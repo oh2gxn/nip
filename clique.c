@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.26 2007-01-12 16:56:42 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.27 2007-03-13 16:48:03 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -115,7 +115,7 @@ clique make_clique(variable vars[], int num_of_vars){
 
   /* JJ_NOTE: reordering probably not required anymore... */
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = vars[reorder[i]]->cardinality;
+    cardinality[i] = CARDINALITY(vars[reorder[i]]);
     c->variables[i] = vars[reorder[i]];
   }
   
@@ -139,7 +139,7 @@ clique make_clique(variable vars[], int num_of_vars){
   free(indices);
   free(reorder);
   c->sepsets = NULL;
-  c->mark = 0;
+  c->mark = MARK_OFF;
 
   return c;
 }
@@ -325,7 +325,7 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
 
   /* JJ_NOTE: reordering probably not required anymore... */
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = vars[reorder[i]]->cardinality;
+    cardinality[i] = CARDINALITY(vars[reorder[i]]);
     s->variables[i] = vars[reorder[i]];
   }
 
@@ -449,8 +449,8 @@ potential create_potential(variable variables[], int num_of_vars,
 
   /* Figure out some stuff */
   for(i = 0; i < num_of_vars; i++){
-    size_of_data *= variables[i]->cardinality; /* optimal? */
-    cardinality[i] = variables[reorder[i]]->cardinality;
+    size_of_data *= CARDINALITY(variables[i]); /* optimal? */
+    cardinality[i] = CARDINALITY(variables[reorder[i]]);
   }
 
   /* Create a potential */
@@ -629,7 +629,7 @@ double *reorder_potential(variable vars[], potential p){
 
 void unmark_clique(clique c){
   if(c != NULL)
-    c->mark = 0;
+    c->mark = MARK_OFF;
   return;
 }
 
@@ -638,7 +638,7 @@ void unmark_clique(clique c){
  * Returns 0 if clique is not marked, 1 if it is. (This could be a macro...)
  */
 static int clique_marked(clique c){
-  return c->mark;
+  return (c->mark == MARK_ON);
 }
 
 
@@ -664,7 +664,7 @@ int distribute_evidence(clique c){
 #endif
 
   /* mark */
-  c->mark = 1;
+  c->mark = MARK_ON;
 
   /* pass the messages */
   l = c->sepsets;
@@ -716,7 +716,7 @@ int collect_evidence(clique c1, sepset s12, clique c2){
   sepset s;
 
   /* mark */
-  c2->mark = 1;
+  c2->mark = MARK_ON;
 
   /* call neighboring cliques */
   l = c2->sepsets;
@@ -946,13 +946,13 @@ int enter_i_observation(variable* vars, int nvars, clique* cliques,
   if(index < 0)
     return NO_ERROR;
 
-  evidence = (double *) calloc(v->cardinality, sizeof(double));
+  evidence = (double *) calloc(CARDINALITY(v), sizeof(double));
   if(!evidence){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
   }
 
-  for(i = 0; i < v->cardinality; i++)
+  for(i = 0; i < CARDINALITY(v); i++)
     if(i == index)
       evidence[i] = 1;
     else
@@ -974,6 +974,8 @@ int enter_evidence(variable* vars, int nvars, clique* cliques,
   /* Q: Why evidence is NULL in some cases?
    * A: Because some variables don't have priors... */
 
+  /* Q: What if there is completely missing data? */
+
   if(v == NULL || evidence == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
@@ -988,7 +990,7 @@ int enter_evidence(variable* vars, int nvars, clique* cliques,
 
   index = var_index(c, v);
 
-  for(i = 0; i < v->cardinality; i++)
+  for(i = 0; i < CARDINALITY(v); i++)
     if((v->likelihood)[i] == 0 && evidence[i] != 0)
       retraction = 1; /* Must do global retraction! */
   
@@ -1223,7 +1225,7 @@ static int clique_search(clique one, clique two){
     return 0; /* as in FALSE */
 
   /* mark */
-  one->mark = 1;
+  one->mark = MARK_ON;
 
   /* NOTE: this defines the equality of cliques. */
   if(one == two)
@@ -1306,7 +1308,7 @@ static void jtree_dfs(clique start,
     return;
 
   /* mark */
-  start->mark = 1;
+  start->mark = MARK_ON;
 
   if(cFuncPointer)
     cFuncPointer(start, ptr); /* do it now or after the children ??? */
@@ -1406,7 +1408,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   l = start->sepsets;
 
   /* Mark the clique */
-  start->mark = 1;
+  start->mark = MARK_ON;
 
 
   /*** 1. Reserve space ***/
@@ -1460,7 +1462,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
     return NULL;
   }
   for(i = 0; i < nuv; i++)
-    cardinality[i] = number_of_values(union_vars[i]);
+    cardinality[i] = CARDINALITY(union_vars[i]);
 
   /* ### possibly HUGE potential array ! ### */
   product = make_potential(cardinality, nuv, NULL); 
@@ -1620,9 +1622,9 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
     
     /* 4.1 Reserve space for the result */
     for(i = 0; i < n_vars; i++)
-      cardinality[i] = number_of_values(vars[i]);
+      cardinality[i] = CARDINALITY(vars[i]);
     for(i = 0; i < n_isect; i++)
-      cardinality[n_vars + i] = number_of_values(isect[i]);
+      cardinality[n_vars + i] = CARDINALITY(isect[i]);
     /* possibly LARGE potential array ! */
     sum = make_potential(cardinality, n_vars + n_isect, NULL); 
     free(cardinality);

@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.12 2005-08-17 14:04:59 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.13 2007-03-13 16:48:03 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) data file with one step,
  * 3) names of wanted variables
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
   m1 = probability_mass(model->cliques, model->num_of_cliques);
 
   /* enter the evidence... */
-  i = insert_ts_step(ts, 0, model);
+  i = insert_ts_step(ts, 0, model, MARK_BOTH);
   /* ...and distribute it */
   make_consistent(model);
 

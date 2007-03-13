@@ -81,7 +81,7 @@ int main(int argc, char *argv[]){
     }
 
     for(i = 0; i < ts->num_of_hidden; i++){
-      result[t][i] = (double*) calloc(number_of_values(ts->hidden[i]), 
+      result[t][i] = (double*) calloc(CARDINALITY(ts->hidden[i]), 
 				      sizeof(double));
       if(!result[t][i]){
 	free_model(model);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]){
     }
   }
   for(i = 0; i < ts->num_of_hidden; i++){
-    quotient[i] = (double*) calloc(number_of_values(ts->hidden[i]), 
+    quotient[i] = (double*) calloc(CARDINALITY(ts->hidden[i]), 
 				   sizeof(double));
     if(!quotient[i]){
       free_model(model);
@@ -143,10 +143,10 @@ int main(int argc, char *argv[]){
       marginalise(clique_of_interest, interesting, result[t][i]);
 
       /* 4. Normalisation */
-      normalise_array(result[t][i], number_of_values(interesting));    
+      normalise_array(result[t][i], CARDINALITY(interesting));    
 
       /* 5. Print the result */
-      for(j = 0; j < number_of_values(interesting); j++)
+      for(j = 0; j < CARDINALITY(interesting); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(interesting),
 	       (interesting->statenames)[j], result[t][i][j]);
       printf("\n");
@@ -224,7 +224,7 @@ int main(int argc, char *argv[]){
 	  
 	  /* FIXME: Get rid of the quotient array */
 	  
-	  for(j = 0; j < number_of_values(temp); j++)
+	  for(j = 0; j < CARDINALITY(temp); j++)
 	    quotient[i][j] = result[t + 1][i][j] / result[t][k][j]; 
 	  
 	  enter_evidence(model->variables, model->num_of_vars, 
@@ -263,10 +263,10 @@ int main(int argc, char *argv[]){
       marginalise(clique_of_interest, interesting, result[t][i]);
       
       /* 4. Normalisation */
-      normalise_array(result[t][i], number_of_values(interesting));
+      normalise_array(result[t][i], CARDINALITY(interesting));
       
       /* 5. Print the result */
-      for(j = 0; j < number_of_values(interesting); j++)
+      for(j = 0; j < CARDINALITY(interesting); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(interesting),
 	       (interesting->statenames)[j], result[t][i][j]);
       printf("\n");

@@ -135,7 +135,7 @@ int main(int argc, char *argv[]){
 	
 	/* Find the MAP value */
 	k = 0; m_max = 0;
-	for(j = 0; j < number_of_values(temp); j++){
+	for(j = 0; j < CARDINALITY(temp); j++){
 	  m = ucs->data[t][i][j];
 	  if(m > m_max){
 	    m_max = m;
@@ -149,7 +149,7 @@ int main(int argc, char *argv[]){
       /* some copy-paste code for the last variable */
       temp = ucs->variables[i];	
       k = 0; m_max = 0;
-      for(j = 0; j < number_of_values(temp); j++){
+      for(j = 0; j < CARDINALITY(temp); j++){
 	m = ucs->data[t][i][j];
 	if(m > m_max){
 	  m_max = m;

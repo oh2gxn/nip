@@ -55,7 +55,7 @@ static void test_probability(double **result, int *size_of_result,
     return;
   }  
 
-  *size_of_result = number_of_values(var);
+  *size_of_result = CARDINALITY(var);
 
   /* Allocate memory for the result */
   *result = (double *) calloc(*size_of_result, sizeof(double));

@@ -38,7 +38,6 @@ int main(int argc, char *argv[]) {
   time_series *ts_set = NULL;
   time_series ts = NULL;
   double log_likelihood = 0;
-  double last = 0;
   variable v = NULL;
 
   if(argc < 4){
@@ -67,7 +66,8 @@ int main(int argc, char *argv[]) {
 
   /* Read the variable labels */
   for(i = 0; i < model->num_of_vars; i++)
-    unmark_variable(model->variables[i]);
+    unmark_variable(model->variables[i]); /* Unmark all to be sure */
+
   for(i = 3; i < argc; i++){
     v = model_variable(model, argv[i]);
     if(v == NULL){
@@ -84,10 +84,22 @@ int main(int argc, char *argv[]) {
   /* THE work */
   for(i = 0; i < n; i++){ /* For each time series */
     ts = ts_set[i];
-    for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* For each time step */
+    for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* For each time step */      
+      reset_model(model); /* Reset the clique tree */
+      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
-      /* TODO */
+      insert_ts_step(ts, t, model, MARK_OFF); /* Only unmarked variables */
+      make_consistent(model);
 
+      log_likelihood = -log( model_prob_mass(model) ); /* reference mass */
+
+      insert_ts_step(ts, t, model, MARK_ON); /* Only marked variables */
+      make_consistent(model);
+
+      /* log_likelihood == ln p( marked | unmarked ) */
+      log_likelihood += log( model_prob_mass(model) ); 
+
+      printf("%g\n", log_likelihood); /* One of the results */
     }
     printf("\n"); /* time series separator */
   }

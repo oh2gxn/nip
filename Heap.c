@@ -1,5 +1,5 @@
 /*
- * Heap.c $Id: Heap.c,v 1.11 2005-05-27 13:18:03 jatoivol Exp $
+ * Heap.c $Id: Heap.c,v 1.12 2007-03-13 16:48:03 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -43,7 +43,7 @@ static int cluster_weight(variable* vs, int n)
     int i, prod = 1;
     
     for (i = 0; i < n; i++)
-	prod *= number_of_values(vs[i]);
+	prod *= CARDINALITY(vs[i]);
 
     return prod;
 }

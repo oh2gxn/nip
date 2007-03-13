@@ -86,7 +86,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
 
   /* Temporary space for a sorted record (unary values) */
   v = observed[0];
-  record = (int*) calloc(number_of_values(v), sizeof(int));
+  record = (int*) calloc(CARDINALITY(v), sizeof(int));
   if(!record){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     free(observed);
@@ -103,7 +103,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
   }
 
   /* Write names of the variable states */
-  for(i = 0; i < number_of_values(v); i++){
+  for(i = 0; i < CARDINALITY(v); i++){
     if(i > 0)
       fprintf(f, "%c", FIELD_SEPARATOR);
     fprintf(f, "%s", get_statename(v, i));
@@ -117,16 +117,16 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
     for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* for each time step */
 
       /* Fill record with indicators of missing data */
-      for(i = 0; i < number_of_values(v); i++)
+      for(i = 0; i < CARDINALITY(v); i++)
 	record[i] = 0;
 
       /* Extract data from the time series */
       d = ts->data[t][0];
-      if(d >= 0 && d < number_of_values(v))
+      if(d >= 0 && d < CARDINALITY(v))
 	record[d] = 1;
 
       /* Print the data */
-      for(i = 0; i < number_of_values(v); i++){
+      for(i = 0; i < CARDINALITY(v); i++){
 	if(i > 0)
 	  fprintf(f, "%c", FIELD_SEPARATOR);
 	if(record[i])

@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.12 2007-01-12 16:56:42 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.13 2007-03-13 16:48:03 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -65,7 +65,7 @@ variable new_variable(const char* symbol, const char* name,
   v->if_status = INTERFACE_NONE; /* does not belong to interfaces at first */
   v->pos_x = 100;
   v->pos_y = 100;
-  v->mark = 0;
+  v->mark = MARK_OFF; /* If this becomes 0x00, there will be a bug (?) */
 
   v->symbol = NULL;
   set_variable_text(&(v->symbol), symbol);
@@ -198,17 +198,17 @@ unsigned long get_id(variable v){
 
 void mark_variable(variable v){
   if(v) 
-    v->mark = 1;
+    v->mark = MARK_ON;
 }
 
 void unmark_variable(variable v){
   if(v)
-    v->mark = 0;
+    v->mark = MARK_OFF;
 }
 
 int variable_marked(variable v){
   if(v)
-    return (v->mark != 0);
+    return (v->mark != MARK_OFF);
   return 0;
 }
 
@@ -281,6 +281,7 @@ void reset_likelihood(variable v){
 }
 
 
+/* OLD STUFF
 int number_of_values(variable v){
   if(v == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
@@ -288,6 +289,7 @@ int number_of_values(variable v){
   }
   return v->cardinality;
 }
+*/
 
 
 int number_of_parents(variable v){

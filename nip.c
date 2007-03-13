@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.190 2007-03-08 16:32:58 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.191 2007-03-13 16:48:03 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -220,7 +220,7 @@ nip parse_model(char* file){
       if(temp->prior == NULL){
 	fprintf(stderr, "Warning: No prior for the variable %s!\n", 
 		temp->symbol);
-	temp->prior = (double*) calloc(temp->cardinality, sizeof(double));
+	temp->prior = (double*) calloc(CARDINALITY(temp), sizeof(double));
 	/* this fixes the situation */
       }
   }
@@ -392,7 +392,7 @@ int write_model(nip model, char* filename){
   /** the variables **/
   for(i = 0; i < model->num_of_vars; i++){
     v = model->variables[i];
-    n = number_of_values(v)-1;
+    n = CARDINALITY(v)-1;
     get_position(v, &x, &y);
     fputs("\n", f);
     fprintf(f, "%snode %s\n", indent, get_symbol(v));
@@ -413,7 +413,7 @@ int write_model(nip model, char* filename){
   /** the priors **/
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
-    n = number_of_values(v);
+    n = CARDINALITY(v);
     fputs("\n", f);
     /* independent variables have priors */
     fprintf(f, "%spotential (%s)\n", indent, get_symbol(v));
@@ -440,7 +440,7 @@ int write_model(nip model, char* filename){
   for(i = 0; i < model->num_of_children; i++){
     v = model->children[i];
 
-    nvalues  = number_of_values(v);
+    nvalues  = CARDINALITY(v);
     nparents = number_of_parents(v);
     fputs("\n", f);
     /* child variables have conditional distributions */
@@ -464,7 +464,7 @@ int write_model(nip model, char* filename){
     temp[0] = nvalues; /* child must be the first... */
     /* ...then the parents */
     for(j = 0; j < nparents; j++)
-      temp[j+1] = v->parents[j]->cardinality;
+      temp[j+1] = CARDINALITY(v->parents[j]);
     p = make_potential(temp, nparents+1, NULL);
 
     /* compute the distribution */
@@ -842,7 +842,7 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
   FILE *f = NULL;
 
   /* Check stuff */
-  n = number_of_values(v);
+  n = CARDINALITY(v);
   if(!(n>0 && ucs_set && filename && n_series>0)){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
@@ -989,32 +989,49 @@ int insert_soft_evidence(nip model, char* varname, double* distribution){
 }
 
 
-/* note that <model> may be different from ts->model */
-int insert_ts_step(time_series ts, int t, nip model){
+/* Note that <model> may be different from ts->model, but the variables
+ * have to be shared. */
+int insert_ts_step(time_series ts, int t, nip model, char mark_mask){
   int i;
-  if(t < 0 || t > timeseries_length(ts))
+  variable v;
+
+  if(t < 0 || t >= timeseries_length(ts)){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
+  }
     
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++){
-    if(ts->data[t][i] >= 0)
-      enter_i_observation(model->variables, model->num_of_vars, 
-			  model->cliques, model->num_of_cliques, 
-			  ts->observed[i], ts->data[t][i]);
+    v = ts->observed[i];
+    if(MARK(v) & mark_mask) /* Only the suitably marked variables */
+      if(ts->data[t][i] >= 0)
+	enter_i_observation(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			    v, ts->data[t][i]);
   }
   return NO_ERROR;
 }
 
 
 /* note that <model> may be different from ucs->model */
-int insert_ucs_step(uncertain_series ucs, int t, nip model){
+int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask){
   int i, e;
+  variable v;
+
+  if(t < 0 || t >= uncertainseries_length(ucs)){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
   for(i = 0; i < ucs->num_of_vars; i++){
-    e = enter_evidence(model->variables, model->num_of_vars, 
-		       model->cliques, model->num_of_cliques, 
-		       ucs->variables[i], ucs->data[t][i]);
-    if(e != NO_ERROR){
-      report_error(__FILE__, __LINE__, e, 1);  
-      return e;
+    v = ucs->variables[i];
+    if(MARK(v) & mark_mask){
+      e = enter_evidence(model->variables, model->num_of_vars, 
+			 model->cliques, model->num_of_cliques, 
+			 v, ucs->data[t][i]);
+      if(e != NO_ERROR){
+	report_error(__FILE__, __LINE__, e, 1);  
+	return e;
+      }
     }
   }
   return NO_ERROR;
@@ -1115,7 +1132,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
 
   /* Fill the array */
   for(i = 0; i < model->outgoing_interface_size; i++)
-    cardinalities[i] = number_of_values(model->outgoing_interface[i]);
+    cardinalities[i] = CARDINALITY(model->outgoing_interface[i]);
 
   /* Allocate some space for the results */
   results = (uncertain_series) malloc(sizeof(uncertain_series_type));
@@ -1165,7 +1182,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
     }
 
     for(i = 0; i < nvars; i++){
-      results->data[t][i] = (double*) calloc(number_of_values(vars[i]),
+      results->data[t][i] = (double*) calloc(CARDINALITY(vars[i]),
 					     sizeof(double));
       if(!results->data[t][i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -1227,7 +1244,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
     }
 
     /* Put some data in */
-    insert_ts_step(ts, t, model);
+    insert_ts_step(ts, t, model, MARK_BOTH);
 
     /* Do the inference */
     make_consistent(model);
@@ -1274,7 +1291,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
       marginalise(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
-      normalise_array(results->data[t][i], number_of_values(temp));
+      normalise_array(results->data[t][i], CARDINALITY(temp));
     } 
 
     /* Start a message pass between time slices (compute new alpha) */
@@ -1329,7 +1346,7 @@ uncertain_series forward_backward_inference(time_series ts,
 
   /* Fill the array */
   for(i = 0; i < model->outgoing_interface_size; i++)
-    cardinalities[i] = number_of_values(model->outgoing_interface[i]);
+    cardinalities[i] = CARDINALITY(model->outgoing_interface[i]);
 
   /* Allocate some space for the results */
   results = (uncertain_series) malloc(sizeof(uncertain_series_type));
@@ -1379,7 +1396,7 @@ uncertain_series forward_backward_inference(time_series ts,
     }
 
     for(i = 0; i < nvars; i++){
-      results->data[t][i] = (double*) calloc(number_of_values(vars[i]),
+      results->data[t][i] = (double*) calloc(CARDINALITY(vars[i]),
 					     sizeof(double));
       if(!results->data[t][i]){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -1440,7 +1457,7 @@ uncertain_series forward_backward_inference(time_series ts,
     }
 
     /* Put some data in (Q: should this be AFTER message passing?) */
-    insert_ts_step(ts, t, model);    
+    insert_ts_step(ts, t, model, MARK_BOTH);
     
     /* Do the inference */
     make_consistent(model);
@@ -1500,7 +1517,7 @@ uncertain_series forward_backward_inference(time_series ts,
       }
     
     /* Put some evidence in */
-    insert_ts_step(ts, t, model);
+    insert_ts_step(ts, t, model, MARK_BOTH);
 
     /* Pass the message from the future */
     if(t < ts->length - 1)
@@ -1536,7 +1553,7 @@ uncertain_series forward_backward_inference(time_series ts,
       marginalise(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
-      normalise_array(results->data[t][i], number_of_values(temp));
+      normalise_array(results->data[t][i], CARDINALITY(temp));
     }
     /* End of the CORE */
 
@@ -1730,7 +1747,7 @@ static int e_step(time_series ts, potential* parameters,
   }
   for(i = 0; i < model->num_of_vars; i++){
     p = parameters[i];
-    results[i] = make_potential(p->cardinality, p->num_of_vars, NULL);
+    results[i] = make_potential(CARDINALITY(p), p->num_of_vars, NULL);
     /* in principle, make_potential can return NULL */
   }  
 
@@ -1754,7 +1771,7 @@ static int e_step(time_series ts, potential* parameters,
   }
 
   for(i = 0; i < model->outgoing_interface_size; i++)
-    cardinalities[i] = number_of_values(model->outgoing_interface[i]);
+    cardinalities[i] = CARDINALITY(model->outgoing_interface[i]);
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++)
@@ -1794,7 +1811,7 @@ static int e_step(time_series ts, potential* parameters,
 
     m1 = model_prob_mass(model);
 
-    insert_ts_step(ts, t, model); /* Put some data in */
+    insert_ts_step(ts, t, model, MARK_BOTH); /* Put some data in */
 
     make_consistent(model); /* Do the inference */
 
@@ -1880,7 +1897,7 @@ static int e_step(time_series ts, potential* parameters,
       }
     
     /* Put some evidence in */
-    insert_ts_step(ts, t, model);
+    insert_ts_step(ts, t, model, MARK_BOTH);
     
     /* Pass the message from the future */
     if(t < ts->length - 1)
@@ -2011,7 +2028,7 @@ static int m_step(potential* parameters, nip model){
   
   /* 1. Normalise parameters by dividing with the sums over child variables */
   for(i = 0; i < model->num_of_vars; i++){
-    /* k = number_of_values(model->variables[i]); */
+    /* k = CARDINALITY(model->variables[i]); */
     /* child is the first variable in the potential? */
     normalise_cpd(parameters[i]);
     /** JJT: Not so sure if this is correct! **/
@@ -2041,7 +2058,7 @@ static int m_step(potential* parameters, nip model){
     else{
       /* Update the priors of independent variables */
       total_marginalise(parameters[i], child->prior, 0); /* correct? */
-      /*for(j = 0; j < number_of_values(child); j++)
+      /*for(j = 0; j < CARDINALITY(child); j++)
 	  child->prior[j] = parameters[i]->data[j];*/
     }
   }
@@ -2088,9 +2105,9 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     }
     /* The child MUST be the first variable in order to normalize
      * potentials reasonably */
-    card[0] = number_of_values(model->variables[v]);
+    card[0] = CARDINALITY(model->variables[v]);
     for(i = 1; i < n; i++)
-      card[i] = number_of_values(model->variables[v]->parents[i-1]);
+      card[i] = CARDINALITY(model->variables[v]->parents[i-1]);
     /* variable->parents should be null only if n==1 
      * => no for-loop => no null dereference */
 
@@ -2241,7 +2258,7 @@ double *get_probability(nip model, variable v){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return NULL;
   }
-  cardinality = number_of_values(v);
+  cardinality = CARDINALITY(v);
   result = (double *) calloc(cardinality, sizeof(double));
   if(!result){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
@@ -2388,7 +2405,7 @@ time_series generate_data(nip model, int length){
   }
 
   for(i = 0; i < model->outgoing_interface_size; i++)
-    cardinalities[i] = number_of_values(model->outgoing_interface[i]);
+    cardinalities[i] = CARDINALITY(model->outgoing_interface[i]);
   alpha = make_potential(cardinalities, model->outgoing_interface_size, NULL);
   free(cardinalities);
   
@@ -2418,7 +2435,7 @@ time_series generate_data(nip model, int length){
       /*** get the probability distribution */
       distribution = get_probability(model, v);
       /*** organize a lottery */
-      k = lottery(distribution, number_of_values(v));
+      k = lottery(distribution, CARDINALITY(v));
       free(distribution);
       /*** insert into the time series and the model as evidence */
       ts->data[t][i] = k;

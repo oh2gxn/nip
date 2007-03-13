@@ -1,5 +1,5 @@
 /*
- * clique.h $Id: clique.h,v 1.7 2007-01-12 16:56:42 jatoivol Exp $
+ * clique.h $Id: clique.h,v 1.8 2007-03-13 16:48:03 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -23,7 +23,7 @@ typedef struct {
   variable *variables; /* p contains num_of_vars */
   sepset_link sepsets;
   int num_of_sepsets;
-  int mark; /* the way to prevent endless loops */
+  char mark; /* the way to prevent endless loops, either MARK_ON or MARK_OFF */
 } cliquetype;
 typedef cliquetype *clique;
 

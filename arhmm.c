@@ -33,23 +33,23 @@ char** gen_obs(int n)
     return observations;
 }
 
-void make_consistent(Clique* cliques, int n_cliques)
+void make_consistent(clique* cliques, int n_cliques)
 {
     int i;
     for (i = 0; i < n_cliques; i++)
-        unmark_Clique(cliques[i]);
+        unmark_clique(cliques[i]);
     collect_evidence(NULL, NULL, cliques[0]);
     for (i = 0; i < n_cliques; i++)
-        unmark_Clique(cliques[i]);
+        unmark_clique(cliques[i]);
     distribute_evidence(cliques[0]);
 }
 
-int get_distribution_1(Variable v, Clique* cliques, int n, double** data)
+int get_distribution_1(variable v, clique* cliques, int n, double** data)
 {
     int n_states;
     Clique c;
     
-    n_states = number_of_values(v);
+    n_states = CARDINALITY(v);
     *data = (double*) calloc(n_states, sizeof(double));
     c = find_family(cliques, n, v);
     marginalise(c, v, *data);
@@ -58,7 +58,7 @@ int get_distribution_1(Variable v, Clique* cliques, int n, double** data)
     return n_states;
 }
 
-void setup_vars(Variable* H0, Variable* H1, Variable* O1)
+void setup_vars(variable* H0, variable* H1, variable* O1)
 {
 	char*[2] Hstates = {"False", "True"};
 	char*[2] Ostates = {"A", "B"};
@@ -70,7 +70,7 @@ void setup_vars(Variable* H0, Variable* H1, Variable* O1)
 	*O1 = new_variable("O1", "Observed", Ostates, 2);
 }
 
-void setup_graph(Graph** G, Variable H0, Variable H1, Variable O1)
+void setup_graph(Graph** G, variable H0, variable H1, variable O1)
 {
     	*G = new_graph(3);
 	add_variable(*G, H0); add_variable(*G, H1); add_variable(*G, O1);

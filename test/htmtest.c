@@ -89,7 +89,7 @@ int main(int argc, char *argv[]){
     for(i = 0; i < ucs->num_of_vars; i++){
       temp = ucs->variables[i];            
       /* Print a value */
-      for(j = 0; j < number_of_values(temp); j++)
+      for(j = 0; j < CARDINALITY(temp); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(temp),
 	       (temp->statenames)[j], ucs->data[t][i][j]);
       printf("\n"); 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
     for(i = 0; i < ucs->num_of_vars; i++){
       temp = ucs->variables[i];
       /* Print a value */
-      for(j = 0; j < number_of_values(temp); j++)
+      for(j = 0; j < CARDINALITY(temp); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(temp),
 	       (temp->statenames)[j], ucs->data[t][i][j]);
       printf("\n"); 
