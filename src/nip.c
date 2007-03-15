@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.192 2007-03-13 17:14:33 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.193 2007-03-15 16:31:05 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,13 +44,17 @@
 /***** 
  * TODO: 
 
+ * - BUG: Evidence about variables without parents cancels the prior
+ *   + Priors should not be entered as if they were evidence
+ *   - DBN models work, equivalent static ones don't... WHY?
+ *   - Should use_priors() be used automatically by reset_model() ?
+
  * - A program for computing conditional likelihoods
- *   - command line parameters:
- *     - "-model foo.net"
- *     - "-vars D E F", at least one variable!
- *     - "-given A B C", default to empty set
- *     - "-data bar.txt"
- *   - output: the likelihood value "p (d e f | a b c)"
+ *   + command line parameters:
+ *     + "foo.net", the model
+ *     + "bar.txt", the data
+ *     + "D E F", at least one variable!
+ *   + output: the likelihood value "p (d e f | a b c)"
  *   - the same for DBN models???
 
  * - Use separate structure for the first time step
@@ -154,9 +158,13 @@ void use_priors(nip model, int has_history){
     v = model->independent[i];
     assert(v->prior != NULL);
     if(!has_history || !(v->if_status & INTERFACE_OLD_OUTGOING)){
-      retval = enter_evidence(model->variables, model->num_of_vars, 
-			      model->cliques, model->num_of_cliques, 
-			      v, v->prior);
+      /* Reminder: priors should be multiplied into the tree so that
+       *           they are not canceled if evidence is entered, but
+       *           there was the idea that global retraction should
+       *           cancel priors... */
+      retval = enter_prior(model->variables, model->num_of_vars, 
+			   model->cliques, model->num_of_cliques, 
+			   v, v->prior);
       if(retval != NO_ERROR)
 	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     }

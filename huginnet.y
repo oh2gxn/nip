@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.80 2007-03-13 16:48:03 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.81 2007-03-15 16:31:05 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -1006,7 +1006,7 @@ static int parsed_potentials_to_jtree(potentialList potentials,
 	  return ERROR_GENERAL;
 	}
       }
-      else{ 
+      else{
 	/* Priors of the independent variables are stored into the variable 
 	 * itself, but NOT entered into the model YET. */
 	/*retval = enter_evidence(vars, nvars, nip_cliques, 

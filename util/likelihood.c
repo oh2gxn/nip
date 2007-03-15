@@ -85,9 +85,10 @@ int main(int argc, char *argv[]) {
   /* THE work */
   for(i = 0; i < n; i++){ /* For each time series */
     ts = ts_set[i];
+    reset_model(model); /* Reset the clique tree */
+    use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+    
     for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* For each time step */      
-      reset_model(model); /* Reset the clique tree */
-      use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
       insert_ts_step(ts, t, model, MARK_OFF); /* Only unmarked variables */
       make_consistent(model);      
@@ -100,7 +101,10 @@ int main(int argc, char *argv[]) {
       /* log_likelihood == ln p( marked | unmarked ) */
       log_likelihood = log(m2) - log(m1);
 
-      printf("%g\n", log_likelihood); /* One of the results */
+      printf("%g %g %g\n", m1, m2, log_likelihood); /* One of the results */
+
+      reset_model(model); /* Reset the clique tree */
+      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
     }
     printf("\n"); /* time series separator */
   }

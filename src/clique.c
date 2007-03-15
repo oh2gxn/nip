@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.27 2007-03-13 16:48:03 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.28 2007-03-15 16:31:05 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -910,10 +910,12 @@ int global_retraction(variable* vars, int nvars, clique* cliques,
   for(index = 0; index < ncliques; index++)
     unmark_clique(cliques[index]);
 
-  /* Reset all the potentials back to original. */
+  /* Reset all the potentials back to the original.
+   * NOTE: this excludes the priors. */
   jtree_dfs(cliques[0], retract_clique, retract_sepset, NULL);
 
-  /* Enter evidence back to the join tree. */
+  /* Enter evidence back to the join tree.
+   * Does not enter the priors... */
   for(i = 0; i < nvars; i++){
     v = vars[i];
     c = find_family(cliques, ncliques, v);
@@ -972,17 +974,15 @@ int enter_evidence(variable* vars, int nvars, clique* cliques,
   clique c;
 
   /* Q: Why evidence is NULL in some cases?
-   * A: Because some variables don't have priors... */
-
-  /* Q: What if there is completely missing data? */
+   * A: Because some variables don't have priors... 
+   *    The net parser should fix the situation. */
 
   if(v == NULL || evidence == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
   }
 
-  c = find_family(cliques, ncliques, v);
-    
+  c = find_family(cliques, ncliques, v);    
   if(!c){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);
     return ERROR_INVALID_ARGUMENT;
@@ -1019,6 +1019,47 @@ int enter_evidence(variable* vars, int nvars, clique* cliques,
       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
     return(retval);
   }
+
+  return NO_ERROR;
+}
+
+
+int enter_prior(variable* vars, int nvars, clique* cliques, 
+		int ncliques, variable v, double prior[]){
+  int index, i;
+  int e;
+  clique c;
+
+  if(v == NULL || prior == NULL){
+    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    return ERROR_NULLPOINTER;
+  }
+
+  c = find_family(cliques, ncliques, v);    
+
+  e = 1;
+  for(i = 0; i < CARDINALITY(v); i++)
+    if(prior[i] > 0)
+      e = 0; /* Not a zero vector... */
+
+  if(!c || e){ /* v not in any clique or prior is a zero vector */
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);
+    return ERROR_INVALID_ARGUMENT;
+  }
+
+  index = var_index(c, v);
+
+  /*
+   * Here is the update of clique potential.
+   * MUST be done before update_likelihood.
+   */
+  e = update_evidence(prior, NULL, c->p, index);
+  if(e != NO_ERROR){
+    report_error(__FILE__, __LINE__, e, 1);
+    return e;
+  }
+
+  /* Don't update the likelihood... */
 
   return NO_ERROR;
 }

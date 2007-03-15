@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.65 2007-01-04 16:26:42 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.66 2007-03-15 16:31:05 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -460,7 +460,6 @@ int update_evidence(double numerator[], double denominator[],
 
   /* target->num_of_vars > 0  always */
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
-
   if(!target_indices){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     return ERROR_OUTOFMEMORY;
@@ -475,10 +474,8 @@ int update_evidence(double numerator[], double denominator[],
     target->data[i] *= numerator[source_index];  /* THE multiplication */
 
     if(denominator != NULL)
-      if(denominator[source_index] != 0){
-
+      if(denominator[source_index] != 0)
 	target->data[i] /= denominator[source_index];  /* THE division */
-      }
     /* ----------------------------------------------------------- */
     /* It is assumed that: denominator[i]==0 => numerator[i]==0 !!!*/
     /* ----------------------------------------------------------- */

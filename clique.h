@@ -1,5 +1,5 @@
 /*
- * clique.h $Id: clique.h,v 1.8 2007-03-13 16:48:03 jatoivol Exp $
+ * clique.h $Id: clique.h,v 1.9 2007-03-15 16:31:05 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
@@ -189,14 +189,25 @@ int enter_i_observation(variable* vars, int nvars, clique* cliques,
 			int ncliques, variable v, int index);
 
 
-/*
- * Function for entering evidence to a clique tree.
- * sizeof(evidence) must equal variable->cardinality.
+/* Function for entering evidence to a clique tree. 
+ * Resetting the model or entering some new evidence about the 
+ * variable cancels the effects of this operation.
+ * Size of the evidence array must equal variable->cardinality.
  * This function might do a global retraction.
  * Returns an error code.
  */
 int enter_evidence(variable* vars, int nvars, clique* cliques, 
 		   int ncliques, variable v, double evidence[]);
+
+
+/* Function for entering a prior to a clique tree. 
+ * Resetting the cliques cancels the effect of this operation, 
+ * but entering evidence about the variable does not.
+ * Size of the prior array must equal variable->cardinality.
+ * Returns an error code.
+ */
+int enter_prior(variable* vars, int nvars, clique* cliques, 
+	        int ncliques, variable v, double prior[]);
 
 
 /* Finds a clique containing the family of the given variable.
