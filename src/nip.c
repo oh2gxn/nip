@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.193 2007-03-15 16:31:05 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.194 2007-04-03 14:34:12 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -91,10 +91,12 @@
 
  * - Get rid of copy-paste stuff in inference procedures... but how?
 
- * - Viterbi algorithm for the ML-estimate of the latent variables
+ * - "Viterbi" algorithm for the ML-estimate of the latent variables
+ *   - It is a descendant of the algorithm called "max-product" or "max-sum"
  *   - another forward-like algorithm with elements of dynamic programming
  *   - To save huge amounts of memory, could the process use some kind of 
  *     "timeslice sepsets" for encoding the progress throughout time?
+ *   - It has to have the backtracking ability...
 
  * - Online forward_inference (+ refactor offline forward_inference?)
 
