@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.194 2007-04-03 14:34:12 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.195 2007-08-02 15:45:01 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,10 +44,13 @@
 /***** 
  * TODO: 
 
+ * - Leave-one-out program based on EM-test...
+
  * - BUG: Evidence about variables without parents cancels the prior
  *   + Priors should not be entered as if they were evidence
  *   - DBN models work, equivalent static ones don't... WHY?
  *   - Should use_priors() be used automatically by reset_model() ?
+ *   - Did I already fix this..?
 
  * - A program for computing conditional likelihoods
  *   + command line parameters:
