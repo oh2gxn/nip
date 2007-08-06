@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.195 2007-08-02 15:45:01 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.196 2007-08-06 16:32:24 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -45,6 +45,10 @@
  * TODO: 
 
  * - Leave-one-out program based on EM-test...
+ *   - loo_prediction_test
+ *   - for each time series: predict the values of a given variable
+ *       given a model learned from other series and 
+ *       given data about the other variables
 
  * - BUG: Evidence about variables without parents cancels the prior
  *   + Priors should not be entered as if they were evidence
@@ -52,7 +56,7 @@
  *   - Should use_priors() be used automatically by reset_model() ?
  *   - Did I already fix this..?
 
- * - A program for computing conditional likelihoods
+ * - A program for computing conditional likelihoods: likelihood.c
  *   + command line parameters:
  *     + "foo.net", the model
  *     + "bar.txt", the data

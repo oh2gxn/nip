@@ -1,12 +1,14 @@
-/* inftest.c
+/* loo_prediction_test.c
  * 
- * Executes inference procedure with given model and time series. 
- * Inferred probabilities for the selected variable are written to 
- * the specified data file.
+ * Executes leave-one-out testing on the prediction accuracy. 
+ * For each time series, a model is estimated from the rest 
+ * of the data sequences and predictive inference is done for 
+ * a given variable... Inference results are written to a file.
  *
- * SYNOPSIS: INFTEST <MODEL.NET> <INPUT_DATA.TXT> <VARIABLE> <OUTPUT_DATA.TXT>
+ * SYNOPSIS: 
+ * LOO_PREDICTION_TEST <MODEL.NET> <INPUT_DATA.TXT> <VAR> <OUTPUT_DATA.TXT>
  *
- * EXAMPLE: ./inftest filter.net data.txt A inferred_data.txt
+ * EXAMPLE: ./loo_prediction_test model.net data.txt A inferred_data.txt
  */
 
 #include <stdlib.h>
@@ -19,10 +21,7 @@
 #include "errorhandler.h"
 #include "nip.h"
 
-/*
-#define PRINT_CLIQUE_TREE
-*/
-
+/* a lot of similarities with the inference tool (inftest)... */
 
 int main(int argc, char *argv[]){
 
@@ -51,10 +50,6 @@ int main(int argc, char *argv[]){
 
   if(model == NULL)
     return -1;
-
-#ifdef PRINT_CLIQUE_TREE
-  print_cliques(model);
-#endif
 
   use_priors(model, 0); /* Only to be sure... */
 
@@ -102,9 +97,23 @@ int main(int argc, char *argv[]){
   loglikelihood = 0; /* init */
 
   for(i = 0; i < n_max; i++){
+
+
+
+    /* TODO: leaving one time series out and running EM on the rest... */
+    printf("Error: Not yet implemented...\n");
+    return 1;
+    
+
+
     /* the computation of posterior probabilities */
     ts = ts_set[i];
+
+
+    /* FIXME: what about the variable..? it is probably observed in ts! 
+     * Should f_b_inference ignore the data about the variable..?       */
     ucs_set[i] = forward_backward_inference(ts, &v, 1, &probe);
+
 
     /* Compute average log likelihood */
     loglikelihood += probe / TIME_SERIES_LENGTH(ts);
