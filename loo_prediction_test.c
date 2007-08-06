@@ -5,6 +5,9 @@
  * of the data sequences and predictive inference is done for 
  * a given variable... Inference results are written to a file.
  *
+
+ * TODO: more parameters, like the threshold for EM...
+
  * SYNOPSIS: 
  * LOO_PREDICTION_TEST <MODEL.NET> <INPUT_DATA.TXT> <VAR> <OUTPUT_DATA.TXT>
  *
