@@ -152,6 +152,10 @@ int main(int argc, char *argv[]){
 	loo_set[j-1] = ts_set[j];
     }
 
+    /* Use all the data (mark all variables) in EM */
+    for(j = 0; j < model->num_of_vars; j++)
+      mark_variable(model->variables[j]);
+
     /* repeat EM until good enough */
     do{
       last = 0; /* init */
@@ -190,12 +194,12 @@ int main(int argc, char *argv[]){
 
     /* the computation of posterior probabilities */
     ts = ts_set[i];
+    
+    /* ignore possible evidence about the variable to be predicted */
+    unmark_variable(v);
 
-
-    /* FIXME: what about the variable itself? It is probably observed in ts! 
-     * Should f_b_inference ignore the data about the variable..?       */
+    /* Run the inference procedure */
     ucs_set[i] = forward_backward_inference(ts, &v, 1, &probe);
-
 
     /* Compute average log likelihood */
     loglikelihood += probe / TIME_SERIES_LENGTH(ts);

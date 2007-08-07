@@ -33,7 +33,7 @@
 
 int main(int argc, char *argv[]) {
 
-  int i, n, t, e;
+  int i, n, t;
   nip model = NULL;
   time_series *ts_set = NULL;
   time_series ts = NULL;

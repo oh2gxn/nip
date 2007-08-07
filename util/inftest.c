@@ -94,6 +94,11 @@ int main(int argc, char *argv[]){
     free_model(model);
     return -1;
   }
+
+  /* Use all the data (mark all variables) */
+  for(i = 0; i < model->num_of_vars; i++)
+    mark_variable(model->variables[i]);
+
   
   /*****************/
   /* The inference */

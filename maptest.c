@@ -97,6 +97,9 @@ int main(int argc, char *argv[]){
     printf("%s ", ts->hidden[i]->symbol);
   printf("\n");
 
+  /* Use all the data (mark all variables) */
+  for(i = 0; i < model->num_of_vars; i++)
+    mark_variable(model->variables[i]);
 
   /* TODO: replace with the new write_timeseries? */
 

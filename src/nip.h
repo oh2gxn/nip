@@ -1,5 +1,5 @@
 /*
- * nip.h $Id: nip.h,v 1.60 2007-03-13 16:48:03 jatoivol Exp $
+ * nip.h $Id: nip.h,v 1.61 2007-08-07 16:03:21 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -92,7 +92,7 @@ typedef uncertain_series_type *uncertain_series;
 /* Makes the model forget all the given evidence.
  * NOTE: also the priors specified in the NET file are cleared
  * (but remain intact in the variables) so you'll have to re-enter them
- * as soft evidence. */
+ * as soft evidence. (FIXME: priors should not be treated as evidence!) */
 void reset_model(nip model);
 
 
@@ -104,6 +104,7 @@ void total_reset(nip model);
 
 
 /* Enters the priors of independent variables into the model as evidence.
+ * (FIXME: priors should not be treated as evidence!)
  * This has to be done after reset_model and parse_model if you have any
  * other kind of priors than uniform ones. If you need to suppress the 
  * initialisation of the variables representing another one from the 
@@ -188,19 +189,22 @@ int insert_soft_evidence(nip model, char* varname, double* distribution);
 int insert_ts_step(time_series ts, int t, nip model, char mark_mask);
 
 
-/* Method for inserting part of the evidence at a specified step <t> in 
- * an uncertain time series <ucs> into the model <ucs->model>. 
- * Only the variables marked with <mark_mask> will be considered. */
+/* Method for inserting part of the evidence at a specified step <t> in an
+ * uncertain time series <ucs> into the model <ucs->model>.  Only the
+ * variables marked with <mark_mask> will be considered. */
 int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask);
 
 
-/* This algorithm computes the probability distributions for every 
- * hidden variable and for every time step according to the timeseries.
- * It uses only forward propagation, so the result of time step t 
- * is not affected by the rest of the timeseries. 
- * You'll have to specify the variables of interest in the vars array 
- * and the number of the variables. 
- * Returns also the average log. likelihood if <loglikelihood> is not NULL 
+/* This algorithm computes the marginal posterior probability distributions
+ * for every hidden variable and for every time step according to the
+ * timeseries.  It uses only forward propagation, so the result of time
+ * step t is not affected by the rest of the timeseries.  You'll have to
+ * specify the variables of interest in the vars array and the number of
+ * the variables.  Returns also the average log. likelihood if
+ * <loglikelihood> is not NULL.
+ *
+ * NOTE: only evidence for the marked variables is used. Unmarked are
+ * ignored and you can thus easily omit evidence for an entire variable.
  */
 uncertain_series forward_inference(time_series ts, variable vars[], int nvars, 
 				   double* loglikelihood);
@@ -213,6 +217,9 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
  *  You'll have to specify the variables of interest in the vars array 
  * and the number of the variables. 
  * Returns also the average log. likelihood if <loglikelihood> is not NULL
+ *
+ * NOTE: only evidence for the marked variables is used. Unmarked are
+ * ignored and you can thus easily omit evidence for an entire variable.
  */
 uncertain_series forward_backward_inference(time_series ts, 
 					   variable vars[], int nvars,
@@ -241,7 +248,11 @@ time_series mlss(variable vars[], int nvars, time_series ts);
  * NOTE2: the model is included in the time_series 
  * <learning_curve> can be NULL: if it isn't, it will be
  * emptied and filled with average log. likelihood values for each
- * iteration... */
+ * iteration... 
+ *
+ * NOTE: only evidence for the marked variables is used. Unmarked are
+ * ignored and you can thus easily omit evidence for an entire variable.
+ */
 int em_learn(time_series *ts, int n_ts, double threshold, 
 	     doublelist learning_curve);
 

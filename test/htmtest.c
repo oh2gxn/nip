@@ -73,6 +73,12 @@ int main(int argc, char *argv[]){
   /*print_cliques(model);*/
   printf("\n");
 
+  /* Make sure all the variables are marked not to be ignored 
+   * in inserting evidence... */
+  for(i = 0; i < model->num_of_vars; i++)
+    mark_variable(model->variables[i]); /* Unmark all to be sure */
+
+
   /*****************/
   /* Forward phase */
   /*****************/

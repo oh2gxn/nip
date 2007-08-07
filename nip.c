@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.197 2007-08-07 13:11:08 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.198 2007-08-07 16:03:21 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -1265,7 +1265,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
     }
 
     /* Put some data in */
-    insert_ts_step(ts, t, model, MARK_BOTH);
+    insert_ts_step(ts, t, model, MARK_ON); /* only marked variables */
 
     /* Do the inference */
     make_consistent(model);
@@ -1478,7 +1478,7 @@ uncertain_series forward_backward_inference(time_series ts,
     }
 
     /* Put some data in (Q: should this be AFTER message passing?) */
-    insert_ts_step(ts, t, model, MARK_BOTH);
+    insert_ts_step(ts, t, model, MARK_ON);
     
     /* Do the inference */
     make_consistent(model);
@@ -1538,7 +1538,7 @@ uncertain_series forward_backward_inference(time_series ts,
       }
     
     /* Put some evidence in */
-    insert_ts_step(ts, t, model, MARK_BOTH);
+    insert_ts_step(ts, t, model, MARK_ON);
 
     /* Pass the message from the future */
     if(t < ts->length - 1)
@@ -1832,7 +1832,7 @@ static int e_step(time_series ts, potential* parameters,
 
     m1 = model_prob_mass(model);
 
-    insert_ts_step(ts, t, model, MARK_BOTH); /* Put some data in */
+    insert_ts_step(ts, t, model, MARK_ON); /* Put some data in */
 
     make_consistent(model); /* Do the inference */
 
@@ -1918,7 +1918,7 @@ static int e_step(time_series ts, potential* parameters,
       }
     
     /* Put some evidence in */
-    insert_ts_step(ts, t, model, MARK_BOTH);
+    insert_ts_step(ts, t, model, MARK_ON); /* only marked variables */
     
     /* Pass the message from the future */
     if(t < ts->length - 1)
