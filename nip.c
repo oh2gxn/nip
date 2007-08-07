@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.196 2007-08-06 16:32:24 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.197 2007-08-07 13:11:08 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -116,6 +116,9 @@
 
  * - Hide time_series and uncertain_series implementations better
  *   - more useful operations for them?
+
+ * - write_X() functions could take file id's instead of file names...
+ *   (opening a file or other output would be users responsibility)
  *****/
 
 extern FILE *open_net_file(const char *filename);

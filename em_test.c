@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  /* read the threshold value */
+  /* read the min log likelihood value */
   tailptr = NULL;
   min_log_likelihood = strtod(argv[4], &tailptr);
   if(min_log_likelihood >= 0.0 || tailptr == argv[4]){
