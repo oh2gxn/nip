@@ -1,5 +1,5 @@
 /*
- * potential.c $Id: potential.c,v 1.66 2007-03-15 16:31:05 jatoivol Exp $
+ * potential.c $Id: potential.c,v 1.67 2007-08-08 14:51:53 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -452,6 +452,7 @@ int update_potential(potential numerator, potential denominator,
   return NO_ERROR;
 }
 
+
 int update_evidence(double numerator[], double denominator[], 
 		    potential target, int var){
 
@@ -484,6 +485,7 @@ int update_evidence(double numerator[], double denominator[],
   free(target_indices);   /* JJ NOTE: GET RID OF THESE */
   return NO_ERROR;
 }
+
 
 int init_potential(potential probs, potential target, int mapping[]){
 

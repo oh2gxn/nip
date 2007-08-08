@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.28 2007-03-15 16:31:05 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.29 2007-08-08 14:51:52 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -973,10 +973,6 @@ int enter_evidence(variable* vars, int nvars, clique* cliques,
   int retval;
   clique c;
 
-  /* Q: Why evidence is NULL in some cases?
-   * A: Because some variables don't have priors... 
-   *    The net parser should fix the situation. */
-
   if(v == NULL || evidence == NULL){
     report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
     return ERROR_NULLPOINTER;
@@ -1050,8 +1046,9 @@ int enter_prior(variable* vars, int nvars, clique* cliques,
   index = var_index(c, v);
 
   /*
-   * Here is the update of clique potential.
-   * MUST be done before update_likelihood.
+   * Here is the update of clique potential: simply a multiplication, 
+   * effects of which may not disappear if it gets multiplied again
+   * when the variable is observed and actual evidence entered.
    */
   e = update_evidence(prior, NULL, c->p, index);
   if(e != NO_ERROR){

@@ -17,6 +17,8 @@
 #include "errorhandler.h"
 #include "nip.h"
 
+#define VAR_OF_INTEREST(m,x) ((m->variables[x]->if_status & INTERFACE_OLD_OUTGOING) == 0)
+
 int main(int argc, char *argv[]){
 
   int i, j, n, t = 0;
@@ -25,6 +27,8 @@ int main(int argc, char *argv[]){
 
   nip model = NULL;
   variable temp = NULL;
+  variable* vars = NULL;
+  int nvars = 0;
 
   time_series ts = NULL;
   time_series *ts_set = NULL;
@@ -62,21 +66,40 @@ int main(int argc, char *argv[]){
 
   ts = ts_set[0];
 
+  /* Determine variables of interest */
+  nvars = 0;
+  for(i = 0; i < model->num_of_vars; i++){
+    if(VAR_OF_INTEREST(model,i))
+      nvars++;
+  }
+  vars = (variable*) calloc(nvars, sizeof(variable));
+  j = 0;
+  for(i = 0; i < model->num_of_vars; i++){
+    if(VAR_OF_INTEREST(model,i))
+      vars[j++] = model->variables[i];
+  }
+  assert(j == nvars);
+
   /** DEBUG **/
   printf("Observed variables:\n  ");
   for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
     printf("%s ", ts->observed[i]->symbol);
+
   printf("\nHidden variables:\n  ");
   for(i = 0; i < ts->num_of_hidden; i++)
     printf("%s ", ts->hidden[i]->symbol);
-  printf("\n");
+
+  printf("\nVariables of interest:\n  ");
+  for(i = 0; i < nvars; i++)
+    printf("%s ", vars[i]->symbol);
+  
   /*print_cliques(model);*/
   printf("\n");
 
   /* Make sure all the variables are marked not to be ignored 
    * in inserting evidence... */
   for(i = 0; i < model->num_of_vars; i++)
-    mark_variable(model->variables[i]); /* Unmark all to be sure */
+    mark_variable(model->variables[i]);
 
 
   /*****************/
@@ -85,7 +108,9 @@ int main(int argc, char *argv[]){
 
   printf("## Forward phase ##\n");  
 
-  ucs = forward_inference(ts, ts->hidden, ts->num_of_hidden, &loglikelihood);
+  /* TODO: instead of ts->hidden, use variables not in  */
+
+  ucs = forward_inference(ts, vars, nvars, &loglikelihood);
 
   for(t = 0; t < UNCERTAIN_SERIES_LENGTH(ucs); t++){ /* FOR EACH TIMESLICE */
     
@@ -102,7 +127,9 @@ int main(int argc, char *argv[]){
     }
   }  
 
-  printf("  Log. likelihood = %g\n\n", loglikelihood);
+  printf("  ln p(y(1:%d)) = %g\n\n", 
+	 UNCERTAIN_SERIES_LENGTH(ucs), 
+	 loglikelihood);
   
   /******************/
   /* Backward phase */
@@ -112,7 +139,7 @@ int main(int argc, char *argv[]){
 
   free_uncertainseries(ucs); /* REMEMBER THIS */
 
-  ucs = forward_backward_inference(ts, ts->hidden, ts->num_of_hidden, NULL);
+  ucs = forward_backward_inference(ts, vars, nvars, NULL);
 
   /* forget old evidence */
   reset_model(model);
@@ -137,6 +164,7 @@ int main(int argc, char *argv[]){
     free_timeseries(ts_set[i]);
   free(ts_set);
   free_uncertainseries(ucs);
+  free(vars);
   free_model(model);
   
   return 0;

@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.81 2007-03-15 16:31:05 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.82 2007-08-08 14:51:52 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -514,6 +514,7 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' { free($1); }
 
 
 potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}' { 
+  /* FIXME: parser segfaults if <symbols> is an empty list... */
   int i;
   int retval, size;
   int nparents = nip_parent_vars->length;

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.198 2007-08-07 16:03:21 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.199 2007-08-08 14:51:52 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -44,17 +44,29 @@
 /***** 
  * TODO: 
 
+ * - print_model
+ *   - writes an input file for graphviz/dot for automated visualization?
+
+ * - automated test scripts
+ *   - test models and data
+ *   - script with simple diff operations?
+
+ * - BUG: net parser segfaults if <symbols> is an empty list:
+ *   "potential( A | ) { }" - it should report an error and quit
+
  * - Leave-one-out program based on EM-test...
- *   - loo_prediction_test
- *   - for each time series: predict the values of a given variable
+ *   + loo_prediction_test
+ *   + for each time series: predict the values of a given variable
  *       given a model learned from other series and 
  *       given data about the other variables
+ *   - testing
 
- * - BUG: Evidence about variables without parents cancels the prior
+ * + BUG: Evidence about variables without parents cancels the prior
  *   + Priors should not be entered as if they were evidence
- *   - DBN models work, equivalent static ones don't... WHY?
+
+ * - BUG: DBN models work, equivalent static ones don't... WHY?
  *   - Should use_priors() be used automatically by reset_model() ?
- *   - Did I already fix this..?
+ *   - Is the condition for entering priors really correct ?
 
  * - A program for computing conditional likelihoods: likelihood.c
  *   + command line parameters:
@@ -112,7 +124,7 @@
  * - Refactor the list implementations (ADTs, almost done?)
  *   - potentialList needs to be "hidden" better?
  *   - still massive amounts of copy-paste stuff... let it be?
- *   + Next time: make a general void* list
+ *   + Next time: make a general void* list or use C++
 
  * - Hide time_series and uncertain_series implementations better
  *   - more useful operations for them?
@@ -201,7 +213,7 @@ nip parse_model(char* file){
     return NULL;
   }
 
-  retval = yyparse(); /* Reminder: priors not entered yet! */
+  retval = yyparse(); /* Reminder: priors not entered yet?! */
 
   close_net_file();
 
@@ -1279,7 +1291,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
 	*loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
       }
       /* Check for anomalies */
-      assert(*loglikelihood < 0.0);
+      /*assert(*loglikelihood <= 0.0);*/
       assert(m2 >= 0.0);
       if(m2 == 0){
 	*loglikelihood = -DBL_MAX; /* -infinity ? */
