@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.199 2007-08-08 14:51:52 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.200 2007-08-09 14:53:52 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -54,19 +54,21 @@
  * - BUG: net parser segfaults if <symbols> is an empty list:
  *   "potential( A | ) { }" - it should report an error and quit
 
- * - Leave-one-out program based on EM-test...
+ * - Leave-one-out program based on em_test and inftest...
  *   + loo_prediction_test
  *   + for each time series: predict the values of a given variable
  *       given a model learned from other series and 
  *       given data about the other variables
  *   - testing
 
- * + BUG: Evidence about variables without parents cancels the prior
- *   + Priors should not be entered as if they were evidence
+ * - BUG: some DBN models work, equivalent static ones don't... WHY?
+ *   - Does this happen only on MRF-like models? 
+ *     Is it because of bad triangulation?
 
- * - BUG: DBN models work, equivalent static ones don't... WHY?
  *   - Should use_priors() be used automatically by reset_model() ?
  *   - Is the condition for entering priors really correct ?
+ *   - Make sure priors get multiplied into the model only once!
+ *     (previously they were treated like evidence and this wasn't a problem)
 
  * - A program for computing conditional likelihoods: likelihood.c
  *   + command line parameters:
@@ -131,6 +133,9 @@
 
  * - write_X() functions could take file id's instead of file names...
  *   (opening a file or other output would be users responsibility)
+
+ * + BUG: Evidence about variables without parents cancels the prior
+ *   + Priors should not be entered as if they were evidence
  *****/
 
 extern FILE *open_net_file(const char *filename);
@@ -153,8 +158,12 @@ static int m_step(potential* results, nip model);
 
 void reset_model(nip model){
   int i, retval;
-  for(i = 0; i < model->num_of_vars; i++)
-    reset_likelihood(model->variables[i]);
+  variable v;
+  for(i = 0; i < model->num_of_vars; i++){
+    v = model->variables[i];
+    reset_likelihood(v);
+    v->prior_entered = 0;
+  }
   retval = global_retraction(model->variables, model->num_of_vars, 
 			     model->cliques, model->num_of_cliques);
   if(retval != NO_ERROR)
@@ -181,16 +190,28 @@ void use_priors(nip model, int has_history){
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
     assert(v->prior != NULL);
-    if(!has_history || !(v->if_status & INTERFACE_OLD_OUTGOING)){
-      /* Reminder: priors should be multiplied into the tree so that
-       *           they are not canceled if evidence is entered, but
-       *           there was the idea that global retraction should
-       *           cancel priors... */
-      retval = enter_prior(model->variables, model->num_of_vars, 
-			   model->cliques, model->num_of_cliques, 
-			   v, v->prior);
-      if(retval != NO_ERROR)
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+
+    /* Prevent priors from being multiplied into the model more than once */
+    if(!(v->prior_entered)){
+      /* Interface variables have priors only in the first time step 
+       * (!has_history => first time step) */
+      if(!has_history || !(v->if_status & INTERFACE_OLD_OUTGOING)){
+
+	/* Reminder: Priors should be multiplied into the tree so that
+	 *           they are not canceled if evidence is entered, but
+	 *           there was the idea that global retraction should
+	 *           cancel priors. Canceling some priors is needed in 
+	 *           time slice models where interface variables will 
+	 *           not actually have priors in subsequent time steps. */
+	
+	retval = enter_prior(model->variables, model->num_of_vars, 
+			     model->cliques, model->num_of_cliques, 
+			     v, v->prior);
+	if(retval != NO_ERROR)
+	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+
+	v->prior_entered = 1;
+      }
     }
   }
 }
@@ -2016,7 +2037,7 @@ static int e_step(time_series ts, potential* parameters,
 
     /* forget old evidence */
     reset_model(model);
-    if(t > 1) /* or t > 0 ? */
+    if(t > 1) /* Q: Or t > 0 ?  A: No, t will be t-1 soon... */
       use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
     else
       use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
@@ -2190,7 +2211,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /* Initialise the parameter potentials to "zero" for  
      * accumulating the "average parameters" in the E-step */
     for(v = 0; v < model->num_of_vars; v++){
-      uniform_potential(parameters[v], 0.0);
+      uniform_potential(parameters[v], 1.0); /* Q: Use pseudo counts? */
+
       /*memset(parameters[v]->data, 0, n * sizeof(double)); BS */
 
       /* the M-step will take care of the normalisation 

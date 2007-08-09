@@ -1,5 +1,5 @@
 /*
- * variable.h $Id: variable.h,v 1.17 2007-03-13 16:48:03 jatoivol Exp $
+ * variable.h $Id: variable.h,v 1.18 2007-08-09 14:53:52 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -34,6 +34,7 @@ struct nip_var {
   unsigned long id;   /* Unique id for every variable */
   double *likelihood; /* Likelihood of each value */
   double *prior;      /* Prior prob. of each value for an indep. variable */
+  int prior_entered;  /* Tells whether the prior is already in use */
   struct nip_var *previous; /* Pointer to the variable which corresponds to
 			     * this one in the previous timeslice */
   struct nip_var *next;     /* Pointer to the variable which corresponds to

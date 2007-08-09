@@ -58,7 +58,6 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Unable to parse the NET file: %s?\n", argv[1]);
     return -1;
   }
-  use_priors(model, 1);
 
   /* read the data */
   n = read_timeseries(model, argv[2], &ts_set);

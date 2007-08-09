@@ -53,9 +53,9 @@ int main(int argc, char *argv[]){
   /* Parse the model from a Hugin NET file */
   /*****************************************/
   if(argc < 6){
-    printf("Specify the names of the net file, input data file, ");
-    printf("EM stopping threshold, minimum average likelihood, ");
-    printf("variable of interest, and output data file.\n");
+    printf("Specify:\n - name of the net file,\n - input data file, \n");
+    printf(" - EM stopping threshold,\n - minimum average likelihood, \n");
+    printf(" - variable of interest,\n - and output data file.\n");
     return 0;
   }
 
@@ -63,8 +63,6 @@ int main(int argc, char *argv[]){
 
   if(model == NULL)
     return -1;
-
-  use_priors(model, 0); /* Only to be sure... */
 
   /*****************************/
   /* read the data from a file */
@@ -204,9 +202,8 @@ int main(int argc, char *argv[]){
     /* Compute average log likelihood */
     loglikelihood += probe / TIME_SERIES_LENGTH(ts);
 
-    /* forget old evidence */
-    reset_model(model);
-    use_priors(model, 0);
+    /* Display progress */
+    printf("%d / %d\n", i, n_max);
   }
   loglikelihood /= n_max;
 

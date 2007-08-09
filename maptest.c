@@ -49,8 +49,6 @@ int main(int argc, char *argv[]){
   if(model == NULL)
     return -1;
 
-  use_priors(model, 0); /* Only to be sure... */
-
   /*****************************/
   /* read the data from a file */
   /*****************************/
@@ -125,10 +123,6 @@ int main(int argc, char *argv[]){
 
     /* the computation of posterior probabilities */
     ucs = forward_backward_inference(ts, ts->hidden, ts->num_of_hidden, NULL);
-    
-    /* forget old evidence */
-    reset_model(model);
-    use_priors(model, 0);
     
     for(t = 0; t < UNCERTAIN_SERIES_LENGTH(ucs); t++){ /* FOR EACH TIMESLICE */
       

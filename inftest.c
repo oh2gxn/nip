@@ -56,8 +56,6 @@ int main(int argc, char *argv[]){
   print_cliques(model);
 #endif
 
-  use_priors(model, 0); /* Only to be sure... */
-
   /*****************************/
   /* read the data from a file */
   /*****************************/
@@ -113,10 +111,6 @@ int main(int argc, char *argv[]){
 
     /* Compute average log likelihood */
     loglikelihood += probe / TIME_SERIES_LENGTH(ts);
-
-    /* forget old evidence */
-    reset_model(model);
-    use_priors(model, 0);
   }
   loglikelihood /= n_max;
 

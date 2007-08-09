@@ -1,8 +1,8 @@
 /* htmtest.c
  *
  * Experimental code for handling the inference with time slices. 
- * Prints a MAP estimate for the hidden variables during the first 
- * time series in the given data file.
+ * Prints marginal posterior probability distributions for each variable 
+ * during the first time series in the given data file.
  *
  * SYNOPSIS: HTMTEST <MODEL.NET> <DATA.TXT>
  */
@@ -48,9 +48,7 @@ int main(int argc, char *argv[]){
 
   if(model == NULL)
     return -1;
-  /* The input file has been parsed. -- */
 
-  use_priors(model, 0); /* Only to be sure... */
 
   /*****************************/
   /* read the data from a file */
@@ -66,6 +64,7 @@ int main(int argc, char *argv[]){
 
   ts = ts_set[0];
 
+
   /* Determine variables of interest */
   nvars = 0;
   for(i = 0; i < model->num_of_vars; i++){
@@ -79,6 +78,7 @@ int main(int argc, char *argv[]){
       vars[j++] = model->variables[i];
   }
   assert(j == nvars);
+
 
   /** DEBUG **/
   printf("Observed variables:\n  ");
@@ -96,6 +96,7 @@ int main(int argc, char *argv[]){
   /*print_cliques(model);*/
   printf("\n");
 
+
   /* Make sure all the variables are marked not to be ignored 
    * in inserting evidence... */
   for(i = 0; i < model->num_of_vars; i++)
@@ -108,12 +109,9 @@ int main(int argc, char *argv[]){
 
   printf("## Forward phase ##\n");  
 
-  /* TODO: instead of ts->hidden, use variables not in  */
-
   ucs = forward_inference(ts, vars, nvars, &loglikelihood);
 
   for(t = 0; t < UNCERTAIN_SERIES_LENGTH(ucs); t++){ /* FOR EACH TIMESLICE */
-    
     printf("-- t = %d --\n", t+1);
 
     /* Print some intermediate results */
@@ -141,12 +139,7 @@ int main(int argc, char *argv[]){
 
   ucs = forward_backward_inference(ts, vars, nvars, NULL);
 
-  /* forget old evidence */
-  reset_model(model);
-  use_priors(model, 0);
- 
   for(t = 0; t < UNCERTAIN_SERIES_LENGTH(ucs); t++){ /* FOR EACH TIMESLICE */
-    
     printf("-- t = %d --\n", t+1);
     
     /* Print the final results */

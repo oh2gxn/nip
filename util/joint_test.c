@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.13 2007-03-13 16:48:03 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.14 2007-08-09 14:53:52 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 1) a .net file, 2) data file with one step,
  * 3) names of wanted variables
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]){
   model = parse_model(argv[1]);
   if(!model)
     return -1;
-  use_priors(model, 1);
+  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
 
   /* read the data */
   n = read_timeseries(model, argv[2], &ts_set);

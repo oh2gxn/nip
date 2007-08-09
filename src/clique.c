@@ -1,5 +1,5 @@
 /*
- * clique.c $Id: clique.c,v 1.29 2007-08-08 14:51:52 jatoivol Exp $
+ * clique.c $Id: clique.c,v 1.30 2007-08-09 14:53:52 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -1031,12 +1031,17 @@ int enter_prior(variable* vars, int nvars, clique* cliques,
     return ERROR_NULLPOINTER;
   }
 
+  /* printf("Entering prior for variable %s:\n", v->symbol); DEBUG */
+
   c = find_family(cliques, ncliques, v);    
 
   e = 1;
-  for(i = 0; i < CARDINALITY(v); i++)
+  for(i = 0; i < CARDINALITY(v); i++){
+    /* printf("%g ", prior[i]); DEBUG */
     if(prior[i] > 0)
       e = 0; /* Not a zero vector... */
+  }
+  /* printf("\n"); DEBUG */
 
   if(!c || e){ /* v not in any clique or prior is a zero vector */
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);

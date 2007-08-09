@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.13 2007-03-13 16:48:03 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.14 2007-08-09 14:53:52 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -59,6 +59,7 @@ variable new_variable(const char* symbol, const char* name,
 
   v->parents = NULL;
   v->prior = NULL; /* Usually prior == NULL  =>  num_of_parents > 0 */
+  v->prior_entered = 0;
   v->num_of_parents = 0;
   v->family_clique = NULL;
   v->family_mapping = NULL;

@@ -173,7 +173,6 @@ int main(int argc, char *argv[]) {
     printf("Unable to parse the NET file: %s?\n", argv[1]);
     return -1;
   }
-  use_priors(model, 1); /* ? */
 
   /* read file formats */
   /* Reminder: strcasecmp() is NOT ANSI C. */

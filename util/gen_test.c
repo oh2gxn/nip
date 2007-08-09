@@ -41,7 +41,6 @@ int main(int argc, char *argv[]) {
     printf("Unable to parse the NET file: %s?\n", argv[1]);
     return -1;
   }
-  use_priors(model, 1);
 
   /* read how many time series to generate */
   d = strtod(argv[2], &tailptr);

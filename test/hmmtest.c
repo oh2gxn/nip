@@ -50,7 +50,6 @@ int main(int argc, char *argv[]){
     return -1;
   /* The input file has been parsed. -- */
 
-  use_priors(model, 0);
 
   /*****************************/
   /* read the data from a file */
@@ -65,6 +64,7 @@ int main(int argc, char *argv[]){
   ts = ts_set[0];
 
   /* Allocate some space for filtering */
+  assert(ts->num_of_hidden > 0);
   result = (double***) calloc(TIME_SERIES_LENGTH(ts) + 1, sizeof(double**));
   quotient = (double**) calloc(ts->num_of_hidden, sizeof(double*));
   if(!(result && quotient)){
@@ -106,7 +106,10 @@ int main(int argc, char *argv[]){
   /*****************/
   printf("## Forward phase ##\n");  
 
-  for(t = 0; t <= TIME_SERIES_LENGTH(ts); t++){ /* FOR EVERY TIMESLICE */
+  reset_model(model); /* Reset the clique tree */
+  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+
+  for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* FOR EVERY TIMESLICE */
     
     printf("-- t = %d --\n", t);
         
@@ -155,7 +158,7 @@ int main(int argc, char *argv[]){
     if(t < TIME_SERIES_LENGTH(ts)){
       /* forget old evidence */
       reset_model(model);
-      use_priors(model, 1);
+      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
 
       for(i = 0; i < ts->num_of_hidden; i++){
 	/* old posteriors become new priors */
@@ -186,9 +189,9 @@ int main(int argc, char *argv[]){
 
   /* forget old evidence */
   reset_model(model);
-  use_priors(model, 1); /* JJT: Not sure... */
+  use_priors(model, HAD_A_PREVIOUS_TIMESLICE); /* JJT: Not sure... */
 
-  for(t = TIME_SERIES_LENGTH(ts); t >= 0; t--){ /* FOR EVERY TIMESLICE */
+  for(t = TIME_SERIES_LENGTH(ts)-1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
 
     printf("-- t = %d --\n", t);
 
@@ -211,7 +214,7 @@ int main(int argc, char *argv[]){
 			 temp->next, result[t-1][i]);
       }
     }
-    
+
     if(t < TIME_SERIES_LENGTH(ts)){
       
       for(i = 0; i < ts->num_of_hidden; i++){
@@ -223,7 +226,9 @@ int main(int argc, char *argv[]){
 	      break;
 	  
 	  /* FIXME: Get rid of the quotient array */
-	  
+	  printf("result[%d][%d][%d] / result[%d][%d][%d]\n", 
+		 t+1, i, j, t, k, j);
+
 	  for(j = 0; j < CARDINALITY(temp); j++)
 	    quotient[i][j] = result[t + 1][i][j] / result[t][k][j]; 
 	  
@@ -274,7 +279,7 @@ int main(int argc, char *argv[]){
     
     /* forget old evidence */
     reset_model(model);
-    use_priors(model, 1);
+    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
   }
   
   for(t = 0; t < TIME_SERIES_LENGTH(ts) + 1; t++){
