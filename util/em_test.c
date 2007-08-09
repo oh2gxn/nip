@@ -111,6 +111,9 @@ int main(int argc, char *argv[]) {
   seed = random_seed(NULL);
   printf("  Random seed = %ld\n", seed);
 
+  for(i = 0; i < model->num_of_vars; i++)
+    mark_variable(model->variables[i]); /* Make sure all the data is used */
+
   learning_curve = make_doublelist();
   t = 0;
   do{
