@@ -203,7 +203,7 @@ int main(int argc, char *argv[]){
     loglikelihood += probe / TIME_SERIES_LENGTH(ts);
 
     /* Display progress */
-    printf("%d / %d\n", i, n_max);
+    printf("%d / %d\n", i+1, n_max);
   }
   loglikelihood /= n_max;
 
