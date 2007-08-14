@@ -69,15 +69,16 @@ int main(int argc, char *argv[]){
   /*****************************/
   n_max = read_timeseries(model, argv[2], &ts_set);
 
-  if(n_max < 1){
+  /* can't do leave-one-out with a single series */
+  if(n_max < 2){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    fprintf(stderr, "%s\n", argv[2]);
+    fprintf(stderr, "%s should have more than one time series.\n", argv[2]);
     free_model(model);
     return -1;
   }
 
   ucs_set = (uncertain_series*) calloc(n_max, sizeof(uncertain_series));
-  loo_set = (time_series*) calloc(n_max-1, sizeof(time_series));
+  loo_set = (time_series*) calloc(n_max - 1, sizeof(time_series));
   if(!ucs_set || !loo_set){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     for(i = 0; i < n_max; i++)

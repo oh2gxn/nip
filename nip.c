@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.200 2007-08-09 14:53:52 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.201 2007-08-14 16:08:12 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -2121,8 +2121,8 @@ static int m_step(potential* parameters, nip model){
 }
 
 
-/* Trains the given model (ts->model) according to the given time series 
- * (ts) with EM-algorithm. Returns an error code. */
+/* Trains the given model (ts[0]->model) according to the given set of 
+ * time series (ts[*]) with EM-algorithm. Returns an error code. */
 int em_learn(time_series *ts, int n_ts, double threshold,
 	     doublelist learning_curve){
   int e, i, n, v;
@@ -2132,7 +2132,13 @@ int em_learn(time_series *ts, int n_ts, double threshold,
   double loglikelihood = -DBL_MAX;
   double probe = 0;
   potential *parameters = NULL;
-  nip model = ts[0]->model;
+  nip model = NULL;
+
+  if(!ts[0] || !ts[0]->model){
+    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    return ERROR_INVALID_ARGUMENT;
+  }
+  model = ts[0]->model;
 
   if(learning_curve != NULL){
     /* Take care it's empty */
