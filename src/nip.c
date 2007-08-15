@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.201 2007-08-14 16:08:12 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.202 2007-08-15 08:40:30 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -933,9 +933,11 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
   }
 
   /* Write names of the states */
-  fprintf(f, "%s", get_statename(v, 0));
-  for(i = 1; i < n; i++)
-    fprintf(f, ", %s", get_statename(v, i));
+  for(i = 0; i < n; i++){
+    if(i > 0)
+      fprintf(f, "%c", FIELD_SEPARATOR);
+    fprintf(f, "%s", get_statename(v, i));
+  }
   fputs("\n", f);
 
   /* Write the data: probabilities... */
@@ -944,9 +946,11 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
 
     for(t = 0; t < ucs->length; t++){ /* ...for each time step... */
       
-      fprintf(f, "%f", ucs->data[t][v_index[s]][0]); /* ...for each state. */
-      for(i = 1; i < n; i++) 
-	fprintf(f, ", %f", ucs->data[t][v_index[s]][i]);
+      for(i = 0; i < n; i++){ /* ...for each state. */
+	if(i > 0)
+	  fprintf(f, "%c", FIELD_SEPARATOR);
+	fprintf(f, "%f", ucs->data[t][v_index[s]][i]);
+      }
       fputs("\n", f);
     }
     fputs("\n", f); /* series separator */
