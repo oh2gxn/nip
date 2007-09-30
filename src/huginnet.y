@@ -1,5 +1,5 @@
 /*
- * huginnet.y $Id: huginnet.y,v 1.82 2007-08-08 14:51:52 jatoivol Exp $
+ * huginnet.y $Id: huginnet.y,v 1.83 2007-09-30 19:10:56 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -514,19 +514,25 @@ unknownDeclaration:  UNQUOTED_STRING '=' value ';' { free($1); }
 
 
 potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}' { 
-  /* FIXME: parser segfaults if <symbols> is an empty list... */
+  /* fixed ? : parser segfaults if <symbols> is an empty list... */
   int i;
   int retval, size;
-  int nparents = nip_parent_vars->length;
+  int nparents = 0;
   variable *family = NULL;
   variable *parents = NULL;
   double *doubles = $8;
   char* error = NULL;
   potential p = NULL;
 
-  family = (variable*) calloc(nparents + 1, sizeof(variable));
-  parents = list_to_variable_array(nip_parent_vars);
+  if(nip_parent_vars != NULL)
+    nparents = nip_parent_vars->length;
 
+  family = (variable*) calloc(nparents + 1, sizeof(variable));
+
+  if(nip_parent_vars != NULL)
+    parents = list_to_variable_array(nip_parent_vars);
+
+  /* TODO: parser could survive even when "potential(A| )" happens... */
   if(!parents || !family){
     free(family);
     free(parents);
@@ -611,6 +617,71 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 			    family[0], NULL); 
   if(retval != NO_ERROR){
     report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    YYABORT;
+  }
+}
+|                     token_potential '(' child '|' symbols ')' '{' '}' {
+  /* fixed ? : parser segfaults if <symbols> is an empty list... */
+  int i;
+  int retval, size;
+  int nparents = 0;
+  variable *family = NULL;
+  variable *parents = NULL;
+  double *doubles = NULL;
+  char* error = NULL;
+  potential p = NULL;
+
+  if(nip_parent_vars != NULL)
+    nparents = nip_parent_vars->length;
+
+  family = (variable*) calloc(nparents + 1, sizeof(variable));
+
+  if(nip_parent_vars != NULL)
+    parents = list_to_variable_array(nip_parent_vars);
+
+  /* TODO: parser could survive even when "potential(A| )" happens... */
+  if(!parents || !family){
+    free(family);
+    free(parents);
+    free(doubles);
+    YYABORT;
+  }
+
+#ifdef DEBUG_BISON
+  printf("nip_symbols_parsed = %d\n", nparents);
+#endif
+
+  family[0] = $3;
+  size = CARDINALITY(family[0]);
+  for(i = 0; i < nparents; i++){
+    family[i + 1] = parents[i];
+    size = size * CARDINALITY(parents[i]);
+  }
+  /* check that nip_data_size >= product of variable cardinalities! */
+  if(size > nip_data_size){
+    /* too few elements in the specified potential */
+    asprintf(&error, 
+	     "NET parser: Not enough elements in potential( %s... )!", 
+	     get_symbol(family[0]));
+    yyerror(error);
+    free(family);
+    free(parents);
+    free(doubles);
+    YYABORT;
+  }
+
+  if(nip_parsed_potentials == NULL)
+    nip_parsed_potentials = make_potentialList();
+
+  p = create_potential(family, nparents + 1, doubles);
+  normalise_cpd(p); /* useless? */
+  retval = append_potential(nip_parsed_potentials, p, family[0], parents);
+
+  free(doubles); /* the data was copied at create_potential */
+  empty_variablelist(nip_parent_vars);
+  free(family);
+  if(retval != NO_ERROR){
+    report_error(__FILE__, __LINE__, retval, 1);
     YYABORT;
   }
 }
