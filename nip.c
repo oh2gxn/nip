@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.202 2007-08-15 08:40:30 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.203 2007-09-30 18:39:05 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -43,6 +43,10 @@
 
 /***** 
  * TODO: 
+
+ * - tiny addition to huginnet.y: potentialDeclaration without data
+ *   (uniform potential) AND parents. Copy-paste the similar thing
+ *   currently made for priors?
 
  * - print_model
  *   - writes an input file for graphviz/dot for automated visualization?
