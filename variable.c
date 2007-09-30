@@ -1,5 +1,5 @@
 /*
- * variable.c $Id: variable.c,v 1.14 2007-08-09 14:53:52 jatoivol Exp $
+ * variable.c $Id: variable.c,v 1.15 2007-09-30 19:20:59 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -426,10 +426,15 @@ variable *variable_union(variable *a, variable *b, int na, int nb, int* nc){
   variable *c = NULL;
 
   /* Check stuff */
-  if(!(a && na > 0 && ((b == NULL && nb == 0) || (b != NULL && nb > 0)))){
+  if((nc == NULL) || (na > 0 && a == NULL) || (nb > 0 && b == NULL)){
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     if(nc)
       *nc = -1;
+    return NULL;
+  }
+
+  if(na <= 0 && nb <= 0){
+    *nc = 0;
     return NULL;
   }
   
@@ -445,7 +450,7 @@ variable *variable_union(variable *a, variable *b, int na, int nb, int* nc){
   }
   *nc = n; /* save */
   if(!n)
-    return NULL; /* empty set */
+    return NULL; /* empty set... shouldn't happen at this phase though */
 
   /* The union operation */
   c = (variable*) calloc(*nc, sizeof(variable));
