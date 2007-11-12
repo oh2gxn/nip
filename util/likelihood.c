@@ -72,13 +72,17 @@ int main(int argc, char *argv[]) {
     v = model_variable(model, argv[i]);
     if(v == NULL){
       fprintf(stderr, "Unrecognized variable: %s?\n", argv[i]);
-      for(i = 0; i < n; i++)
-	free_timeseries(ts_set[i]);
-      free(ts_set);
-      free_model(model);
-      return -1;
+      /*
+	for(i = 0; i < n; i++)
+	  free_timeseries(ts_set[i]);
+	free(ts_set);
+	free_model(model);
+	return -1;
+      */
     }
-    mark_variable(v); /* Mark the variables of interest */
+    else{
+      mark_variable(v); /* Mark the variables of interest */
+    }
   }
 
   /* THE work */
