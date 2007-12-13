@@ -71,8 +71,9 @@ int main(int argc, char *argv[]) {
   for(i = 3; i < argc; i++){
     v = model_variable(model, argv[i]);
     if(v == NULL){
-      fprintf(stderr, "Unrecognized variable: %s?\n", argv[i]);
-      /*
+      ;
+      /*fprintf(stderr, "Unrecognized variable: %s?\n", argv[i]);
+      
 	for(i = 0; i < n; i++)
 	  free_timeseries(ts_set[i]);
 	free(ts_set);

@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.203 2007-09-30 18:39:05 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.204 2007-12-13 17:05:21 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -719,7 +719,7 @@ int read_timeseries(nip model, char* filename,
       
       /* Get the data */
       for(j = 0; j < ts->length; j++){
-	m = nextline_tokens(df, ',', &tokens); /* 2. Read */
+	m = nextline_tokens(df, FIELD_SEPARATOR, &tokens); /* 2. Read */
 	assert(m == df->num_of_nodes);
 	
 	/* 3. Put into the data array 
@@ -1533,10 +1533,10 @@ uncertain_series forward_backward_inference(time_series ts,
 	*loglikelihood = (*loglikelihood) + (log(m2) - log(m1));
       }
       /* Check for anomalies */
-      assert(*loglikelihood < 0.0);
+      /*assert(*loglikelihood <= 0.0);*/
       assert(m2 >= 0.0);
-      if(m2 == 0){
-	*loglikelihood = -DBL_MAX; /* -infinity ? */
+      if(m2 == 0.0){
+	*loglikelihood = -DBL_MAX; /* -infinity, does this underflow ? */
       }
     }
 
