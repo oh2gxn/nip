@@ -3,7 +3,7 @@
 # Example: gawk -f select.awk var=X original_data.txt > variable_X.txt
 #
 # Janne Toivola, 19.06.2006
-# $Id: select.awk,v 1.1 2007-08-09 14:53:52 jatoivol Exp $
+# $Id: select.awk,v 1.1 2008-12-19 20:53:50 jatoivol Exp $
 
 BEGIN{
 # Field Separator is ", "
