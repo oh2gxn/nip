@@ -77,7 +77,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
     observed = observed_more;
   }
 
-  if(!n_observed){ /* no observations in any time series? */
+  if(n_observed < 1){ /* no observations in any time series? */
     report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
     return ERROR_INVALID_ARGUMENT;
   }

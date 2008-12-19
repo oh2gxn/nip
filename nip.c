@@ -1,5 +1,5 @@
 /*
- * nip.c $Id: nip.c,v 1.204 2007-12-13 17:05:21 jatoivol Exp $
+ * nip.c $Id: nip.c,v 1.205 2008-12-19 20:27:46 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -687,7 +687,8 @@ int read_timeseries(nip model, char* filename,
       for(i = 0; i < df->num_of_nodes; i++){
 	v = model_variable(model, df->node_symbols[i]);
 	if(v)
-	  ts->observed[k++] = v;
+	  ts->observed[k++] = v; 
+	/* note that these are coupled with ts->data */
       }
       
       /* Allocate some space for data */
@@ -720,16 +721,26 @@ int read_timeseries(nip model, char* filename,
       /* Get the data */
       for(j = 0; j < ts->length; j++){
 	m = nextline_tokens(df, FIELD_SEPARATOR, &tokens); /* 2. Read */
-	assert(m == df->num_of_nodes);
+
+	if(m != df->num_of_nodes){
+	  fprintf(stderr, "Warning: (%s): time series %d (t=%d) ", 
+		  filename, n, j);
+	  fprintf(stderr, "has %d tokens, ", m);
+	  fprintf(stderr, "%d expected instead.\n", df->num_of_nodes);
+	}
+	/* assert(m >= df->num_of_nodes); //get rid of this assertion! */
 	
 	/* 3. Put into the data array 
 	 * (the same loop as above to ensure the data is in 
-	 *  the same order as variables) */
+	 *  the same order as variables ts->observed) */
 	k = 0;
-	for(i = 0; i < m; i++){
+	for(i = 0; i < df->num_of_nodes; i++){
 	  v = model_variable(model, df->node_symbols[i]);
+	  if(i == m) 
+	    break; /* the line was too short */
 	  if(v)
 	    ts->data[j][k++] = get_stateindex(v, tokens[i]);
+	  /* note that these are coupled with ts->observed */
 	  
 	  /* Q: Should missing data be allowed?   A: Yes. */
 	  /* assert(data[j][i] >= 0); */

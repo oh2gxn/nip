@@ -27,6 +27,8 @@
 
 /* a lot of similarities with the inference tool (inftest)... */
 
+/* TODO: a way to evaluate statistical significance... empirical p-value? */
+
 int main(int argc, char *argv[]){
 
   int e, i, j, n_max;
