@@ -1,7 +1,9 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.14 2007-08-09 14:53:52 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.15 2008-12-20 13:14:01 jatoivol Exp $
  * Testing the calculation of joint probabilities.
- * Command line parameters: 1) a .net file, 2) data file with one step,
+ * Command line parameters: 
+ * 1) a .net file, 
+ * 2) data file with one step,
  * 3) names of wanted variables
  */
 

@@ -20,7 +20,7 @@
 
 
 /* Converts data between various formats: 
- * currently only univariate data into unary format
+ * currently only univariate data into unary format!
  *
  * SYNOPSIS: CONVERT <MODEL.NET> <IN FORMAT> <IN.TXT> <OUT FORMAT> <OUT.TXT>
  */

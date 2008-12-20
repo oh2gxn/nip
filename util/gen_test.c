@@ -10,7 +10,8 @@
 
 /* Generates data according to a given model
  * SYNOPSIS: GEN_TEST <MODEL.NET> <N SERIES> <SAMPLES/SERIES> <RESULT.TXT>
- * (resulting data will be written to the file <result.txt>) */
+ * (resulting data will be written to the file <result.txt>) 
+ */
 
 int main(int argc, char *argv[]) {
 

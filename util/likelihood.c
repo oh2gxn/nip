@@ -3,7 +3,7 @@
  * Reads the structure for the model from a Hugin NET file, 
  * reads the given data file and prints the conditional likelihood
  * of one set of variables {ABC} given the rest of the observed 
- * variables {DEF}. 
+ * variables {DEF}.
  * For example, you can compute p( a b c | d e f ) for each record of 
  * {abcdef} data in a file by specifying {ABC} as the variables of interest.
  *

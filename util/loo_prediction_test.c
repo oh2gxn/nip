@@ -5,7 +5,7 @@
  * of the data sequences and predictive inference is done for 
  * a given variable... The EM learning algorithm requires the 
  * stopping threshold and minimum likelihood parameters. 
- * Inference results are written to a file.
+ * Inference results are written to a file. 
  *
  * SYNOPSIS: 
  * LOO_PREDICTION_TEST <MODEL.NET> <INPUT_DATA.TXT> \ 

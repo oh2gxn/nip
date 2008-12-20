@@ -3,7 +3,7 @@
  * Reads the structure for the model from a Hugin NET file, 
  * uses EM-algorithm for learning the parameters from the 
  * given data file and writes the estimated model to the 
- * specified output file. 
+ * specified output file.
  *
  * SYNOPSIS: 
  * EM_TEST <ORIGINAL.NET> <DATA.TXT> <THRESHOLD> <MINL> <RESULT.NET>

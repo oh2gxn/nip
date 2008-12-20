@@ -2,7 +2,7 @@
  * 
  * Executes inference procedure with given model and time series. 
  * Inferred probabilities for the selected variable are written to 
- * the specified data file.
+ * the specified data file. 
  *
  * SYNOPSIS: INFTEST <MODEL.NET> <INPUT_DATA.TXT> <VARIABLE> <OUTPUT_DATA.TXT>
  *
