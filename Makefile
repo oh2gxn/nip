@@ -1,18 +1,24 @@
 # Makefile for the "nip" project.
-# $Id: Makefile,v 1.54 2007-08-06 16:32:24 jatoivol Exp $
+#
+# FIXME & TODO: all kinds of stuff !!!
+# - make a library out of the basic source files
+# - make test programs separately
+# - make utility programs separately
+#
+# $Id: Makefile,v 1.55 2008-12-20 13:28:39 jatoivol Exp $
 
 # Variable assignments for make
 # XXX Replace "*.c" below with the names of your source files!
-POT_SRCS=potential.c errorhandler.c
-CLI_SRCS=$(POT_SRCS) variable.c clique.c Heap.c
-GRPH_SRCS=$(CLI_SRCS) cls2clq.c Graph.c
+POT_SRCS=src/potential.c src/errorhandler.c
+CLI_SRCS=$(POT_SRCS) src/variable.c src/clique.c src/Heap.c
+GRPH_SRCS=$(CLI_SRCS) src/cls2clq.c src/Graph.c
 
-HUG_DEFS=huginnet.y
+HUG_DEFS=src/huginnet.y
 HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
 
-PAR_SRCS=$(GRPH_SRCS) $(HUG_SRCS) lists.c fileio.c parser.c
+PAR_SRCS=$(GRPH_SRCS) $(HUG_SRCS) src/lists.c src/fileio.c src/parser.c
 BIS_SRCS=$(PAR_SRCS)
-IO_SRCS=fileio.c errorhandler.c
+IO_SRCS=src/fileio.c src/errorhandler.c
 DF_SRCS=$(PAR_SRCS)
 HMM_SRCS=nip.c $(PAR_SRCS)
 HTM_SRCS=$(HMM_SRCS)
@@ -27,24 +33,25 @@ LIKE_SRCS=$(HMM_SRCS)
 LOO_SRCS=$(HMM_SRCS)
 
 # XXX Replace "cliquetest" below with the name you want for your program!
-POT_TARGET=potentialtest
-CLI_TARGET=cliquetest
-PAR_TARGET=parsertest
-GRPH_TARGET=graph_test
-IO_TARGET=iotest
-BIS_TARGET=bisontest
-DF_TARGET=datafiletest
-HMM_TARGET=hmmtest
-HTM_TARGET=htmtest
-JNT_TARGET=joint_test
-EM_TARGET=em_test
-MLT_TARGET=memleaktest
-GEN_TARGET=gen_test
-MAP_TARGET=maptest
-INF_TARGET=inftest
-CONV_TARGET=convert
-LIKE_TARGET=likelihood
-LOO_TARGET=loo_prediction_test
+POT_TARGET=test/potentialtest
+CLI_TARGET=test/cliquetest
+PAR_TARGET=test/parsertest
+GRPH_TARGET=test/graph_test
+IO_TARGET=test/iotest
+BIS_TARGET=test/bisontest
+DF_TARGET=test/datafiletest
+HMM_TARGET=test/hmmtest
+HTM_TARGET=test/htmtest
+MLT_TARGET=test/memleaktest
+
+JNT_TARGET=util/joint_test
+EM_TARGET=util/em_test
+GEN_TARGET=util/gen_test
+MAP_TARGET=util/map
+INF_TARGET=util/inftest
+CONV_TARGET=util/convert
+LIKE_TARGET=util/likelihood
+LOO_TARGET=util/loo_prediction_test
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
 $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
 $(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) \
@@ -68,32 +75,34 @@ YYFLAGS=-d
 # Link the math library in with the program, in case you use the
 # functions in <math.h>
 LIBS=-lm
+NIPLIBS=-lm -lnip
 
 # This gives make the names of object files made by the compiler and
 # used by the linker.
-POT_OBJS=$(POT_SRCS:.c=.o) potentialtest.o
-CLI_OBJS=$(GRPH_SRCS:.c=.o) cliquetest.o # had to put the Graph srcs
-PAR_OBJS=$(PAR_SRCS:.c=.o) parsertest.o
-GRPH_OBJS=$(GRPH_SRCS:.c=.o) graph_test.o
+POT_OBJS=$(POT_SRCS:.c=.o) src/potentialtest.o
+CLI_OBJS=$(GRPH_SRCS:.c=.o) src/cliquetest.o # had to put the Graph srcs
+PAR_OBJS=$(PAR_SRCS:.c=.o) src/parsertest.o
+GRPH_OBJS=$(GRPH_SRCS:.c=.o) src/graph_test.o
 HUG_OBJS=$(HUG_SRCS:.c=.o) 
-BIS_OBJS=$(BIS_SRCS:.c=.o) bisontest.o
-IO_OBJS=$(IO_SRCS:.c=.o) iotest.o
-DF_OBJS=$(DF_SRCS:.c=.o) datafiletest.o
-HMM_OBJS=$(HMM_SRCS:.c=.o) hmmtest.o
-HTM_OBJS=$(HTM_SRCS:.c=.o) htmtest.o
-MLT_OBJS=$(MLT_SRCS:.c=.o) memleaktest.o
-JNT_OBJS=$(JNT_SRCS:.c=.o) joint_test.o
-EM_OBJS=$(EM_SRCS:.c=.o) em_test.o
-GEN_OBJS=$(GEN_SRCS:.c=.o) gen_test.o
-MAP_OBJS=$(MAP_SRCS:.c=.o) maptest.o
-INF_OBJS=$(INF_SRCS:.c=.o) inftest.o
-CONV_OBJS=$(CONV_SRCS:.c=.o) convert.o
-LIKE_OBJS=$(LIKE_SRCS:.c=.o) likelihood.o
-LOO_OBJS=$(LOO_SRCS:.c=.o) loo_prediction_test.o
-OBJS=$(HTM_OBJS) potentialtest.o cliquetest.o parsertest.o graph_test.o \
-bisontest.o iotest.o datafiletest.o hmmtest.o memleaktest.o joint_test.o \
-em_test.o gen_test.o maptest.o inftest.o convert.o likelihood.o \
-loo_prediction_test.o
+BIS_OBJS=$(BIS_SRCS:.c=.o) src/bisontest.o
+IO_OBJS=$(IO_SRCS:.c=.o) src/iotest.o
+DF_OBJS=$(DF_SRCS:.c=.o) src/datafiletest.o
+HMM_OBJS=$(HMM_SRCS:.c=.o) src/hmmtest.o
+HTM_OBJS=$(HTM_SRCS:.c=.o) src/htmtest.o
+MLT_OBJS=$(MLT_SRCS:.c=.o) src/memleaktest.o
+JNT_OBJS=$(JNT_SRCS:.c=.o) src/joint_test.o
+EM_OBJS=$(EM_SRCS:.c=.o) src/em_test.o
+GEN_OBJS=$(GEN_SRCS:.c=.o) src/gen_test.o
+MAP_OBJS=$(MAP_SRCS:.c=.o) src/maptest.o
+INF_OBJS=$(INF_SRCS:.c=.o) src/inftest.o
+CONV_OBJS=$(CONV_SRCS:.c=.o) src/convert.o
+LIKE_OBJS=$(LIKE_SRCS:.c=.o) src/likelihood.o
+LOO_OBJS=$(LOO_SRCS:.c=.o) src/loo_prediction_test.o
+OBJS=$(HTM_OBJS) src/potentialtest.o src/cliquetest.o src/parsertest.o \
+src/graph_test.o src/bisontest.o src/iotest.o src/datafiletest.o \
+src/hmmtest.o src/memleaktest.o src/joint_test.o src/em_test.o \
+src/gen_test.o src/maptest.o src/inftest.o src/convert.o src/likelihood.o \
+src/loo_prediction_test.o
 
 # Headers
 POT_HDRS=$(POT_SRCS:.c=.h)
@@ -197,7 +206,7 @@ $(LOO_TARGET): $(LOO_OBJS) $(HUG_OBJS)
 # With these lines, executing "make clean" removes the .o files that
 # are not needed after the program is compiled.
 clean:
-	rm -f huginnet.tab.c huginnet.tab.h *.o *.i *.s
+	rm -f src/huginnet.tab.c src/huginnet.tab.h src/*.o src/*.i src/*.s
 
 # "make realclean" does the same as "make clean", and also removes the
 # compiled program and a possible "core" file.
