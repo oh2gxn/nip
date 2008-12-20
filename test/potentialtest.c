@@ -1,4 +1,4 @@
-/* Tämä on pieni testi potentiaalille. */
+/* This is a small test for potentials... */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -13,6 +13,8 @@
 #define TESTATUT
 #define THRESHOLD 0.001
 
+/* Tests if the library functions leak memory. */
+
 int main(int argc, char *argv[]){
   
   int i, j, m, n;

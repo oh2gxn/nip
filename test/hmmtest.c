@@ -2,8 +2,8 @@
  *
  * Experimental time slice stuff for Hidden Markov Models (HMM).
  * Prints a MAP estimate for the hidden variable during the first
- * time series in the given data file.
- */
+ * time series in the given data file. 
+x */
 
 #include <stdlib.h>
 #include <assert.h>

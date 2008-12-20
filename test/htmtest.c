@@ -2,7 +2,7 @@
  *
  * Experimental code for handling the inference with time slices. 
  * Prints marginal posterior probability distributions for each variable 
- * during the first time series in the given data file.
+ * during the first time series in the given data file. 
  *
  * SYNOPSIS: HTMTEST <MODEL.NET> <DATA.TXT>
  */

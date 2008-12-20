@@ -14,13 +14,17 @@
 #define DEBUG_BISONTEST
 */
 
-/*#define EVIDENCE*/
+/*
+#define EVIDENCE
+*/
 
 /*
 #define EVIDENCE1
 */
 
-/*#define EVIDENCE2*/
+/*
+#define EVIDENCE2
+*/
 
 #define EVIDENCE_SOTKU
 

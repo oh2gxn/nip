@@ -1,5 +1,4 @@
-/*
- * iotest.c $Id: iotest.c,v 1.5 2005-07-05 13:24:27 jatoivol Exp $
+/* iotest.c $Id: iotest.c,v 1.6 2008-12-20 13:05:24 jatoivol Exp $
  */
 
 #include <stdio.h>

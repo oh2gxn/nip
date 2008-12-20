@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
 int main(){
   int i;
   double result[3]; /* note1 */

@@ -1,7 +1,7 @@
 /*
  * errorhandlertest.c
- * $Id: errorhandlertest.c,v 1.3 2004-06-21 06:12:12 mvkorpel Exp $
- * Tämä on pieni testi errorhandlerille.
+ * $Id: errorhandlertest.c,v 1.4 2008-12-20 13:05:24 jatoivol Exp $
+ * This is a small test for the error handler.
  */
 
 #include <stdio.h>

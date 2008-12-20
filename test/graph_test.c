@@ -7,6 +7,7 @@
 #include "clique.h"
 #include "potential.h"
 
+/* some graph test..? */
 void print_adjm(Graph* G)
 {
 	variable* v;

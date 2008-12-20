@@ -6,6 +6,7 @@
 extern FILE *open_net_file(const char *filename);
 extern void close_net_file();
 
+/* Tries out the Huginnet parser stuff. */
 int main(int argc, char *argv[]){
 
   int token_length;
