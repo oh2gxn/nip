@@ -19,11 +19,11 @@
 # Janne Toivola, 28.04.2006
 # - No special treatment for completely hidden variables: 09.10.2006
 # - Drop completely hidden variables from the output: 11.11.2006
-# $Id: hide_values.awk,v 1.1 2008-12-19 20:53:50 jatoivol Exp $
+# $ID$
 
 BEGIN{
-# Field Separator is ", "
-  FS = ", "
+# Field Separator is space: " " - it used to be ", "
+  FS = " "
 
 # Reset line counter (only non-empty lines)
   line = 0;
@@ -32,11 +32,11 @@ BEGIN{
   prob["A0"] =  -1;
   prob["A1"] = 100;
   prob["B0"] =  -1;
-  prob["B1"] =  50;
+  prob["B1"] =  80;
   prob["C0"] =  -1;
   prob["C1"] =  -1;
   prob["D0"] =  -1;
-  prob["D1"] =  20;
+  prob["D1"] =  80;
   prob["V0"] =  -1;
   prob["S0"] =  -1;
   prob["Y0"] =  -1;
