@@ -1,5 +1,4 @@
-/*
- * variable.c $Id: variable.c,v 1.15 2007-09-30 19:20:59 jatoivol Exp $
+/* variable.c $Id: variable.c,v 1.16 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #include <stdio.h>

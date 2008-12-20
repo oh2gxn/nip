@@ -1,5 +1,4 @@
-/*
- * nip.h $Id: nip.h,v 1.61 2007-08-07 16:03:21 jatoivol Exp $
+/* nip.h $Id: nip.h,v 1.62 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #ifndef __NIP_H__

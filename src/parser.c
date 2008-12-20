@@ -1,7 +1,6 @@
-/*
- * Functions for the bison parser.
+/* Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.118 2007-01-05 16:58:42 jatoivol Exp $
+ * $Id: parser.c,v 1.119 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #include <assert.h>

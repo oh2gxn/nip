@@ -1,5 +1,4 @@
-/*
- * Heap.h $Id: Heap.h,v 1.7 2005-05-27 13:18:03 jatoivol Exp $
+/* Heap.h $Id: Heap.h,v 1.8 2008-12-20 12:59:52 jatoivol Exp $
  */
 
 #ifndef __HEAP_H__

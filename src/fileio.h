@@ -1,5 +1,4 @@
-/*
- * fileio.h $Id: fileio.h,v 1.12 2004-09-01 11:23:32 jatoivol Exp $
+/* fileio.h $Id: fileio.h,v 1.13 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #ifndef __FILEIO_H__

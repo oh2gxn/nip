@@ -1,5 +1,4 @@
-/*
- * variable.h $Id: variable.h,v 1.18 2007-08-09 14:53:52 jatoivol Exp $
+/* variable.h $Id: variable.h,v 1.19 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__

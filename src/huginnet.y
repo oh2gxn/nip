@@ -1,5 +1,4 @@
-/*
- * huginnet.y $Id: huginnet.y,v 1.84 2007-09-30 19:18:50 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.85 2008-12-20 12:59:53 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 

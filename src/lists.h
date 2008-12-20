@@ -1,7 +1,6 @@
-/*
- * Various linked list data structures used e.g. in parser
+/* Various linked list data structures used e.g. in parser
  *
- * $Id: lists.h,v 1.9 2007-01-12 16:56:42 jatoivol Exp $
+ * $Id: lists.h,v 1.10 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #ifndef __LISTS_H__

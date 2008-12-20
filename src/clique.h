@@ -1,5 +1,4 @@
-/*
- * clique.h $Id: clique.h,v 1.9 2007-03-15 16:31:05 jatoivol Exp $
+/* clique.h $Id: clique.h,v 1.10 2008-12-20 12:59:52 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__

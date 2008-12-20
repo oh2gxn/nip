@@ -1,11 +1,10 @@
-/*
- * Definitions for the bison parser and for other parsers.
+/* Definitions for the bison parser and for other parsers.
  *
  * JJ Comment: Currently the parser is ugly as hell...
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.52 2007-01-05 16:58:42 jatoivol Exp $
+ * $Id: parser.h,v 1.53 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__

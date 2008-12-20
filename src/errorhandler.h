@@ -1,7 +1,7 @@
 #ifndef __ERRORHANDLER_H__
 #define __ERRORHANDLER_H__
 
-/* Is there something like errno.h ??? */
+/* Is there something like errno.h ?? */
 #define NO_ERROR 0
 #define ERROR_NULLPOINTER 1
 #define ERROR_DIVBYZERO 2

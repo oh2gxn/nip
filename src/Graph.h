@@ -1,5 +1,4 @@
-/*
- * Graph.h $Id: Graph.h,v 1.22 2006-03-06 17:20:10 jatoivol Exp $
+/* Graph.h $Id: Graph.h,v 1.23 2008-12-20 12:59:52 jatoivol Exp $
  */
 
 #ifndef __GRAPH_H__

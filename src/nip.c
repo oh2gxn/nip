@@ -1,5 +1,4 @@
-/*
- * nip.c $Id: nip.c,v 1.205 2008-12-19 20:27:46 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.206 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #include "nip.h"

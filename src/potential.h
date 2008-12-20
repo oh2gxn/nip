@@ -1,5 +1,4 @@
-/*
- * potential.h $Id: potential.h,v 1.38 2007-01-12 16:56:42 jatoivol Exp $
+/* potential.h $Id: potential.h,v 1.39 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__

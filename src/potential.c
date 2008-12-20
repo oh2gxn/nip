@@ -1,5 +1,4 @@
-/*
- * potential.c $Id: potential.c,v 1.67 2007-08-08 14:51:53 jatoivol Exp $
+/* potential.c $Id: potential.c,v 1.68 2008-12-20 12:59:53 jatoivol Exp $
  * Functions for handling potentials. 
  */
 

@@ -1,5 +1,4 @@
-/*
- * fileio.c $Id: fileio.c,v 1.19 2004-09-01 11:23:32 jatoivol Exp $
+/* fileio.c $Id: fileio.c,v 1.20 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #include <ctype.h>

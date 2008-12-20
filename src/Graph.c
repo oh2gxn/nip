@@ -1,5 +1,4 @@
-/*
- * Graph.c $Id: Graph.c,v 1.49 2006-10-10 13:34:16 jatoivol Exp $
+/* Graph.c $Id: Graph.c,v 1.50 2008-12-20 12:59:52 jatoivol Exp $
  */
 
 #include <string.h>

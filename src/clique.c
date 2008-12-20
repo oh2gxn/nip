@@ -1,5 +1,4 @@
-/*
- * clique.c $Id: clique.c,v 1.30 2007-08-09 14:53:52 jatoivol Exp $
+/* clique.c $Id: clique.c,v 1.31 2008-12-20 12:59:52 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.

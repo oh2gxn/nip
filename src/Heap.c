@@ -1,5 +1,4 @@
-/*
- * Heap.c $Id: Heap.c,v 1.12 2007-03-13 16:48:03 jatoivol Exp $
+/* Heap.c $Id: Heap.c,v 1.13 2008-12-20 12:59:52 jatoivol Exp $
  */
 
 #include <stdlib.h>

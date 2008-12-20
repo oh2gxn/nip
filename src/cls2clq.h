@@ -1,5 +1,4 @@
-/*
- * cls2clq.h $Id: cls2clq.h,v 1.2 2005-05-27 13:18:03 jatoivol Exp $
+/* cls2clq.h $Id: cls2clq.h,v 1.3 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #ifndef __CLS2CLQ_H__

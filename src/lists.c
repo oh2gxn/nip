@@ -1,8 +1,7 @@
-/*
- * Functions for using list structures
+/* Functions for using list structures
  * (a C++ implementation would use STL)
  *
- * $Id: lists.c,v 1.8 2007-01-12 16:56:42 jatoivol Exp $
+ * $Id: lists.c,v 1.9 2008-12-20 12:59:53 jatoivol Exp $
  */
 
 #include <stdio.h>
