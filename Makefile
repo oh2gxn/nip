@@ -5,49 +5,78 @@
 # - make test programs separately
 # - make utility programs separately
 #
-# $Id: Makefile,v 1.56 2008-12-21 01:50:40 jatoivol Exp $
+# $Id: Makefile,v 1.57 2008-12-21 11:20:19 jatoivol Exp $
 
 
 # Sets the name and some flags for the C compiler and linker
-CC=gcc
-CCFLAGS=-c
+CC = gcc
+CCFLAGS = -c
 #CFLAGS=-O2 -Wall
-CFLAGS=-g -pedantic-errors -Wall
-#CFLAGS=-Os -g -Wall -ansi -pedantic-errors
-#CFLAGS=-O2 -g -Wall
-#CFLAGS=-g -Wall --save-temps
-#CFLAGS=-Wall
-LD=gcc
-LDFLAGS=
-#LDFLAGS=-v
-YY=bison
-YYFLAGS=-d
+CFLAGS = -g -pedantic-errors -Wall
+#CFLAGS = -Os -g -Wall -ansi -pedantic-errors
+#CFLAGS = -O2 -g -Wall
+#CFLAGS = -g -Wall --save-temps
+#CFLAGS = -Wall
+LD = gcc
+LDFLAGS =
+#LDFLAGS = -v
+YY = bison
+YYFLAGS = -d
+AR = ar
 
 # Link the math library in with the program, in case you use the
 # functions in <math.h>
-LIBS=-lm
-NIPLIBS=-lm -lnip
+LIBS = -lm
+NIPLIBS = -lm -L./lib -lnip
 
 
-# Object files depend on headers also
+# Object files depend on headers also, FIXME !
+#%.o: %.c %.h
+#	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 %.o: %.c %.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 # How to use Bison parser generator
-%.tab.c %.tab.h: %.y
+HUG_DEFS = src/huginnet.y
+HUG_SRCS = $(HUG_DEFS:.y=.tab.c)
+HUG_HDRS = $(HUG_DEFS:.y=.tab.h)
+$(HUG_SRCS) $(HUG_HDRS): $(HUG_DEFS)
 	$(YY) $(YYFLAGS) $<
 
 # How to create the static and shared libraries
-lib: $(HMM_SRCS)
-	$(CC) # TODO!
+
+LIB_SRCS = src/fileio.c \
+src/errorhandler.c \
+src/potential.c \
+src/variable.c \
+src/clique.c \
+src/Heap.c \
+src/cls2clq.c \
+src/Graph.c \
+$(HUG_SRCS) \
+src/lists.c \
+src/fileio.c \
+src/parser.c \
+src/nip.c
+LIB_HDRS=$(LIB_SRCS:.c=.h)
+LIB_OBJS=$(LIB_SRCS:.c=.o)
+lib: lib/libnip.a lib/libnip.so
+
+lib/libnip.a: $(LIB_OBJS)
+	$(AR) rcs lib/libnip.a nip.o
+
+lib/libnip.so: $(LIB_OBJS)
+	$(CC) -shared -Wl,-soname,libnip.so.1 -o libnip.so.1.0.1  nip.o
+
+
 
 # Rules for making each program
-IO_SRCS=src/fileio.c src/errorhandler.c
+IO_SRCS=src/iotest.c
 IO_HDRS=$(IO_SRCS:.c=.h)
-IO_OBJS=$(IO_SRCS:.c=.o) src/iotest.o
+IO_OBJS=$(IO_SRCS:.c=.o)
 IO_TARGET=test/iotest
 $(IO_TARGET): $(IO_OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(IO_OBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ $(IO_OBJS) $(NIPLIBS)
 
 
 POT_SRCS=src/potential.c src/errorhandler.c
