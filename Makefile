@@ -5,21 +5,21 @@
 # - make test programs separately
 # - make utility programs separately
 #
-# $Id: Makefile,v 1.57 2008-12-21 11:20:19 jatoivol Exp $
+# $Id: Makefile,v 1.58 2008-12-22 13:38:51 jatoivol Exp $
 
 
 # Sets the name and some flags for the C compiler and linker
 CC = gcc
 CCFLAGS = -c
-#CFLAGS=-O2 -Wall
 CFLAGS = -g -pedantic-errors -Wall
+#CFLAGS=-O2 -Wall
 #CFLAGS = -Os -g -Wall -ansi -pedantic-errors
-#CFLAGS = -O2 -g -Wall
 #CFLAGS = -g -Wall --save-temps
-#CFLAGS = -Wall
+
 LD = gcc
-LDFLAGS =
+LDFLAGS = -static
 #LDFLAGS = -v
+
 YY = bison
 YYFLAGS = -d
 AR = ar
@@ -30,21 +30,57 @@ LIBS = -lm
 NIPLIBS = -lm -L./lib -lnip
 
 
-# Object files depend on headers also, FIXME !
+# NOTE: for some reason, this does not work
 #%.o: %.c %.h
 #	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
-%.o: %.c %.h
+
+# Rules for static object files
+src/fileio.o: src/fileio.c src/fileio.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
-# How to use Bison parser generator
-HUG_DEFS = src/huginnet.y
-HUG_SRCS = $(HUG_DEFS:.y=.tab.c)
-HUG_HDRS = $(HUG_DEFS:.y=.tab.h)
-$(HUG_SRCS) $(HUG_HDRS): $(HUG_DEFS)
+src/errorhandler.o: src/errorhandler.c src/errorhandler.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+src/potential.o: src/potential.c src/potential.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+src/variable.o: src/variable.c src/variable.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+src/clique.o: src/clique.c src/clique.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+src/Heap.o: src/Heap.c src/Heap.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+src/cls2clq.o: src/cls2clq.c src/cls2clq.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+src/Graph.o: src/Graph.c src/Graph.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+# use Bison parser generator
+HUG_DEF = src/huginnet.y
+HUG_SRC = $(HUG_DEF:.y=.tab.c)
+HUG_HDR = $(HUG_DEF:.y=.tab.h)
+HUG_OBJ = $(HUG_DEF:.y=.o)
+$(HUG_SRC) $(HUG_HDR): $(HUG_DEF)
 	$(YY) $(YYFLAGS) $<
 
-# How to create the static and shared libraries
+$(HUG_OBJ): $(HUG_SRC) $(HUG_HDR)
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
+src/lists.o: src/lists.c src/lists.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+src/parser.o: src/parser.c src/parser.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+src/nip.o: src/nip.c src/nip.h
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
+
+
+# Rules to create the static and shared libraries
 LIB_SRCS = src/fileio.c \
 src/errorhandler.c \
 src/potential.c \
@@ -53,9 +89,8 @@ src/clique.c \
 src/Heap.c \
 src/cls2clq.c \
 src/Graph.c \
-$(HUG_SRCS) \
+$(HUG_SRC) \
 src/lists.c \
-src/fileio.c \
 src/parser.c \
 src/nip.c
 LIB_HDRS=$(LIB_SRCS:.c=.h)
@@ -63,29 +98,36 @@ LIB_OBJS=$(LIB_SRCS:.c=.o)
 lib: lib/libnip.a lib/libnip.so
 
 lib/libnip.a: $(LIB_OBJS)
-	$(AR) rcs lib/libnip.a nip.o
+	$(AR) rcs lib/libnip.a $(LIB_OBJS)
 
 lib/libnip.so: $(LIB_OBJS)
 	$(CC) -shared -Wl,-soname,libnip.so.1 -o libnip.so.1.0.1  nip.o
-
+# TODO: why .1 and .1.0.1 ???
 
 
 # Rules for making each program
-IO_SRCS=src/iotest.c
-IO_HDRS=$(IO_SRCS:.c=.h)
-IO_OBJS=$(IO_SRCS:.c=.o)
+
+### FIXME the source code assumes fileio.h, but it's src/fileio.h
+
+IO_SRC=test/iotest.c
+IO_OBJ=$(IO_SRC:.c=.o)
 IO_TARGET=test/iotest
-$(IO_TARGET): $(IO_OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(IO_OBJS) $(NIPLIBS)
+$(IO_TARGET): $(IO_SRC)
+	$(LD) $(LDFLAGS) $< $(NIPLIBS) -o $@
 
-
-POT_SRCS=src/potential.c src/errorhandler.c
-POT_HDRS=$(POT_SRCS:.c=.h)
-POT_OBJS=$(POT_SRCS:.c=.o) src/potentialtest.o
+POT_SRC=src/potentialtest.c
+POT_HDR=$(POT_SRC:.c=.h)
+POT_OBJ=$(POT_SRC:.c=.o)
 POT_TARGET=test/potentialtest
-$(POT_TARGET): $(POT_OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(POT_OBJS) $(LIBS)
+$(POT_TARGET): $(POT_SRC) $(POT_HDR)
+	$(LD) $(LDFLAGS) $< $(NIPLIBS) -o $@
 
+
+
+
+
+
+# TODO: all the ones below
 
 CLI_SRCS=$(POT_SRCS) src/variable.c src/clique.c src/Heap.c
 CLI_HDRS=$(GRPH_SRCS:.c=.h) # had to put the Graph srcs
