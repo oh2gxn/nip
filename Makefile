@@ -5,7 +5,7 @@
 # - make test programs separately
 # - make utility programs separately
 #
-# $Id: Makefile,v 1.58 2008-12-22 13:38:51 jatoivol Exp $
+# $Id: Makefile,v 1.59 2008-12-24 17:05:29 jatoivol Exp $
 
 
 # Sets the name and some flags for the C compiler and linker
@@ -22,12 +22,13 @@ LDFLAGS = -static
 
 YY = bison
 YYFLAGS = -d
-AR = ar
+
+LL = libtool
 
 # Link the math library in with the program, in case you use the
 # functions in <math.h>
 LIBS = -lm
-NIPLIBS = -lm -L./lib -lnip
+NIPLIBS = -lm -L. -lnip
 
 
 # NOTE: for some reason, this does not work
@@ -65,11 +66,12 @@ HUG_SRC = $(HUG_DEF:.y=.tab.c)
 HUG_HDR = $(HUG_DEF:.y=.tab.h)
 HUG_OBJ = $(HUG_DEF:.y=.o)
 $(HUG_SRC) $(HUG_HDR): $(HUG_DEF)
-	$(YY) $(YYFLAGS) $<
+	$(YY) $(YYFLAGS) $< -o $(HUG_SRC)
 
 $(HUG_OBJ): $(HUG_SRC) $(HUG_HDR)
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
+# ...the rest of the library objects
 src/lists.o: src/lists.c src/lists.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
@@ -93,15 +95,20 @@ $(HUG_SRC) \
 src/lists.c \
 src/parser.c \
 src/nip.c
-LIB_HDRS=$(LIB_SRCS:.c=.h)
-LIB_OBJS=$(LIB_SRCS:.c=.o)
-lib: lib/libnip.a lib/libnip.so
+LIB_HDRS = $(LIB_SRCS:.c=.h)
+LIB_OBJS = $(LIB_SRCS:.c=.o)
+SLIB = lib/libnip.a
+DLIB = lib/libnip.so
+lib: $(SLIB) $(DLIB)
 
-lib/libnip.a: $(LIB_OBJS)
-	$(AR) rcs lib/libnip.a $(LIB_OBJS)
+# package the object files as a static library
+$(SLIB): $(LIB_OBJS)
+	$(LL) -static -o $(SLIB) $(LIB_OBJS)
 
+# compile a shared library
 lib/libnip.so: $(LIB_OBJS)
-	$(CC) -shared -Wl,-soname,libnip.so.1 -o libnip.so.1.0.1  nip.o
+	$(CC) -shared -Wl,-soname,libnip.so.1 -o libnip.so.1.0.1  $(LIB_OBJS)
+# FIXME: compile the objects separately with -fPIC ?
 # TODO: why .1 and .1.0.1 ???
 
 
@@ -112,7 +119,7 @@ lib/libnip.so: $(LIB_OBJS)
 IO_SRC=test/iotest.c
 IO_OBJ=$(IO_SRC:.c=.o)
 IO_TARGET=test/iotest
-$(IO_TARGET): $(IO_SRC)
+$(IO_TARGET): $(IO_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(NIPLIBS) -o $@
 
 POT_SRC=src/potentialtest.c
