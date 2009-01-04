@@ -1,12 +1,6 @@
-/* nip.c $Id: nip.c,v 1.206 2008-12-20 12:59:53 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.207 2009-01-04 20:13:43 jatoivol Exp $
  */
 
-#include "nip.h"
-#include "lists.h"
-#include "clique.h"
-#include "variable.h"
-#include "errorhandler.h"
-#include "huginnet.tab.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +8,13 @@
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
+
+#include "nip.h"
+#include "lists.h"
+#include "clique.h"
+#include "variable.h"
+#include "errorhandler.h"
+#include "huginnet.tab.h"
 
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
