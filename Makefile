@@ -5,61 +5,67 @@
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.61 2009-01-04 20:13:43 jatoivol Exp $
+# $Id: Makefile,v 1.62 2009-01-04 20:27:04 jatoivol Exp $
 
 
-# Sets the name and some flags for the C compiler and linker
+# The C compiler and flags for compiling the library
 CC = gcc
 CCFLAGS = -c
-CFLAGS = -g -pedantic-errors -Wall
+CFLAGS = -fPIC -g -pedantic-errors -Wall
 #CFLAGS = -g -pedantic-errors -Wall
 #CFLAGS=-O2 -Wall
 #CFLAGS = -Os -g -Wall -ansi -pedantic-errors
 #CFLAGS = -g -Wall --save-temps
+LIBS = -lm
 
+
+# The linker and flags for compiling programs
 LD = gcc
 LDFLAGS = -static
 #LDFLAGS = -v
+NIPLIBS = -L./lib -lnip -lm
 
+
+# The parser generator
 YY = bison
 YYFLAGS = -d
 
-# Link the math library in with the program, in case you use the
-# functions in <math.h>
-LIBS = -lm
-NIPLIBS = -L./lib -lnip -lm
+
+# Path to the header files of NIP library
 INC = -Isrc/
 
 # NOTE: for some reason, this does not work
 #%.o: %.c %.h
 #	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
+# The default target
 all: test util
 
-# Rules for static object files
+
+# Rules for the library object files
 src/fileio.o: src/fileio.c src/fileio.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/errorhandler.o: src/errorhandler.c src/errorhandler.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/potential.o: src/potential.c src/potential.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/variable.o: src/variable.c src/variable.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/clique.o: src/clique.c src/clique.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/Heap.o: src/Heap.c src/Heap.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/cls2clq.o: src/cls2clq.c src/cls2clq.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/Graph.o: src/Graph.c src/Graph.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 # use Bison parser generator
 HUG_DEF = src/huginnet.y
@@ -70,17 +76,17 @@ $(HUG_SRC) $(HUG_HDR): $(HUG_DEF)
 	$(YY) $(YYFLAGS) $< -o $(HUG_SRC)
 
 $(HUG_OBJ): $(HUG_SRC) $(HUG_HDR)
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 # ...the rest of the library objects
 src/lists.o: src/lists.c src/lists.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/parser.o: src/parser.c src/parser.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/nip.o: src/nip.c src/nip.h
-	$(CC) -fPIC $(CFLAGS) $(CCFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 
 # Rules to create the static and shared libraries
@@ -117,8 +123,7 @@ $(DLIBRN): $(LIB_OBJS)
 
 # Rules for making each program
 
-### FIXME the source code assumes fileio.h, but it's src/fileio.h
-
+# The programs for debugging NIP library (test)
 IO_SRC = test/iotest.c
 IO_TARGET = test/iotest
 $(IO_TARGET): $(IO_SRC) $(SLIB)
@@ -177,9 +182,12 @@ MLT_TARGET = test/memleaktest
 $(MLT_TARGET): $(MLT_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
+test: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
+$(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
+$(MLT_TARGET)
 
 
-
+# The utility programs for using certain features of NIP
 
 JNT_SRC = util/joint_test.c
 JNT_TARGET = util/joint_test
@@ -227,9 +235,10 @@ LOO_SRC = util/loo_prediction_test.c
 LOO_TARGET = util/loo_prediction_test
 $(LOO_TARGET): $(LOO_SRC) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
-# The program depends on the object files in $(OBJS). Make knows how
-# to compile a .c file into an object (.o) file; this rule tells it
-# how to link the .o files together into an executable program.
+
+
+util: $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET) \
+$(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
 
 
 
@@ -247,16 +256,6 @@ $(INF_TARGET) $(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
 # <target>: <dependencies>
 # \t<command>
 
-#all: test util
-
-test: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
-$(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
-$(MLT_TARGET)
-
-util: $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET) \
-$(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
-
-
 
 # With these lines, executing "make clean" removes the .o files that
 # are not needed after the program is compiled.
@@ -266,7 +265,7 @@ clean:
 	rm -f $(HUG_SRC) $(HUG_HDR) $(LIB_OBJS) $(IFILES) $(SFILES)
 
 # "make realclean" does the same as "make clean", and also removes the
-# compiled program and a possible "core" file.
+# compiled programs, libraries, and a possible "core" file.
 realclean: clean
 	rm -f $(TARGET) $(SLIB) $(DLIBRN) core
 
