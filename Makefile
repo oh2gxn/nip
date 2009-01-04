@@ -5,7 +5,7 @@
 # - make test programs separately
 # - make utility programs separately
 #
-# $Id: Makefile,v 1.59 2008-12-24 17:05:29 jatoivol Exp $
+# $Id: Makefile,v 1.60 2009-01-04 14:53:53 jatoivol Exp $
 
 
 # Sets the name and some flags for the C compiler and linker
@@ -22,8 +22,6 @@ LDFLAGS = -static
 
 YY = bison
 YYFLAGS = -d
-
-LL = libtool
 
 # Link the math library in with the program, in case you use the
 # functions in <math.h>
@@ -103,7 +101,7 @@ lib: $(SLIB) $(DLIB)
 
 # package the object files as a static library
 $(SLIB): $(LIB_OBJS)
-	$(LL) -static -o $(SLIB) $(LIB_OBJS)
+	ar rcs $(SLIB) $(LIB_OBJS)
 
 # compile a shared library
 lib/libnip.so: $(LIB_OBJS)
@@ -122,27 +120,24 @@ IO_TARGET=test/iotest
 $(IO_TARGET): $(IO_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(NIPLIBS) -o $@
 
-POT_SRC=src/potentialtest.c
+POT_SRC=test/potentialtest.c
 POT_HDR=$(POT_SRC:.c=.h)
 POT_OBJ=$(POT_SRC:.c=.o)
 POT_TARGET=test/potentialtest
-$(POT_TARGET): $(POT_SRC) $(POT_HDR)
+$(POT_TARGET): $(POT_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(NIPLIBS) -o $@
 
 
-
-
+CLI_SRC=test/cliquetest.c
+CLI_HDR=$(CLI_SRCS:.c=.h)
+CLI_OBJ=$(CLI_SRCS:.c=.o)
+CLI_TARGET=test/cliquetest
+$(CLI_TARGET): $(CLI_SRC) $(SLIB)
+	$(LD) $(LDFLAGS) $< $(NIPLIBS) -o $@
+#	$(LD) $(LDFLAGS) -o $@ $(CLI_OBJS) $(LIBS)
 
 
 # TODO: all the ones below
-
-CLI_SRCS=$(POT_SRCS) src/variable.c src/clique.c src/Heap.c
-CLI_HDRS=$(GRPH_SRCS:.c=.h) # had to put the Graph srcs
-CLI_OBJS=$(GRPH_SRCS:.c=.o) src/cliquetest.o # had to put the Graph srcs
-CLI_TARGET=test/cliquetest
-$(CLI_TARGET): $(CLI_OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(CLI_OBJS) $(LIBS)
-
 
 GRPH_SRCS=$(CLI_SRCS) src/cls2clq.c src/Graph.c
 GRPH_HDRS=$(GRPH_SRCS:.c=.h)
@@ -153,10 +148,6 @@ $(GRPH_TARGET): $(GRPH_OBJS)
 
 
 
-HUG_DEFS=src/huginnet.y
-HUG_SRCS=$(HUG_DEFS:.y=.tab.c)
-#HUG_HDRS - no such thing?
-HUG_OBJS=$(HUG_SRCS:.c=.o) 
 PAR_SRCS=$(GRPH_SRCS) $(HUG_SRCS) src/lists.c src/fileio.c src/parser.c
 PAR_HDRS=$(PAR_SRCS:.c=.h)
 PAR_OBJS=$(PAR_SRCS:.c=.o) src/parsertest.o
