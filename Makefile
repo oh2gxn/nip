@@ -5,7 +5,7 @@
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.62 2009-01-04 20:27:04 jatoivol Exp $
+# $Id: Makefile,v 1.63 2009-01-04 21:30:25 jatoivol Exp $
 
 
 # The C compiler and flags for compiling the library
@@ -21,7 +21,7 @@ LIBS = -lm
 
 # The linker and flags for compiling programs
 LD = gcc
-LDFLAGS = -static
+LDFLAGS = #-static
 #LDFLAGS = -v
 NIPLIBS = -L./lib -lnip -lm
 
