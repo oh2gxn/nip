@@ -1,13 +1,11 @@
 /* Various linked list data structures used e.g. in parser
  *
- * $Id: lists.h,v 1.10 2008-12-20 12:59:53 jatoivol Exp $
+ * $Id: lists.h,v 1.11 2010-10-15 15:33:32 jatoivol Exp $
  */
 
 #ifndef __LISTS_H__
 #define __LISTS_H__
 
-#include "variable.h"
-#include "potential.h"
 #include <stdio.h>
 
 

@@ -4,7 +4,7 @@
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.53 2008-12-20 12:59:53 jatoivol Exp $
+ * $Id: parser.h,v 1.54 2010-10-15 15:33:32 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -17,11 +17,7 @@
  */
 #define COMMENT_CHAR '%'
 
-#include "clique.h"
 #include "lists.h"
-#include "variable.h"
-#include "potential.h"
-#include "Graph.h"
 #include <stdio.h>
 
 
