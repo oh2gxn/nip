@@ -1,4 +1,4 @@
-/* nip.c $Id: nip.c,v 1.207 2009-01-04 20:13:43 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.208 2010-10-27 17:20:59 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -43,6 +43,8 @@
 
 /***** 
  * TODO: 
+
+ * - the data file abstraction should be "lighter" and separate from model
 
  * - tiny addition to huginnet.y: potentialDeclaration without data
  *   (uniform potential) AND parents. Copy-paste the similar thing
