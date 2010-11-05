@@ -1,4 +1,4 @@
-/* nip.c $Id: nip.c,v 1.208 2010-10-27 17:20:59 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.209 2010-11-05 14:52:03 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -26,6 +26,7 @@
 /* #define DEBUG_NIP */
 
 /***********************************************************
+ * AN OLD PROBLEM:
  * The time slice concept features some major difficulties 
  * because the actual calculations are done in the join tree
  * instead of the graph. The program should be able to 
@@ -45,13 +46,40 @@
  * TODO: 
 
  * - the data file abstraction should be "lighter" and separate from model
+ * - Hide time_series and uncertain_series implementations better
+ *   - more useful operations for them?
+ * - write_X() functions could take file id's instead of file names...
+ *   (opening a file or other output would be users responsibility)
+
+ * - Refactorisation of variable_union(), variable_isect(), and
+ *   mapper() by replacing a lot of copy-paste code with them...
+
+ * - Consistent conventions in naming functions, variables, 
+ *   and data structures?
+ *   - foo_bar(), dataType, etc.?
+
+ * - Printing potential tables should be contained in potential.c
+ *   - Problem: how to include comments about parent values?
+ *   - Solution: refactor potentials to use variables!!!
 
  * - tiny addition to huginnet.y: potentialDeclaration without data
  *   (uniform potential) AND parents. Copy-paste the similar thing
  *   currently made for priors?
 
+ * - Parse and preserve other fields specified in Hugin Net files
+ *   (currently this program ignores them)
+ *   - How to store potential-specific fields?
+ *   - What are net{input/output}-fields?
+
  * - print_model
  *   - writes an input file for graphviz/dot for automated visualization?
+
+ * - "Viterbi" algorithm for the ML-estimate of the latent variables
+ *   - It is a descendant of the algorithm called "max-product" or "max-sum"
+ *   - another forward-like algorithm with elements of dynamic programming
+ *   - To save huge amounts of memory, could the process use some kind of 
+ *     "timeslice sepsets" for encoding the progress throughout time?
+ *   - It has to have the backtracking ability...
 
  * - automated test scripts
  *   - test models and data
@@ -101,29 +129,7 @@
  *       (or only priors)
  *     - nip struct == a set of graphs and their clique trees?
 
- * - Parse and preserve other fields specified in Hugin Net files
- *   (currently this program ignores them)
- *   - How to store potential-specific fields?
- *   - What are net{input/output}-fields?
-
- * - Consistent conventions in naming functions, variables, 
- *   and data structures?
- *   - foo_bar(), dataType, etc.?
-
- * - Printing potential tables should be contained in potential.c
- *   - Problem: how to include comments about parent values?
-
- * - Refactorisation of variable_union(), variable_isect(), and
- *   mapper() by replacing a lot of copy-paste code with them...
-
  * - Get rid of copy-paste stuff in inference procedures... but how?
-
- * - "Viterbi" algorithm for the ML-estimate of the latent variables
- *   - It is a descendant of the algorithm called "max-product" or "max-sum"
- *   - another forward-like algorithm with elements of dynamic programming
- *   - To save huge amounts of memory, could the process use some kind of 
- *     "timeslice sepsets" for encoding the progress throughout time?
- *   - It has to have the backtracking ability...
 
  * - Online forward_inference (+ refactor offline forward_inference?)
 
@@ -133,12 +139,6 @@
  *   - potentialList needs to be "hidden" better?
  *   - still massive amounts of copy-paste stuff... let it be?
  *   + Next time: make a general void* list or use C++
-
- * - Hide time_series and uncertain_series implementations better
- *   - more useful operations for them?
-
- * - write_X() functions could take file id's instead of file names...
- *   (opening a file or other output would be users responsibility)
 
  * + BUG: Evidence about variables without parents cancels the prior
  *   + Priors should not be entered as if they were evidence
