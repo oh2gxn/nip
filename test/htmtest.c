@@ -17,7 +17,7 @@
 #include "errorhandler.h"
 #include "nip.h"
 
-#define VAR_OF_INTEREST(m,x) ((m->variables[x]->if_status & INTERFACE_OLD_OUTGOING) == 0)
+#define VAR_OF_INTEREST(m,x) ((m->variables[x]->interface_status & INTERFACE_OLD_OUTGOING) == 0)
 
 int main(int argc, char *argv[]){
 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
       /* Print a value */
       for(j = 0; j < CARDINALITY(temp); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(temp),
-	       (temp->statenames)[j], ucs->data[t][i][j]);
+	       (temp->state_names)[j], ucs->data[t][i][j]);
       printf("\n"); 
     }
   }  
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]){
       /* Print a value */
       for(j = 0; j < CARDINALITY(temp); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(temp),
-	       (temp->statenames)[j], ucs->data[t][i][j]);
+	       (temp->state_names)[j], ucs->data[t][i][j]);
       printf("\n"); 
     }
   }

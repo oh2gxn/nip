@@ -1,4 +1,4 @@
-/* nip.c $Id: nip.c,v 1.210 2010-11-08 14:14:39 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.211 2010-11-08 17:02:07 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -24,133 +24,6 @@
 #define MIN_EM_ITERATIONS 3
 
 /* #define DEBUG_NIP */
-
-/***********************************************************
- * AN OLD PROBLEM:
- * The time slice concept features some major difficulties 
- * because the actual calculations are done in the join tree
- * instead of the graph. The program should be able to 
- * figure out how the join tree repeats itself and store 
- * some kind of sepsets between the time slices... Note that 
- * there can be only one sepset between two adjacent 
- * time slices, because the join tree can't have loops. This 
- * implies that the variables, which have links to the 
- * variables in the next time slice, should be found in the 
- * same clique.
- *
- * UPDATE: it seems that Mr. Murphy has a solution...
- */
-
-
-/***** 
- * TODO: 
-
- * - Document the code structure with UML "class" diagram
-
- * - Make it a library
- *   + makefile rules for static
- *   + makefile rules for a shared library
- *   - prefix everything with "nip" to simulate namespace
- *   - GNU libtool or Automake for portability???
-
- * - automated test scripts
- *   - test models and data
- *   - script with simple diff operations?
-
- * - the data file abstraction should be "lighter" and separate from model
- * - Hide time_series and uncertain_series implementations better
- *   - more useful operations for them?
- * - write_X() functions could take file id's instead of file names...
- *   (opening a file or other output would be users responsibility)
-
- * - Refactorisation of variable_union(), variable_isect(), and
- *   mapper() by replacing a lot of copy-paste code with them...
-
- * - Consistent conventions in naming functions, variables, 
- *   and data structures?
- *   - foo_bar(), dataType, etc.?
-
- * - Printing potential tables should be contained in potential.c
- *   - Problem: how to include comments about parent values?
- *   - Solution: refactor potentials to use variables!!!
-
- * - tiny addition to huginnet.y: potentialDeclaration without data
- *   (uniform potential) AND parents. Copy-paste the similar thing
- *   currently made for priors?
-
- * - Parse and preserve other fields specified in Hugin Net files
- *   (currently this program ignores them)
- *   - How to store potential-specific fields?
- *   - What are net{input/output}-fields?
-
- * - print_model
- *   - writes an input file for graphviz/dot for automated visualization?
-
- * - "Viterbi" algorithm for the ML-estimate of the latent variables
- *   - It is a descendant of the algorithm called "max-product" or "max-sum"
- *   - another forward-like algorithm with elements of dynamic programming
- *   - To save huge amounts of memory, could the process use some kind of 
- *     "timeslice sepsets" for encoding the progress throughout time?
- *   - It has to have the backtracking ability...
-
- * - BUG: net parser segfaults if <symbols> is an empty list:
- *   "potential( A | ) { }" - it should report an error and quit
-
- * - Leave-one-out program based on em_test and inftest...
- *   + loo_prediction_test
- *   + for each time series: predict the values of a given variable
- *       given a model learned from other series and 
- *       given data about the other variables
- *   - testing
-
- * - BUG: some DBN models work, equivalent static ones don't... WHY?
- *   - Does this happen only on MRF-like models? 
- *     Is it because of bad triangulation?
-
- *   - Should use_priors() be used automatically by reset_model() ?
- *   - Is the condition for entering priors really correct ?
- *   - Make sure priors get multiplied into the model only once!
- *     (previously they were treated like evidence and this wasn't a problem)
-
- * - A program for computing conditional likelihoods: likelihood.c
- *   + command line parameters:
- *     + "foo.net", the model
- *     + "bar.txt", the data
- *     + "D E F", at least one variable!
- *   + output: the likelihood value "p (d e f | a b c)"
- *   - the same for DBN models???
-
- * - Use separate structure for the first time step
- *   - How to create the graph for it automatically?
- *   - How to use the new piece for inference in the first step?
-
- * - Implement some sort of structural learning algorithm?
- *   - NIP_potential_parents = "P1 P2 P3"; ?
- *   - There is a static set of edges and defined 
- *     set of possible additional edges in a graph
- *   - The graph has to be stored in the nip struct ?
- *     - nip struct       <=> net file
- *     - variable struct  <=> node() definition
- *     - potential struct <=> potential() definition???
- *   - What about graphs without any static edges?
- *     - Net file without any potential() definitions?
- *       (or only priors)
- *     - nip struct == a set of graphs and their clique trees?
-
- * - Get rid of copy-paste stuff in inference procedures... but how?
-
- * - Online forward_inference (+ refactor offline forward_inference?)
-
- * - Online fixed_lag_smoothing...
-
- * - Refactor the list implementations (ADTs, almost done?)
- *   - potentialList needs to be "hidden" better?
- *   - still massive amounts of copy-paste stuff... let it be?
- *   + Next time: make a general void* list or use C++
-
- * + BUG: Evidence about variables without parents cancels the prior
- *   + Priors should not be entered as if they were evidence
- *****/
 
 extern FILE *open_net_file(const char *filename);
 extern void close_net_file();
@@ -209,7 +82,7 @@ void use_priors(nip model, int has_history){
     if(!(v->prior_entered)){
       /* Interface variables have priors only in the first time step 
        * (!has_history => first time step) */
-      if(!has_history || !(v->if_status & INTERFACE_OLD_OUTGOING)){
+      if(!has_history || !(v->interface_status & INTERFACE_OLD_OUTGOING)){
 
 	/* Reminder: Priors should be multiplied into the tree so that
 	 *           they are not canceled if evidence is entered, but
@@ -275,9 +148,9 @@ nip parse_model(char* file){
       new->num_of_nexts++;
     
     /* how many belong to the interfaces */
-    if(temp->if_status & INTERFACE_INCOMING)
+    if(temp->interface_status & INTERFACE_INCOMING)
       new->incoming_interface_size++;
-    if(temp->if_status & INTERFACE_OUTGOING)
+    if(temp->interface_status & INTERFACE_OUTGOING)
       new->outgoing_interface_size++;
 
     /* how many have parents */
@@ -334,12 +207,12 @@ nip parse_model(char* file){
       j++;
     }
     
-    if(temp->if_status & INTERFACE_INCOMING)
+    if(temp->interface_status & INTERFACE_INCOMING)
       new->incoming_interface[k++] = temp;
-    if(temp->if_status & INTERFACE_OLD_OUTGOING){
+    if(temp->interface_status & INTERFACE_OLD_OUTGOING){
       new->previous_outgoing_interface[m] = temp;
       new->outgoing_interface[m] = temp->previous;
-      assert(temp->previous->if_status & INTERFACE_OUTGOING);
+      assert(temp->previous->interface_status & INTERFACE_OUTGOING);
       m++;
     }
   }
@@ -468,8 +341,8 @@ int write_model(nip model, char* filename){
     fprintf(f, "%s    position = (%d %d);\n", indent, x, y);
     fprintf(f, "%s    states = (", indent);
     for(j = 0; j < n; j++)
-      fprintf(f, " \"%s\" \n%s              ", v->statenames[j], indent);
-    fprintf(f, " \"%s\" );\n", v->statenames[n]);
+      fprintf(f, " \"%s\" \n%s              ", v->state_names[j], indent);
+    fprintf(f, " \"%s\" );\n", v->state_names[n]);
     if(v->previous)
       fprintf(f, "%s    NIP_next = \"%s\";\n", indent, 
 	      get_symbol(v->previous));
@@ -558,7 +431,7 @@ int write_model(nip model, char* filename){
 	  inverse_mapping(p, j-1, temp);
 	  for(x = nparents-1; x >= 0; x--){
 	    fprintf(f, "%s=%s ", get_symbol(v->parents[x]),
-		    get_statename(v->parents[x], temp[x+1]));
+		    get_state_name(v->parents[x], temp[x+1]));
 	  }
 	}
 	/* cut the line and indent */
@@ -749,7 +622,7 @@ int read_timeseries(nip model, char* filename,
 	  if(i == m) 
 	    break; /* the line was too short */
 	  if(v)
-	    ts->data[j][k++] = get_stateindex(v, tokens[i]);
+	    ts->data[j][k++] = get_state_index(v, tokens[i]);
 	  /* note that these are coupled with ts->observed */
 	  
 	  /* Q: Should missing data be allowed?   A: Yes. */
@@ -870,7 +743,7 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
 	if(i > 0)
 	  fprintf(f, "%c", FIELD_SEPARATOR);
 	if(d >= 0)
-	  fprintf(f, "%s", get_statename(v, d));      
+	  fprintf(f, "%s", get_state_name(v, d));      
 	else
 	  fputs("null", f);
       }
@@ -961,7 +834,7 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
   for(i = 0; i < n; i++){
     if(i > 0)
       fprintf(f, "%c", FIELD_SEPARATOR);
-    fprintf(f, "%s", get_statename(v, i));
+    fprintf(f, "%s", get_state_name(v, i));
   }
   fputs("\n", f);
 
@@ -1022,7 +895,7 @@ char* get_observation(time_series ts, variable v, int time){
   if(j < 0)
     return NULL;
 
-  return v->statenames[ts->data[time][j]];
+  return v->state_names[ts->data[time][j]];
 }
 
 
@@ -1032,7 +905,7 @@ int set_observation(time_series ts, variable v, int time, char* observation){
     if(equal_variables(v, ts->observed[i]))
       j = i;
 
-  i = get_stateindex(v, observation);
+  i = get_state_index(v, observation);
   /* a valid variable? a valid observation for that variable? */
   if((j < 0) || (i < 0))
     return ERROR_INVALID_ARGUMENT;
@@ -2010,7 +1883,7 @@ static int e_step(time_series ts, potential* parameters,
       v = model->variables[i];
 
       /* JJT 02.11.2006: Skip old interface variables for t > 0 */
-      if(t > 0 && (v->if_status & INTERFACE_OLD_OUTGOING))
+      if(t > 0 && (v->interface_status & INTERFACE_OLD_OUTGOING))
 	continue;
       
       /* 2. Find the clique that contains the family of 

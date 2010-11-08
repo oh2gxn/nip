@@ -1,4 +1,4 @@
-/* clique.c $Id: clique.c,v 1.31 2008-12-20 12:59:52 jatoivol Exp $
+/* clique.c $Id: clique.c,v 1.32 2010-11-08 17:02:07 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -932,7 +932,7 @@ int global_retraction(variable* vars, int nvars, clique* cliques,
 
 int enter_observation(variable* vars, int nvars, clique* cliques, 
 		      int ncliques, variable v, char *state){
-  int index = get_stateindex(v, state);
+  int index = get_state_index(v, state);
   if(index < 0)
     return NO_ERROR;
   return enter_i_observation(vars, nvars, cliques, ncliques, v, index);

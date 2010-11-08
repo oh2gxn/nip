@@ -1,3 +1,130 @@
+* AN OLD PROBLEM:
+  The time slice concept features some major difficulties because the
+  actual calculations are done in the join tree instead of the graph. The
+  program should be able to figure out how the join tree repeats itself and
+  store some kind of sepsets between the time slices... Note that there can
+  be only one sepset between two adjacent time slices, because the join
+  tree can't have loops. This implies that the variables, which have links
+  to the variables in the next time slice, should be found in the
+  same clique.
+
+* UPDATE: 
+  It seems that Mr. Murphy has a solution: additional moralization of 
+  "interface" variables to include them in a single clique.
+
+
+
+TODO:
+* Document the code structure with UML "class" diagram
+  - make the naming conventions uniform, e.g. 
+    state_names instead of statenames or stateNames
+  - prefix everything with "nip" to simulate namespace
+
+* Make it a library
+  + makefile rules for static
+  + makefile rules for a shared library
+  - GNU libtool or Automake for portability???
+
+* automated test scripts
+  - test models and data
+  - script with simple diff operations?
+
+* the data file abstraction should be "lighter" and separate from model
+  - Hide time_series and uncertain_series implementations better
+    - more useful operations for them?
+  - write_X() functions could take file id's instead of file names...
+    (opening a file or other output would be users responsibility)
+
+* Refactorisation
+  - variable_union(), 
+  - variable_isect(), and
+  - mapper() by replacing a lot of copy-paste code with them...
+
+* Consistent conventions in naming functions, variables, and data structures?
+  - foo_bar(), dataType, etc.?
+
+* Printing potential tables should be contained in potential.c
+  - Problem: how to include comments about parent values?
+  - Solution: refactor potentials to use variables!!!
+
+* Tiny addition to huginnet.y: potentialDeclaration without data
+  (uniform potential) AND parents. Copy-paste the similar thing
+  currently made for priors?
+
+* Parse and preserve other fields specified in Hugin Net files
+  (currently this program ignores them)
+  - How to store potential-specific fields?
+  - What are net{input/output}-fields?
+
+* print_model
+  - writes an input file for graphviz/dot for automated visualization?
+
+* "Viterbi" algorithm for the ML-estimate of the latent variables
+  - It is a descendant of the algorithm called "max-product" or "max-sum"
+  - another forward-like algorithm with elements of dynamic programming
+  - To save huge amounts of memory, could the process use some kind of 
+    "timeslice sepsets" for encoding the progress throughout time?
+  - It has to have the backtracking ability...
+
+* BUG: net parser segfaults if <symbols> is an empty list:
+  "potential( A | ) { }" - it should report an error and quit
+
+* Leave-one-out program based on em_test and inftest...
+  + loo_prediction_test
+  + for each time series: predict the values of a given variable
+      given a model learned from other series and 
+      given data about the other variables
+  - testing
+
+* BUG: some DBN models work, equivalent static ones don't... WHY?
+  - Does this happen only on MRF-like models? 
+    Is it because of bad triangulation?
+
+  - Should use_priors() be used automatically by reset_model() ?
+  - Is the condition for entering priors really correct ?
+  - Make sure priors get multiplied into the model only once!
+    (previously they were treated like evidence and this wasn't a problem)
+
+* A program for computing conditional likelihoods: likelihood.c
+  + command line parameters:
+    + "foo.net", the model
+    + "bar.txt", the data
+    + "D E F", at least one variable!
+  + output: the likelihood value "p (d e f | a b c)"
+  - the same for DBN models???
+
+* Use separate structure for the first time step
+  - How to create the graph for it automatically?
+  - How to use the new piece for inference in the first step?
+
+* Implement some sort of structural learning algorithm?
+  - NIP_potential_parents = "P1 P2 P3"; ?
+  - There is a static set of edges and defined 
+    set of possible additional edges in a graph
+  - The graph has to be stored in the nip struct ?
+    - nip struct       <=> net file
+    - variable struct  <=> node() definition
+    - potential struct <=> potential() definition???
+  - What about graphs without any static edges?
+    - Net file without any potential() definitions? (or only priors)
+    - nip struct == a set of graphs and their clique trees?
+
+* Get rid of copy-paste stuff in inference procedures... but how?
+
+* Online forward_inference (+ refactor offline forward_inference?)
+
+* Online fixed_lag_smoothing...
+
+* Refactor the list implementations (ADTs, almost done?)
+  - potentialList needs to be "hidden" better?
+  - still massive amounts of copy-paste stuff... let it be?
+  + Next time: make a general void* list or use C++
+
+* BUG: Evidence about variables without parents cancels the prior
+  + Priors should not be entered as if they were evidence
+
+
+--- Original huomioita.txt ---
 Sekalaisia huomioita:
 
 * voisi olla j‰rkev‰‰ yhdist‰‰ myˆs moralisaatio find_cliquesiin
@@ -123,3 +250,5 @@ Sekalaisia huomioita:
 
 * nip.c:hen joku "parse_model" tms. joka k‰ynnist‰‰ parserin ja kopioi
   muuttujalistan ja klikkitaulukon (ainakin) malliin. Palauttaa mallin.
+
+--- end of huomioita.txt ---

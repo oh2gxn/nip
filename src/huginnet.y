@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.85 2008-12-20 12:59:53 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.86 2010-11-08 17:02:07 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -1104,13 +1104,13 @@ static int interface_to_vars(interfaceList il, variablelist vl){
     if(v1->cardinality == v2->cardinality){
       /* check one thing */
       for(i = 0; i < v1->cardinality; i++){
-	if(strcmp(get_statename(v1, i), get_statename(v2, i))){
+	if(strcmp(get_state_name(v1, i), get_state_name(v2, i))){
 	  fprintf(stderr, 
 		  "Warning: Corresponding variables %s and %s\n", 
 		  get_symbol(v1), get_symbol(v2));
 	  fprintf(stderr, 
 		  "have different kind of states %s and %s!\n", 
-		  get_statename(v1,i), get_statename(v2,i));
+		  get_state_name(v1,i), get_state_name(v2,i));
 	}
       }
       /* the core */
@@ -1140,9 +1140,9 @@ static int interface_to_vars(interfaceList il, variablelist vl){
       if(v1->previous != NULL && 
 	 v2->previous == NULL){ 
 	/* v2 has the parent v1 in the previous time slice */
-	v1->if_status |= INTERFACE_OLD_OUTGOING;
-	v1->previous->if_status |= INTERFACE_OUTGOING;
-	v2->if_status |= INTERFACE_INCOMING;
+	v1->interface_status |= INTERFACE_OLD_OUTGOING;
+	v1->previous->interface_status |= INTERFACE_OUTGOING;
+	v2->interface_status |= INTERFACE_INCOMING;
 	m = 1;
 	/* break; ?? */
 
@@ -1164,7 +1164,7 @@ static int interface_to_vars(interfaceList il, variablelist vl){
 	v1 = v2->parents[i];
 	if(v1->previous == NULL){ 
 	  /* v1 (in time slice t) is married with someone in t-1 */
-	  v1->if_status |= INTERFACE_INCOMING;
+	  v1->interface_status |= INTERFACE_INCOMING;
 
 #ifdef DEBUG_BISON
 	fprintf(stdout, 
@@ -1239,14 +1239,14 @@ static void print_parsed_stuff(potentialList pl){
       inverse_mapping(list->data, i, indices);
 
       printf("P( %s = %s", list->child->symbol, 
-	     (list->child->statenames)[indices[temp_array[0]]]);
+	     (list->child->state_names)[indices[temp_array[0]]]);
 
       if(list->data->num_of_vars > 1)
 	printf(" |");
 
       for(j = 0; j < list->data->num_of_vars - 1; j++)
 	printf(" %s = %s", ((list->parents)[j])->symbol,
-	       (((list->parents)[j])->statenames)[indices[temp_array[j + 1]]]);
+	       (((list->parents)[j])->state_names)[indices[temp_array[j + 1]]]);
       
       printf(" ) = %.2f \n", (list->data->data)[i]);
     }

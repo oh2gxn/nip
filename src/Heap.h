@@ -1,4 +1,6 @@
-/* Heap.h $Id: Heap.h,v 1.8 2008-12-20 12:59:52 jatoivol Exp $
+/* Heap.h 
+ * Authors: Antti Rasinen, Mikko Korpela, Janne Toivola
+ * $Id: Heap.h,v 1.9 2010-11-08 17:02:07 jatoivol Exp $
  */
 
 #ifndef __HEAP_H__
@@ -16,7 +18,6 @@ typedef struct {
     variable* Vs; /* Vs[0] is the variable in the array, rest are neighbours*/
     sepset s;
     int n; /* size (always at least 1) */
-
     int primary_key;
     int secondary_key;
 } Heap_item;
@@ -24,9 +25,9 @@ typedef struct {
 typedef struct {
     Heap_item* heap_items;
     int heap_size;
-    /* MVK: Mikä on orig_size ? */
-    /* AR: S'on heapin käyttämän taulukon koko. Ei liene tarpeellinen,
-     * ellei sitten heappia tuhottaessa. */
+    /* MVK: What is orig_size ? */
+    /* AR: Size of the table used by heap. May not be necessary,
+     *     unless while freeing the heap. */
     int orig_size;
     sepset *useless_sepsets; /* MVK */
 } Heap;

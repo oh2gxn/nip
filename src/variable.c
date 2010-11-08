@@ -1,4 +1,7 @@
-/* variable.c $Id: variable.c,v 1.17 2010-11-08 14:14:39 jatoivol Exp $
+/* variable.c 
+ * 
+ * Author: Janne Toivola
+ * $Id: variable.c,v 1.18 2010-11-08 17:02:07 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -61,7 +64,7 @@ variable new_variable(const char* symbol, const char* name,
   v->num_of_parents = 0;
   v->family_clique = NULL;
   v->family_mapping = NULL;
-  v->if_status = INTERFACE_NONE; /* does not belong to interfaces at first */
+  v->interface_status = INTERFACE_NONE; /* does not belong to interfaces */
   v->pos_x = 100;
   v->pos_y = 100;
   v->mark = MARK_OFF; /* If this becomes 0x00, there will be a bug (?) */
@@ -75,19 +78,19 @@ variable new_variable(const char* symbol, const char* name,
   /* DANGER! The name can be omitted and consequently be NULL */
 
   if(states){
-    v->statenames = (char **) calloc(cardinality, sizeof(char *));
-    if(!(v->statenames)){
+    v->state_names = (char **) calloc(cardinality, sizeof(char *));
+    if(!(v->state_names)){
       report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
       free(v);
       return NULL;
     }
     for(i = 0; i < cardinality; i++){
-      if(set_variable_text(&(v->statenames[i]), states[i]) == 
+      if(set_variable_text(&(v->state_names[i]), states[i]) == 
 	 ERROR_OUTOFMEMORY){
 	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
 	for(j = 0; j < i; j++)
-	  free(v->statenames[j]);
-	free(v->statenames);
+	  free(v->state_names[j]);
+	free(v->state_names);
 	free(v);
       }
     }
@@ -99,8 +102,8 @@ variable new_variable(const char* symbol, const char* name,
   if(!(v->likelihood)){
     report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
     for(i = 0; i < v->cardinality; i++)
-      free(v->statenames[i]);
-    free(v->statenames);
+      free(v->state_names[i]);
+    free(v->state_names);
     free(v);
   }
 
@@ -169,10 +172,10 @@ void free_variable(variable v){
     return;
   free(v->symbol);
   free(v->name);
-  if(v->statenames)
+  if(v->state_names)
     for(i = 0; i < v->cardinality; i++)
-      free(v->statenames[i]);
-  free(v->statenames);
+      free(v->state_names[i]);
+  free(v->state_names);
   free(v->parents);
   free(v->family_mapping);
   free(v->likelihood);
@@ -219,21 +222,21 @@ char *get_symbol(variable v){
 }
 
 
-int get_stateindex(variable v, char *state){
+int get_state_index(variable v, char *state){
   int i;
-  if(!v->statenames)
+  if(!v->state_names)
     return -1;
   for(i = 0; i < v->cardinality; i++)
-    if(strcmp(state, v->statenames[i]) == 0)
+    if(strcmp(state, v->state_names[i]) == 0)
       return i;
   return -1;
 }
 
 
-char* get_statename(variable v, int index){
-  if(!v->statenames)
+char* get_state_name(variable v, int index){
+  if(!v->state_names)
     return NULL;
-  return v->statenames[index];
+  return v->state_names[index];
 }
 
 

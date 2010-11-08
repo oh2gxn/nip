@@ -151,7 +151,7 @@ int main(int argc, char *argv[]){
       /* 5. Print the result */
       for(j = 0; j < CARDINALITY(interesting); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(interesting),
-	       (interesting->statenames)[j], result[t][i][j]);
+	       (interesting->state_names)[j], result[t][i][j]);
       printf("\n");
     }
 
@@ -273,7 +273,7 @@ int main(int argc, char *argv[]){
       /* 5. Print the result */
       for(j = 0; j < CARDINALITY(interesting); j++)
 	printf("P(%s=%s) = %f\n", get_symbol(interesting),
-	       (interesting->statenames)[j], result[t][i][j]);
+	       (interesting->state_names)[j], result[t][i][j]);
       printf("\n");
     }
     

@@ -1,4 +1,4 @@
-/* variable.h $Id: variable.h,v 1.20 2010-11-08 14:14:39 jatoivol Exp $
+/* variable.h $Id: variable.h,v 1.21 2010-11-08 17:02:07 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
@@ -27,7 +27,7 @@
 struct nip_var {
   char *symbol;       /* Short symbol for the node */
   char *name;         /* Label in the Net language*/
-  char **statenames;  /* A string array with <cardinality> strings */
+  char **state_names; /* A string array with <cardinality> strings */
   int cardinality;    /* Number of possible values */
   unsigned long id;   /* Unique id for every variable */
   double *likelihood; /* Likelihood of each value */
@@ -42,7 +42,7 @@ struct nip_var {
   void *family_clique;      /* Possible reference to the family clique */
   int *family_mapping;      /* Maps the variables in the family to the
 			     * variables in the family clique */
-  int if_status; /* Which interfaces the variable belongs to */
+  int interface_status; /* Which interfaces the variable belongs to */
   int pos_x; /* node position by Hugin */
   int pos_y;
   char mark; /* mark for some algorithms (like DFS and data generation) */
@@ -51,18 +51,18 @@ struct nip_var {
 };
 
 typedef struct nip_var vtype;
-typedef vtype *variable;
+typedef vtype* variable;
 
 
 /* List for storing variables */
 struct variablelinktype {
   variable data;
-  struct variablelinktype *fwd;
-  struct variablelinktype *bwd;
+  struct variablelinktype* fwd;
+  struct variablelinktype* bwd;
 };
 
 typedef struct variablelinktype variablelinkstruct;
-typedef variablelinkstruct *variablelink;
+typedef variablelinkstruct* variablelink;
 typedef variablelink variable_iterator;
 
 struct variablelisttype {
@@ -72,7 +72,7 @@ struct variablelisttype {
 };
 
 typedef struct variablelisttype variableliststruct;
-typedef variableliststruct *variablelist;
+typedef variableliststruct* variablelist;
 
 
 
@@ -81,12 +81,12 @@ typedef variableliststruct *variablelist;
 struct interfaceLinkType {
   variable var;
   char* next;
-  struct interfaceLinkType *fwd;
-  struct interfaceLinkType *bwd;
+  struct interfaceLinkType* fwd;
+  struct interfaceLinkType* bwd;
 };
 
 typedef struct interfaceLinkType interfaceLinkStruct;
-typedef interfaceLinkStruct *interfaceLink;
+typedef interfaceLinkStruct* interfaceLink;
 
 struct interfaceListType {
   int length;
@@ -95,7 +95,7 @@ struct interfaceListType {
 };
 
 typedef struct interfaceListType interfaceListStruct;
-typedef interfaceListStruct *interfaceList;
+typedef interfaceListStruct* interfaceList;
 
 
 
@@ -146,12 +146,12 @@ char *get_symbol(variable v);
 /* Gives the numerical representation of the variable state. 
  * Numbers are [0 ... <cardinality-1>] or -1 if the variable doesn't have
  * such a state. This function is needed when parsing data. */
-int get_stateindex(variable v, char *state);
+int get_state_index(variable v, char *state);
 
 
 /* The reciprocal of the function above... 
  */
-char* get_statename(variable v, int index);
+char* get_state_name(variable v, int index);
 
 
 /* Gets the parsed variable according to the symbol. */

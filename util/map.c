@@ -139,7 +139,7 @@ int main(int argc, char *argv[]){
 	    k = j;
 	  }
 	}
-	fprintf(f, "%s, ", (temp->statenames)[k]);
+	fprintf(f, "%s, ", (temp->state_names)[k]);
       }
 
       i = ucs->num_of_vars - 1;
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]){
 	  k = j;
 	}
       }
-      fprintf(f, "%s \n", (temp->statenames)[k]);
+      fprintf(f, "%s \n", (temp->state_names)[k]);
     }
     fputs("\n", f); /* space between time series */
     free_uncertainseries(ucs); /* remember to free ucs */
