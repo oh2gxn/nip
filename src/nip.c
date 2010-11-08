@@ -1,4 +1,4 @@
-/* nip.c $Id: nip.c,v 1.209 2010-11-05 14:52:03 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.210 2010-11-08 14:14:39 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -45,6 +45,18 @@
 /***** 
  * TODO: 
 
+ * - Document the code structure with UML "class" diagram
+
+ * - Make it a library
+ *   + makefile rules for static
+ *   + makefile rules for a shared library
+ *   - prefix everything with "nip" to simulate namespace
+ *   - GNU libtool or Automake for portability???
+
+ * - automated test scripts
+ *   - test models and data
+ *   - script with simple diff operations?
+
  * - the data file abstraction should be "lighter" and separate from model
  * - Hide time_series and uncertain_series implementations better
  *   - more useful operations for them?
@@ -80,10 +92,6 @@
  *   - To save huge amounts of memory, could the process use some kind of 
  *     "timeslice sepsets" for encoding the progress throughout time?
  *   - It has to have the backtracking ability...
-
- * - automated test scripts
- *   - test models and data
- *   - script with simple diff operations?
 
  * - BUG: net parser segfaults if <symbols> is an empty list:
  *   "potential( A | ) { }" - it should report an error and quit

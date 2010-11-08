@@ -1,10 +1,9 @@
-/* variable.h $Id: variable.h,v 1.19 2008-12-20 12:59:53 jatoivol Exp $
+/* variable.h $Id: variable.h,v 1.20 2010-11-08 14:14:39 jatoivol Exp $
  */
 
 #ifndef __VARIABLE_H__
 #define __VARIABLE_H__
 
-#include "potential.h"
 /* The name, symbol, statename etc. can be at most 40 characters long... */
 #define VAR_TEXT_LENGTH 40
 #define VAR_MIN_ID 1

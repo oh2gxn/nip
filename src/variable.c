@@ -1,11 +1,10 @@
-/* variable.c $Id: variable.c,v 1.16 2008-12-20 12:59:53 jatoivol Exp $
+/* variable.c $Id: variable.c,v 1.17 2010-11-08 14:14:39 jatoivol Exp $
  */
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "variable.h"
-#include "potential.h"
 #include "errorhandler.h"
 
 static int set_variable_text(char** record, const char *name);
@@ -416,7 +415,6 @@ variable *sort_variables(variable *vars, int num_of_vars){
       }
 
   return sorted;
-
 }
 
 
