@@ -1,4 +1,4 @@
-/* cls2clq.h $Id: cls2clq.h,v 1.3 2008-12-20 12:59:53 jatoivol Exp $
+/* cls2clq.h $Id: cls2clq.h,v 1.4 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #ifndef __CLS2CLQ_H__
@@ -26,7 +26,8 @@ int is_subset(Cluster_list* cl_head, int* var_set, int size);
 /*
  */
 
-clique* cl2cliques(variable* vars, Cluster_list* cl_head, int n_cliques,int n);
+clique* cl2cliques(nip_variable* vars, Cluster_list* cl_head, 
+		   int n_cliques,int n);
 /*
  */
 

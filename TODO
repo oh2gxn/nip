@@ -20,6 +20,12 @@ TODO:
     state_names instead of statenames or stateNames
   - prefix everything with "nip" to simulate namespace
 
+* Consistent conventions in naming functions, variables, and data structures?
+  - errorhandler.h -> niperrorhandler.h
+  - variable.h -> nipvariable.h
+  - ...
+  - foo_bar(), data_type, etc.?
+
 * Make it a library
   + makefile rules for static
   + makefile rules for a shared library
@@ -40,12 +46,11 @@ TODO:
   - variable_isect(), and
   - mapper() by replacing a lot of copy-paste code with them...
 
-* Consistent conventions in naming functions, variables, and data structures?
-  - foo_bar(), dataType, etc.?
-
 * Printing potential tables should be contained in potential.c
   - Problem: how to include comments about parent values?
   - Solution: refactor potentials to use variables!!!
+
+* Hugin Net parser should use a struct instead of global variables!
 
 * Tiny addition to huginnet.y: potentialDeclaration without data
   (uniform potential) AND parents. Copy-paste the similar thing
@@ -56,6 +61,9 @@ TODO:
   - How to store potential-specific fields?
   - What are net{input/output}-fields?
 
+* BUG: net parser segfaults if <symbols> is an empty list:
+  "potential( A | ) { }" - it should report an error and quit
+
 * print_model
   - writes an input file for graphviz/dot for automated visualization?
 
@@ -65,9 +73,6 @@ TODO:
   - To save huge amounts of memory, could the process use some kind of 
     "timeslice sepsets" for encoding the progress throughout time?
   - It has to have the backtracking ability...
-
-* BUG: net parser segfaults if <symbols> is an empty list:
-  "potential( A | ) { }" - it should report an error and quit
 
 * Leave-one-out program based on em_test and inftest...
   + loo_prediction_test

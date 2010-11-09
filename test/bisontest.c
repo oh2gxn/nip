@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include "parser.h"
 #include "clique.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "potential.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 #include "huginnet.tab.h"
 
 /*
@@ -37,7 +37,7 @@
 extern FILE *open_net_file(const char *filename);
 extern void close_net_file();
 extern int yyparse();
-extern variablelist get_parsed_variables();
+extern nip_variable_list get_parsed_variables();
 extern int get_cliques(clique** clique_array_pointer);
 
 /*
@@ -48,7 +48,7 @@ extern int get_cliques(clique** clique_array_pointer);
  * the array is returned in "size_of_result".
  */
 static void test_probability(double **result, int *size_of_result,
-			     variable var, clique cliques[],
+			     nip_variable var, clique cliques[],
 			     int num_of_cliques){
 
   /* Find the clique that contains the family of the interesting variable. */
@@ -59,7 +59,7 @@ static void test_probability(double **result, int *size_of_result,
     return;
   }  
 
-  *size_of_result = CARDINALITY(var);
+  *size_of_result = NIP_CARDINALITY(var);
 
   /* Allocate memory for the result */
   *result = (double *) calloc(*size_of_result, sizeof(double));
@@ -81,7 +81,7 @@ static void test_probability(double **result, int *size_of_result,
 /*
  * Enter some evidence of variable "observed".
  */
-static void test_evidence(variable* vars, int nvars, clique* cliques, 
+static void test_evidence(nip_variable* vars, int nvars, clique* cliques, 
 			  int num_of_cliques, variable observed, 
 			  double data[]){
 
@@ -119,10 +119,10 @@ int main(int argc, char *argv[]){
 
   clique *nip_cliques;
 
-  variable interesting;
-  variable* vars;
-  variablelist var_list;
-  variable_iterator it;
+  nip_variable interesting;
+  nip_variable* vars;
+  nip_variable_list var_list;
+  nip_variable_iterator it;
 
 #ifdef PRINT_POTENTIALS
   int j;
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]){
 
 #endif /* EVIDENCE_SOTKU */
 
-  variable observed[3];
+  nip_variable observed[3];
   double *probs[3];
 #endif /* EVIDENCE */
 
@@ -194,10 +194,10 @@ int main(int argc, char *argv[]){
   var_list = get_parsed_variables();
   it = var_list->first;
   nvars = LIST_LENGTH(var_list);
-  vars = (variable*) calloc(nvars, sizeof(variable));
+  vars = (nip_variable*) calloc(nvars, sizeof(nip_variable));
   
   for(i = 0; i < nvars; i++)
-    vars[i] = next_variable(&it);
+    vars[i] = nip_next_variable(&it);
 
 #ifdef PRINT_JOINTREE
   jtree_dfs(nip_cliques[0], print_clique, print_Sepset);
@@ -224,14 +224,14 @@ int main(int argc, char *argv[]){
 #ifdef EVIDENCE
   /* add some evidence */
 #ifndef EVIDENCE_SOTKU
-  observed[0] = get_variable(vars, nvars, "B");
-  observed[1] = get_variable(vars, nvars, "D");
+  observed[0] = nip_search_variable_array(vars, nvars, "B");
+  observed[1] = nip_search_variable_array(vars, nvars, "D");
 #endif
 
 #ifdef EVIDENCE_SOTKU
-  observed[0] = get_variable(vars, nvars, "C1");
-  observed[1] = get_variable(vars, nvars, "C4");
-  observed[2] = get_variable(vars, nvars, "C19");
+  observed[0] = nip_search_variable_array(vars, nvars, "C1");
+  observed[1] = nip_search_variable_array(vars, nvars, "C4");
+  observed[2] = nip_search_variable_array(vars, nvars, "C19");
 #endif
 
 
@@ -266,7 +266,7 @@ int main(int argc, char *argv[]){
   else
     var_name = "B";
 
-  interesting = get_variable(vars, nvars, var_name);
+  interesting = nip_search_variable_array(vars, nvars, var_name);
 
   if(!interesting){
     printf("In bisontest.c : variable %s not found.\n", var_name);
@@ -276,9 +276,9 @@ int main(int argc, char *argv[]){
   test_probability(&result, &size_of_result, interesting, nip_cliques,
 		   nip_num_of_cliques);
 
-  printf("Normalised probability of %s:\n", get_symbol(interesting));
+  printf("Normalised probability of %s:\n", nip_get_symbol(interesting));
   for(i = 0; i < size_of_result; i++)
-    printf("P(%s=%d) = %f\n", get_symbol(interesting), i, result[i]);
+    printf("P(%s=%d) = %f\n", nip_get_symbol(interesting), i, result[i]);
 
   printf("\n\n");
 
@@ -320,7 +320,7 @@ int main(int argc, char *argv[]){
   else
     var_name = "B";
   
-  interesting = get_variable(vars, nvars, var_name);
+  interesting = nip_search_variable_array(vars, nvars, var_name);
     
   if(!interesting){
     printf("In bisontest.c : variable %s not found.\n", var_name);
@@ -330,9 +330,9 @@ int main(int argc, char *argv[]){
   test_probability(&result, &size_of_result, interesting, nip_cliques,
 		   nip_num_of_cliques);
 
-  printf("Normalised probability of %s:\n", get_symbol(interesting));
+  printf("Normalised probability of %s:\n", nip_get_symbol(interesting));
   for(i = 0; i < size_of_result; i++)
-    printf("P(%s=%d) = %f\n", get_symbol(interesting), i, result[i]);
+    printf("P(%s=%d) = %f\n", nip_get_symbol(interesting), i, result[i]);
 
   free(result);
   return 0;

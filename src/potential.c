@@ -1,4 +1,4 @@
-/* potential.c $Id: potential.c,v 1.68 2008-12-20 12:59:53 jatoivol Exp $
+/* potential.c $Id: potential.c,v 1.69 2010-11-09 19:06:08 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "potential.h" 
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 
 /*#define DEBUG_POTENTIAL*/
 
@@ -63,14 +63,14 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
   potential p = (potential) malloc(sizeof(ptype));
 
   if(!p){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }  
 
   if(num_of_vars){
     cardinal = (int *) calloc(num_of_vars, sizeof(int));
     if(!cardinal){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(p);
       return NULL;
     }  
@@ -89,7 +89,7 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
   p->data = (double *) calloc(size_of_data, sizeof(double));
   
   if(!(p->data)){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free_potential(p);
     return NULL;
   }
@@ -143,7 +143,7 @@ double get_pvalue(potential p, int indices[]){
   if(ppointer != NULL)
     return *ppointer;
   else{
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return -1;
   }
 }
@@ -188,8 +188,8 @@ int general_marginalise(potential source, potential destination,
     dest_indices = (int *) calloc(destination->num_of_vars, sizeof(int));
     
     if(!dest_indices){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      return ERROR_OUTOFMEMORY;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      return NIP_ERROR_OUTOFMEMORY;
     }
   }
   else{ /* the rare event of potential being scalar */
@@ -197,15 +197,15 @@ int general_marginalise(potential source, potential destination,
 
     for(i = 0; i < source->size_of_data; i++)
       destination->data[0] += source->data[i];
-    return NO_ERROR;
+    return NIP_NO_ERROR;
   }
 
   /* source->num_of_vars > 0 always */
   source_indices = (int *) calloc(source->num_of_vars, sizeof(int));  
   if(!source_indices){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(dest_indices);
-    return ERROR_OUTOFMEMORY;
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   /* Remove old garbage */
@@ -235,7 +235,7 @@ int general_marginalise(potential source, potential destination,
      The space is needed anyway in general_marginalise() and 
      update_potential()... */
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -250,13 +250,13 @@ int total_marginalise(potential source, double destination[], int variable){
     source_indices = (int *) calloc(source->num_of_vars, sizeof(int));
     
     if(!source_indices){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);    
-      return ERROR_OUTOFMEMORY;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);    
+      return NIP_ERROR_OUTOFMEMORY;
     }
   }
   else{
     destination[0] = source->data[0];
-    return NO_ERROR;
+    return NIP_NO_ERROR;
   }
 
   /* initialization */
@@ -276,7 +276,7 @@ int total_marginalise(potential source, double destination[], int variable){
     destination[index] += source->data[i]; 
   }
   free(source_indices);
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -296,11 +296,11 @@ void normalise_array(double result[], int array_size){
 /* wrapper */
 int normalise_potential(potential p){
   if(!p){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
   normalise_array(p->data, p->size_of_data);
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -309,13 +309,13 @@ int normalise_potential(potential p){
 int normalise_cpd(potential p){
   int i, n;
   if(!p){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
   n = p->cardinality[0]; /* first dimension */
   for(i = 0; i < p->size_of_data; i += n)
     normalise_array(&(p->data[i]), n);
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -326,14 +326,14 @@ int normalise_dimension(potential p, int dimension){
   potential denom = NULL;
 
   if(!p || dimension < 0 || dimension >= p->num_of_vars){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   map = (int*) calloc(p->num_of_vars - 1, sizeof(int));
   if(!map){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   n = 0;
@@ -354,7 +354,7 @@ int normalise_dimension(potential p, int dimension){
   
   free_potential(denom);
   free(map);
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -363,14 +363,14 @@ int sum_potential(potential sum, potential increment){
   
   if(!sum || !increment || sum->size_of_data != increment->size_of_data){
     /* check for different geometry? */
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
   
   for(i = 0; i < sum->size_of_data; i++)
     sum->data[i] += increment->data[i];
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -386,8 +386,8 @@ int update_potential(potential numerator, potential denominator,
       (numerator->num_of_vars != denominator->num_of_vars)) || 
      (numerator == NULL && denominator == NULL)){
     /* I hope the logic behind &&-evaluation is "fail fast" */
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   if(numerator)
@@ -399,8 +399,8 @@ int update_potential(potential numerator, potential denominator,
     source_indices = (int *) calloc(nvars, sizeof(int));
     
     if(!source_indices){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      return ERROR_OUTOFMEMORY;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      return NIP_ERROR_OUTOFMEMORY;
     }
   }
   else{ /* when numerator & denominator are scalar */
@@ -415,15 +415,15 @@ int update_potential(potential numerator, potential denominator,
 	  target->data[i] = 0;
       }
     }
-    return NO_ERROR;
+    return NIP_NO_ERROR;
   }
 
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
   if(!target_indices){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(source_indices);
-    return ERROR_OUTOFMEMORY;
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   /* The general idea is the same as in marginalise */
@@ -448,7 +448,7 @@ int update_potential(potential numerator, potential denominator,
   free(source_indices); /* JJ NOTE: GET RID OF THESE */
   free(target_indices);
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -461,8 +461,8 @@ int update_evidence(double numerator[], double denominator[],
   /* target->num_of_vars > 0  always */
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
   if(!target_indices){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   /* The general idea is the same as in marginalise */
@@ -482,7 +482,7 @@ int update_evidence(double numerator[], double denominator[],
   }
 
   free(target_indices);   /* JJ NOTE: GET RID OF THESE */
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -498,32 +498,32 @@ int init_potential(potential probs, potential target, int mapping[]){
   if(!mapping){
     if(probs->size_of_data != target->size_of_data){
       /* certainly different geometry but no mapping !?!? */
-      report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-      return ERROR_NULLPOINTER;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+      return NIP_ERROR_NULLPOINTER;
     }
     else{ /* the potentials (may) have the same geometry */
       for(i = 0; i < target->size_of_data; i++)
 	target->data[i] *= probs->data[i];
-      return NO_ERROR;
+      return NIP_NO_ERROR;
     }
   }
 
   if(probs->num_of_vars){
     probs_indices = (int *) calloc(probs->num_of_vars, sizeof(int));
     if(!probs_indices){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      return ERROR_OUTOFMEMORY;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      return NIP_ERROR_OUTOFMEMORY;
     }
   }
   else /* probs is a scalar & normalised => probs == 1 */
-    return NO_ERROR;
+    return NIP_NO_ERROR;
 
   target_indices = (int *) calloc(target->num_of_vars, sizeof(int));
 
   if(!target_indices){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(probs_indices);
-    return ERROR_OUTOFMEMORY;
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   /* The general idea is the same as in marginalise */
@@ -544,7 +544,7 @@ int init_potential(potential probs, potential target, int mapping[]){
   free(probs_indices); /* JJ NOTE: GET RID OF THESE? */
   free(target_indices);
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -557,7 +557,7 @@ void print_potential(potential p){
   if(p->num_of_vars){
     indices = (int *) calloc(p->num_of_vars, sizeof(int));
     if(!indices){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return;
     }
   }

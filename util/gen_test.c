@@ -6,7 +6,7 @@
 #include <time.h>
 
 #include "nip.h"
-#include "variable.h"
+#include "nipvariable.h"
 
 /* Generates data according to a given model
  * SYNOPSIS: GEN_TEST <MODEL.NET> <N SERIES> <SAMPLES/SERIES> <RESULT.TXT>
@@ -89,9 +89,9 @@ int main(int argc, char *argv[]) {
 
   /* Write the results to the file */
   i =  write_timeseries(ts_set, n, argv[4]);
-  if(i != NO_ERROR){
+  if(i != NIP_NO_ERROR){
     fprintf(stderr, "Failed to write the data into %s\n", argv[4]);
-    report_error(__FILE__, __LINE__, i, 1);
+    nip_report_error(__FILE__, __LINE__, i, 1);
     while(n > 0)
       free_timeseries(ts_set[--n]);
     free(ts_set);

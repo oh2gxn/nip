@@ -3,14 +3,13 @@
 #include <assert.h>
 #include <string.h>
 #include "Graph.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "clique.h"
 #include "potential.h"
 
 /* some graph test..? */
-void print_adjm(Graph* G)
-{
-	variable* v;
+void print_adjm(Graph* G) {
+	nip_variable* v;
 	int i,j,n;
 
 	v = get_variables(G);
@@ -26,14 +25,15 @@ void print_adjm(Graph* G)
 	}
 }
 
-Graph* test1(void)
-{
+Graph* test1(void) {
     Graph *G;
-    variable v[4];
-    variable *w;
-    char symbol[VAR_TEXT_LENGTH]; /* MVK: Must reserve some memory (?)*/
-    char name[VAR_TEXT_LENGTH];   /* AR: True. IRIX has a black magic sprintf. */
+    nip_variable v[4];
+    nip_variable *w;
     /* char *symbol, *name; */
+    char symbol[NIP_VAR_TEXT_LENGTH]; 
+    char name[NIP_VAR_TEXT_LENGTH];
+    /* MVK: Must reserve some memory (?)*/
+    /* AR: True. IRIX has a black magic sprintf.*/
     
     int i;
 
@@ -46,7 +46,7 @@ Graph* test1(void)
     {
         sprintf(symbol, "var%d", i);
         sprintf(name, "variable %d", i);
-        v[i] = new_variable(symbol, name, NULL, 2);
+        v[i] = nip_new_variable(symbol, name, NULL, 2);
         assert(add_variable(G, v[i])==0);
     }
 
@@ -57,16 +57,15 @@ Graph* test1(void)
     printf("\t\tget_size OK.\n");
 
     for (i = 0; i<5; i++) {
-        assert(equal_variables(v[i], w[i]));
+        assert(nip_equal_variables(v[i], w[i]));
     }
     
     printf("\tTest 1 done.\n");
     return G;
 }
 
-void test2(Graph* G)
-{
-    variable* v = get_variables(G);
+void test2(Graph* G) {
+    nip_variable* v = get_variables(G);
     
     printf("\tTest 2... add_child, is_child\n");
 
@@ -90,10 +89,9 @@ void test2(Graph* G)
 }
 
 
-void test3(Graph* G)
-{
+void test3(Graph* G) {
     Graph* Gc;
-    variable *v, *w;
+    nip_variable *v, *w;
     int i,j;
     
     printf("\tTest 3... copy_graph\n");
@@ -102,7 +100,7 @@ void test3(Graph* G)
     w = get_variables(Gc);
     assert(get_size(G) == get_size(Gc));
     for (i = 0; i < get_size(G); i++) {
-        assert(equal_variables(v[i],w[i]));
+        assert(nip_equal_variables(v[i],w[i]));
     }
     for (i = 0; i < get_size(G); i++)
         for (j = 0; j < get_size(G); j++) {
@@ -111,10 +109,9 @@ void test3(Graph* G)
     printf("\tTest 3 done.\n");
 }
 
-void test4(Graph* G)
-{
+void test4(Graph* G) {
     Graph *Gu;
-    variable *v;
+    nip_variable *v;
     int i,j,n;
     
     printf("\tTest 4... make_undirected\n");
@@ -139,10 +136,9 @@ void test4(Graph* G)
     printf("\tTest 4 done.\n");
 }
 
-void test5(Graph* G)
-{
+void test5(Graph* G) {
     Graph *Gm;
-    variable *v;
+    nip_variable *v;
     int i,j,n;
     printf("\tTest 5... moralise\n");
     Gm = moralise(G);
@@ -158,24 +154,23 @@ void test5(Graph* G)
 	printf("\tTest 5 done.\n");
 }
 
-Graph* test6()
-{
+Graph* test6() {
 	Graph *G, *Gu, *Gm;
 	int i,n=8;
 	clique* cliques;
-	variable v[8];
+	nip_variable v[8];
 	
 	printf("\tTest 6... triangulation\n");
 	G = new_graph(n);
 	
-	v[0] =  new_variable("A", "", NULL, 2);
-	v[1] =  new_variable("B", "", NULL, 2);
-	v[2] =  new_variable("C", "", NULL, 2);
-	v[3] =  new_variable("D", "", NULL, 2);
-	v[4] =  new_variable("E", "", NULL, 2);
-	v[5] =  new_variable("F", "", NULL, 2);
-	v[6] =  new_variable("G", "", NULL, 2);
-	v[7] =  new_variable("H", "", NULL, 2);
+	v[0] =  nip_new_variable("A", "", NULL, 2);
+	v[1] =  nip_new_variable("B", "", NULL, 2);
+	v[2] =  nip_new_variable("C", "", NULL, 2);
+	v[3] =  nip_new_variable("D", "", NULL, 2);
+	v[4] =  nip_new_variable("E", "", NULL, 2);
+	v[5] =  nip_new_variable("F", "", NULL, 2);
+	v[6] =  nip_new_variable("G", "", NULL, 2);
+	v[7] =  nip_new_variable("H", "", NULL, 2);
 
 	for(i=0;i<n;i++)
 		add_variable(G, v[i]);
@@ -199,8 +194,7 @@ Graph* test6()
 	return G;
 }
 
-void test7(Graph* G)
-{
+void test7(Graph* G) {
 	clique* cliques;
 	clique ci;
 	int i, j, n_cliques, n_vars;
@@ -221,8 +215,7 @@ void test7(Graph* G)
 	printf("\tTest 7 done.\n");	
 }
 
-int main(void)
-{
+int main(void) {
     Graph *G, *G2;
     printf("-------------------------------\n");
     printf("Testing graphs:\n");

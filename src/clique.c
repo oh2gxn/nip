@@ -1,4 +1,4 @@
-/* clique.c $Id: clique.c,v 1.32 2010-11-08 17:02:07 jatoivol Exp $
+/* clique.c $Id: clique.c,v 1.33 2010-11-09 19:06:08 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -9,22 +9,22 @@
 #include <stdio.h>
 #include <math.h>
 #include "clique.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "potential.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 #include "Heap.h"
 
 /*
-#define DEBUG_CLIQUE
+#define NIP_DEBUG_CLIQUE
 */
 
 /*
-#define DEBUG_RETRACTION
+#define NIP_DEBUG_RETRACTION
 */
 
 static int message_pass(clique c1, sepset s, clique c2);
 
-static int var_index(clique c, variable v);
+static int var_index(clique c, nip_variable v);
 
 static int clique_search(clique one, clique two);
 
@@ -42,7 +42,7 @@ static void neg_sepset_mass(sepset s, double* ptr);
 static void remove_sepset(clique c, sepset s);
 
 
-clique make_clique(variable vars[], int num_of_vars){
+clique new_clique(nip_variable vars[], int num_of_vars){
   clique c;
   int *cardinality;
   int *reorder;
@@ -52,14 +52,14 @@ clique make_clique(variable vars[], int num_of_vars){
 
   c = (clique) malloc(sizeof(cliquetype));
   if(!c){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }    
 
   cardinality = (int *) calloc(num_of_vars, sizeof(int));
   if(!cardinality){
     free(c);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }    
 
@@ -67,7 +67,7 @@ clique make_clique(variable vars[], int num_of_vars){
   if(!reorder){
     free(c);
     free(cardinality);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }    
 
@@ -76,7 +76,7 @@ clique make_clique(variable vars[], int num_of_vars){
     free(c);
     free(cardinality);
     free(reorder);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }    
 
@@ -92,9 +92,9 @@ clique make_clique(variable vars[], int num_of_vars){
   /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
   for(i = 0; i < num_of_vars; i++){
-    temp = get_id(vars[i]);
+    temp = nip_get_id(vars[i]);
     for(j = 0; j < num_of_vars; j++){
-      if(get_id(vars[j]) > temp)
+      if(nip_get_id(vars[j]) > temp)
 	indices[j]++; /* counts how many greater variables there are */
     }
   }
@@ -102,19 +102,19 @@ clique make_clique(variable vars[], int num_of_vars){
   for(i = 0; i < num_of_vars; i++)
     reorder[indices[i]] = i; /* fill the reordering */
 
-  c->variables = (variable *) calloc(num_of_vars, sizeof(variable));
+  c->variables = (nip_variable *) calloc(num_of_vars, sizeof(nip_variable));
   if(!(c->variables)){
     free(c);
     free(cardinality);
     free(reorder);
     free(indices);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
   /* JJ_NOTE: reordering probably not required anymore... */
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = CARDINALITY(vars[reorder[i]]);
+    cardinality[i] = NIP_CARDINALITY(vars[reorder[i]]);
     c->variables[i] = vars[reorder[i]];
   }
   
@@ -130,7 +130,7 @@ clique make_clique(variable vars[], int num_of_vars){
     free_potential(c->p);
     free_potential(c->original_p);
     free(c);
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
   }
 
@@ -138,7 +138,7 @@ clique make_clique(variable vars[], int num_of_vars){
   free(indices);
   free(reorder);
   c->sepsets = NULL;
-  c->mark = MARK_OFF;
+  c->mark = NIP_MARK_OFF;
 
   return c;
 }
@@ -182,8 +182,8 @@ int add_sepset(clique c, sepset s){
 
   sepset_link new = (sepset_link) malloc(sizeof(element));
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   new->data = s;
@@ -201,7 +201,7 @@ static void remove_sepset(clique c, sepset s){
   sepset_link l;
 
   if(!(c && s)){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return;
   }
   l = c->sepsets;
@@ -228,7 +228,7 @@ static void remove_sepset(clique c, sepset s){
 /*
  * ATTENTION! Check what this does when num_of_vars == 0.
  */
-sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
+sepset make_sepset(nip_variable vars[], int num_of_vars, clique cliques[]){
 
   sepset s;
   int *cardinality = NULL;
@@ -240,7 +240,7 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
   s = (sepset) malloc(sizeof(sepsettype));
 
   if(!s){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -248,7 +248,7 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
     cardinality = (int *) calloc(num_of_vars, sizeof(int));
     if(!cardinality){
       free(s);
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NULL;
     }
 
@@ -256,7 +256,7 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
     if(!reorder){
       free(s);
       free(cardinality);
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NULL;
     }
 
@@ -265,7 +265,7 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
       free(s);
       free(cardinality);
       free(reorder);
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NULL;
     }
   }
@@ -282,19 +282,19 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
     free(cardinality);
     free(reorder);
     free(indices);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
   if(num_of_vars){
-    s->variables = (variable *) calloc(num_of_vars, sizeof(variable));
+    s->variables = (nip_variable *) calloc(num_of_vars, sizeof(nip_variable));
     if(!s->variables){
       free(cardinality);
       free(reorder);
       free(indices);
       free(s->cliques);
       free(s);
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NULL;
     }
   }
@@ -311,9 +311,9 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
   /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
   for(i = 0; i < num_of_vars; i++){
-    temp = get_id(vars[i]);
+    temp = nip_get_id(vars[i]);
     for(j = 0; j < num_of_vars; j++){
-      if(get_id(vars[j]) > temp)
+      if(nip_get_id(vars[j]) > temp)
 	indices[j]++; /* counts how many greater variables there are */
     }
   }
@@ -324,7 +324,7 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
 
   /* JJ_NOTE: reordering probably not required anymore... */
   for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = CARDINALITY(vars[reorder[i]]);
+    cardinality[i] = NIP_CARDINALITY(vars[reorder[i]]);
     s->variables[i] = vars[reorder[i]];
   }
 
@@ -341,7 +341,7 @@ sepset make_sepset(variable vars[], int num_of_vars, clique cliques[]){
     free_potential(s->old);
     free_potential(s->new);
     free(s);
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
   }
 
@@ -369,7 +369,7 @@ void free_sepset(sepset s){
 }
 
 
-potential create_potential(variable variables[], int num_of_vars, 
+potential create_potential(nip_variable variables[], int num_of_vars, 
 			   double data[]){
   /*
    * Suppose we get an array of variables with IDs {5, 2, 3, 4, 0, 1}.
@@ -401,25 +401,25 @@ potential create_potential(variable variables[], int num_of_vars,
   potential p;
 
   if((cardinality = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
   if((indices = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinality);
     return NULL;
   }
 
   if((temp_array = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinality);
     free(indices);
     return NULL;
   }
 
   if((reorder = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinality);
     free(indices);
     free(temp_array);
@@ -436,9 +436,9 @@ potential create_potential(variable variables[], int num_of_vars,
   /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
   for(i = 0; i < num_of_vars; i++){
-    temp = get_id(variables[i]);
+    temp = nip_get_id(variables[i]);
     for(j = 0; j < num_of_vars; j++){
-      if(get_id(variables[j]) > temp)
+      if(nip_get_id(variables[j]) > temp)
 	temp_array[j]++; /* counts how many greater variables there are */
     }
   }
@@ -448,8 +448,8 @@ potential create_potential(variable variables[], int num_of_vars,
 
   /* Figure out some stuff */
   for(i = 0; i < num_of_vars; i++){
-    size_of_data *= CARDINALITY(variables[i]); /* optimal? */
-    cardinality[i] = CARDINALITY(variables[reorder[i]]);
+    size_of_data *= NIP_CARDINALITY(variables[i]); /* optimal? */
+    cardinality[i] = NIP_CARDINALITY(variables[reorder[i]]);
   }
 
   /* Create a potential */
@@ -461,7 +461,7 @@ potential create_potential(variable variables[], int num_of_vars,
     free(indices);
     free(temp_array);
     free(reorder);
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
   }
   
@@ -511,7 +511,7 @@ potential create_potential(variable variables[], int num_of_vars,
 
 
 /* NOTE: don't use this. This is just a bad idea we had... */
-double *reorder_potential(variable vars[], potential p){
+double *reorder_potential(nip_variable vars[], potential p){
 
   int old_flat_index, new_flat_index;
   int i, j;
@@ -526,34 +526,34 @@ double *reorder_potential(variable vars[], potential p){
 
   /* Simple (stupid) checks */
   if(!p){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return NULL;
   }
   if(!vars){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return NULL;
   }
   old_indices = (int *) calloc(p->num_of_vars, sizeof(int));
   if(!old_indices){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
   new_indices = (int *) calloc(p->num_of_vars, sizeof(int));
   if(!new_indices){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(old_indices);
     return NULL;
   }
   new_card = (int *) calloc(p->num_of_vars, sizeof(int));
   if(!new_card){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(old_indices);
     free(new_indices);
     return NULL;
   }
   new_data = (double *) calloc(p->size_of_data, sizeof(double));
   if(!new_data){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(old_indices);
     free(new_indices);
     free(new_card);
@@ -628,7 +628,7 @@ double *reorder_potential(variable vars[], potential p){
 
 void unmark_clique(clique c){
   if(c != NULL)
-    c->mark = MARK_OFF;
+    c->mark = NIP_MARK_OFF;
   return;
 }
 
@@ -637,7 +637,7 @@ void unmark_clique(clique c){
  * Returns 0 if clique is not marked, 1 if it is. (This could be a macro...)
  */
 static int clique_marked(clique c){
-  return (c->mark == MARK_ON);
+  return (c->mark == NIP_MARK_ON);
 }
 
 
@@ -657,13 +657,13 @@ int distribute_evidence(clique c){
   sepset_link l;
   sepset s;
 
-#ifdef DEBUG_CLIQUE
+#ifdef NIP_DEBUG_CLIQUE
   printf("Distributing evidence in ");
   print_clique(c);
 #endif
 
   /* mark */
-  c->mark = MARK_ON;
+  c->mark = NIP_MARK_ON;
 
   /* pass the messages */
   l = c->sepsets;
@@ -671,16 +671,16 @@ int distribute_evidence(clique c){
     s = l->data;
     if(!clique_marked(s->cliques[0])){
       retval = message_pass(c, s, s->cliques[0]); /* pass a message */
-      if(retval != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+      if(retval != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }
     }
     else if(!clique_marked(s->cliques[1])){
       retval = message_pass(c, s, s->cliques[1]); /* pass a message */
-      if(retval != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+      if(retval != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }
     }
     l = l->fwd;
@@ -691,20 +691,20 @@ int distribute_evidence(clique c){
   while (l != 0){
     s = l->data;
     if(!clique_marked(s->cliques[0])){
-      if(distribute_evidence(s->cliques[0]) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+      if(distribute_evidence(s->cliques[0]) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }
     }
     else if(!clique_marked(s->cliques[1])){
-      if(distribute_evidence(s->cliques[1]) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+      if(distribute_evidence(s->cliques[1]) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }
     }
     l = l->fwd;
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -715,22 +715,22 @@ int collect_evidence(clique c1, sepset s12, clique c2){
   sepset s;
 
   /* mark */
-  c2->mark = MARK_ON;
+  c2->mark = NIP_MARK_ON;
 
   /* call neighboring cliques */
   l = c2->sepsets;
   while (l != NULL){
     s = l->data;
     if(!clique_marked(s->cliques[0])){
-      if(collect_evidence(c2, s, s->cliques[0]) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+      if(collect_evidence(c2, s, s->cliques[0]) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }
     }
     else if(!clique_marked(s->cliques[1]))
-      if(collect_evidence(c2, s, s->cliques[1]) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+      if(collect_evidence(c2, s, s->cliques[1]) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }
     l = l->fwd;
   }
@@ -738,13 +738,13 @@ int collect_evidence(clique c1, sepset s12, clique c2){
   /* pass the message to c1 */
   if((c1 != NULL) && (s12 != NULL)){
     retval = message_pass(c2, s12, c1);
-    if(retval != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      return ERROR_GENERAL;
+    if(retval != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+      return NIP_ERROR_GENERAL;
     }
   }
 
-#ifdef DEBUG_CLIQUE
+#ifdef NIP_DEBUG_CLIQUE
   if(c1 != NULL && c2 != NULL){
     printf("Collecting evidence from ");
     print_clique(c2);
@@ -753,7 +753,7 @@ int collect_evidence(clique c1, sepset s12, clique c2){
   }
 #endif
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -777,15 +777,15 @@ static int message_pass(clique c1, sepset s, clique c2){
    * Marginalise (projection).
    * First: select the variables. This takes O(n^2)
    */
-  mapping = mapper(c1->variables, s->variables, 
-		   c1->p->num_of_vars, s->new->num_of_vars);
+  mapping = nip_mapper(c1->variables, s->variables, 
+		       c1->p->num_of_vars, s->new->num_of_vars);
 
   /* Information flows from clique c1 to sepset s. */
   retval = general_marginalise(c1->p, s->new, mapping);
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(retval != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(mapping);
-    return ERROR_GENERAL;
+    return NIP_ERROR_GENERAL;
   }
 
   j = 0; k = 0;
@@ -797,7 +797,7 @@ static int message_pass(clique c1, sepset s, clique c2){
     if(k == s->new->num_of_vars)
       break; /* all found */
     for(j=0; j < s->new->num_of_vars; j++)
-      if(equal_variables((c2->variables)[i], (s->variables)[j])){
+      if(nip_equal_variables((c2->variables)[i], (s->variables)[j])){
 	mapping[j] = i;
 	k++;
 	break;
@@ -806,30 +806,30 @@ static int message_pass(clique c1, sepset s, clique c2){
 
   /* Information flows from sepset s to clique c2. */
   retval = update_potential(s->new, s->old, c2->p, mapping);
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(retval != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(mapping);
-    return ERROR_GENERAL;
+    return NIP_ERROR_GENERAL;
   }
 
   free(mapping);
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
-int initialise(clique c, variable child, potential p, int transient){
+int initialise(clique c, nip_variable child, potential p, int transient){
   int i, j = 0, k = 0;
   int *mapping = NULL;
   int retval;
-  variable var = NULL;
-  variable* parents = get_parents(child);
+  nip_variable var = NULL;
+  nip_variable* parents = nip_get_parents(child);
 
   if(p->num_of_vars < c->p->num_of_vars){
     mapping = (int *) calloc(p->num_of_vars, sizeof(int));
     if(!mapping){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      return ERROR_OUTOFMEMORY;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      return NIP_ERROR_OUTOFMEMORY;
     }    
     
     /***************************************************************/
@@ -846,30 +846,30 @@ int initialise(clique c, variable child, potential p, int transient){
       var = (c->variables)[i];
       
       for(j=0; j < p->num_of_vars - 1; j++)
-	if(equal_variables(var, parents[j]))
+	if(nip_equal_variables(var, parents[j]))
 	  mapping[k++] = i;
       
-      if(equal_variables(var, child))
+      if(nip_equal_variables(var, child))
 	mapping[k++] = i;
     }
   }
 
   /* rest the case */
   retval = init_potential(p, c->p, mapping);
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(retval != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(mapping);
-    return ERROR_GENERAL;
+    return NIP_ERROR_GENERAL;
   }
 
   /* Some extra work is done here,
    * because only the last initialisation counts. */
   if(!transient){
     retval = init_potential(p, c->original_p, mapping);
-    if(retval != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    if(retval != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free(mapping);
-      return ERROR_GENERAL;
+      return NIP_ERROR_GENERAL;
     }
   }
   /* This should be an optional phase: in timeslice models 
@@ -877,33 +877,33 @@ int initialise(clique c, variable child, potential p, int transient){
    * be retractable... */
 
   free(mapping); /* free(NULL) is O.K. */
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
-int marginalise(clique c, variable v, double r[]){
+int marginalise(clique c, nip_variable v, double r[]){
   int index = var_index(c, v);
   int retval;
 
-  /* variable not in this clique => ERROR */
+  /* variable not in this clique => NIP_ERROR */
   if(index == -1){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
   
   retval = total_marginalise(c->p, r, index);
-  if(retval != NO_ERROR)
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(retval != NIP_NO_ERROR)
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
   return(retval);
 }
 
 
-int global_retraction(variable* vars, int nvars, clique* cliques, 
+int global_retraction(nip_variable* vars, int nvars, clique* cliques, 
 		      int ncliques){
   int i, index;
   int retval;
-  variable v;
+  nip_variable v;
   clique c;
 
   for(index = 0; index < ncliques; index++)
@@ -921,39 +921,39 @@ int global_retraction(variable* vars, int nvars, clique* cliques,
     index = var_index(c, v);
 
     retval = update_evidence(v->likelihood, NULL, c->p, index);
-    if(retval != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      return ERROR_GENERAL;
+    if(retval != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+      return NIP_ERROR_GENERAL;
     }
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
-int enter_observation(variable* vars, int nvars, clique* cliques, 
-		      int ncliques, variable v, char *state){
-  int index = get_state_index(v, state);
+int enter_observation(nip_variable* vars, int nvars, clique* cliques, 
+		      int ncliques, nip_variable v, char *state){
+  int index = nip_get_state_index(v, state);
   if(index < 0)
-    return NO_ERROR;
+    return NIP_NO_ERROR;
   return enter_i_observation(vars, nvars, cliques, ncliques, v, index);
 }
 
 
-int enter_i_observation(variable* vars, int nvars, clique* cliques, 
-			int ncliques, variable v, int index){
+int enter_i_observation(nip_variable* vars, int nvars, clique* cliques, 
+			int ncliques, nip_variable v, int index){
   int i, retval;
   double *evidence;
 
   if(index < 0)
-    return NO_ERROR;
+    return NIP_NO_ERROR;
 
-  evidence = (double *) calloc(CARDINALITY(v), sizeof(double));
+  evidence = (double *) calloc(NIP_CARDINALITY(v), sizeof(double));
   if(!evidence){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
-  for(i = 0; i < CARDINALITY(v); i++)
+  for(i = 0; i < NIP_CARDINALITY(v); i++)
     if(i == index)
       evidence[i] = 1;
     else
@@ -965,27 +965,27 @@ int enter_i_observation(variable* vars, int nvars, clique* cliques,
 }
 
 
-int enter_evidence(variable* vars, int nvars, clique* cliques, 
-		   int ncliques, variable v, double evidence[]){
+int enter_evidence(nip_variable* vars, int nvars, clique* cliques, 
+		   int ncliques, nip_variable v, double evidence[]){
   int index, i;
   int retraction = 0;
   int retval;
   clique c;
 
   if(v == NULL || evidence == NULL){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-    return ERROR_NULLPOINTER;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    return NIP_ERROR_NULLPOINTER;
   }
 
   c = find_family(cliques, ncliques, v);    
   if(!c){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 0);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   index = var_index(c, v);
 
-  for(i = 0; i < CARDINALITY(v); i++)
+  for(i = 0; i < NIP_CARDINALITY(v); i++)
     if((v->likelihood)[i] == 0 && evidence[i] != 0)
       retraction = 1; /* Must do global retraction! */
   
@@ -995,39 +995,39 @@ int enter_evidence(variable* vars, int nvars, clique* cliques,
    */
   if(!retraction){
     retval = update_evidence(evidence, v->likelihood, c->p, index);
-    if(retval != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      return ERROR_GENERAL;
+    if(retval != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+      return NIP_ERROR_GENERAL;
     }
   }
 
   /* Update likelihood. Check the return value. */
-  retval = update_likelihood(v, evidence);
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    return ERROR_GENERAL;
+  retval = nip_update_likelihood(v, evidence);
+  if(retval != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+    return NIP_ERROR_GENERAL;
   }
 
   if(retraction){
     retval = global_retraction(vars, nvars, cliques, ncliques);
-    if(retval != NO_ERROR)
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    if(retval != NIP_NO_ERROR)
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return(retval);
   }
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
-int enter_prior(variable* vars, int nvars, clique* cliques, 
-		int ncliques, variable v, double prior[]){
+int enter_prior(nip_variable* vars, int nvars, clique* cliques, 
+		int ncliques, nip_variable v, double prior[]){
   int index, i;
   int e;
   clique c;
 
   if(v == NULL || prior == NULL){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
-    return ERROR_NULLPOINTER;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    return NIP_ERROR_NULLPOINTER;
   }
 
   /* printf("Entering prior for variable %s:\n", v->symbol); DEBUG */
@@ -1035,7 +1035,7 @@ int enter_prior(variable* vars, int nvars, clique* cliques,
   c = find_family(cliques, ncliques, v);    
 
   e = 1;
-  for(i = 0; i < CARDINALITY(v); i++){
+  for(i = 0; i < NIP_CARDINALITY(v); i++){
     /* printf("%g ", prior[i]); DEBUG */
     if(prior[i] > 0)
       e = 0; /* Not a zero vector... */
@@ -1043,8 +1043,8 @@ int enter_prior(variable* vars, int nvars, clique* cliques,
   /* printf("\n"); DEBUG */
 
   if(!c || e){ /* v not in any clique or prior is a zero vector */
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 0);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 0);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   index = var_index(c, v);
@@ -1055,14 +1055,14 @@ int enter_prior(variable* vars, int nvars, clique* cliques,
    * when the variable is observed and actual evidence entered.
    */
   e = update_evidence(prior, NULL, c->p, index);
-  if(e != NO_ERROR){
-    report_error(__FILE__, __LINE__, e, 1);
+  if(e != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, e, 1);
     return e;
   }
 
   /* Don't update the likelihood... */
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -1070,15 +1070,15 @@ int enter_prior(variable* vars, int nvars, clique* cliques,
  * Method for checking if variable v is part of clique c.
  * Returns -1 if not, else the index of v among the variables in c.
  */
-static int var_index(clique c, variable v){
+static int var_index(clique c, nip_variable v){
   int var = 0;
 
   if(!(c && v)){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return -1;
   }
 
-  while(!equal_variables(v, c->variables[var])){
+  while(!nip_equal_variables(v, c->variables[var])){
     var++;
     if(var == c->p->num_of_vars)
       /* variable not in this clique => -1 */
@@ -1088,19 +1088,19 @@ static int var_index(clique c, variable v){
 }
 
 
-clique find_family(clique *cliques, int num_of_cliques, variable var){
+clique find_family(clique *cliques, int num_of_cliques, nip_variable var){
   int i, n;
-  variable *family = NULL;
+  nip_variable* family = NULL;
   clique found;
 
   /* NOTE: uses memoization for finding families */
   if(var->family_clique != NULL)
     return (clique)(var->family_clique);
 
-  n = number_of_parents(var);
-  family = (variable*) calloc(n + 1, sizeof(variable));
+  n = nip_number_of_parents(var);
+  family = (nip_variable*) calloc(n + 1, sizeof(nip_variable));
   if(!family){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -1116,7 +1116,7 @@ clique find_family(clique *cliques, int num_of_cliques, variable var){
 }
 
 
-int* find_family_mapping(clique family, variable child){
+int* find_family_mapping(clique family, nip_variable child){
   int i, j, n, p;
   int *result = NULL;
 
@@ -1124,13 +1124,13 @@ int* find_family_mapping(clique family, variable child){
     n = child->num_of_parents + 1;
     result = (int *) calloc(n, sizeof(int));
     if(!result){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NULL;
     }
 
     /* NOTE: Child must always be the first in the target potential! */
     for(i=0; i < family->p->num_of_vars; i++)
-      if(equal_variables((family->variables)[i], child)){
+      if(nip_equal_variables((family->variables)[i], child)){
 	result[0] = i;
 	break;
       }
@@ -1142,7 +1142,7 @@ int* find_family_mapping(clique family, variable child){
 	if(p == n)
 	  break; /* all pointers found */
 	for(j=0; j < n; j++)
-	  if(equal_variables((family->variables)[i], child->parents[j])){
+	  if(nip_equal_variables((family->variables)[i], child->parents[j])){
 	    result[j+1] = i;
 	    p++;
 	    break;
@@ -1156,7 +1156,7 @@ int* find_family_mapping(clique family, variable child){
 
 
 clique find_clique(clique *cliques, int num_of_cliques, 
-		   variable *variables, int num_of_vars){
+		   nip_variable *variables, int num_of_vars){
   int i, j, k;
   int ok;
 
@@ -1164,7 +1164,7 @@ clique find_clique(clique *cliques, int num_of_cliques,
     ok = 0;
     for(j = 0; j < num_of_vars; j++){
       for(k = 0; k < cliques[i]->p->num_of_vars; k++){
-	if(equal_variables(variables[j], cliques[i]->variables[k])){
+	if(nip_equal_variables(variables[j], cliques[i]->variables[k])){
 	  ok++;
 	  break; /* found the variable in the clique */
 	}
@@ -1186,7 +1186,7 @@ int find_sepsets(clique *cliques, int num_of_cliques){
   sepset s;
   clique one, two;
 
-#ifdef DEBUG_CLIQUE
+#ifdef NIP_DEBUG_CLIQUE
   int j, k;
   int ok = 1;
 #endif
@@ -1194,8 +1194,8 @@ int find_sepsets(clique *cliques, int num_of_cliques){
   Heap *H = build_sepset_heap(cliques, num_of_cliques);
 
   if(!H){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    return ERROR_GENERAL;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+    return NIP_ERROR_GENERAL;
   }
 
   while(inserted < num_of_cliques - 1){
@@ -1205,8 +1205,8 @@ int find_sepsets(clique *cliques, int num_of_cliques){
 
       /* In case of error */
       free_heap(H);
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      return ERROR_GENERAL;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+      return NIP_ERROR_GENERAL;
     }
 
     one = s->cliques[0];
@@ -1222,7 +1222,7 @@ int find_sepsets(clique *cliques, int num_of_cliques){
 
       mark_useful_sepset(H, s); /* MVK */
 
-#ifdef DEBUG_CLIQUE
+#ifdef NIP_DEBUG_CLIQUE
       printf("In clique.c: Trying to add ");
       print_sepset(s);
 
@@ -1233,15 +1233,15 @@ int find_sepsets(clique *cliques, int num_of_cliques){
       print_clique(two);
 #endif
 
-      if(add_sepset(one, s) != NO_ERROR){
+      if(add_sepset(one, s) != NIP_NO_ERROR){
 	free_heap(H);
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }	
-      if(add_sepset(two, s) != NO_ERROR){
+      if(add_sepset(two, s) != NIP_NO_ERROR){
 	free_heap(H);
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }
 
       inserted++;
@@ -1250,7 +1250,7 @@ int find_sepsets(clique *cliques, int num_of_cliques){
 
   free_heap(H);
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -1267,7 +1267,7 @@ static int clique_search(clique one, clique two){
     return 0; /* as in FALSE */
 
   /* mark */
-  one->mark = MARK_ON;
+  one->mark = NIP_MARK_ON;
 
   /* NOTE: this defines the equality of cliques. */
   if(one == two)
@@ -1350,7 +1350,7 @@ static void jtree_dfs(clique start,
     return;
 
   /* mark */
-  start->mark = MARK_ON;
+  start->mark = NIP_MARK_ON;
 
   if(cFuncPointer)
     cFuncPointer(start, ptr); /* do it now or after the children ??? */
@@ -1414,8 +1414,8 @@ double probability_mass(clique* cliques, int ncliques){
  ** remember the found variables and prune the DFS after all necessary 
  ** variables have been encountered.
  **/
-potential gather_joint_probability(clique start, variable *vars, int n_vars,
-				   variable *isect, int n_isect){  
+potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
+				   nip_variable *isect, int n_isect){  
   /* a lot of copy-paste from jtree_dfs */
   int i, j, k, m, n;
   int retval;
@@ -1424,11 +1424,11 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   potential product = NULL;
   potential sum = NULL;
   potential rest = NULL;
-  variable *union_vars = NULL; 
+  nip_variable *union_vars = NULL; 
   int nuv;
-  variable *rest_vars = NULL; /* for recursion */
+  nip_variable *rest_vars = NULL; /* for recursion */
   int nrv;
-  variable *temp = NULL;
+  nip_variable *temp = NULL;
   int nt;
   sepset_link l;
   sepset s;
@@ -1436,13 +1436,13 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   
   /* error? */
   if(start == NULL || n_vars < 0){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
   if(n_vars == 0)
     return make_potential(NULL, 0, NULL); /* NOTE: verify correctness!? */
   if(vars == NULL){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
@@ -1450,7 +1450,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   l = start->sepsets;
 
   /* Mark the clique */
-  start->mark = MARK_ON;
+  start->mark = NIP_MARK_ON;
 
 
   /*** 1. Reserve space ***/
@@ -1460,16 +1460,16 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   for(i = 0; i < n_vars; i++){
     for(j = 0; j < start->p->num_of_vars; j++){
       /* (variables in isect are a subset of clique variables) */
-      if(equal_variables(vars[i], start->variables[j])){
+      if(nip_equal_variables(vars[i], start->variables[j])){
 	nuv++;
 	break;
       }
     }
   }
   nuv = n_vars + start->p->num_of_vars - nuv; /* size of union */
-  union_vars = (variable*) calloc(nuv, sizeof(variable));
+  union_vars = (nip_variable*) calloc(nuv, sizeof(nip_variable));
   if(!union_vars){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
   /* A certain kind of union */
@@ -1481,13 +1481,13 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   for(i = 0; i < start->p->num_of_vars; i++){
     m = 1;
     for(j = 0; j < n_vars; j++){
-      if(equal_variables(vars[j], start->variables[i])){
+      if(nip_equal_variables(vars[j], start->variables[i])){
 	m = 0; /* don't add duplicates */
 	break;
       }
     }
     for(j = 0; j < n_isect; j++){
-      if(equal_variables(isect[j], start->variables[i])){
+      if(nip_equal_variables(isect[j], start->variables[i])){
 	m = 0; /* don't add duplicates */
 	break;
       }
@@ -1499,12 +1499,12 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   /* 1.2 Potential for the union of variables */
   cardinality = (int*) calloc(nuv, sizeof(int));
   if(!cardinality){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(union_vars);
     return NULL;
   }
   for(i = 0; i < nuv; i++)
-    cardinality[i] = CARDINALITY(union_vars[i]);
+    cardinality[i] = NIP_CARDINALITY(union_vars[i]);
 
   /* ### possibly HUGE potential array ! ### */
   product = make_potential(cardinality, nuv, NULL); 
@@ -1518,7 +1518,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   /* NOTE: a slightly bigger array allocated for future purposes also. */
   mapping = (int*) calloc(nuv, sizeof(int));
   if(!mapping){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinality);
     free(union_vars);
     free_potential(product);
@@ -1527,7 +1527,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
   /* perhaps this could have beed done earlier... */
   for(i = 0; i < start->p->num_of_vars; i++){
     for(j = 0; j < nuv; j++){ /* linear search */
-      if(equal_variables(start->variables[i], union_vars[j])){
+      if(nip_equal_variables(start->variables[i], union_vars[j])){
 	mapping[i] = j;
 	break;
       }
@@ -1536,8 +1536,8 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 
   /* 2.2 Do the multiplication of potentials */
   retval = update_potential(start->p, NULL, product, mapping);
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(retval != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(cardinality);
     free(union_vars);
     free_potential(product);
@@ -1560,7 +1560,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 	/* 3.1 Mapping between sepset and product potentials */
 	for(j = 0; j < s->new->num_of_vars; j++){
 	  for(k = 0; k < nuv; k++){ /* linear search */
-	    if(equal_variables(s->variables[j], union_vars[k])){
+	    if(nip_equal_variables(s->variables[j], union_vars[k])){
 	      mapping[j] = k;
 	      break;
 	    }
@@ -1569,8 +1569,8 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 
 	/* 3.2 Division with sepset potential */
 	retval = update_potential(NULL, s->new, product, mapping);
-	if(retval != NO_ERROR){
-	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	if(retval != NIP_NO_ERROR){
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	  free(cardinality);
 	  free(union_vars);
 	  free(mapping);
@@ -1588,15 +1588,15 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 	nrv = nt;
 	for(j = 0; j < nt; j++){
 	  for(k = 0; k < n_vars; k++){
-	    if(equal_variables(temp[j], vars[k])){
+	    if(nip_equal_variables(temp[j], vars[k])){
 	      nrv--;
 	      break;
 	    }
 	  }
 	}
-	rest_vars = (variable*) calloc(nrv, sizeof(variable));
+	rest_vars = (nip_variable*) calloc(nrv, sizeof(nip_variable));
 	if(!rest_vars){
-	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	  free(cardinality);
 	  free(union_vars);
 	  free(mapping);
@@ -1607,7 +1607,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 	for(j = 0; j < nt; j++){
 	  m = 1;
 	  for(k = 0; k < n_vars; k++){
-	    if(equal_variables(temp[j], vars[k])){
+	    if(nip_equal_variables(temp[j], vars[k])){
 	      m = 0; /* don't add duplicates */
 	      break;
 	    }
@@ -1624,7 +1624,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 	  mapping[j] = j; /* the first part is trivial */
 	for(j = 0; j < nrv; j++){
 	  for(k = n_vars; k < nuv; k++){
-	    if(equal_variables(rest_vars[j], union_vars[k])){
+	    if(nip_equal_variables(rest_vars[j], union_vars[k])){
 	      mapping[n_vars + j] = k;
 	      break;
 	      /* (Reminder: once this block missed braces...
@@ -1635,8 +1635,8 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 
 	/* 3.6 Multiplication with the recursive results */
 	retval = update_potential(rest, NULL, product, mapping);
-	if(retval != NO_ERROR){
-	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	if(retval != NIP_NO_ERROR){
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	  free(cardinality);
 	  free(union_vars);
 	  free(mapping);
@@ -1664,9 +1664,9 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
     
     /* 4.1 Reserve space for the result */
     for(i = 0; i < n_vars; i++)
-      cardinality[i] = CARDINALITY(vars[i]);
+      cardinality[i] = NIP_CARDINALITY(vars[i]);
     for(i = 0; i < n_isect; i++)
-      cardinality[n_vars + i] = CARDINALITY(isect[i]);
+      cardinality[n_vars + i] = NIP_CARDINALITY(isect[i]);
     /* possibly LARGE potential array ! */
     sum = make_potential(cardinality, n_vars + n_isect, NULL); 
     free(cardinality);
@@ -1677,8 +1677,8 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
     
     /* 4.3 Marginalise */
     retval = general_marginalise(product, sum, mapping);
-    if(retval != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    if(retval != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free(mapping);
       free_potential(product);
       free_potential(sum);
@@ -1697,28 +1697,28 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
 }
 
 
-int clique_intersection(clique cl1, clique cl2, variable **vars, int *n){
+int clique_intersection(clique cl1, clique cl2, nip_variable **vars, int *n){
 
   int i, j;
   int max_vars = cl2->p->num_of_vars;
   int realsize = 0;
-  variable *isect;
-  variable *shaved_isect;
+  nip_variable *isect;
+  nip_variable *shaved_isect;
 
   if(cl1->p->num_of_vars < max_vars)
     max_vars = cl1->p->num_of_vars;
 
-  isect = (variable *) calloc(max_vars, sizeof(variable));
+  isect = (nip_variable *) calloc(max_vars, sizeof(nip_variable));
 
   if(!isect){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   for(i = 0; i < cl1->p->num_of_vars; i++)
     for(j = 0; j < cl2->p->num_of_vars; j++){
 
-      if(equal_variables(cl1->variables[i], cl2->variables[j]))
+      if(nip_equal_variables(cl1->variables[i], cl2->variables[j]))
 	isect[realsize++] = cl1->variables[i];
     }
 
@@ -1726,17 +1726,17 @@ int clique_intersection(clique cl1, clique cl2, variable **vars, int *n){
     free(isect);
     *vars = NULL;
     *n = 0;
-    return NO_ERROR;
+    return NIP_NO_ERROR;
   }
 
   /* Intersection is non-empty, realsize > 0 */
 
-  shaved_isect = (variable *) calloc(realsize, sizeof(variable));
+  shaved_isect = (nip_variable *) calloc(realsize, sizeof(nip_variable));
 
   if(!shaved_isect){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(isect);
-    return ERROR_OUTOFMEMORY;
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   for(i = 0; i < realsize; i++)
@@ -1746,7 +1746,7 @@ int clique_intersection(clique cl1, clique cl2, variable **vars, int *n){
   *vars = shaved_isect;
   *n = realsize;
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -1761,17 +1761,17 @@ potentialList make_potentialList(){
 
 
 int append_potential(potentialList l, potential p, 
-		     variable child, variable* parents){
+		     nip_variable child, nip_variable* parents){
   potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
 
   if(!l || !p){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   new->data = p;
@@ -1787,22 +1787,22 @@ int append_potential(potentialList l, potential p,
 
   l->last = new;
   l->length++;
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
 int prepend_potential(potentialList l, potential p, 
-		      variable child, variable* parents){
+		      nip_variable child, nip_variable* parents){
   potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
 
   if(!l || !p){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   new->data = p;
@@ -1817,7 +1817,7 @@ int prepend_potential(potentialList l, potential p,
 
   l->first = new;
   l->length++;
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 

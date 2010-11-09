@@ -1,4 +1,4 @@
-/* nip.h $Id: nip.h,v 1.62 2008-12-20 12:59:53 jatoivol Exp $
+/* nip.h $Id: nip.h,v 1.63 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -6,8 +6,8 @@
 
 #include "parser.h"
 #include "clique.h"
-#include "variable.h"
-#include "errorhandler.h"
+#include "nipvariable.h"
+#include "niperrorhandler.h"
 #include <stdlib.h>
 
 #define TIME_SERIES_LENGTH(ts) ( (ts)->length )
@@ -28,11 +28,11 @@ typedef struct{
   int num_of_cliques;
   clique *cliques;
   int num_of_vars;
-  variable *variables;
-  variable *next;     /* An array of the variables that will substitute 
+  nip_variable *variables;
+  nip_variable *next;     /* An array of the variables that will substitute 
 		       * another one in the next timeslice. */
 
-  variable *previous; /* An array of the variables that are substituted 
+  nip_variable *previous; /* An array of the variables that are substituted 
 		       * by some variables from the previous timeslice. 
 		       * Waste of memory? */
 
@@ -41,10 +41,10 @@ typedef struct{
 
   /* Undocumented features: */
   int outgoing_interface_size;
-  variable *outgoing_interface;          /* I_{t}->   */
-  variable *previous_outgoing_interface; /* I_{t-1}-> */
+  nip_variable* outgoing_interface;          /* I_{t}->   */
+  nip_variable* previous_outgoing_interface; /* I_{t-1}-> */
   int incoming_interface_size;
-  variable *incoming_interface;          /* I_{t}<-   */
+  nip_variable* incoming_interface;          /* I_{t}<-   */
 
   clique in_clique;  /* Reference to the clique which receives
 		      * the message from the past timeslices */
@@ -52,8 +52,8 @@ typedef struct{
   clique out_clique; /* The clique which handles the connection to the 
 		      * timeslices in the future */
 
-  variable *children;    /* All the variables that have parents */
-  variable *independent; /* ...and those who dont. (Redundant?)  */
+  nip_variable *children;    /* All the variables that have parents */
+  nip_variable *independent; /* ...and those who dont. (Redundant?)  */
   int num_of_children;
 
   int node_size_x;
@@ -65,9 +65,9 @@ typedef nip_type *nip;
 
 typedef struct{
   nip model;          /* The model (contains the variables and state names) */
-  variable *hidden;   /* An array containing the latent variables */
+  nip_variable *hidden;   /* An array containing the latent variables */
   int num_of_hidden;  /* Number of latent variables */
-  variable *observed; /* An array containing the observed variables */
+  nip_variable *observed; /* An array containing the observed variables */
   int num_of_observed; /* == model->num_of_vars - num_of_hidden */
 
   int length;         /* Number of time steps */
@@ -79,7 +79,7 @@ typedef time_series_type *time_series;
 
 
 typedef struct{
-  variable *variables; /* variables of interest */
+  nip_variable *variables; /* variables of interest */
   int num_of_vars;
   int length;     /* length of the time series */
   double ***data; /* probability distribution of every variable at every t */
@@ -147,7 +147,7 @@ int timeseries_length(time_series ts);
 
 /* Writes the inferred probabilities of given variable into a file. */
 int write_uncertainseries(uncertain_series *ucs_set, int n_series, 
-			  variable v, char* filename);
+			  nip_variable v, char* filename);
 
 
 /* A method for freeing the memory used by an uncertain time series. */
@@ -162,11 +162,12 @@ int uncertainseries_length(uncertain_series ucs);
  * You'll have to specify the variable. DO NOT alter the string returned 
  * by the function! The returned value may be NULL if the variable was not 
  * observed at the specified moment in time. The time span is [0, T-1] */
-char* get_observation(time_series ts, variable v, int time);
+char* get_observation(time_series ts, nip_variable v, int time);
 
 
 /* A method for setting an observation in the time series. */
-int set_observation(time_series ts, variable v, int time, char* observation);
+int set_observation(time_series ts, nip_variable v, int time, 
+		    char* observation);
 
 
 /* This is a function for telling the model about observations. 
@@ -205,8 +206,8 @@ int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask);
  * NOTE: only evidence for the marked variables is used. Unmarked are
  * ignored and you can thus easily omit evidence for an entire variable.
  */
-uncertain_series forward_inference(time_series ts, variable vars[], int nvars, 
-				   double* loglikelihood);
+uncertain_series forward_inference(time_series ts, nip_variable vars[], 
+				   int nvars, double* loglikelihood);
 
 
 /* This one computes the probability distributions for every 
@@ -221,12 +222,12 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
  * ignored and you can thus easily omit evidence for an entire variable.
  */
 uncertain_series forward_backward_inference(time_series ts, 
-					   variable vars[], int nvars,
+					    nip_variable vars[], int nvars,
 					    double* loglikelihood);
 
 
-/* Fetches you the variable with a given name. */
-variable model_variable(nip model, char* symbol);
+/* Fetches you the variable with a given symbol. */
+nip_variable model_variable(nip model, char* symbol);
 
 
 /* Makes the join tree consistent i.e. does the inference on a single 
@@ -238,7 +239,7 @@ void make_consistent(nip model);
  * series. In other words, this function implements the idea also known as
  * the Viterbi algorithm. (The model is included in the time_series.)  
  * NOTE: this is not implemented yet! */
-time_series mlss(variable vars[], int nvars, time_series ts);
+time_series mlss(nip_variable vars[], int nvars, time_series ts);
 
 
 /* Teaches the given model according to the given time series with
@@ -272,7 +273,7 @@ double model_prob_mass(nip model);
  * The returned array is of size v->cardinality.
  * In case of problems, NULL is returned.
  */
-double *get_probability(nip model, variable v);
+double *get_probability(nip model, nip_variable v);
 
 
 /*
@@ -287,7 +288,7 @@ double *get_probability(nip model, variable v);
  * The variables of the potential are in the same order as they were given.
  * In case of problems, NULL is returned.
  */
-potential get_joint_probability(nip model, variable *vars, int num_of_vars);
+potential get_joint_probability(nip model, nip_variable *vars, int num_of_vars);
 
 
 /* Generates time series data according to a model. 

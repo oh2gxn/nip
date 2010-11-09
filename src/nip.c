@@ -1,4 +1,4 @@
-/* nip.c $Id: nip.c,v 1.211 2010-11-08 17:02:07 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.212 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -12,8 +12,8 @@
 #include "nip.h"
 #include "lists.h"
 #include "clique.h"
-#include "variable.h"
-#include "errorhandler.h"
+#include "nipvariable.h"
+#include "niperrorhandler.h"
 #include "huginnet.tab.h"
 
 /* write new kind of net files (net language rev.2) */
@@ -28,7 +28,7 @@
 extern FILE *open_net_file(const char *filename);
 extern void close_net_file();
 extern int yyparse();
-extern variablelist get_parsed_variables();
+extern nip_variable_list get_parsed_variables();
 extern int get_cliques(clique** clique_array_pointer);
 extern void get_parsed_node_size(int* x, int* y);
 
@@ -45,16 +45,16 @@ static int m_step(potential* results, nip model);
 
 void reset_model(nip model){
   int i, retval;
-  variable v;
+  nip_variable v;
   for(i = 0; i < model->num_of_vars; i++){
     v = model->variables[i];
-    reset_likelihood(v);
+    nip_reset_likelihood(v);
     v->prior_entered = 0;
   }
   retval = global_retraction(model->variables, model->num_of_vars, 
 			     model->cliques, model->num_of_cliques);
-  if(retval != NO_ERROR)
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(retval != NIP_NO_ERROR)
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 }
 
 
@@ -72,7 +72,7 @@ void total_reset(nip model){
 
 void use_priors(nip model, int has_history){
   int i, retval;
-  variable v;
+  nip_variable v;
 
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
@@ -82,7 +82,7 @@ void use_priors(nip model, int has_history){
     if(!(v->prior_entered)){
       /* Interface variables have priors only in the first time step 
        * (!has_history => first time step) */
-      if(!has_history || !(v->interface_status & INTERFACE_OLD_OUTGOING)){
+      if(!has_history || !(v->interface_status & NIP_INTERFACE_OLD_OUTGOING)){
 
 	/* Reminder: Priors should be multiplied into the tree so that
 	 *           they are not canceled if evidence is entered, but
@@ -94,8 +94,8 @@ void use_priors(nip model, int has_history){
 	retval = enter_prior(model->variables, model->num_of_vars, 
 			     model->cliques, model->num_of_cliques, 
 			     v, v->prior);
-	if(retval != NO_ERROR)
-	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	if(retval != NIP_NO_ERROR)
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
 	v->prior_entered = 1;
       }
@@ -106,18 +106,18 @@ void use_priors(nip model, int has_history){
 
 nip parse_model(char* file){
   int i, j, k, m, retval;
-  variable temp;
-  variablelist vl;
+  nip_variable temp;
+  nip_variable_list vl;
   nip new = (nip) malloc(sizeof(nip_type));
 
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
   
   /* 1. Parse */
   if(open_net_file(file) == NULL){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
   }
 
@@ -132,8 +132,8 @@ nip parse_model(char* file){
   new->num_of_cliques = get_cliques(&(new->cliques));
   vl = get_parsed_variables();
   new->num_of_vars = LIST_LENGTH(vl);
-  new->variables = list_to_variable_array(vl);
-  empty_variablelist(vl); /* free the list? */
+  new->variables = nip_variable_list_to_array(vl);
+  nip_empty_variable_list(vl); /* free the list? */
 
   /* count the number of various kinds of "special" variables */
   new->num_of_nexts = 0;
@@ -148,9 +148,9 @@ nip parse_model(char* file){
       new->num_of_nexts++;
     
     /* how many belong to the interfaces */
-    if(temp->interface_status & INTERFACE_INCOMING)
+    if(temp->interface_status & NIP_INTERFACE_INCOMING)
       new->incoming_interface_size++;
-    if(temp->interface_status & INTERFACE_OUTGOING)
+    if(temp->interface_status & NIP_INTERFACE_OUTGOING)
       new->outgoing_interface_size++;
 
     /* how many have parents */
@@ -160,23 +160,25 @@ nip parse_model(char* file){
       if(temp->prior == NULL){
 	fprintf(stderr, "Warning: No prior for the variable %s!\n", 
 		temp->symbol);
-	temp->prior = (double*) calloc(CARDINALITY(temp), sizeof(double));
+	temp->prior = (double*) calloc(NIP_CARDINALITY(temp), sizeof(double));
 	/* this fixes the situation */
       }
   }
 
-  new->next = (variable*) calloc(new->num_of_nexts, sizeof(variable));
-  new->previous = (variable*) calloc(new->num_of_nexts, sizeof(variable));
-  new->outgoing_interface = (variable*) calloc(new->outgoing_interface_size, 
-					       sizeof(variable));
+  new->next = (nip_variable*) calloc(new->num_of_nexts, sizeof(nip_variable));
+  new->previous = (nip_variable*) calloc(new->num_of_nexts, 
+					 sizeof(nip_variable));
+  new->outgoing_interface = (nip_variable*) 
+    calloc(new->outgoing_interface_size, sizeof(nip_variable));
   new->previous_outgoing_interface = 
-    (variable*) calloc(new->outgoing_interface_size, sizeof(variable));
-  new->incoming_interface = (variable*) calloc(new->incoming_interface_size, 
-					       sizeof(variable));
-  new->children = (variable*) calloc(new->num_of_children, sizeof(variable));
+    (nip_variable*) calloc(new->outgoing_interface_size, sizeof(nip_variable));
+  new->incoming_interface = 
+    (nip_variable*) calloc(new->incoming_interface_size, sizeof(nip_variable));
+  new->children = (nip_variable*) calloc(new->num_of_children, 
+					 sizeof(nip_variable));
   new->independent = 
-    (variable*) calloc(new->num_of_vars - new->num_of_children, 
-		       sizeof(variable));
+    (nip_variable*) calloc(new->num_of_vars - new->num_of_children, 
+			   sizeof(nip_variable));
   if(!(new->independent && 
        new->children && 
        new->outgoing_interface && 
@@ -184,7 +186,7 @@ nip parse_model(char* file){
        new->incoming_interface && 
        new->previous && 
        new->next)){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(new->variables);
     free(new->next);
     free(new->previous);
@@ -207,12 +209,12 @@ nip parse_model(char* file){
       j++;
     }
     
-    if(temp->interface_status & INTERFACE_INCOMING)
+    if(temp->interface_status & NIP_INTERFACE_INCOMING)
       new->incoming_interface[k++] = temp;
-    if(temp->interface_status & INTERFACE_OLD_OUTGOING){
+    if(temp->interface_status & NIP_INTERFACE_OLD_OUTGOING){
       new->previous_outgoing_interface[m] = temp;
       new->outgoing_interface[m] = temp->previous;
-      assert(temp->previous->interface_status & INTERFACE_OUTGOING);
+      assert(temp->previous->interface_status & NIP_INTERFACE_OUTGOING);
       m++;
     }
   }
@@ -250,7 +252,7 @@ nip parse_model(char* file){
     assert(new->independent[i]->num_of_parents == 0);
 
   /* 4. Reset parser globals? */
-  /*empty_variablelist(vl);*/
+  /*nip_empty_variable_list(vl);*/
 
 #ifdef DEBUG_NIP
   if(new->out_clique){
@@ -281,7 +283,7 @@ int write_model(nip model, char* filename){
   int x, y;
   int nparents, nvalues;
   FILE *f = NULL;
-  variable v = NULL;
+  nip_variable v = NULL;
   int *temp = NULL;
   int *map = NULL;
   clique c = NULL;
@@ -297,8 +299,8 @@ int write_model(nip model, char* filename){
   /* open the stream */
   f = fopen(filename, "w");
   if(!f){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
-    return ERROR_IO;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
+    return NIP_ERROR_IO;
   }
 
   /* remove the evidence */
@@ -332,10 +334,10 @@ int write_model(nip model, char* filename){
   /** the variables **/
   for(i = 0; i < model->num_of_vars; i++){
     v = model->variables[i];
-    n = CARDINALITY(v)-1;
-    get_position(v, &x, &y);
+    n = NIP_CARDINALITY(v)-1;
+    nip_get_position(v, &x, &y);
     fputs("\n", f);
-    fprintf(f, "%snode %s\n", indent, get_symbol(v));
+    fprintf(f, "%snode %s\n", indent, nip_get_symbol(v));
     fprintf(f, "%s{\n", indent);
     fprintf(f, "%s    label = \"%s\";\n", indent, v->name);
     fprintf(f, "%s    position = (%d %d);\n", indent, x, y);
@@ -345,7 +347,7 @@ int write_model(nip model, char* filename){
     fprintf(f, " \"%s\" );\n", v->state_names[n]);
     if(v->previous)
       fprintf(f, "%s    NIP_next = \"%s\";\n", indent, 
-	      get_symbol(v->previous));
+	      nip_get_symbol(v->previous));
     fprintf(f, "%s}\n", indent);
     fflush(f);
   }
@@ -353,10 +355,10 @@ int write_model(nip model, char* filename){
   /** the priors **/
   for(i = 0; i < model->num_of_vars - model->num_of_children; i++){
     v = model->independent[i];
-    n = CARDINALITY(v);
+    n = NIP_CARDINALITY(v);
     fputs("\n", f);
     /* independent variables have priors */
-    fprintf(f, "%spotential (%s)\n", indent, get_symbol(v));
+    fprintf(f, "%spotential (%s)\n", indent, nip_get_symbol(v));
     fprintf(f, "%s{\n", indent);
     fprintf(f, "%s    data = ( ", indent);
     for(j = 0; j < n; j++){
@@ -380,31 +382,31 @@ int write_model(nip model, char* filename){
   for(i = 0; i < model->num_of_children; i++){
     v = model->children[i];
 
-    nvalues  = CARDINALITY(v);
-    nparents = number_of_parents(v);
+    nvalues  = NIP_CARDINALITY(v);
+    nparents = nip_number_of_parents(v);
     fputs("\n", f);
     /* child variables have conditional distributions */
-    fprintf(f, "%spotential (%s | ", indent, get_symbol(v));
+    fprintf(f, "%spotential (%s | ", indent, nip_get_symbol(v));
     for(j = nparents-1; j > 0; j--){ 
       /* Hugin fellas put parents in reverse order */
-      fprintf(f, "%s ", get_symbol(v->parents[j]));
+      fprintf(f, "%s ", nip_get_symbol(v->parents[j]));
     }
-    fprintf(f, "%s)\n", get_symbol(v->parents[0]));
+    fprintf(f, "%s)\n", nip_get_symbol(v->parents[0]));
     fprintf(f, "%s{ \n", indent);
     fprintf(f, "%s    data = (", indent);
 
     temp = (int*) calloc(nparents+1, sizeof(int));
     if(!temp){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       fclose(f);
-      return ERROR_OUTOFMEMORY;
+      return NIP_ERROR_OUTOFMEMORY;
     }
 
     /* form the potential */
     temp[0] = nvalues; /* child must be the first... */
     /* ...then the parents */
     for(j = 0; j < nparents; j++)
-      temp[j+1] = CARDINALITY(v->parents[j]);
+      temp[j+1] = NIP_CARDINALITY(v->parents[j]);
     p = make_potential(temp, nparents+1, NULL);
 
     /* compute the distribution */
@@ -430,8 +432,8 @@ int write_model(nip model, char* filename){
 	  fputs(" % ", f);
 	  inverse_mapping(p, j-1, temp);
 	  for(x = nparents-1; x >= 0; x--){
-	    fprintf(f, "%s=%s ", get_symbol(v->parents[x]),
-		    get_state_name(v->parents[x], temp[x+1]));
+	    fprintf(f, "%s=%s ", nip_get_symbol(v->parents[x]),
+		    nip_get_state_name(v->parents[x], temp[x+1]));
 	  }
 	}
 	/* cut the line and indent */
@@ -456,10 +458,10 @@ int write_model(nip model, char* filename){
 
   /* close the file */
   if(fclose(f)){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
-    return ERROR_IO;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
+    return NIP_ERROR_IO;
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -473,7 +475,7 @@ void free_model(nip model){
 
   /* 2. Free the variables */
   for(i = 0; i < model->num_of_vars; i++)
-    free_variable(model->variables[i]);
+    nip_free_variable(model->variables[i]);
   free(model->variables);
 
   free(model->next);
@@ -494,12 +496,12 @@ int read_timeseries(nip model, char* filename,
   char** tokens = NULL;
   time_series ts = NULL;
   datafile* df = NULL;
-  variable v = NULL;
+  nip_variable v = NULL;
   
   df = open_datafile(filename, FIELD_SEPARATOR, 0, 1);
 
   if(df == NULL){
-    report_error(__FILE__, __LINE__, ERROR_FILENOTFOUND, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_FILENOTFOUND, 1);
     fprintf(stderr, "%s\n", filename);
     return 0;
   }  
@@ -508,7 +510,7 @@ int read_timeseries(nip model, char* filename,
   N = df->ndatarows;
   *results = (time_series*) calloc(N, sizeof(time_series));
   if(!*results){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     close_datafile(df);
     return 0;
   }
@@ -516,7 +518,7 @@ int read_timeseries(nip model, char* filename,
   for(n = 0; n < N; n++){
     ts = (time_series) malloc(sizeof(time_series_type));
     if(!ts){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(*results);
       close_datafile(df);
       return 0;
@@ -540,11 +542,12 @@ int read_timeseries(nip model, char* filename,
     ts->num_of_observed = obs; /* Must be "final" */
     
     /* Allocate the array for the hidden variables. */
-    ts->hidden = (variable *) calloc(ts->num_of_hidden, sizeof(variable));
+    ts->hidden = (nip_variable *) calloc(ts->num_of_hidden, 
+					 sizeof(nip_variable));
     if(obs > 0)
-      ts->observed = (variable *) calloc(obs, sizeof(variable));
+      ts->observed = (nip_variable *) calloc(obs, sizeof(nip_variable));
     if(!(ts->hidden && (ts->observed || obs == 0))){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(ts->hidden);
       free(ts);
       free(*results);
@@ -557,8 +560,8 @@ int read_timeseries(nip model, char* filename,
     for(k = 0; k < model->num_of_vars; k++){
       j = 1;
       for(i = 0; i < df->num_of_nodes; i++){
-	if(equal_variables(model->variables[k], 
-			   model_variable(model, df->node_symbols[i])))
+	if(nip_equal_variables(model->variables[k], 
+			       model_variable(model, df->node_symbols[i])))
 	  j = 0;
       }
       if(j)
@@ -577,7 +580,7 @@ int read_timeseries(nip model, char* filename,
       /* Allocate some space for data */
       ts->data = (int**) calloc(ts->length, sizeof(int*));
       if(!(ts->data)){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	free(ts->hidden);
 	free(ts->observed);
 	free(ts);
@@ -588,7 +591,7 @@ int read_timeseries(nip model, char* filename,
       for(i = 0; i < ts->length; i++){
 	ts->data[i] = (int*) calloc(obs, sizeof(int));
 	if(!(ts->data[i])){
-	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	  for(j = 0; j < i; j++)
 	    free(ts->data[j]);
 	  free(ts->data);
@@ -622,7 +625,7 @@ int read_timeseries(nip model, char* filename,
 	  if(i == m) 
 	    break; /* the line was too short */
 	  if(v)
-	    ts->data[j][k++] = get_state_index(v, tokens[i]);
+	    ts->data[j][k++] = nip_get_state_index(v, tokens[i]);
 	  /* note that these are coupled with ts->observed */
 	  
 	  /* Q: Should missing data be allowed?   A: Yes. */
@@ -649,67 +652,68 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
   int *record;
   int n_observed;
   int *map;
-  variable v;
-  variable *observed;
-  variable *observed_more;
+  nip_variable v;
+  nip_variable *observed;
+  nip_variable *observed_more;
   time_series ts;
   nip the_model;
   FILE *f = NULL;
 
   /* Check stuff */
   if(!(n_series > 0 && ts_set && filename)){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   /* Check all the models are same */
   the_model = ts_set[0]->model;
   for(n = 1; n < n_series; n++){
     if(ts_set[n]->model != the_model){
-      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-      return ERROR_INVALID_ARGUMENT;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+      return NIP_ERROR_INVALID_ARGUMENT;
     }
   }
 
   /* Find out union of observed variables */
   ts = ts_set[0];
-  observed = variable_union(ts->observed, NULL, 
+  observed = nip_variable_union(ts->observed, NULL, 
 			    the_model->num_of_vars - ts->num_of_hidden,
 			    0, &n_observed);
   if(n_observed < 0){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    return ERROR_GENERAL;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+    return NIP_ERROR_GENERAL;
   }
 
   for(n = 1; n < n_series; n++){
     ts = ts_set[n];
-    observed_more = variable_union(observed, ts->observed, n_observed,
-				   the_model->num_of_vars - ts->num_of_hidden,
-				   &n_observed);
+    observed_more = 
+      nip_variable_union(observed, ts->observed, n_observed,
+			 the_model->num_of_vars - ts->num_of_hidden,
+			 &n_observed);
     free(observed); /* nice to create the same array again and again? */
     observed = observed_more;
   }
 
   if(!n_observed){ /* no observations in any time series? */
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   /* Temporary space for a sorted record (time step) */
   record = (int*) calloc(n_observed, sizeof(int));
   if(!record){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(observed);
-    return ERROR_OUTOFMEMORY;
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   /* Try to open the file for write */
   f = fopen(filename, "w");
   if(!f){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
     free(observed);
     free(record);
-    return ERROR_IO;
+    return NIP_ERROR_IO;
   }
 
   /* Write names of the variables */
@@ -717,14 +721,14 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
     v = observed[i];
     if(i > 0)
       fprintf(f, "%c", FIELD_SEPARATOR);
-    fprintf(f, "%s", get_symbol(v));
+    fprintf(f, "%s", nip_get_symbol(v));
   }
   fputs("\n", f);
 
   /* Write the data */
   for(n = 0; n < n_series; n++){ /* for each time series */
     ts = ts_set[n];
-    map = mapper(observed, ts->observed, n_observed, ts->num_of_observed);
+    map = nip_mapper(observed, ts->observed, n_observed, ts->num_of_observed);
 
     for(t = 0; t < ts->length; t++){ /* for each time step */
 
@@ -743,7 +747,7 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
 	if(i > 0)
 	  fprintf(f, "%c", FIELD_SEPARATOR);
 	if(d >= 0)
-	  fprintf(f, "%s", get_state_name(v, d));      
+	  fprintf(f, "%s", nip_get_state_name(v, d));      
 	else
 	  fputs("null", f);
       }
@@ -757,10 +761,10 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
 
   /* Close the file */
   if(fclose(f)){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
-    return ERROR_IO;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
+    return NIP_ERROR_IO;
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -786,23 +790,23 @@ int timeseries_length(time_series ts){
 
 
 int write_uncertainseries(uncertain_series *ucs_set, int n_series, 
-			  variable v, char *filename){
+			  nip_variable v, char *filename){
   int i, n, t, s;
   int *v_index;
   uncertain_series ucs;
   FILE *f = NULL;
 
   /* Check stuff */
-  n = CARDINALITY(v);
+  n = NIP_CARDINALITY(v);
   if(!(n>0 && ucs_set && filename && n_series>0)){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   v_index = (int*) calloc(n_series, sizeof(int));
   if(!v_index){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   /* Check that the variable exists in all UCS and which one is it */
@@ -810,14 +814,14 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
     ucs = ucs_set[s];
     v_index[s] = -1; /* linear search */
     for(i=0; i < ucs->num_of_vars; i++){
-      if(equal_variables(v, ucs->variables[i])){
+      if(nip_equal_variables(v, ucs->variables[i])){
 	v_index[s] = i;
 	break;
       }
     }
     if(v_index[s] < 0){ /* no such variable in the UCS */
-      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-      return ERROR_INVALID_ARGUMENT;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+      return NIP_ERROR_INVALID_ARGUMENT;
       free(v_index);
     }
   }
@@ -825,16 +829,16 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
   /* Try to open the file for write */
   f = fopen(filename, "w");
   if(!f){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
     free(v_index);
-    return ERROR_IO;
+    return NIP_ERROR_IO;
   }
 
   /* Write names of the states */
   for(i = 0; i < n; i++){
     if(i > 0)
       fprintf(f, "%c", FIELD_SEPARATOR);
-    fprintf(f, "%s", get_state_name(v, i));
+    fprintf(f, "%s", nip_get_state_name(v, i));
   }
   fputs("\n", f);
 
@@ -856,13 +860,13 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
 
   /* Close the file */
   if(fclose(f)){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
     free(v_index);
-    return ERROR_IO;
+    return NIP_ERROR_IO;
   }
 
   free(v_index);
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -886,10 +890,10 @@ int uncertainseries_length(uncertain_series ucs){
 }
 
 
-char* get_observation(time_series ts, variable v, int time){
+char* get_observation(time_series ts, nip_variable v, int time){
   int i, j = -1;
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
-    if(equal_variables(v, ts->observed[i]))
+    if(nip_equal_variables(v, ts->observed[i]))
       j = i;
 
   if(j < 0)
@@ -899,16 +903,17 @@ char* get_observation(time_series ts, variable v, int time){
 }
 
 
-int set_observation(time_series ts, variable v, int time, char* observation){
+int set_observation(time_series ts, nip_variable v, int time, 
+		    char* observation){
   int i, j = -1;
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++)
-    if(equal_variables(v, ts->observed[i]))
+    if(nip_equal_variables(v, ts->observed[i]))
       j = i;
 
-  i = get_state_index(v, observation);
+  i = nip_get_state_index(v, observation);
   /* a valid variable? a valid observation for that variable? */
   if((j < 0) || (i < 0))
-    return ERROR_INVALID_ARGUMENT;
+    return NIP_ERROR_INVALID_ARGUMENT;
 
   ts->data[time][j] = i;
   return 0;
@@ -917,14 +922,14 @@ int set_observation(time_series ts, variable v, int time, char* observation){
 
 int insert_hard_evidence(nip model, char* varname, char* observation){
   int ret;
-  variable v = model_variable(model, varname);
+  nip_variable v = model_variable(model, varname);
   if(v == NULL)
-    return ERROR_INVALID_ARGUMENT;
+    return NIP_ERROR_INVALID_ARGUMENT;
   ret = enter_observation(model->variables, model->num_of_vars, 
 			  model->cliques, model->num_of_cliques, 
 			  v, observation);
-  if(ret != NO_ERROR)
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(ret != NIP_NO_ERROR)
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
   make_consistent(model);
   return ret;
@@ -933,9 +938,9 @@ int insert_hard_evidence(nip model, char* varname, char* observation){
 
 int insert_soft_evidence(nip model, char* varname, double* distribution){
   int ret;
-  variable v = model_variable(model, varname);
+  nip_variable v = model_variable(model, varname);
   if(v == NULL)
-    return ERROR_INVALID_ARGUMENT;
+    return NIP_ERROR_INVALID_ARGUMENT;
   ret =  enter_evidence(model->variables, model->num_of_vars, 
 			model->cliques, model->num_of_cliques, 
 			v, distribution);
@@ -948,49 +953,49 @@ int insert_soft_evidence(nip model, char* varname, double* distribution){
  * have to be shared. */
 int insert_ts_step(time_series ts, int t, nip model, char mark_mask){
   int i;
-  variable v;
+  nip_variable v;
 
   if(t < 0 || t >= timeseries_length(ts)){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
     
   for(i = 0; i < ts->model->num_of_vars - ts->num_of_hidden; i++){
     v = ts->observed[i];
-    if(MARK(v) & mark_mask){ /* Only the suitably marked variables */
+    if(NIP_MARK(v) & mark_mask){ /* Only the suitably marked variables */
       if(ts->data[t][i] >= 0)
 	enter_i_observation(model->variables, model->num_of_vars, 
 			    model->cliques, model->num_of_cliques, 
 			    v, ts->data[t][i]);
     }
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
 /* note that <model> may be different from ucs->model */
 int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask){
   int i, e;
-  variable v;
+  nip_variable v;
 
   if(t < 0 || t >= uncertainseries_length(ucs)){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   for(i = 0; i < ucs->num_of_vars; i++){
     v = ucs->variables[i];
-    if(MARK(v) & mark_mask){
+    if(NIP_MARK(v) & mark_mask){
       e = enter_evidence(model->variables, model->num_of_vars, 
 			 model->cliques, model->num_of_cliques, 
 			 v, ucs->data[t][i]);
-      if(e != NO_ERROR){
-	report_error(__FILE__, __LINE__, e, 1);  
+      if(e != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, e, 1);  
 	return e;
       }
     }
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -1000,12 +1005,12 @@ static int start_timeslice_message_pass(nip model, direction dir,
   int *mapping;
   clique c;
   int nvars = model->outgoing_interface_size;
-  variable *vars;
+  nip_variable *vars;
 
   /* What if there are no subsequent time slices? */
   if(nvars == 0){
     uniform_potential(alpha_or_gamma, 1.0);
-    return NO_ERROR;
+    return NIP_NO_ERROR;
   }
 
   if(dir == forward){
@@ -1018,7 +1023,7 @@ static int start_timeslice_message_pass(nip model, direction dir,
   }
 
   /* map the variables */
-  mapping = mapper(c->variables, vars, c->p->num_of_vars, nvars);
+  mapping = nip_mapper(c->variables, vars, c->p->num_of_vars, nvars);
 
   /* the marginalisation */
   general_marginalise(c->p, alpha_or_gamma, mapping);
@@ -1027,7 +1032,7 @@ static int start_timeslice_message_pass(nip model, direction dir,
   /* normalisation in order to avoid drifting towards zeros */
   normalise_potential(alpha_or_gamma);
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -1037,10 +1042,10 @@ static int finish_timeslice_message_pass(nip model, direction dir,
   int *mapping;
   clique c;
   int nvars = model->outgoing_interface_size;
-  variable *vars;
+  nip_variable *vars;
 
   if(nvars == 0) /* independent time slices (multiplication with 1) */
-    return NO_ERROR;
+    return NIP_NO_ERROR;
 
   /* Find a suitable clique c */
   if(dir == forward){
@@ -1053,23 +1058,23 @@ static int finish_timeslice_message_pass(nip model, direction dir,
   }
 
   /* map the variables */
-  mapping = mapper(c->variables, vars, c->p->num_of_vars, nvars);
+  mapping = nip_mapper(c->variables, vars, c->p->num_of_vars, nvars);
 
   /* the multiplication (and division, if den != NULL) */
   update_potential(num, den, c->p, mapping);
   free(mapping);  
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
 /* forward-only inference consumes constant (1 time slice) amount of memory 
  * + the results (which is linear) */
-uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
-				   double* loglikelihood){
+uncertain_series forward_inference(time_series ts, nip_variable vars[], 
+				   int nvars, double* loglikelihood){
   int i, t;
-  int *cardinalities = NULL;
+  int* cardinalities = NULL;
   double m1, m2;
-  variable temp;
+  nip_variable temp;
   potential alpha = NULL;
   clique clique_of_interest;
   uncertain_series results = NULL;
@@ -1081,39 +1086,39 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
     cardinalities = (int*) calloc(model->outgoing_interface_size, 
 				  sizeof(int));
     if(!cardinalities){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NULL;
     }
   }
 
   /* Fill the array */
   for(i = 0; i < model->outgoing_interface_size; i++)
-    cardinalities[i] = CARDINALITY(model->outgoing_interface[i]);
+    cardinalities[i] = NIP_CARDINALITY(model->outgoing_interface[i]);
 
   /* Allocate some space for the results */
   results = (uncertain_series) malloc(sizeof(uncertain_series_type));
   if(!results){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinalities);
     return NULL;
   }
   
-  results->variables = (variable*) calloc(nvars, sizeof(variable));
+  results->variables = (nip_variable*) calloc(nvars, sizeof(nip_variable));
   if(!results->variables){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(results);
     free(cardinalities);
     return NULL;
   }
 
   /* Copy the references to the variables of interest */
-  memcpy(results->variables, vars, nvars*sizeof(variable));
+  memcpy(results->variables, vars, nvars*sizeof(nip_variable));
   results->num_of_vars = nvars;
   results->length = ts->length;
 
   results->data = (double***) calloc(ts->length, sizeof(double**));
   if(!results->data){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(results->variables);
     free(results);
     free(cardinalities);
@@ -1123,7 +1128,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
   for(t = 0; t < results->length; t++){
     results->data[t] = (double**) calloc(nvars, sizeof(double*));
     if(!results->data[t]){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       while(t > 0){
 	t--;
 	for(i = 0; i < nvars; i++)
@@ -1138,10 +1143,10 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
     }
 
     for(i = 0; i < nvars; i++){
-      results->data[t][i] = (double*) calloc(CARDINALITY(vars[i]),
+      results->data[t][i] = (double*) calloc(NIP_CARDINALITY(vars[i]),
 					     sizeof(double));
       if(!results->data[t][i]){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	while(i > 0)
 	  free(results->data[t][--i]);
 	free(results->data[t]);
@@ -1185,8 +1190,8 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
     if(t > 0){ /*  Fwd or Fwd1  */
       /*  clique_in = clique_in * alpha  */
       if(finish_timeslice_message_pass(model, forward, 
-				       alpha, NULL    ) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				       alpha, NULL    ) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	free_potential(alpha);
 	return NULL;
@@ -1200,7 +1205,7 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
     }
 
     /* Put some data in */
-    insert_ts_step(ts, t, model, MARK_ON); /* only marked variables */
+    insert_ts_step(ts, t, model, NIP_MARK_ON); /* only marked variables */
 
     /* Do the inference */
     make_consistent(model);
@@ -1247,13 +1252,13 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
       marginalise(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
-      normalise_array(results->data[t][i], CARDINALITY(temp));
+      normalise_array(results->data[t][i], NIP_CARDINALITY(temp));
     } 
 
     /* Start a message pass between time slices (compute new alpha) */
     if(start_timeslice_message_pass(model, forward, 
-				    alpha) != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				    alpha) != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free_uncertainseries(results);
       free_potential(alpha);
       return NULL;
@@ -1280,12 +1285,12 @@ uncertain_series forward_inference(time_series ts, variable vars[], int nvars,
 /* This consumes much more memory depending on the size of the 
  * sepsets between time slices. */
 uncertain_series forward_backward_inference(time_series ts,
-					   variable vars[], int nvars,
+					    nip_variable vars[], int nvars,
 					    double* loglikelihood){
   int i, t;
   int *cardinalities = NULL;
   double m1, m2;
-  variable temp;
+  nip_variable temp;
   potential *alpha_gamma = NULL;
   clique clique_of_interest;
   uncertain_series results = NULL;
@@ -1295,39 +1300,39 @@ uncertain_series forward_backward_inference(time_series ts,
   if(model->outgoing_interface_size > 0){
     cardinalities = (int*) calloc(model->outgoing_interface_size, sizeof(int));
     if(!cardinalities){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NULL;
     }
   }
 
   /* Fill the array */
   for(i = 0; i < model->outgoing_interface_size; i++)
-    cardinalities[i] = CARDINALITY(model->outgoing_interface[i]);
+    cardinalities[i] = NIP_CARDINALITY(model->outgoing_interface[i]);
 
   /* Allocate some space for the results */
   results = (uncertain_series) malloc(sizeof(uncertain_series_type));
   if(!results){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinalities);
     return NULL;
   }
   
-  results->variables = (variable*) calloc(nvars, sizeof(variable));
+  results->variables = (nip_variable*) calloc(nvars, sizeof(nip_variable));
   if(!results->variables){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(results);
     free(cardinalities);
     return NULL;
   }
 
   /* Copy the references to the variables of interest */
-  memcpy(results->variables, vars, nvars*sizeof(variable));
+  memcpy(results->variables, vars, nvars*sizeof(nip_variable));
   results->num_of_vars = nvars;
   results->length = ts->length;
 
   results->data = (double***) calloc(ts->length, sizeof(double**));
   if(!results->data){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(results->variables);
     free(results);
     free(cardinalities);
@@ -1337,7 +1342,7 @@ uncertain_series forward_backward_inference(time_series ts,
   for(t = 0; t < results->length; t++){
     results->data[t] = (double**) calloc(nvars, sizeof(double*));
     if(!results->data[t]){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       while(t > 0){
 	t--;
 	for(i = 0; i < nvars; i++)
@@ -1352,10 +1357,10 @@ uncertain_series forward_backward_inference(time_series ts,
     }
 
     for(i = 0; i < nvars; i++){
-      results->data[t][i] = (double*) calloc(CARDINALITY(vars[i]),
+      results->data[t][i] = (double*) calloc(NIP_CARDINALITY(vars[i]),
 					     sizeof(double));
       if(!results->data[t][i]){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	while(i > 0)
 	  free(results->data[t][--i]);
 	free(results->data[t]);
@@ -1397,8 +1402,8 @@ uncertain_series forward_backward_inference(time_series ts,
     
     if(t > 0)
       if(finish_timeslice_message_pass(model, forward, 
-				       alpha_gamma[t-1], NULL) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				       alpha_gamma[t-1], NULL) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(alpha_gamma[i]);
@@ -1413,7 +1418,7 @@ uncertain_series forward_backward_inference(time_series ts,
     }
 
     /* Put some data in (Q: should this be AFTER message passing?) */
-    insert_ts_step(ts, t, model, MARK_ON);
+    insert_ts_step(ts, t, model, NIP_MARK_ON);
     
     /* Do the inference */
     make_consistent(model);
@@ -1436,8 +1441,8 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* Start a message pass between timeslices */
     if(start_timeslice_message_pass(model, forward,
-				    alpha_gamma[t]) != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				    alpha_gamma[t]) != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free_uncertainseries(results);
       for(i = 0; i <= ts->length; i++)
 	free_potential(alpha_gamma[i]);
@@ -1462,9 +1467,9 @@ uncertain_series forward_backward_inference(time_series ts,
     if(t > 0)
       if(finish_timeslice_message_pass(model, forward, 
 				       alpha_gamma[t-1], 
-				       NULL)                   != NO_ERROR){
+				       NULL)                   != NIP_NO_ERROR){
 	
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(alpha_gamma[i]);
@@ -1473,15 +1478,15 @@ uncertain_series forward_backward_inference(time_series ts,
       }
     
     /* Put some evidence in */
-    insert_ts_step(ts, t, model, MARK_ON);
+    insert_ts_step(ts, t, model, NIP_MARK_ON);
 
     /* Pass the message from the future */
     if(t < ts->length - 1)
       if(finish_timeslice_message_pass(model, backward, 
 				       alpha_gamma[t+1], /* gamma */
 				       alpha_gamma[t]  ) /* alpha */
-	 != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	 != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(alpha_gamma[i]);
@@ -1509,15 +1514,15 @@ uncertain_series forward_backward_inference(time_series ts,
       marginalise(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
-      normalise_array(results->data[t][i], CARDINALITY(temp));
+      normalise_array(results->data[t][i], NIP_CARDINALITY(temp));
     }
     /* End of the CORE */
 
     /* Pass the message to the past */
     if(t > 0)
       if(start_timeslice_message_pass(model, backward, 
-				      alpha_gamma[t]) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				      alpha_gamma[t]) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(alpha_gamma[i]);
@@ -1542,11 +1547,11 @@ uncertain_series forward_backward_inference(time_series ts,
 }
 
 
-variable model_variable(nip model, char* symbol){
+nip_variable model_variable(nip model, char* symbol){
   int i;
 
   if(!model){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return NULL;
   }
 
@@ -1563,42 +1568,43 @@ void make_consistent(nip model){
   for (i = 0; i < model->num_of_cliques; i++)
     unmark_clique(model->cliques[i]);
 
-  if(collect_evidence(NULL, NULL, model->cliques[0]) != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(collect_evidence(NULL, NULL, model->cliques[0]) != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return;
   }
 
   for (i = 0; i < model->num_of_cliques; i++)
     unmark_clique(model->cliques[i]);
 
-  if(distribute_evidence(model->cliques[0]) != NO_ERROR)
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(distribute_evidence(model->cliques[0]) != NIP_NO_ERROR)
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
   return;
 }
 
 
 /* Most likely state sequence of the variables given the timeseries. */
-time_series mlss(variable vars[], int nvars, time_series ts){
+time_series mlss(nip_variable vars[], int nvars, time_series ts){
   int i, j, k, l, t;
   time_series mlss;
 
   /* Allocate some space for the results */
   mlss = (time_series)malloc(sizeof(time_series_type));
   if(!mlss){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
   mlss->model = ts->model;
   mlss->num_of_hidden = ts->model->num_of_vars - nvars;
   mlss->num_of_observed = nvars;
-  mlss->hidden = (variable*) calloc(mlss->num_of_hidden, sizeof(variable));
-  mlss->observed = (variable*) calloc(nvars, sizeof(variable));
+  mlss->hidden = (nip_variable*) calloc(mlss->num_of_hidden, 
+					sizeof(nip_variable));
+  mlss->observed = (nip_variable*) calloc(nvars, sizeof(nip_variable));
   mlss->length = ts->length;
   mlss->data = (int**) calloc(mlss->length, sizeof(int*));
   if(!(mlss->data && mlss->observed && mlss->hidden)){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(mlss->data); /* useless? */
     free(mlss->observed);
     free(mlss->hidden);
@@ -1609,7 +1615,7 @@ time_series mlss(variable vars[], int nvars, time_series ts){
   for(t=0; t < mlss->length; t++){
     mlss->data[t] = (int*) calloc(nvars, sizeof(int));
     if(!(mlss->data[t])){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       while(t > 0)
 	free(mlss->data[--t]);
       free(mlss->data);
@@ -1621,7 +1627,7 @@ time_series mlss(variable vars[], int nvars, time_series ts){
   }
 
   /* Copy the variable references */
-  memcpy(mlss->observed, vars, nvars*sizeof(variable));
+  memcpy(mlss->observed, vars, nvars*sizeof(nip_variable));
 
   /* Find out the "hidden", or more like uninteresting, variables */
   l = 0;
@@ -1631,7 +1637,7 @@ time_series mlss(variable vars[], int nvars, time_series ts){
 
     k = 1;
     for(j=0; j < nvars; j++){
-      if(equal_variables(ts->model->variables[i], vars[j])){
+      if(nip_equal_variables(ts->model->variables[i], vars[j])){
 	k = 0;
 	break;
       }
@@ -1654,7 +1660,7 @@ time_series mlss(variable vars[], int nvars, time_series ts){
    */
 
   /* NOT IMPLEMENTED YET! */
-  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
   return mlss;
 }
 
@@ -1673,8 +1679,8 @@ static int e_step(time_series ts, potential* parameters,
   int nobserved;
   int *data = NULL;
   int *mapping;
-  variable* observed = NULL;
-  variable v;
+  nip_variable* observed = NULL;
+  nip_variable v;
   potential *alpha_gamma = NULL;
   potential *results = NULL;
   potential p;
@@ -1684,17 +1690,17 @@ static int e_step(time_series ts, potential* parameters,
 
   /* Reserve some memory for computation */
   nobserved = ts->num_of_observed;
-  observed = (variable*) calloc(nobserved, sizeof(variable));
+  observed = (nip_variable*) calloc(nobserved, sizeof(nip_variable));
   data     = (int*) calloc(nobserved, sizeof(int));
   results = (potential*) calloc(model->num_of_vars, sizeof(potential));
   if(!(results && data && observed && loglikelihood)){
     if(loglikelihood){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-      error = ERROR_OUTOFMEMORY;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      error = NIP_ERROR_OUTOFMEMORY;
     }
     else{
-      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-      error = ERROR_INVALID_ARGUMENT;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+      error = NIP_ERROR_INVALID_ARGUMENT;
     }
     free(data);
     free(observed);
@@ -1703,7 +1709,7 @@ static int e_step(time_series ts, potential* parameters,
   }
   for(i = 0; i < model->num_of_vars; i++){
     p = parameters[i];
-    results[i] = make_potential(CARDINALITY(p), p->num_of_vars, NULL);
+    results[i] = make_potential(NIP_CARDINALITY(p), p->num_of_vars, NULL);
     /* in principle, make_potential can return NULL */
   }  
 
@@ -1715,19 +1721,19 @@ static int e_step(time_series ts, potential* parameters,
     cardinalities = (int*) calloc(model->outgoing_interface_size, 
 				  sizeof(int));
     if(!cardinalities){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       for(i = 0; i < model->num_of_vars; i++)
 	free_potential(results[i]);
       free(results);
       free(data);
       free(observed);
       free(alpha_gamma);
-      return ERROR_OUTOFMEMORY;
+      return NIP_ERROR_OUTOFMEMORY;
     }
   }
 
   for(i = 0; i < model->outgoing_interface_size; i++)
-    cardinalities[i] = CARDINALITY(model->outgoing_interface[i]);
+    cardinalities[i] = NIP_CARDINALITY(model->outgoing_interface[i]);
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++)
@@ -1747,8 +1753,8 @@ static int e_step(time_series ts, potential* parameters,
     
     if(t > 0){
       if(finish_timeslice_message_pass(model, forward, 
-				       alpha_gamma[t-1], NULL) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				       alpha_gamma[t-1], NULL) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	/* i is useless at this point */
 	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
@@ -1758,7 +1764,7 @@ static int e_step(time_series ts, potential* parameters,
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
-	return ERROR_GENERAL;
+	return NIP_ERROR_GENERAL;
       }
     }
 
@@ -1767,7 +1773,7 @@ static int e_step(time_series ts, potential* parameters,
 
     m1 = model_prob_mass(model);
 
-    insert_ts_step(ts, t, model, MARK_ON); /* Put some data in */
+    insert_ts_step(ts, t, model, NIP_MARK_ON); /* Put some data in */
 
     make_consistent(model); /* Do the inference */
 
@@ -1804,13 +1810,13 @@ static int e_step(time_series ts, potential* parameters,
 #endif
 
 
-      return ERROR_BAD_LUCK;
+      return NIP_ERROR_BAD_LUCK;
     }
     
     /* Start a message pass between timeslices */
     if(start_timeslice_message_pass(model, forward,
-				    alpha_gamma[t]) != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				    alpha_gamma[t]) != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       for(i = 0; i < model->num_of_vars; i++)
 	free_potential(results[i]);
       free(results);
@@ -1819,7 +1825,7 @@ static int e_step(time_series ts, potential* parameters,
       for(i = 0; i <= ts->length; i++)
 	free_potential(alpha_gamma[i]);
       free(alpha_gamma);
-      return ERROR_GENERAL;
+      return NIP_ERROR_GENERAL;
     }
 
     /* Forget old evidence */
@@ -1839,8 +1845,8 @@ static int e_step(time_series ts, potential* parameters,
     if(t > 0)
       if(finish_timeslice_message_pass(model, forward, 
 				       alpha_gamma[t-1], 
-				       NULL)            != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				       NULL)            != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
@@ -1849,18 +1855,18 @@ static int e_step(time_series ts, potential* parameters,
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
-	return ERROR_GENERAL;
+	return NIP_ERROR_GENERAL;
       }
     
     /* Put some evidence in */
-    insert_ts_step(ts, t, model, MARK_ON); /* only marked variables */
+    insert_ts_step(ts, t, model, NIP_MARK_ON); /* only marked variables */
     
     /* Pass the message from the future */
     if(t < ts->length - 1)
       if(finish_timeslice_message_pass(model, backward, 
 				       alpha_gamma[t+1], 
-				       alpha_gamma[t]) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				       alpha_gamma[t]) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
@@ -1869,7 +1875,7 @@ static int e_step(time_series ts, potential* parameters,
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
-	return ERROR_GENERAL;
+	return NIP_ERROR_GENERAL;
       }
 
     /* Do the inference */
@@ -1883,7 +1889,7 @@ static int e_step(time_series ts, potential* parameters,
       v = model->variables[i];
 
       /* JJT 02.11.2006: Skip old interface variables for t > 0 */
-      if(t > 0 && (v->interface_status & INTERFACE_OLD_OUTGOING))
+      if(t > 0 && (v->interface_status & NIP_INTERFACE_OLD_OUTGOING))
 	continue;
       
       /* 2. Find the clique that contains the family of 
@@ -1924,8 +1930,8 @@ static int e_step(time_series ts, potential* parameters,
     /* Pass the message to the past */
     if(t > 0)
       if(start_timeslice_message_pass(model, backward, 
-				      alpha_gamma[t]) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				      alpha_gamma[t]) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	for(i = 0; i < model->num_of_vars; i++)
 	  free_potential(results[i]);
 	free(results);
@@ -1934,7 +1940,7 @@ static int e_step(time_series ts, potential* parameters,
 	for(i = 0; i <= ts->length; i++)
 	  free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
-	return ERROR_GENERAL;
+	return NIP_ERROR_GENERAL;
       }
 
     /* forget old evidence */
@@ -1957,7 +1963,7 @@ static int e_step(time_series ts, potential* parameters,
     free_potential(alpha_gamma[t]);
   free(alpha_gamma);
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -1965,7 +1971,7 @@ static int m_step(potential* parameters, nip model){
   int i, j, k;
   int* fam_map;
   clique fam_clique = NULL;
-  variable child = NULL;
+  nip_variable child = NULL;
 
 #ifdef PARAMETER_EPSILON
   /* 0. Make sure there are no zero probabilities 
@@ -1984,7 +1990,7 @@ static int m_step(potential* parameters, nip model){
   
   /* 1. Normalise parameters by dividing with the sums over child variables */
   for(i = 0; i < model->num_of_vars; i++){
-    /* k = CARDINALITY(model->variables[i]); */
+    /* k = NIP_CARDINALITY(model->variables[i]); */
     /* child is the first variable in the potential? */
     normalise_cpd(parameters[i]);
     /** JJT: Not so sure if this is correct! **/
@@ -2004,9 +2010,9 @@ static int m_step(potential* parameters, nip model){
       /* Update the conditional probability distributions (dependencies) */
       j = init_potential(parameters[i], fam_clique->p, fam_map);
       k = init_potential(parameters[i], fam_clique->original_p, fam_map);
-      if(j != NO_ERROR || k != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+      if(j != NIP_NO_ERROR || k != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }
       /* couldn't use initialise() here because of the messy order of
        * parameter potentials */
@@ -2014,12 +2020,12 @@ static int m_step(potential* parameters, nip model){
     else{
       /* Update the priors of independent variables */
       total_marginalise(parameters[i], child->prior, 0); /* correct? */
-      /*for(j = 0; j < CARDINALITY(child); j++)
+      /*for(j = 0; j < NIP_CARDINALITY(child); j++)
 	  child->prior[j] = parameters[i]->data[j];*/
     }
   }
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -2037,8 +2043,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
   nip model = NULL;
 
   if(!ts[0] || !ts[0]->model){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
   model = ts[0]->model;
 
@@ -2051,25 +2057,25 @@ int em_learn(time_series *ts, int n_ts, double threshold,
   /* Reserve some memory for calculation */
   parameters = (potential*) calloc(model->num_of_vars, sizeof(potential));
   if(!parameters){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   for(v = 0; v < model->num_of_vars; v++){
     n = model->variables[v]->num_of_parents + 1;
     card = (int*) calloc(n, sizeof(int));
     if(!card){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       while(v > 0)
 	free_potential(parameters[--v]);
       free(parameters);
-      return ERROR_OUTOFMEMORY;
+      return NIP_ERROR_OUTOFMEMORY;
     }
     /* The child MUST be the first variable in order to normalize
      * potentials reasonably */
-    card[0] = CARDINALITY(model->variables[v]);
+    card[0] = NIP_CARDINALITY(model->variables[v]);
     for(i = 1; i < n; i++)
-      card[i] = CARDINALITY(model->variables[v]->parents[i-1]);
+      card[i] = NIP_CARDINALITY(model->variables[v]->parents[i-1]);
     /* variable->parents should be null only if n==1 
      * => no for-loop => no null dereference */
 
@@ -2102,8 +2108,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
      * On the first iteration this enters the random parameters 
      * into the model. */
     e = m_step(parameters, model);
-    if(e != NO_ERROR){
-      report_error(__FILE__, __LINE__, e, 1);
+    if(e != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, e, 1);
       for(v = 0; v < model->num_of_vars; v++){
 	free_potential(parameters[v]);
       }
@@ -2131,15 +2137,15 @@ int em_learn(time_series *ts, int n_ts, double threshold,
      * (for each time series separately to save memory) */
     for(n = 0; n < n_ts; n++){
       e = e_step(ts[n], parameters, &probe);
-      if(e != NO_ERROR){
-	if(e != ERROR_BAD_LUCK)
-	  report_error(__FILE__, __LINE__, e, 1);
+      if(e != NIP_NO_ERROR){
+	if(e != NIP_ERROR_BAD_LUCK)
+	  nip_report_error(__FILE__, __LINE__, e, 1);
 	/* don't report invalid random parameters */
 	for(v = 0; v < model->num_of_vars; v++){
 	  free_potential(parameters[v]);
 	}
 	free(parameters);
-	if(e != ERROR_BAD_LUCK){
+	if(e != NIP_ERROR_BAD_LUCK){
 	  if(learning_curve != NULL)
 	    empty_doublelist(learning_curve);
 	}
@@ -2159,8 +2165,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /* Add an element to the linked list */
     if(learning_curve != NULL){
       e = append_double(learning_curve, loglikelihood / ts_steps);
-      if(e != NO_ERROR){
-	report_error(__FILE__, __LINE__, e, 1);
+      if(e != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, e, 1);
 	for(v = 0; v < model->num_of_vars; v++){
 	  free_potential(parameters[v]);
 	}
@@ -2180,7 +2186,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       }
       free(parameters);
       /* Return the list as it is */
-      return ERROR_BAD_LUCK;
+      return NIP_ERROR_BAD_LUCK;
     }
 
     /* Remember this! 
@@ -2196,7 +2202,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
   }
   free(parameters);
 
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -2208,30 +2214,30 @@ double model_prob_mass(nip model){
 }
 
 
-double *get_probability(nip model, variable v){
+double *get_probability(nip model, nip_variable v){
   clique clique_of_interest;
   double *result;
   int cardinality;
 
   if(!model){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return NULL;
   }
   if(!v){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return NULL;
   }
-  cardinality = CARDINALITY(v);
+  cardinality = NIP_CARDINALITY(v);
   result = (double *) calloc(cardinality, sizeof(double));
   if(!result){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
   /* 1. Find the clique that contains the interesting variable */
   clique_of_interest = find_family(model->cliques, model->num_of_cliques, v);
   if(!clique_of_interest){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(result);
     return NULL;
   }
@@ -2247,7 +2253,8 @@ double *get_probability(nip model, variable v){
 }
 
 
-potential get_joint_probability(nip model, variable *vars, int num_of_vars){
+potential get_joint_probability(nip model, nip_variable *vars, 
+				int num_of_vars){
   potential p;
   int i;
 
@@ -2258,7 +2265,7 @@ potential get_joint_probability(nip model, variable *vars, int num_of_vars){
   /* Make a DFS in the tree... */
   p = gather_joint_probability(model->cliques[0], vars, num_of_vars, NULL, 0);
   if(p == NULL){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
   }
   
@@ -2274,22 +2281,22 @@ time_series generate_data(nip model, int length){
   int *cardinalities = NULL;
   potential alpha = NULL;
   int nvars = model->num_of_vars;
-  variable *vars = NULL;
+  nip_variable *vars = NULL;
   /* reserved the possibility to pass the set of variables 
    * as a parameter in order to omit part of the data...   */
-  variable v;
+  nip_variable v;
   time_series ts = NULL;
   double *distribution = NULL;
 
-  vars = (variable*) calloc(nvars, sizeof(variable));
+  vars = (nip_variable*) calloc(nvars, sizeof(nip_variable));
   if(!vars){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
   /* sort the variables appropriately */
   for(i = 0; i < model->num_of_vars; i++)
-    unmark_variable(model->variables[i]);
+    nip_unmark_variable(model->variables[i]);
 
   /* first the independent variables... */
   j = 0;
@@ -2297,7 +2304,7 @@ time_series generate_data(nip model, int length){
     v = model->variables[i];
     if(!v->num_of_parents){
       vars[j++] = v;
-      mark_variable(v);
+      nip_mark_variable(v);
     }
   }
  
@@ -2305,18 +2312,18 @@ time_series generate_data(nip model, int length){
   while(j < nvars){
     for(i = 0; i < model->num_of_vars; i++){
       v = model->variables[i];
-      if(variable_marked(v))
+      if(nip_variable_marked(v))
 	continue;
       t = 1;
       for(k = 0; k < v->num_of_parents; k++){
-	if(!variable_marked(v->parents[k])){
+	if(!nip_variable_marked(v->parents[k])){
 	  t = 0;
 	  break;
 	}
       }
       if(t){
 	vars[j++] = v;
-	mark_variable(v);
+	nip_mark_variable(v);
       }	
     }
   }
@@ -2324,7 +2331,7 @@ time_series generate_data(nip model, int length){
   /* allocate memory for the time series */
   ts = (time_series) malloc(sizeof(time_series_type));
   if(!ts){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(vars);
     return NULL;
   }
@@ -2338,7 +2345,7 @@ time_series generate_data(nip model, int length){
 
   ts->data = (int**) calloc(ts->length, sizeof(int*));
   if(!ts->data){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(ts);
     free(vars);
     return(NULL);
@@ -2346,7 +2353,7 @@ time_series generate_data(nip model, int length){
   for(t = 0; t < ts->length; t++){
     ts->data[t] = (int*) calloc(nvars, sizeof(int));
     if(!(ts->data[t])){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       while(t >= 0)
 	free(ts->data[t--]);
       free(ts->data);
@@ -2361,14 +2368,14 @@ time_series generate_data(nip model, int length){
     cardinalities = (int*) calloc(model->outgoing_interface_size, 
 				  sizeof(int));
     if(!cardinalities){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free_timeseries(ts);
       return NULL;
     }
   }
 
   for(i = 0; i < model->outgoing_interface_size; i++)
-    cardinalities[i] = CARDINALITY(model->outgoing_interface[i]);
+    cardinalities[i] = NIP_CARDINALITY(model->outgoing_interface[i]);
   alpha = make_potential(cardinalities, model->outgoing_interface_size, NULL);
   free(cardinalities);
   
@@ -2383,8 +2390,8 @@ time_series generate_data(nip model, int length){
     /* influence from the previous time step */
     if(t > 0){
       if(finish_timeslice_message_pass(model, forward, 
-				       alpha, NULL) != NO_ERROR){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				       alpha, NULL) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_timeseries(ts);
 	free_potential(alpha);
 	return NULL;
@@ -2398,7 +2405,7 @@ time_series generate_data(nip model, int length){
       /*** get the probability distribution */
       distribution = get_probability(model, v);
       /*** organize a lottery */
-      k = lottery(distribution, CARDINALITY(v));
+      k = lottery(distribution, NIP_CARDINALITY(v));
       free(distribution);
       /*** insert into the time series and the model as evidence */
       ts->data[t][i] = k;
@@ -2408,8 +2415,8 @@ time_series generate_data(nip model, int length){
     make_consistent(model);
 
     /* influence from the current time slice to the next one */
-    if(start_timeslice_message_pass(model, forward, alpha) != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    if(start_timeslice_message_pass(model, forward, alpha) != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free_timeseries(ts);
       free_potential(alpha);
       return NULL;
@@ -2457,7 +2464,7 @@ int lottery(double* distribution, int size){
   /* double r = drand48(); NON-ANSI! */
   do{
     if(i >= size){
-      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
       return size-1;
     }
     sum += distribution[i++];
@@ -2475,7 +2482,7 @@ void print_cliques(nip model){
   clique *cliques;
 
   if(!model){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return;
   }
 

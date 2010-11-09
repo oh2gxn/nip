@@ -5,7 +5,7 @@
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.63 2009-01-04 21:30:25 jatoivol Exp $
+# $Id: Makefile,v 1.64 2010-11-09 19:06:08 jatoivol Exp $
 
 
 # The C compiler and flags for compiling the library
@@ -21,7 +21,7 @@ LIBS = -lm
 
 # The linker and flags for compiling programs
 LD = gcc
-LDFLAGS = #-static
+LDFLAGS = -g #-static
 #LDFLAGS = -v
 NIPLIBS = -L./lib -lnip -lm
 
@@ -46,13 +46,13 @@ all: test util
 src/fileio.o: src/fileio.c src/fileio.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
-src/errorhandler.o: src/errorhandler.c src/errorhandler.h
+src/niperrorhandler.o: src/niperrorhandler.c src/niperrorhandler.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/potential.o: src/potential.c src/potential.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
-src/variable.o: src/variable.c src/variable.h
+src/nipvariable.o: src/nipvariable.c src/nipvariable.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/clique.o: src/clique.c src/clique.h
@@ -91,9 +91,9 @@ src/nip.o: src/nip.c src/nip.h
 
 # Rules to create the static and shared libraries
 LIB_SRCS = src/fileio.c \
-src/errorhandler.c \
+src/niperrorhandler.c \
 src/potential.c \
-src/variable.c \
+src/nipvariable.c \
 src/clique.c \
 src/Heap.c \
 src/cls2clq.c \

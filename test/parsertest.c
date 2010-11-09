@@ -1,4 +1,3 @@
-#include "variable.h"
 #include "parser.h"
 #include "huginnet.tab.h"
 #include <stdio.h>

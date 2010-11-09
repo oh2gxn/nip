@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.15 2008-12-20 13:14:01 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.16 2010-11-09 19:06:09 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 
  * 1) a .net file, 
@@ -12,9 +12,9 @@
 #include <math.h>
 #include "parser.h"
 #include "clique.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "potential.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 #include "nip.h"
 
 
@@ -27,8 +27,8 @@ int main(int argc, char *argv[]){
   nip model = NULL;
   time_series ts = NULL;
   time_series *ts_set = NULL;
-  variable v = NULL;
-  variable *vars = NULL;
+  nip_variable v = NULL;
+  nip_variable *vars = NULL;
 
   double m1, m2;
 
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]){
   m1 = probability_mass(model->cliques, model->num_of_cliques);
 
   /* enter the evidence... */
-  i = insert_ts_step(ts, 0, model, MARK_BOTH);
+  i = insert_ts_step(ts, 0, model, NIP_MARK_BOTH);
   /* ...and distribute it */
   make_consistent(model);
 
@@ -72,11 +72,11 @@ int main(int argc, char *argv[]){
    */
   if(argc > 3){
     num_of_vars = argc - 3;
-    vars = (variable *) calloc(num_of_vars, sizeof(variable));
+    vars = (nip_variable *) calloc(num_of_vars, sizeof(nip_variable));
     for(i = 0; i < num_of_vars; i++){
       v = model_variable(model, argv[3 + i]);
       if(!v){
-	report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
 	fprintf(stderr, "  Variable %s unknown\n", argv[3 + i]);
 	return -1;
       }
@@ -105,9 +105,9 @@ int main(int argc, char *argv[]){
   /* Print stuff */
   printf("P(");
   for(i = 0; i < num_of_vars-1; i++){
-    printf("%s, ", get_symbol(vars[i]));
+    printf("%s, ", nip_get_symbol(vars[i]));
   }
-  printf("%s) equals: \n", get_symbol(vars[num_of_vars-1]));
+  printf("%s) equals: \n", nip_get_symbol(vars[num_of_vars-1]));
   print_potential(result);
 
   printf("Mass before evidence: m1 = %g\n", m1);

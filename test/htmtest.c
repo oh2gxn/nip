@@ -12,12 +12,12 @@
 #include <string.h>
 #include "parser.h"
 #include "clique.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "potential.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 #include "nip.h"
 
-#define VAR_OF_INTEREST(m,x) ((m->variables[x]->interface_status & INTERFACE_OLD_OUTGOING) == 0)
+#define VAR_OF_INTEREST(m,x) ((m->variables[x]->interface_status & NIP_INTERFACE_OLD_OUTGOING) == 0)
 
 int main(int argc, char *argv[]){
 
@@ -26,8 +26,8 @@ int main(int argc, char *argv[]){
   double loglikelihood = 0;
 
   nip model = NULL;
-  variable temp = NULL;
-  variable* vars = NULL;
+  nip_variable temp = NULL;
+  nip_variable* vars = NULL;
   int nvars = 0;
 
   time_series ts = NULL;
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]){
   n = read_timeseries(model, argv[2], &ts_set);
 
   if(n < 1){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s\n", argv[2]);
     free_model(model);
     return -1;
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]){
     if(VAR_OF_INTEREST(model,i))
       nvars++;
   }
-  vars = (variable*) calloc(nvars, sizeof(variable));
+  vars = (nip_variable*) calloc(nvars, sizeof(nip_variable));
   j = 0;
   for(i = 0; i < model->num_of_vars; i++){
     if(VAR_OF_INTEREST(model,i))
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]){
   /* Make sure all the variables are marked not to be ignored 
    * in inserting evidence... */
   for(i = 0; i < model->num_of_vars; i++)
-    mark_variable(model->variables[i]);
+    nip_mark_variable(model->variables[i]);
 
 
   /*****************/
@@ -118,8 +118,8 @@ int main(int argc, char *argv[]){
     for(i = 0; i < ucs->num_of_vars; i++){
       temp = ucs->variables[i];            
       /* Print a value */
-      for(j = 0; j < CARDINALITY(temp); j++)
-	printf("P(%s=%s) = %f\n", get_symbol(temp),
+      for(j = 0; j < NIP_CARDINALITY(temp); j++)
+	printf("P(%s=%s) = %f\n", nip_get_symbol(temp),
 	       (temp->state_names)[j], ucs->data[t][i][j]);
       printf("\n"); 
     }
@@ -146,8 +146,8 @@ int main(int argc, char *argv[]){
     for(i = 0; i < ucs->num_of_vars; i++){
       temp = ucs->variables[i];
       /* Print a value */
-      for(j = 0; j < CARDINALITY(temp); j++)
-	printf("P(%s=%s) = %f\n", get_symbol(temp),
+      for(j = 0; j < NIP_CARDINALITY(temp); j++)
+	printf("P(%s=%s) = %f\n", nip_get_symbol(temp),
 	       (temp->state_names)[j], ucs->data[t][i][j]);
       printf("\n"); 
     }

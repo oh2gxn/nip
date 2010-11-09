@@ -29,7 +29,7 @@
 #include <math.h>
 #include "nip.h"
 #include "lists.h"
-#include "variable.h"
+#include "nipvariable.h"
 
 int main(int argc, char *argv[]) {
 
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   time_series ts = NULL;
   double m1, m2;
   double log_likelihood = 0;
-  variable v = NULL;
+  nip_variable v = NULL;
 
   if(argc < 4){
     printf("You must specify: \n"); 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
   /* Read the variable labels */
   for(i = 0; i < model->num_of_vars; i++)
-    unmark_variable(model->variables[i]); /* Unmark all to be sure */
+    nip_unmark_variable(model->variables[i]); /* Unmark all to be sure */
 
   for(i = 3; i < argc; i++){
     v = model_variable(model, argv[i]);
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
       */
     }
     else{
-      mark_variable(v); /* Mark the variables of interest */
+      nip_mark_variable(v); /* Mark the variables of interest */
     }
   }
 
@@ -94,11 +94,11 @@ int main(int argc, char *argv[]) {
     
     for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* For each time step */      
 
-      insert_ts_step(ts, t, model, MARK_OFF); /* Only unmarked variables */
+      insert_ts_step(ts, t, model, NIP_MARK_OFF); /* Only unmarked variables */
       make_consistent(model);      
       m1 = model_prob_mass(model); /* the reference mass */
 
-      insert_ts_step(ts, t, model, MARK_ON); /* Only marked variables */
+      insert_ts_step(ts, t, model, NIP_MARK_ON); /* Only marked variables */
       make_consistent(model);
       m2 = model_prob_mass(model); /* the final mass */
 

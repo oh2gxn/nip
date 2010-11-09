@@ -1,4 +1,4 @@
-/* fileio.c $Id: fileio.c,v 1.20 2008-12-20 12:59:53 jatoivol Exp $
+/* fileio.c $Id: fileio.c,v 1.21 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #include <ctype.h>
@@ -6,14 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "fileio.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 
 /* #define DEBUG_IO */
 
 int count_words(const char *s, int *chars){
-
   return count_tokens(s, chars, 0, NULL, 0, 0, 1);
-
 }
 
 int count_tokens(const char *s, int *chars, int q_strings,
@@ -90,11 +88,11 @@ int *tokenise(const char s[], int n, int q_strings,
   char ch, ch2;
 
   if(s == NULL){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 0);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 0);
     return NULL;
   }
   if(n < 0){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
@@ -105,7 +103,7 @@ int *tokenise(const char s[], int n, int q_strings,
 
   /* Couldn't allocate memory */
   if(!indices){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -203,7 +201,7 @@ char **split(const char s[], int indices[], int n){
 
   /* Couldn't allocate memory */
   if(!words){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -215,7 +213,7 @@ char **split(const char s[], int indices[], int n){
 
     /* Couldn't allocate memory */
     if(!words[i]){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       for(j = 0; j < i; j++)
 	free(words[j]);
       free(words);

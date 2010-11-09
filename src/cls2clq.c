@@ -1,4 +1,4 @@
-/* cls2clq.c $Id: cls2clq.c,v 1.3 2008-12-20 12:59:52 jatoivol Exp $
+/* cls2clq.c $Id: cls2clq.c,v 1.4 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -62,19 +62,20 @@ int is_subset(Cluster_list* cl_head, int* var_set, int size)
     return 0;
 }
 
-clique* cl2cliques(variable* vars, Cluster_list* cl_head, int n_cliques, int n)
+clique* cl2cliques(nip_variable* vars, Cluster_list* cl_head, 
+		   int n_cliques, int n)
 {
     int n_vars, i, j;
     int orig_n_cliques = n_cliques;
     Cluster_list* cl_i;
     clique* cliques;
-    variable* clique_vars;
+    nip_variable* clique_vars;
 
     cliques = (clique*) calloc(n_cliques, sizeof(clique));
     if(!cliques)
       return NULL;
 
-    clique_vars = (variable*) calloc(n, sizeof(variable));
+    clique_vars = (nip_variable*) calloc(n, sizeof(nip_variable));
     if(!clique_vars){
       free(cliques);
       return NULL;
@@ -87,7 +88,7 @@ clique* cl2cliques(variable* vars, Cluster_list* cl_head, int n_cliques, int n)
             if (cl_i->variable_set[i])
                 clique_vars[n_vars++] = vars[i];
 
-	   cliques[--n_cliques] = make_clique(clique_vars, n_vars);
+	   cliques[--n_cliques] = new_clique(clique_vars, n_vars);
 	   /* This ^^^^^^^^^^^ is sort of dangerous. */
 
 	   if(cliques[n_cliques] == NULL){

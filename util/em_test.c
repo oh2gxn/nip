@@ -26,7 +26,7 @@
 #include <math.h>
 #include "nip.h"
 #include "lists.h"
-#include "variable.h"
+#include "nipvariable.h"
 
 int main(int argc, char *argv[]) {
 
@@ -75,10 +75,10 @@ int main(int argc, char *argv[]) {
   ts = ts_set[0];
   printf("Hidden variables are:\n");
   for(i = 0; i < ts->num_of_hidden; i++)
-    printf("  %s", get_symbol(ts->hidden[i]));
+    printf("  %s", nip_get_symbol(ts->hidden[i]));
   printf("\nObserved variables are:\n");
   for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-    printf("  %s", get_symbol(ts->observed[i]));
+    printf("  %s", nip_get_symbol(ts->observed[i]));
   printf("\n");
 
   /* read the threshold value */
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
   printf("  Random seed = %ld\n", seed);
 
   for(i = 0; i < model->num_of_vars; i++)
-    mark_variable(model->variables[i]); /* Make sure all the data is used */
+    nip_mark_variable(model->variables[i]); /* Make sure all the data is used */
 
   learning_curve = make_doublelist();
   t = 0;
@@ -128,9 +128,9 @@ int main(int argc, char *argv[]) {
     /* EM algorithm */
     e = em_learn(ts_set, n, threshold, learning_curve);
 
-    if(!(e == NO_ERROR || e == ERROR_BAD_LUCK)){
+    if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
       fprintf(stderr, "There were errors during learning:\n");
-      report_error(__FILE__, __LINE__, e, 1);
+      nip_report_error(__FILE__, __LINE__, e, 1);
       for(i = 0; i < n; i++)
 	free_timeseries(ts_set[i]);
       free(ts_set);
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Try again, if not satisfied with the result */
-  } while(e == ERROR_BAD_LUCK || 
+  } while(e == NIP_ERROR_BAD_LUCK || 
 	  last < min_log_likelihood);
 
   printf("...done.\n");
@@ -186,9 +186,9 @@ int main(int argc, char *argv[]) {
 
   /* Write the results to a NET file */
   i =  write_model(model, argv[5]);
-  if(i != NO_ERROR){
+  if(i != NIP_NO_ERROR){
     fprintf(stderr, "Failed to write the model into %s\n", argv[5]);
-    report_error(__FILE__, __LINE__, i, 1);
+    nip_report_error(__FILE__, __LINE__, i, 1);
     empty_doublelist(learning_curve);
     free(learning_curve);
     for(i = 0; i < n; i++)

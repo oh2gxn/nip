@@ -1,11 +1,11 @@
-/* Heap.c $Id: Heap.c,v 1.13 2008-12-20 12:59:52 jatoivol Exp $
+/* Heap.c $Id: Heap.c,v 1.14 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #include <stdlib.h>
-#include "variable.h"
+#include "nipvariable.h"
 #include "Graph.h"
 #include "Heap.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,12 +13,12 @@
 static void free_useless_sepsets(Heap *H);
 static int lessthan(Heap_item h1, Heap_item h2);
 static void heapify(Heap* H, int i);
-static int get_heap_index(Heap* H, variable v);
+static int get_heap_index(Heap* H, nip_variable v);
 static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G);
-static int edges_added(Graph* G, variable* vs, int n);
-static int cluster_weight(variable* vs, int n);
+static int edges_added(Graph* G, nip_variable* vs, int n);
+static int cluster_weight(nip_variable* vs, int n);
 
-static int edges_added(Graph* G, variable* vs, int n)
+static int edges_added(Graph* G, nip_variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
 
@@ -28,21 +28,22 @@ static int edges_added(Graph* G, variable* vs, int n)
         for (j = i+1; j < n; j++)
             sum += !is_child(G, vs[i], vs[j]);
 
-      /* AR: Joo, po. looginen not. Tarkoitus on laskea, kuinka monta
-         kaarta on lisättävä graafiin, eli kaikki ne tapaukset, 
-         kun A ei ole B:n lapsi. Tässä käydään taulukko vain yhteen suuntaan,
-         eroaa alkuperäisestä ideasta kertoimella 2.*/
+      /* AR: Joo, po. logical not. The purpose is to count, how many
+         edges must be added to the graph, i.e. all the cases, 
+         when A is not child of B. Here the table is traversed only 
+         to one direction, which differs from the original idea by 
+         factor of 2.*/
    
     return sum; /* Number of links to add */
 }
 
-static int cluster_weight(variable* vs, int n)
+static int cluster_weight(nip_variable* vs, int n)
 {
     /* vs is the array of variables in the cluster induced by vs[0] */
     int i, prod = 1;
     
     for (i = 0; i < n; i++)
-	prod *= CARDINALITY(vs[i]);
+	prod *= NIP_CARDINALITY(vs[i]);
 
     return prod;
 }
@@ -54,7 +55,7 @@ Heap* build_heap(Graph* Gm)
     int i,j, n;
 
     Heap_item* hi;
-    variable* Vs_temp;
+    nip_variable* Vs_temp;
 
     Heap* H = (Heap*) malloc(sizeof(Heap));
     if(!H)
@@ -62,7 +63,7 @@ Heap* build_heap(Graph* Gm)
 
     n = get_size(Gm);
 
-    Vs_temp = (variable*) calloc(n, sizeof(variable));
+    Vs_temp = (nip_variable*) calloc(n, sizeof(nip_variable));
     if(!Vs_temp){
       free(H);
       return NULL;
@@ -87,7 +88,7 @@ Heap* build_heap(Graph* Gm)
            get_size(G) units of memory.
         */
 
-	hi->Vs = (variable *) calloc(hi->n, sizeof(variable));
+	hi->Vs = (nip_variable *) calloc(hi->n, sizeof(nip_variable));
 	if(!(hi->Vs)){
 	  free(Vs_temp);
 	  for(j = 0; j < i; j++)
@@ -122,7 +123,7 @@ Heap* build_sepset_heap(clique* cliques, int num_of_cliques)
     int isect_size;
     int retval;
     clique neighbours[2];
-    variable *isect;
+    nip_variable *isect;
 
     Heap_item* hi;
 
@@ -166,7 +167,7 @@ Heap* build_sepset_heap(clique* cliques, int num_of_cliques)
 
 	/* In case of failure, free all sepsets and the Heap. */
 	if(!(hi->s)){
-	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	  for(k = 0; k < hi_index - 1; k++){
 	    hi = &(H->heap_items[k]);
 	    free_sepset(hi->s);
@@ -236,7 +237,7 @@ static void heapify(Heap* H, int i)
     } while (flag);
 }
 
-int extract_min(Heap* H, Graph* G, variable** cluster_vars)
+int extract_min(Heap* H, Graph* G, nip_variable** cluster_vars)
 {
     Heap_item min;	/* Cluster with smallest weight */
     int i, heap_i;
@@ -280,13 +281,13 @@ int extract_min_sepset(Heap* H, sepset* sepset)
 
     /* Empty heap, nothing to extract. */
     if (H->heap_size < 1)
-      return ERROR_GENERAL;
+      return NIP_ERROR_GENERAL;
     
     min = H->heap_items[0];
 
     /* Not a sepset heap */
     if(min.s == NULL)
-      return ERROR_GENERAL;
+      return NIP_ERROR_GENERAL;
 
     H->heap_items[0] = H->heap_items[H->heap_size -1];
 
@@ -336,8 +337,7 @@ static void free_useless_sepsets(Heap *H){
   }
 }
 
-static int get_heap_index(Heap* H, variable v)
-{
+static int get_heap_index(Heap* H, nip_variable v){
     /* Finds the heap element that contains the variable v */
     /* Linear search, but at the moment the only option */
     /* Hopefully this will not be too slow */
@@ -345,7 +345,7 @@ static int get_heap_index(Heap* H, variable v)
     int i;
 
     for (i = 0; i < H->heap_size; i++)
-		if (equal_variables(H->heap_items[i].Vs[0], v))
+		if (nip_equal_variables(H->heap_items[i].Vs[0], v))
 			return i;
 
     return -1;
@@ -354,13 +354,13 @@ static int get_heap_index(Heap* H, variable v)
 static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 {
     int i, j, n_vars = 0, n_total;
-    variable v_i, V_removed = min_cluster->Vs[0];
-    variable* cluster_vars;
+    nip_variable v_i, V_removed = min_cluster->Vs[0];
+    nip_variable* cluster_vars;
 
     /* Copy all variables in hi and min_cluster together.
        Copy hi first, because Vs[0] must be the generating node */
     n_total = hi->n + min_cluster->n;
-    cluster_vars = (variable*) calloc(n_total, sizeof(variable));
+    cluster_vars = (nip_variable*) calloc(n_total, sizeof(nip_variable));
     if(!cluster_vars)
       return;
 
@@ -369,9 +369,9 @@ static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
       for (i = 0; i < min_cluster->n; i++)
       cluster_vars[hi->n +i] = min_cluster[i];*/
 
-    memcpy(cluster_vars, hi->Vs, hi->n*sizeof(variable));
+    memcpy(cluster_vars, hi->Vs, hi->n*sizeof(nip_variable));
     memcpy(cluster_vars+hi->n, min_cluster->Vs, 
-	   min_cluster->n*sizeof(variable));
+	   min_cluster->n*sizeof(nip_variable));
 		
     /* Remove duplicates and min_vs[0] */
     for (i = 0; i < n_total; i++)
@@ -381,8 +381,8 @@ static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 	for (j = i+1; j < n_total; j++)
 	  {
 	    if (cluster_vars[j] == NULL) continue;
-	    if (equal_variables(v_i, cluster_vars[j]) ||
-		equal_variables(V_removed, cluster_vars[j]))
+	    if (nip_equal_variables(v_i, cluster_vars[j]) ||
+		nip_equal_variables(V_removed, cluster_vars[j]))
 	      cluster_vars[j] = NULL;
 	  }
 	cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
@@ -392,13 +392,13 @@ static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
 
     free(hi->Vs);
 
-    hi->Vs = (variable*) calloc(n_vars, sizeof(variable));
+    hi->Vs = (nip_variable*) calloc(n_vars, sizeof(nip_variable));
     if(!(hi->Vs)){
       free(cluster_vars);
       return;
     }
 
-    memcpy(hi->Vs, cluster_vars, n_vars*sizeof(variable));
+    memcpy(hi->Vs, cluster_vars, n_vars*sizeof(nip_variable));
 
     free(cluster_vars);
 

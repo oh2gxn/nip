@@ -1,6 +1,6 @@
 /* Functions for the bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.119 2008-12-20 12:59:53 jatoivol Exp $
+ * $Id: parser.c,v 1.120 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -8,12 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "parser.h"
-#include "Graph.h"
-#include "clique.h"
 #include "lists.h"
-#include "variable.h"
 #include "fileio.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 
 /* #define DEBUG_PARSER */
 
@@ -44,7 +41,7 @@ datafile *open_datafile(char *filename, char separator,
   f = (datafile *) malloc(sizeof(datafile));
 
   if(f == NULL){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -68,7 +65,7 @@ datafile *open_datafile(char *filename, char separator,
     f->file = fopen(filename,"r");
 
   if (!f->file){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
     free(f);
     return NULL; /* fopen(...) failed */
   }
@@ -79,7 +76,7 @@ datafile *open_datafile(char *filename, char separator,
 
   f->name = (char *) calloc(length_of_name + 1, sizeof(char));
   if(!f->name){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     fclose(f->file);
     free(f);
     return NULL;
@@ -143,7 +140,7 @@ datafile *open_datafile(char *filename, char separator,
     f->datarows = (int*) calloc(f->ndatarows, sizeof(int));
     /* NOTE: calloc resets the contents to zero! */
     if(!f->datarows){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       close_datafile(f);
       return NULL;
     }
@@ -156,7 +153,7 @@ datafile *open_datafile(char *filename, char separator,
 	token_bounds =
 	  tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 1);
 	if(!token_bounds){
-	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	  close_datafile(f);
 	  return NULL;
 	}
@@ -191,7 +188,7 @@ datafile *open_datafile(char *filename, char separator,
 	f->node_symbols = (char **) calloc(num_of_tokens, sizeof(char *));
 
 	if(!f->node_symbols){
-	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	  close_datafile(f);
 	  free(token_bounds);
 	  return NULL;
@@ -200,7 +197,7 @@ datafile *open_datafile(char *filename, char separator,
 	statenames = (stringlist *) calloc(num_of_tokens, sizeof(stringlist));
 
 	if(!statenames){
-	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	  close_datafile(f);
 	  free(token_bounds);
 	  return NULL;
@@ -212,7 +209,7 @@ datafile *open_datafile(char *filename, char separator,
 	f->num_of_states = (int *) calloc(num_of_tokens, sizeof(int));
 
 	if(!f->num_of_states){
-	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	  close_datafile(f);
 	  free(statenames);
 	  free(token_bounds);
@@ -222,7 +219,7 @@ datafile *open_datafile(char *filename, char separator,
 	f->node_states = (char ***) calloc(num_of_tokens, sizeof(char **));
 
 	if(!f->node_states){
-	  report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	  close_datafile(f);
 	  free(statenames);
 	  free(token_bounds);
@@ -238,7 +235,7 @@ datafile *open_datafile(char *filename, char separator,
 	      (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
 			      sizeof(char));
 	    if(!f->node_symbols[i]){
-	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	      close_datafile(f);
 	      free(statenames);
 	      free(token_bounds);
@@ -264,7 +261,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	    f->node_symbols[i] = (char *) calloc(length_of_name, sizeof(char));
 	    if(!f->node_symbols[i]){
-	      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	      close_datafile(f);
 	      free(statenames);
 	      free(token_bounds);
@@ -291,7 +288,7 @@ datafile *open_datafile(char *filename, char separator,
 	  token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
 				  sizeof(char));
 	  if(!token){
-	    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	    close_datafile(f);
 	    free(statenames);
 	    free(token_bounds);
@@ -307,8 +304,8 @@ datafile *open_datafile(char *filename, char separator,
 	   * (ownership is passed on, string is not freed here) */
 	  if(!(stringlist_contains(statenames[i], token) ||
 	       nullobservation(token))){
-	    if(prepend_string(statenames[i], token) != NO_ERROR){
-	      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	    if(prepend_string(statenames[i], token) != NIP_NO_ERROR){
+	      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	      close_datafile(f);
 	      for(i = 0; i < f->num_of_nodes; i++)
 		free_stringlist(statenames[i]);
@@ -358,7 +355,7 @@ static int nullobservation(char *token){
 #endif
 
   if(token == NULL){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return 0;
   }
 
@@ -376,7 +373,7 @@ static int nullobservation(char *token){
 
 void close_datafile(datafile *file){
   if(!file){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return;
   }
   if(file->is_open){
@@ -423,12 +420,12 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
   int i, j;
 
   if(!f || !tokens){
-    report_error(__FILE__, __LINE__, ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return -1;
   }
 
   if(!(f->is_open)){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return -1;
   }
 
@@ -456,7 +453,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
   token_bounds = tokenise(line, num_of_tokens, 0, &separator, 1, 0, 1);
   
   if(!token_bounds){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return -1;
   }
 
@@ -465,7 +462,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
 	   sizeof(char *));
 
   if(!tokens){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(token_bounds);
     return -1;
   }
@@ -479,7 +476,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
 			    sizeof(char));
 
     if(!token){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free_datafile(f);
       for(j = 0; j < i; j++)
 	free(*tokens[j]);
@@ -581,7 +578,7 @@ char *next_token(int *token_length, FILE *f){
        * than to stop: return NULL, *token_length = 0.
        */
       if(!indexarray){
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	*token_length = 0;
 
 	return NULL;
@@ -603,7 +600,7 @@ char *next_token(int *token_length, FILE *f){
       indexarray = NULL;
       indexarray_original = NULL;
     }
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     *token_length = -1;
     return NULL;
   }

@@ -14,9 +14,9 @@
 #include <string.h>
 #include "parser.h"
 #include "clique.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "potential.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 #include "nip.h"
 
 /*
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
   double probe, loglikelihood;
 
   nip model = NULL;
-  variable v = NULL;
+  nip_variable v = NULL;
 
   time_series ts = NULL;
   time_series *ts_set = NULL;
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]){
   n_max = read_timeseries(model, argv[2], &ts_set);
 
   if(n_max < 1){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s\n", argv[2]);
     free_model(model);
     return -1;
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]){
 
   ucs_set = (uncertain_series*) calloc(n_max, sizeof(uncertain_series));
   if(!ucs_set){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     for(i = 0; i < n_max; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]){
   /****************/
   v = model_variable(model, argv[3]);
   if(!v){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "No such variable in the model.\n");
     for(i = 0; i < n_max; i++)
       free_timeseries(ts_set[i]);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
 
   /* Use all the data (mark all variables) */
   for(i = 0; i < model->num_of_vars; i++)
-    mark_variable(model->variables[i]);
+    nip_mark_variable(model->variables[i]);
 
   
   /*****************/

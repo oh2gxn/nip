@@ -20,9 +20,9 @@
 #include <string.h>
 #include "parser.h"
 #include "clique.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "potential.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 #include "nip.h"
 
 /* a lot of similarities with the inference tool (inftest)... */
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
   char* tailptr = NULL;
 
   nip model = NULL;
-  variable v = NULL;
+  nip_variable v = NULL;
 
   time_series ts = NULL;
   time_series *ts_set = NULL;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
 
   /* can't do leave-one-out with a single series */
   if(n_max < 2){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s should have more than one time series.\n", argv[2]);
     free_model(model);
     return -1;
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
   ucs_set = (uncertain_series*) calloc(n_max, sizeof(uncertain_series));
   loo_set = (time_series*) calloc(n_max - 1, sizeof(time_series));
   if(!ucs_set || !loo_set){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     for(i = 0; i < n_max; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]){
   /****************/
   v = model_variable(model, argv[5]);
   if(!v){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "No such variable in the model.\n");
     for(i = 0; i < n_max; i++)
       free_timeseries(ts_set[i]);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]){
 
     /* Use all the data (mark all variables) in EM */
     for(j = 0; j < model->num_of_vars; j++)
-      mark_variable(model->variables[j]);
+      nip_mark_variable(model->variables[j]);
 
     /* repeat EM until good enough */
     do{
@@ -167,9 +167,9 @@ int main(int argc, char *argv[]){
       
       /* the EM algorithm */
       e = em_learn(loo_set, n_max-1, threshold, learning_curve);
-      if(!(e == NO_ERROR || e == ERROR_BAD_LUCK)){
+      if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
 	fprintf(stderr, "There were errors during learning:\n");
-	report_error(__FILE__, __LINE__, e, 1);
+	nip_report_error(__FILE__, __LINE__, e, 1);
 	for(i = 0; i < n_max; i++)
 	  free_timeseries(ts_set[i]);
 	free(ts_set);
@@ -191,13 +191,13 @@ int main(int argc, char *argv[]){
 	last = link->data;
       }
 
-    } while(e == ERROR_BAD_LUCK || last < min_log_likelihood);
+    } while(e == NIP_ERROR_BAD_LUCK || last < min_log_likelihood);
 
     /* the computation of posterior probabilities */
     ts = ts_set[i];
     
     /* ignore possible evidence about the variable to be predicted */
-    unmark_variable(v);
+    nip_unmark_variable(v);
 
     /* Run the inference procedure */
     ucs_set[i] = forward_backward_inference(ts, &v, 1, &probe);

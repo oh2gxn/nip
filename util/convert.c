@@ -6,7 +6,7 @@
 #include <time.h>
 
 #include "nip.h"
-#include "variable.h"
+#include "nipvariable.h"
 
 #define UNIVARIATE   1
 #define MULTIVARIATE 2
@@ -36,77 +36,78 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
   int d;
   int *record;
   int n_observed;
-  variable v;
-  variable *observed;
-  variable *observed_more;
+  nip_variable v;
+  nip_variable *observed;
+  nip_variable *observed_more;
   time_series ts;
   nip the_model;
   FILE *f = NULL;
 
   /* Check stuff */
   if(!(n_series > 0 && ts_set && filename)){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   /* Check all the models are same */
   the_model = ts_set[0]->model;
   for(n = 1; n < n_series; n++){
     if(ts_set[n]->model != the_model){
-      report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-      return ERROR_INVALID_ARGUMENT;
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+      return NIP_ERROR_INVALID_ARGUMENT;
     }
   }
 
   /* Find out union of observed variables */
   ts = ts_set[0];
-  observed = variable_union(ts->observed, NULL, 
-			    the_model->num_of_vars - ts->num_of_hidden,
-			    0, &n_observed);
+  observed = nip_variable_union(ts->observed, NULL, 
+				the_model->num_of_vars - ts->num_of_hidden,
+				0, &n_observed);
   if(n_observed < 0){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-    return ERROR_GENERAL;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+    return NIP_ERROR_GENERAL;
   }
 
   for(n = 1; n < n_series; n++){
     ts = ts_set[n];
-    observed_more = variable_union(observed, ts->observed, n_observed,
-				   the_model->num_of_vars - ts->num_of_hidden,
-				   &n_observed);
+    observed_more = nip_variable_union(observed, ts->observed, n_observed,
+				       the_model->num_of_vars - 
+				       ts->num_of_hidden,
+				       &n_observed);
     free(observed); /* nice to create the same array again and again? */
     observed = observed_more;
   }
 
   if(n_observed < 1){ /* no observations in any time series? */
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   /** NOTE: Actually this assumes there is only one observed variable! **/
 
   /* Temporary space for a sorted record (unary values) */
   v = observed[0];
-  record = (int*) calloc(CARDINALITY(v), sizeof(int));
+  record = (int*) calloc(NIP_CARDINALITY(v), sizeof(int));
   if(!record){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(observed);
-    return ERROR_OUTOFMEMORY;
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   /* Try to open the file for write */
   f = fopen(filename, "w");
   if(!f){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
     free(observed);
     free(record);
-    return ERROR_IO;
+    return NIP_ERROR_IO;
   }
 
   /* Write names of the variable states */
-  for(i = 0; i < CARDINALITY(v); i++){
+  for(i = 0; i < NIP_CARDINALITY(v); i++){
     if(i > 0)
       fprintf(f, "%c", FIELD_SEPARATOR);
-    fprintf(f, "%s", get_state_name(v, i));
+    fprintf(f, "%s", nip_get_state_name(v, i));
   }
   fputs("\n", f);
 
@@ -117,16 +118,16 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
     for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* for each time step */
 
       /* Fill record with indicators of missing data */
-      for(i = 0; i < CARDINALITY(v); i++)
+      for(i = 0; i < NIP_CARDINALITY(v); i++)
 	record[i] = 0;
 
       /* Extract data from the time series */
       d = ts->data[t][0];
-      if(d >= 0 && d < CARDINALITY(v))
+      if(d >= 0 && d < NIP_CARDINALITY(v))
 	record[d] = 1;
 
       /* Print the data */
-      for(i = 0; i < CARDINALITY(v); i++){
+      for(i = 0; i < NIP_CARDINALITY(v); i++){
 	if(i > 0)
 	  fprintf(f, "%c", FIELD_SEPARATOR);
 	if(record[i])
@@ -143,10 +144,10 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
 
   /* Close the file */
   if(fclose(f)){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
-    return ERROR_IO;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
+    return NIP_ERROR_IO;
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -211,7 +212,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* Write the results to the file */
-  k = NO_ERROR;
+  k = NIP_NO_ERROR;
   switch (oformat) {
   case UNARY:
     k = write_unary_timeseries(ts_set, n, argv[5]);
@@ -219,9 +220,9 @@ int main(int argc, char *argv[]) {
   default:
     ; /* shouldn't happen */
   }
-  if(k != NO_ERROR){
+  if(k != NIP_NO_ERROR){
     fprintf(stderr, "Failed to write the data into %s\n", argv[5]);
-    report_error(__FILE__, __LINE__, k, 1);
+    nip_report_error(__FILE__, __LINE__, k, 1);
     for(i = 0; i < n; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);

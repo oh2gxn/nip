@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.86 2010-11-08 17:02:07 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.87 2010-11-09 19:06:08 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -6,18 +6,18 @@
 #define _GNU_SOURCE
 
 #include <assert.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lists.h"
 #include "parser.h"
 #include "clique.h"
-#include "variable.h"
-#include "errorhandler.h"
+#include "nipvariable.h"
+#include "niperrorhandler.h"
 #include "Graph.h"
 
-/* The current input file (TODO: get rid of this global variable...) */
+/* The current input file 
+ * TODO: get rid of these global variables and make them a struct... */
 static FILE *nip_net_file = NULL;
 
 /* Is there a hugin net file open? 0 if no, 1 if yes. 
@@ -46,33 +46,31 @@ static stringpairlist nip_ignored_net_fields = NULL;
 static stringpairlist nip_ignored_node_fields = NULL;
 static stringpairlist nip_ignored_potential_fields = NULL;
 
-static char*      nip_label;       /* node label contents */
-static char*      nip_persistence; /* NIP_next contents   */
+static char* nip_label;       /* node label contents */
+static char* nip_persistence; /* NIP_next contents   */
 
-static variablelist nip_parsed_vars   = NULL;
-static variablelist nip_parent_vars   = NULL;
+static nip_variable_list nip_parsed_vars   = NULL;
+static nip_variable_list nip_parent_vars   = NULL;
 
 static Graph* nip_graph = NULL;
 
 static potentialList nip_parsed_potentials = NULL;
 
-static interfaceList nip_interface_relations = NULL;
+static nip_interface_list nip_interface_relations = NULL;
 
 static clique* nip_cliques = NULL;
 static int   nip_n_cliques = 0;
 
-static int
-yylex (void);
+static int yylex (void);
 
-static void
-yyerror (const char *s);  /* Called by yyparse on error */
+static void yyerror (const char *s);  /* Called by yyparse on error */
 
-static int parsed_vars_to_graph(variablelist vl, Graph* g);
+static int parsed_vars_to_graph(nip_variable_list vl, Graph* g);
 
 static int parsed_potentials_to_jtree(potentialList potentials, 
 				      clique* cliques, int ncliques);
 
-static int interface_to_vars(interfaceList il, variablelist vl);
+static int interface_to_vars(nip_interface_list il, nip_variable_list vl);
 
 static void print_parsed_stuff(potentialList pl);
 
@@ -88,7 +86,7 @@ FILE *open_net_file(const char *filename);
 void close_net_file();
 
 /* Gives you the list of variables after yylex() */
-variablelist get_parsed_variables (void);
+nip_variable_list get_parsed_variables (void);
 
 /* Gives you the array of cliques after yylex() */
 int get_cliques (clique** clique_array_pointer);
@@ -106,7 +104,7 @@ void get_parsed_node_size(int* x, int* y);
   double *doublearray;
   char *name;
   char **stringarray;
-  variable var;
+  nip_variable var;
   /* list of X to get rid of global variables? */
 }
 
@@ -144,28 +142,29 @@ void get_parsed_node_size(int* x, int* y);
 
 %%
 input:  nodes potentials {
-  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 
-  if(interface_to_vars(nip_interface_relations, nip_parsed_vars) != NO_ERROR){
+  if(interface_to_vars(nip_interface_relations, nip_parsed_vars) 
+     != NIP_NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
-  free_interfaceList(nip_interface_relations);
+  nip_free_interface_list(nip_interface_relations);
 
   nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
   free_graph(nip_graph); /* Get rid of the graph (?) */
   nip_graph = NULL;
   if(nip_n_cliques < 0){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 
   if(parsed_potentials_to_jtree(nip_parsed_potentials, 
-				nip_cliques, nip_n_cliques) != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				nip_cliques, nip_n_cliques) != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 #ifdef DEBUG_BISON
@@ -176,28 +175,29 @@ input:  nodes potentials {
 
 /* optional net block */
 |  netDeclaration nodes potentials {
-  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 
-  if(interface_to_vars(nip_interface_relations, nip_parsed_vars) != NO_ERROR){
+  if(interface_to_vars(nip_interface_relations, nip_parsed_vars) 
+     != NIP_NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
-  free_interfaceList(nip_interface_relations);
+  nip_free_interface_list(nip_interface_relations);
 
   nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
   free_graph(nip_graph); /* Get rid of the graph (?) */
   nip_graph = NULL;
   if(nip_n_cliques < 0){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 
   if(parsed_potentials_to_jtree(nip_parsed_potentials, 
-				nip_cliques, nip_n_cliques) != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				nip_cliques, nip_n_cliques) != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 #ifdef DEBUG_BISON
@@ -209,28 +209,29 @@ input:  nodes potentials {
 /* possible old class statement */
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
   free($2); /* the classname is useless */
-  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 
-  if(interface_to_vars(nip_interface_relations, nip_parsed_vars) != NO_ERROR){
+  if(interface_to_vars(nip_interface_relations, nip_parsed_vars) 
+     != NIP_NO_ERROR){
     yyerror("Invalid timeslice specification!\nCheck NIP_next declarations.");
     YYABORT;
   }
-  free_interfaceList(nip_interface_relations);
+  nip_free_interface_list(nip_interface_relations);
 
   nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
   free_graph(nip_graph); /* Get rid of the graph (?) */
   nip_graph = NULL;
   if(nip_n_cliques < 0){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 
   if(parsed_potentials_to_jtree(nip_parsed_potentials, 
-				nip_cliques, nip_n_cliques) != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+				nip_cliques, nip_n_cliques) != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 #ifdef DEBUG_BISON
@@ -254,7 +255,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   int i,retval;
   char *label = nip_label;
   char **states = nip_statenames;
-  variable v = NULL;
+  nip_variable v = NULL;
   
   /* have to check that all the necessary fields were included */
   if(label == NULL)
@@ -264,17 +265,17 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     free(label); nip_label = NULL;
     asprintf(&label, "NIP parser: The states field is missing (node %s)", $2);
     yyerror(label);
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free($2);
     free(label);
     free(nip_persistence); nip_persistence = NULL;
     YYABORT;
   }
 
-  v = new_variable($2, label, states, nip_n_statenames);
+  v = nip_new_variable($2, label, states, nip_n_statenames);
 
   if(v == NULL){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free($2);
     free(label); nip_label = NULL;
     free(nip_persistence); nip_persistence = NULL;
@@ -284,28 +285,28 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     YYABORT;
   }
   /* set the parsed position values */
-  set_position(v, nip_node_position_x, nip_node_position_y);
+  nip_set_position(v, nip_node_position_x, nip_node_position_y);
   nip_node_position_x = 100; nip_node_position_y = 100; /* reset */
 
   if(nip_parsed_vars == NULL)
-    nip_parsed_vars = make_variablelist();
-  append_variable(nip_parsed_vars, v);
+    nip_parsed_vars = nip_new_variable_list();
+  nip_append_variable(nip_parsed_vars, v);
 
   if(nip_persistence != NULL){
     
     if(nip_interface_relations == NULL)
-      nip_interface_relations = make_interfaceList();
-    retval = append_interface(nip_interface_relations, v, nip_persistence);
+      nip_interface_relations = nip_new_interface_list();
+    retval = nip_append_interface(nip_interface_relations, v, nip_persistence);
 
-    if(retval != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    if(retval != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free($2);
       free(label); nip_label = NULL;
       free(nip_persistence); nip_persistence = NULL;
       for(i = 0; i < nip_n_statenames; i++)
 	free(nip_statenames[i]);
       free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
-      free_variable(v);
+      nip_free_variable(v);
       YYABORT;
     }
   }
@@ -322,7 +323,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   int i,retval;
   char *label = nip_label;
   char **states = nip_statenames;
-  variable v = NULL;
+  nip_variable v = NULL;
   
   /* have to check that all the necessary fields were included */
   if(label == NULL)
@@ -333,17 +334,17 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     nip_label = NULL;
     asprintf(&label, "NIP parser: The states field is missing (node %s)", $3);
     yyerror(label);
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free($3);
     free(label);
     free(nip_persistence); nip_persistence = NULL;
     YYABORT;
   }
 
-  v = new_variable($3, label, states, nip_n_statenames);
+  v = nip_new_variable($3, label, states, nip_n_statenames);
 
   if(v == NULL){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free($3);
     free(label);
     nip_label = NULL;
@@ -354,27 +355,26 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     YYABORT;
   }
   /* set the parsed position values */
-  set_position(v, nip_node_position_x, nip_node_position_y);
+  nip_set_position(v, nip_node_position_x, nip_node_position_y);
   nip_node_position_x = 100; nip_node_position_y = 100; /* reset */
 
   if(nip_parsed_vars == NULL)
-    nip_parsed_vars = make_variablelist();
-  append_variable(nip_parsed_vars, v);
+    nip_parsed_vars = nip_new_variable_list();
+  nip_append_variable(nip_parsed_vars, v);
 
   if(nip_persistence != NULL){
-
     if(nip_interface_relations == NULL)
-      nip_interface_relations = make_interfaceList();
-    retval = append_interface(nip_interface_relations, v, nip_persistence);
-    if(retval != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+      nip_interface_relations = nip_new_interface_list();
+    retval = nip_append_interface(nip_interface_relations, v, nip_persistence);
+    if(retval != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free($3);
       free(label); nip_label = NULL;
       free(nip_persistence); nip_persistence = NULL;
       for(i = 0; i < nip_n_statenames; i++)
 	free(nip_statenames[i]);
       free(nip_statenames); nip_statenames = NULL; nip_n_statenames = 0;
-      free_variable(v);
+      nip_free_variable(v);
       YYABORT;
     }
   }
@@ -394,7 +394,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   asprintf(&label, "NET parser: Continuous variables (node %s) %s", $3, 
 	   "are not supported.");
   yyerror(label);
-  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
   free($3);
   free(label);
   free(nip_persistence); nip_persistence = NULL;
@@ -411,7 +411,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   asprintf(&label, "NET parser: Utility nodes (node %s) %s", $2, 
 	   "are not supported.");
   yyerror(label);
-  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
   free($2);
   free(label);
   free(nip_persistence); nip_persistence = NULL;
@@ -429,7 +429,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
   asprintf(&label, "NET parser: Decision nodes (node %s) %s", $2, 
 	   "are not supported.");
   yyerror(label);
-  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
   free($2);
   free(label);
   free(nip_persistence); nip_persistence = NULL;
@@ -487,7 +487,7 @@ statesDeclaration:    token_states '=' '(' strings ')' ';' {
   free(nip_parsed_strings); nip_parsed_strings = NULL;
 
   if(!nip_statenames){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 
@@ -517,8 +517,8 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   int i;
   int retval, size;
   int nparents = 0;
-  variable *family = NULL;
-  variable *parents = NULL;
+  nip_variable *family = NULL;
+  nip_variable *parents = NULL;
   double *doubles = $8;
   char* error = NULL;
   potential p = NULL;
@@ -526,10 +526,10 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   if(nip_parent_vars != NULL)
     nparents = nip_parent_vars->length;
 
-  family = (variable*) calloc(nparents + 1, sizeof(variable));
+  family = (nip_variable*) calloc(nparents + 1, sizeof(nip_variable));
 
   if(nip_parent_vars != NULL)
-    parents = list_to_variable_array(nip_parent_vars);
+    parents = nip_variable_list_to_array(nip_parent_vars);
 
   /* TODO: parser could survive even when "potential(A| )" happens... */
   if(!parents || !family){
@@ -544,17 +544,17 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 #endif
 
   family[0] = $3;
-  size = CARDINALITY(family[0]);
+  size = NIP_CARDINALITY(family[0]);
   for(i = 0; i < nparents; i++){
     family[i + 1] = parents[i];
-    size = size * CARDINALITY(parents[i]);
+    size = size * NIP_CARDINALITY(parents[i]);
   }
   /* check that nip_data_size >= product of variable cardinalities! */
   if(size > nip_data_size){
     /* too few elements in the specified potential */
     asprintf(&error, 
 	     "NET parser: Not enough elements in potential( %s... )!", 
-	     get_symbol(family[0]));
+	     nip_get_symbol(family[0]));
     yyerror(error);
     free(family);
     free(parents);
@@ -570,24 +570,24 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   retval = append_potential(nip_parsed_potentials, p, family[0], parents);
 
   free(doubles); /* the data was copied at create_potential */
-  empty_variablelist(nip_parent_vars);
+  nip_empty_variable_list(nip_parent_vars);
   free(family);
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, retval, 1);
+  if(retval != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, retval, 1);
     YYABORT;
   }
 }
 |                     token_potential '(' child ')' '{' dataList '}' {
   int retval;
-  variable *family;
+  nip_variable *family;
   double *doubles = $6;
   char* error = NULL;
   potential p = NULL;
-  if(CARDINALITY($3) > nip_data_size){
+  if(NIP_CARDINALITY($3) > nip_data_size){
     /* too few elements in the specified potential */
     asprintf(&error, 
 	     "NET parser: Not enough elements in potential( %s )!", 
-	     get_symbol($3));
+	     nip_get_symbol($3));
     yyerror(error);
     free(doubles);
     YYABORT;
@@ -599,14 +599,14 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   normalise_potential(p); /* <=> normalise_cpd(p) in this case */
   retval = append_potential(nip_parsed_potentials, p, family[0], NULL); 
   free(doubles); /* the data was copied at create_potential */
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, retval, 1);
+  if(retval != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, retval, 1);
     YYABORT;
   }
 }
 |                     token_potential '(' child ')' '{' '}' {
   int retval;
-  variable* family;
+  nip_variable* family;
   family = &$3;
 
   if(nip_parsed_potentials == NULL)
@@ -614,8 +614,8 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   retval = append_potential(nip_parsed_potentials, 
 			    create_potential(family, 1, NULL), 
 			    family[0], NULL); 
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+  if(retval != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
 }
@@ -624,17 +624,17 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   int i;
   int retval, size;
   int nparents = 0;
-  variable *family = NULL;
-  variable *parents = NULL;
+  nip_variable *family = NULL;
+  nip_variable *parents = NULL;
   potential p = NULL;
 
   if(nip_parent_vars != NULL)
     nparents = nip_parent_vars->length;
 
-  family = (variable*) calloc(nparents + 1, sizeof(variable));
+  family = (nip_variable*) calloc(nparents + 1, sizeof(nip_variable));
 
   if(nip_parent_vars != NULL)
-    parents = list_to_variable_array(nip_parent_vars);
+    parents = nip_variable_list_to_array(nip_parent_vars);
 
   /* TODO: parser could survive even when "potential(A| )" happens... */
   if(!parents || !family){
@@ -648,10 +648,10 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 #endif
 
   family[0] = $3;
-  size = CARDINALITY(family[0]);
+  size = NIP_CARDINALITY(family[0]);
   for(i = 0; i < nparents; i++){
     family[i + 1] = parents[i];
-    size = size * CARDINALITY(parents[i]);
+    size = size * NIP_CARDINALITY(parents[i]);
   }
 
   if(nip_parsed_potentials == NULL)
@@ -661,10 +661,10 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   normalise_cpd(p); /* useless? */
   retval = append_potential(nip_parsed_potentials, p, family[0], parents);
 
-  empty_variablelist(nip_parent_vars);
+  nip_empty_variable_list(nip_parent_vars);
   free(family);
-  if(retval != NO_ERROR){
-    report_error(__FILE__, __LINE__, retval, 1);
+  if(retval != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, retval, 1);
     YYABORT;
   }
 }
@@ -672,7 +672,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 
 
 child:        UNQUOTED_STRING { 
-  $$ = get_parser_variable(nip_parsed_vars, $1);
+  $$ = nip_search_variable_list(nip_parsed_vars, $1);
   /* NOTE: you could check unrecognized child variables here */
   free($1); }
 ;
@@ -687,12 +687,12 @@ symbol:       UNQUOTED_STRING {
 	       /* NOTE: inverted list takes care of the correct order... */
 	       int retval;
 	       if(nip_parent_vars == NULL)
-		 nip_parent_vars = make_variablelist();
-	       retval = prepend_variable(nip_parent_vars, 
-			  get_parser_variable(nip_parsed_vars, $1));
-	       if(retval != NO_ERROR){
+		 nip_parent_vars = nip_new_variable_list();
+	       retval = nip_prepend_variable(nip_parent_vars, 
+			  nip_search_variable_list(nip_parsed_vars, $1));
+	       if(retval != NIP_NO_ERROR){
 		 /* NOTE: you could check unrecognized parent variables here */
-		 report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+		 nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 		 YYABORT;
 	       }
 	       free($1); }
@@ -711,8 +711,8 @@ string:        QUOTED_STRING {
 		 nip_parsed_strings = make_stringlist();
 
 	       retval = append_string(nip_parsed_strings, $1);
-	       if(retval != NO_ERROR){
-		 report_error(__FILE__, __LINE__, retval, 1);
+	       if(retval != NIP_NO_ERROR){
+		 nip_report_error(__FILE__, __LINE__, retval, 1);
 		 YYABORT;
 	       }
 }
@@ -733,8 +733,8 @@ num:       NUMBER {
 	       nip_parsed_doubles = make_doublelist();
 
 	     retval = append_double(nip_parsed_doubles, $1);
-	     if(retval != NO_ERROR){
-	       report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+	     if(retval != NIP_NO_ERROR){
+	       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	       YYABORT;
 	     }
 }
@@ -759,7 +759,7 @@ dataList: token_data '=' '(' numbers ')' ';' {
   empty_doublelist(nip_parsed_doubles); 
   free(nip_parsed_doubles); nip_parsed_doubles = NULL;
   if(!doubles){
-    report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
   $$ = doubles;
@@ -795,7 +795,7 @@ yylex (void)
 
     nullterminated = (char *) calloc(2, sizeof(char));
     if(!nullterminated){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(token);
       return 0; /* In the case of an (unlikely) error, stop the parser */
     }
@@ -934,7 +934,7 @@ yylex (void)
        token[tokenlength - 1] == '"'){
       nullterminated = (char *) calloc(tokenlength - 1, sizeof(char));
       if(!nullterminated){
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	free(token);
 	return 0; /* In the case of an (unlikely) error, stop the parser */
       }
@@ -951,7 +951,7 @@ yylex (void)
 
     nullterminated = (char *) calloc(tokenlength + 1, sizeof(char));
     if(!nullterminated){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(token);
       return 0; /* In the case of an (unlikely) error, stop the parser */
     }
@@ -988,31 +988,31 @@ yyerror (const char *s)  /* Called by yyparse on error */
 
 
 /* Puts the variables into the graph */
-static int parsed_vars_to_graph(variablelist vl, Graph* g){
+static int parsed_vars_to_graph(nip_variable_list vl, Graph* g){
   int i, retval;
-  variable v;
-  variable_iterator it;
+  nip_variable v;
+  nip_variable_iterator it;
   potentialLink initlist = nip_parsed_potentials->first;
 
   /*assert(vl != NULL);*/
   it = vl->first;
-  v = next_variable(&it);
+  v = nip_next_variable(&it);
   
   /* Add parsed variables to the graph. */
   while(v != NULL){
     retval = add_variable(g, v);
-    if(retval != NO_ERROR){
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      return ERROR_GENERAL;
+    if(retval != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+      return NIP_ERROR_GENERAL;
     }
-    v = next_variable(&it);
+    v = nip_next_variable(&it);
   }
 
   /* Add child - parent relations to the graph. */
   while(initlist != NULL){  
     for(i = 0; i < initlist->data->num_of_vars - 1; i++){
       retval = add_child(g, initlist->parents[i], initlist->child);
-      if(retval != NO_ERROR){
+      if(retval != NIP_NO_ERROR){
 
 	if(g == NULL)
 	  printf("DEBUG\n");
@@ -1022,18 +1022,18 @@ static int parsed_vars_to_graph(variablelist vl, Graph* g){
 	printf("Child:  %s\n", initlist->child->symbol);
 	printf("Parent: %s\n", initlist->parents[i]->symbol);
 
-	report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	return ERROR_GENERAL;
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	return NIP_ERROR_GENERAL;
       }
     }
     
     /* Add child - parent relations to variables themselves also */
-    set_parents(initlist->child, initlist->parents, 
-		initlist->data->num_of_vars - 1);
+    nip_set_parents(initlist->child, initlist->parents, 
+		    initlist->data->num_of_vars - 1);
 
     initlist = initlist->fwd;
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -1056,9 +1056,9 @@ static int parsed_potentials_to_jtree(potentialList potentials,
 	 * the jointree potentials */
 	retval = initialise(fam_clique, initlist->child, 
 			    initlist->data, 0); /* THE job */
-	if(retval != NO_ERROR){
-	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	  return ERROR_GENERAL;
+	if(retval != NIP_NO_ERROR){
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	  return NIP_ERROR_GENERAL;
 	}
       }
       else{
@@ -1067,10 +1067,10 @@ static int parsed_potentials_to_jtree(potentialList potentials,
 	/*retval = enter_evidence(vars, nvars, nip_cliques, 
 	 *			nip_num_of_cliques, initlist->child, 
 	 *			initlist->data->data); OLD STUFF */
-	retval = set_prior(initlist->child, initlist->data->data);
-	if(retval != NO_ERROR){
-	  report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-	  return ERROR_GENERAL;
+	retval = nip_set_prior(initlist->child, initlist->data->data);
+	if(retval != NIP_NO_ERROR){
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	  return NIP_ERROR_GENERAL;
 	}
       }
     }
@@ -1078,39 +1078,39 @@ static int parsed_potentials_to_jtree(potentialList potentials,
       fprintf(stderr, "In %s (%d): find_family failed!\n", __FILE__, __LINE__);
     initlist = initlist->fwd;
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
-static int interface_to_vars(interfaceList il, variablelist vl){
+static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
   int i, m;
-  variable v1, v2;
-  interfaceLink initlist = NULL;
-  variable_iterator it = NULL;
+  nip_variable v1, v2;
+  nip_interface_link initlist = NULL;
+  nip_variable_iterator it = NULL;
   
   if(il == NULL)
-    return NO_ERROR;
+    return NIP_NO_ERROR;
 
   if(vl == NULL){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   /* Add time relations to variables. */
   initlist = LIST_ITERATOR(il);
   while(initlist != NULL){
     v1 = initlist->var;
-    v2 = get_parser_variable(vl, initlist->next);
+    v2 = nip_search_variable_list(vl, initlist->next);
     if(v1->cardinality == v2->cardinality){
-      /* check one thing */
+      /* check if the interface variables really match */
       for(i = 0; i < v1->cardinality; i++){
-	if(strcmp(get_state_name(v1, i), get_state_name(v2, i))){
+	if(strcmp(nip_get_state_name(v1, i), nip_get_state_name(v2, i))){
 	  fprintf(stderr, 
 		  "Warning: Corresponding variables %s and %s\n", 
-		  get_symbol(v1), get_symbol(v2));
+		  nip_get_symbol(v1), nip_get_symbol(v2));
 	  fprintf(stderr, 
 		  "have different kind of states %s and %s!\n", 
-		  get_state_name(v1,i), get_state_name(v2,i));
+		  nip_get_state_name(v1,i), nip_get_state_name(v2,i));
 	}
       }
       /* the core */
@@ -1119,17 +1119,20 @@ static int interface_to_vars(interfaceList il, variablelist vl){
     }
     else{
       fprintf(stderr, 
-	      "NET parser: Invalid 'NIP_next' field for node %s!\n",
-	      get_symbol(v1));
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
-      return ERROR_GENERAL;
+	      "NET parser: Invalid 'NIP_next' field for node %s. ",
+	      nip_get_symbol(v1));
+      fprintf(stderr, 
+	      "Node %s does not match with it.",
+	      nip_get_symbol(v2));
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+      return NIP_ERROR_GENERAL;
     }
     initlist = initlist->fwd;
   }
 
   /* Find out which variables belong to incoming/outgoing interfaces */
   it = LIST_ITERATOR(vl);
-  v2 = next_variable(&it); /* get a variable */
+  v2 = nip_next_variable(&it); /* get a variable */
   while(v2 != NULL){
     m = 0;
 
@@ -1140,9 +1143,9 @@ static int interface_to_vars(interfaceList il, variablelist vl){
       if(v1->previous != NULL && 
 	 v2->previous == NULL){ 
 	/* v2 has the parent v1 in the previous time slice */
-	v1->interface_status |= INTERFACE_OLD_OUTGOING;
-	v1->previous->interface_status |= INTERFACE_OUTGOING;
-	v2->interface_status |= INTERFACE_INCOMING;
+	v1->interface_status |= NIP_INTERFACE_OLD_OUTGOING;
+	v1->previous->interface_status |= NIP_INTERFACE_OUTGOING;
+	v2->interface_status |= NIP_INTERFACE_INCOMING;
 	m = 1;
 	/* break; ?? */
 
@@ -1164,7 +1167,7 @@ static int interface_to_vars(interfaceList il, variablelist vl){
 	v1 = v2->parents[i];
 	if(v1->previous == NULL){ 
 	  /* v1 (in time slice t) is married with someone in t-1 */
-	  v1->interface_status |= INTERFACE_INCOMING;
+	  v1->interface_status |= NIP_INTERFACE_INCOMING;
 
 #ifdef DEBUG_BISON
 	fprintf(stdout, 
@@ -1174,9 +1177,9 @@ static int interface_to_vars(interfaceList il, variablelist vl){
 	}
       }
     }
-    v2 = next_variable(&it);
+    v2 = nip_next_variable(&it);
   }
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -1187,26 +1190,26 @@ static void print_parsed_stuff(potentialList pl){
 
   /* Traverse through the list of parsed potentials. */
   while(list != NULL){
-    int *indices; 
-    int *temp_array;
-    variable *variables;
+    int* indices; 
+    int* temp_array;
+    nip_variable* variables;
 
     if((indices = (int *) calloc(list->data->num_of_vars,
 				 sizeof(int))) == NULL){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return;
     }
 
     if((temp_array = (int *) calloc(list->data->num_of_vars,
 				    sizeof(int))) == NULL){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(indices);
       return;
     }
 
-    if((variables = (variable *) calloc(list->data->num_of_vars,
-					sizeof(variable))) == NULL){
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    if((variables = (nip_variable *) calloc(list->data->num_of_vars,
+					sizeof(nip_variable))) == NULL){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(indices);
       free(temp_array);
       return;
@@ -1226,9 +1229,9 @@ static void print_parsed_stuff(potentialList pl){
     /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
      * Note the temporary use of indices array. */
     for(i = 0; i < list->data->num_of_vars; i++){
-      temp = get_id(variables[i]);
+      temp = nip_get_id(variables[i]);
       for(j = 0; j < list->data->num_of_vars; j++){
-	if(get_id(variables[j]) > temp)
+	if(nip_get_id(variables[j]) > temp)
 	  temp_array[j]++; /* counts how many greater variables there are */
       }
     }
@@ -1263,7 +1266,7 @@ FILE *open_net_file(const char *filename){
   if(!nip_net_file_open){
     nip_net_file = fopen(filename,"r");
     if (!nip_net_file){
-      report_error(__FILE__, __LINE__, ERROR_IO, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
       return NULL; /* fopen(...) failed */
     }
     else{
@@ -1284,7 +1287,7 @@ void close_net_file(){
 
 
 /* Gives you the list of variables after yyparse() */
-variablelist get_parsed_variables (void){
+nip_variable_list get_parsed_variables (void){
   return nip_parsed_vars;
 }
 

@@ -9,9 +9,9 @@ x */
 #include <assert.h>
 #include "parser.h"
 #include "clique.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "potential.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 #include "nip.h"
 
 
@@ -24,8 +24,8 @@ int main(int argc, char *argv[]){
   nip model = NULL;
   clique clique_of_interest = NULL;
 
-  variable temp = NULL;
-  variable interesting = NULL;
+  nip_variable temp = NULL;
+  nip_variable interesting = NULL;
 
   time_series *ts_set = NULL;
   time_series ts = NULL;
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
   n = read_timeseries(model, argv[2], &ts_set); /* 1. Open */
   if(n == 0){
     free_model(model);
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s\n", argv[2]);
     return -1;
   }
@@ -69,33 +69,33 @@ int main(int argc, char *argv[]){
   quotient = (double**) calloc(ts->num_of_hidden, sizeof(double*));
   if(!(result && quotient)){
     free_model(model);
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return 1;
   }
   for(t = 0; t < TIME_SERIES_LENGTH(ts) + 1; t++){
     result[t] = (double**) calloc(ts->num_of_hidden, sizeof(double*));
     if(!result[t]){
       free_model(model);
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return 1;
     }
 
     for(i = 0; i < ts->num_of_hidden; i++){
-      result[t][i] = (double*) calloc(CARDINALITY(ts->hidden[i]), 
+      result[t][i] = (double*) calloc(NIP_CARDINALITY(ts->hidden[i]), 
 				      sizeof(double));
       if(!result[t][i]){
 	free_model(model);
-	report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	return 1;
       }
     }
   }
   for(i = 0; i < ts->num_of_hidden; i++){
-    quotient[i] = (double*) calloc(CARDINALITY(ts->hidden[i]), 
+    quotient[i] = (double*) calloc(NIP_CARDINALITY(ts->hidden[i]), 
 				   sizeof(double));
     if(!quotient[i]){
       free_model(model);
-      report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return 1;
     }
   }
@@ -146,11 +146,11 @@ int main(int argc, char *argv[]){
       marginalise(clique_of_interest, interesting, result[t][i]);
 
       /* 4. Normalisation */
-      normalise_array(result[t][i], CARDINALITY(interesting));    
+      normalise_array(result[t][i], NIP_CARDINALITY(interesting));
 
       /* 5. Print the result */
-      for(j = 0; j < CARDINALITY(interesting); j++)
-	printf("P(%s=%s) = %f\n", get_symbol(interesting),
+      for(j = 0; j < NIP_CARDINALITY(interesting); j++)
+	printf("P(%s=%s) = %f\n", nip_get_symbol(interesting),
 	       (interesting->state_names)[j], result[t][i][j]);
       printf("\n");
     }
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]){
 	/* old posteriors become new priors */
 	temp = ts->hidden[i];
 	if(temp->next != NULL)
-	  update_likelihood(temp->next, result[t][i]);
+	  nip_update_likelihood(temp->next, result[t][i]);
       }
 
       global_retraction(model->variables, model->num_of_vars, 
@@ -222,14 +222,14 @@ int main(int argc, char *argv[]){
 	if(temp->previous != NULL){
 	  /* search for the other index */
 	  for(k = 0; k < ts->num_of_hidden; k++)
-	    if(equal_variables(temp->previous, ts->hidden[k]))
+	    if(nip_equal_variables(temp->previous, ts->hidden[k]))
 	      break;
 	  
 	  /* FIXME: Get rid of the quotient array */
 	  printf("result[%d][%d][%d] / result[%d][%d][%d]\n", 
 		 t+1, i, j, t, k, j);
 
-	  for(j = 0; j < CARDINALITY(temp); j++)
+	  for(j = 0; j < NIP_CARDINALITY(temp); j++)
 	    quotient[i][j] = result[t + 1][i][j] / result[t][k][j]; 
 	  
 	  enter_evidence(model->variables, model->num_of_vars, 
@@ -268,11 +268,11 @@ int main(int argc, char *argv[]){
       marginalise(clique_of_interest, interesting, result[t][i]);
       
       /* 4. Normalisation */
-      normalise_array(result[t][i], CARDINALITY(interesting));
+      normalise_array(result[t][i], NIP_CARDINALITY(interesting));
       
       /* 5. Print the result */
-      for(j = 0; j < CARDINALITY(interesting); j++)
-	printf("P(%s=%s) = %f\n", get_symbol(interesting),
+      for(j = 0; j < NIP_CARDINALITY(interesting); j++)
+	printf("P(%s=%s) = %f\n", nip_get_symbol(interesting),
 	       (interesting->state_names)[j], result[t][i][j]);
       printf("\n");
     }

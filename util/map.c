@@ -15,9 +15,9 @@
 #include <string.h>
 #include "parser.h"
 #include "clique.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "potential.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 #include "nip.h"
 
 /* contains some copy-paste from write_timeseries in nip.c */
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
   FILE *f = NULL;
 
   nip model = NULL;
-  variable temp = NULL;
+  nip_variable temp = NULL;
 
   time_series ts = NULL;
   time_series *ts_set = NULL;
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
   n_max = read_timeseries(model, argv[2], &ts_set);
 
   if(n_max < 1){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s\n", argv[2]);
     free_model(model);
     return -1;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]){
   /************************/
   f = fopen(argv[3], "w");
   if(!f){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
     for(i = 0; i < n_max; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]){
   }
 
   if(ts->num_of_hidden == 0){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "No hidden variables to estimate.\n");
     for(i = 0; i < n_max; i++)
       free_timeseries(ts_set[i]);
@@ -97,15 +97,15 @@ int main(int argc, char *argv[]){
 
   /* Use all the data (mark all variables) */
   for(i = 0; i < model->num_of_vars; i++)
-    mark_variable(model->variables[i]);
+    nip_mark_variable(model->variables[i]);
 
   /* TODO: replace with the new write_timeseries? */
 
   /* Write names of the variables */
-  fprintf(f, "%s", get_symbol(ts->hidden[0]));
+  fprintf(f, "%s", nip_get_symbol(ts->hidden[0]));
   for(i = 1; i < ts->num_of_hidden; i++){
     temp = ts->hidden[i];
-    fprintf(f, ", %s", get_symbol(temp));
+    fprintf(f, ", %s", nip_get_symbol(temp));
   }
   fputs("\n", f);
 
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]){
 	
 	/* Find the MAP value */
 	k = 0; m_max = 0;
-	for(j = 0; j < CARDINALITY(temp); j++){
+	for(j = 0; j < NIP_CARDINALITY(temp); j++){
 	  m = ucs->data[t][i][j];
 	  if(m > m_max){
 	    m_max = m;
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]){
       /* some copy-paste code for the last variable */
       temp = ucs->variables[i];	
       k = 0; m_max = 0;
-      for(j = 0; j < CARDINALITY(temp); j++){
+      for(j = 0; j < NIP_CARDINALITY(temp); j++){
 	m = ucs->data[t][i][j];
 	if(m > m_max){
 	  m_max = m;
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]){
 
   /* close the file */
   if(fclose(f)){
-    report_error(__FILE__, __LINE__, ERROR_IO, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_IO, 1);
     return -1;
   }
 

@@ -1,22 +1,21 @@
-/* Graph.c $Id: Graph.c,v 1.51 2010-11-08 17:02:07 jatoivol Exp $
+/* Graph.c $Id: Graph.c,v 1.52 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "Graph.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "clique.h"
 #include "Heap.h"
 #include "cls2clq.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 
 static void sort_gr_variables(Graph* G);
 
 /*** GRAPH MANAGEMENT ***/
 
-Graph* new_graph(unsigned n)
-{
+Graph* new_graph(unsigned n) {
     Graph* newgraph = (Graph*) malloc(sizeof(Graph));
     if(!newgraph)
       return NULL;
@@ -31,7 +30,7 @@ Graph* new_graph(unsigned n)
 
     memset(newgraph->adj_matrix, 0, n*n*sizeof(int));
 
-    newgraph->variables = (variable*) calloc(n, sizeof(variable));
+    newgraph->variables = (nip_variable*) calloc(n, sizeof(nip_variable));
     if(!(newgraph->variables)){
       free(newgraph->adj_matrix);
       free(newgraph);
@@ -43,8 +42,7 @@ Graph* new_graph(unsigned n)
     return newgraph;
 }
 
-Graph* copy_graph(Graph* G)
-{
+Graph* copy_graph(Graph* G) {
     int n, var_ind_size;
     Graph* G_copy;
 
@@ -52,7 +50,7 @@ Graph* copy_graph(Graph* G)
     G_copy = new_graph(n);
 
     memcpy(G_copy->adj_matrix, G->adj_matrix, n*n*sizeof(int));
-    memcpy(G_copy->variables, G->variables, n*sizeof(variable));
+    memcpy(G_copy->variables, G->variables, n*sizeof(nip_variable));
     if (G->var_ind == NULL)
         G_copy->var_ind = NULL;
     else
@@ -73,60 +71,55 @@ Graph* copy_graph(Graph* G)
     return G_copy;
 }
 
-void free_graph(Graph* G) /* XX Onko täysin valmis? */
-{
-    if(G == NULL)
-        return;
-        
-    free(G->adj_matrix);
-    free(G->variables);
-    free(G->var_ind); /* JJT: I added this here, but is it correct... */
-    free(G);
+void free_graph(Graph* G) { 
+  if(G == NULL)
+    return;
+  
+  free(G->adj_matrix);
+  free(G->variables);
+  free(G->var_ind); /* JJT: I added this here, but is it correct..? */
+  free(G);
 }
 
 /*** GETTERS ***/
 
-int get_size(Graph* G)
-{
+int get_size(Graph* G) {
     return G->size;
 }
 
-variable* get_variables(Graph* G)
-{
+nip_variable* get_variables(Graph* G) {
     return G->variables;
 }
 
-int get_graph_index(Graph* G, variable v)
-{
+int get_graph_index(Graph* G, nip_variable v) {
     int i;
 
     /* NOTE: Relies on variable ids being nearly consecutive
      * If the implementation changes, this becomes a lot less
      * memory efficient and needs to be modified. */
 
-    /* Voi räkä. adjmatrix ei muutu. Jospa lapsia vois lisätä vasta kun
-       kaikki muuttujat on lisätty? */
+    /* AR: Bugger. adjmatrix does not change. What if children were 
+       added only after all variables have been included? */
 
     if (G->var_ind != NULL)
     {
-        i = G->var_ind[get_id(v) - G->min_id];
-        return equal_variables(G->variables[i], v)? i: -1;
+        i = G->var_ind[nip_get_id(v) - G->min_id];
+        return nip_equal_variables(G->variables[i], v)? i: -1;
     }
     else /* Backup linear search */
         for (i = 0; i < G->size; i++)
-            if (equal_variables(G->variables[i], v))
+            if (nip_equal_variables(G->variables[i], v))
                 return i;
 
     return -1;
 } 
 
-int get_neighbours(Graph* G, variable* neighbours, variable V)
-{
+int get_neighbours(Graph* G, nip_variable* neighbours, nip_variable v) {
     int i, j;
     int n = get_size(G);
-    int vi = get_graph_index(G, V);
+    int vi = get_graph_index(G, v);
 
-	j = 0;
+    j = 0;
     for (i = 0; i < n; i++)
         if (ADJM(G, vi, i))
             neighbours[j++] = G->variables[i];
@@ -134,8 +127,7 @@ int get_neighbours(Graph* G, variable* neighbours, variable V)
     return j; /* # of neighbours */
 }
 
-int is_child(Graph* G, variable parent, variable child)
-{
+int is_child(Graph* G, nip_variable parent, nip_variable child) {
     int i,j;
     i = get_graph_index(G, parent); /* XX kts. refaktorointi ylhäältä */
     j = get_graph_index(G, child);
@@ -144,10 +136,9 @@ int is_child(Graph* G, variable parent, variable child)
 
 /*** SETTERS ***/
 
-int add_variable(Graph* G, variable v)
-{
+int add_variable(Graph* G, nip_variable v) {
     if (G->top == G->size)
-	   return ERROR_GENERAL; /* Cannot add more items. */
+      return NIP_ERROR_GENERAL; /* Cannot add more items. */
 
     G->variables[G->top] = v;
     G->top++;
@@ -155,38 +146,37 @@ int add_variable(Graph* G, variable v)
     if (G->top == G->size)
 		sort_gr_variables(G);
 
-    return NO_ERROR;
+    return NIP_NO_ERROR;
 }
 
-int add_child(Graph* G, variable parent, variable child)
-{
+int add_child(Graph* G, nip_variable parent, nip_variable child) {
     int parent_i, child_i;
 
     parent_i = get_graph_index(G, parent);
     child_i = get_graph_index(G, child);
 
     if (parent_i == -1 || child_i == -1)
-	   return ERROR_GENERAL;
+	   return NIP_ERROR_GENERAL;
 
     ADJM(G, parent_i, child_i) = 1;
 
-    return NO_ERROR;
+    return NIP_NO_ERROR;
 }
 
 /*** OPERATIONS (methods) ***/
 
-/*int varcomp(variable v1, variable v2) {
-    return get_id(v1) - get_id(v2);
+/*int varcomp(nip_variable v1, nip_variable v2) {
+    return nip_get_id(v1) - nip_get_id(v2);
 }*/
 
-static void sort_gr_variables(Graph* G) 
-{
+static void sort_gr_variables(Graph* G) {
     int i, id;
 	
-    G->min_id = get_id(G->variables[0]); G->max_id = get_id(G->variables[0]);
+    G->min_id = nip_get_id(G->variables[0]); 
+    G->max_id = nip_get_id(G->variables[0]);
     for (i = 1; i < G->size; i++)
     {
-        id = get_id(G->variables[i]);
+        id = nip_get_id(G->variables[i]);
         G->min_id = (id < G->min_id)?id:G->min_id;
         G->max_id = (id > G->max_id)?id:G->max_id;
     }
@@ -197,13 +187,12 @@ static void sort_gr_variables(Graph* G)
       return;
 	
     for (i = 0; i < G->size; i++)
-	   G->var_ind[get_id(G->variables[i]) - G->min_id] = i;
+	   G->var_ind[nip_get_id(G->variables[i]) - G->min_id] = i;
 
     return;
 }
 
-Graph* make_undirected(Graph* G)
-{
+Graph* make_undirected(Graph* G) {
     Graph* Gu;   
     int i,j,n;
     
@@ -221,8 +210,7 @@ Graph* make_undirected(Graph* G)
     return Gu;
 }
 
-Graph* moralise(Graph* G)
-{
+Graph* moralise(Graph* G) {
     int i,j,n,v;
     Graph* Gm;
 
@@ -248,7 +236,7 @@ Graph* moralise(Graph* G)
 /* Additional interface edges. By Janne Toivola */
 Graph* add_interface_edges(Graph* G){
   int i,j,n;
-  variable v1, v2;
+  nip_variable v1, v2;
   Graph* Gi;
   
   if (G == NULL || G->variables == NULL)
@@ -262,10 +250,11 @@ Graph* add_interface_edges(Graph* G){
     for (j = i+1; j < n; j++) {
       v1 = G->variables[i];
       v2 = G->variables[j];
-      if (((v1->interface_status & INTERFACE_OLD_OUTGOING) && 
-	   (v2->interface_status & INTERFACE_OLD_OUTGOING)) ||
-	  ((v1->interface_status & INTERFACE_OUTGOING) && 
-	   (v2->interface_status & INTERFACE_OUTGOING))) {
+      /* join interface variables */
+      if (((v1->interface_status & NIP_INTERFACE_OLD_OUTGOING) && 
+	   (v2->interface_status & NIP_INTERFACE_OLD_OUTGOING)) ||
+	  ((v1->interface_status & NIP_INTERFACE_OUTGOING) && 
+	   (v2->interface_status & NIP_INTERFACE_OUTGOING))) {
 	ADJM(Gi, i, j) = 1;
 	ADJM(Gi, j, i) = 1;
       }
@@ -279,7 +268,7 @@ int triangulate(Graph* Gm, clique** clique_p)
     int i, j, j_index, k, k_index, n;
     int clique_count = 0;
     int cluster_size;
-    variable* min_cluster;
+    nip_variable* min_cluster;
     Heap* H;
     Cluster_list *cl_head = NULL;
     int* variable_set; /* [i] true, if variable[i] is in the cluster */
@@ -331,7 +320,7 @@ int triangulate(Graph* Gm, clique** clique_p)
  
     /* JJT: Free the list cl_head ??? */
     while(cl_head)
-	  cl_head = remove_cl_item(cl_head);
+      cl_head = remove_cl_item(cl_head);
     
     return clique_count;
 }
@@ -355,8 +344,8 @@ int find_cliques(Graph* G, clique** cliques_p)
       return -1;
     }
 
-    if(find_sepsets(*cliques_p, n_cliques) != NO_ERROR)
-      report_error(__FILE__, __LINE__, ERROR_GENERAL, 1);
+    if(find_sepsets(*cliques_p, n_cliques) != NIP_NO_ERROR)
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
     /* JJT: I added some free_graph stuff here, because I suspected
      * memory leaks... */

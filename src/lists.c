@@ -1,14 +1,14 @@
 /* Functions for using list structures
  * (a C++ implementation would use STL)
  *
- * $Id: lists.c,v 1.9 2008-12-20 12:59:53 jatoivol Exp $
+ * $Id: lists.c,v 1.10 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lists.h"
-#include "errorhandler.h"
+#include "niperrorhandler.h"
 
 
 /* 
@@ -51,13 +51,13 @@ int append_double(doublelist l, double d){
   doublelink new = (doublelink) malloc(sizeof(doublelinkstruct));
 
   if(!l){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   new->data = d;
@@ -70,20 +70,20 @@ int append_double(doublelist l, double d){
 
   l->last = new;
   l->length++;
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 int append_string(stringlist l, char* s){
   stringlink new = (stringlink) malloc(sizeof(stringlinkstruct));
 
   if(!l || !s){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   new->data = s;
@@ -96,20 +96,20 @@ int append_string(stringlist l, char* s){
 
   l->last = new;
   l->length++;
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 int append_stringpair(stringpairlist l, char* name, char* value){
   stringpairlink new = (stringpairlink) malloc(sizeof(stringpairlinkstruct));
 
   if(!l || !name || !value){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   new->name = name;
@@ -123,7 +123,7 @@ int append_stringpair(stringpairlist l, char* name, char* value){
 
   l->last = new;
   l->length++;
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -135,13 +135,13 @@ int prepend_double(doublelist l, double d){
   doublelink new = (doublelink) malloc(sizeof(doublelinkstruct));
 
   if(!l){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   new->data = d;
@@ -154,20 +154,20 @@ int prepend_double(doublelist l, double d){
 
   l->first = new;
   l->length++;
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 int prepend_string(stringlist l, char* s){
   stringlink new = (stringlink) malloc(sizeof(stringlinkstruct));
 
   if(!l || !s){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   new->data = s;
@@ -180,20 +180,20 @@ int prepend_string(stringlist l, char* s){
 
   l->first = new;
   l->length++;
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 int prepend_stringpair(stringpairlist l, char* name, char* value){
   stringpairlink new = (stringpairlink) malloc(sizeof(stringpairlinkstruct));
 
   if(!l || !name | !value){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
-    return ERROR_INVALID_ARGUMENT;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
-    return ERROR_OUTOFMEMORY;
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
   }
 
   new->name = name;
@@ -207,7 +207,7 @@ int prepend_stringpair(stringpairlist l, char* name, char* value){
 
   l->first = new;
   l->length++;
-  return NO_ERROR;
+  return NIP_NO_ERROR;
 }
 
 
@@ -222,7 +222,7 @@ double* list_to_double_array(doublelist l){
   double* new;
   
   if(!l){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
@@ -231,7 +231,7 @@ double* list_to_double_array(doublelist l){
 
   new = (double*) calloc(l->length, sizeof(double));
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
@@ -249,7 +249,7 @@ char** list_to_string_array(stringlist l){
   char** new;
   
   if(!l){
-    report_error(__FILE__, __LINE__, ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
 
@@ -258,7 +258,7 @@ char** list_to_string_array(stringlist l){
 
   new = (char**) calloc(l->length, sizeof(char*));
   if(!new){
-    report_error(__FILE__, __LINE__, ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 

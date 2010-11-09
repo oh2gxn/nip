@@ -9,10 +9,10 @@ int main(){
 
   /* create the variables 
    * normally this information would be found in a file and parsed */
-  variable variables[5];
-  variable parentsA[2];
-  variable parentsC[2];
-  variable parentsE[1];
+  nip_variable variables[5];
+  nip_variable parentsA[2];
+  nip_variable parentsC[2];
+  nip_variable parentsE[1];
   char nameA[] = "einari";
   char nameB[] = "jalmari";
   char nameC[] = "jokke";
@@ -59,7 +59,7 @@ int main(){
   /* initialization: This information is usually parsed from a file. */
   potential model[4]; /* the fourth potential is extra */
 
-  variable set_of_variables[3];
+  nip_variable set_of_variables[3];
 
   /* State names for the variables */
   statesA[0] = "a1";
@@ -78,16 +78,16 @@ int main(){
   statesE[1] = "e2";
 
   /* Create the variables */
-  variables[0] = new_variable("A", nameA, statesA, 3);
-  variables[1] = new_variable("B", nameB, statesB, 4);
-  variables[2] = new_variable("C", nameC, statesC, 2); /* note1 */
-  variables[3] = new_variable("D", nameD, statesD, 3);
-  variables[4] = new_variable("E", nameE, statesE, 2);
+  variables[0] = nip_new_variable("A", nameA, statesA, 3);
+  variables[1] = nip_new_variable("B", nameB, statesB, 4);
+  variables[2] = nip_new_variable("C", nameC, statesC, 2); /* note1 */
+  variables[3] = nip_new_variable("D", nameD, statesD, 3);
+  variables[4] = nip_new_variable("E", nameE, statesE, 2);
 
   /* Create cliques */
-  clique_pile[0] = make_clique(variables, 3);
-  clique_pile[1] = make_clique(&(variables[1]), 3);
-  clique_pile[2] = make_clique(&(variables[3]), 2);
+  clique_pile[0] = new_clique(variables, 3);
+  clique_pile[1] = new_clique(&(variables[1]), 3);
+  clique_pile[2] = new_clique(&(variables[3]), 2);
 
   /* Create separator sets */
   sepset_pile[0] = make_sepset(&(variables[1]), 2, &(clique_pile[0]));
@@ -128,9 +128,9 @@ int main(){
   parentsA[0] = variables[1]; parentsA[1] = variables[2];
   parentsC[0] = variables[1]; parentsC[1] = variables[3];
   parentsE[0] = variables[3];
-  set_parents(variables[0], parentsA, 2);
-  set_parents(variables[2], parentsC, 2);
-  set_parents(variables[4], parentsE, 1);
+  nip_set_parents(variables[0], parentsA, 2);
+  nip_set_parents(variables[2], parentsC, 2);
+  nip_set_parents(variables[4], parentsE, 1);
 
   initialise(clique_pile[0], variables[0], model[0], 0);
   initialise(clique_pile[1], variables[2], model[1], 0);

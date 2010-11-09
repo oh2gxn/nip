@@ -1,11 +1,11 @@
-/* clique.h $Id: clique.h,v 1.10 2008-12-20 12:59:52 jatoivol Exp $
+/* clique.h $Id: clique.h,v 1.11 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
 #define __CLIQUE_H__
 
 #include "potential.h"
-#include "variable.h"
+#include "nipvariable.h"
 
 struct sepsetlist {
   void *data; /* void is needed because of the order of definitions */
@@ -19,7 +19,7 @@ typedef element *sepset_link;
 typedef struct {
   potential p;
   potential original_p;
-  variable *variables; /* p contains num_of_vars */
+  nip_variable* variables; /* p contains num_of_vars */
   sepset_link sepsets;
   int num_of_sepsets;
   char mark; /* the way to prevent endless loops, either MARK_ON or MARK_OFF */
@@ -29,7 +29,7 @@ typedef cliquetype *clique;
 typedef struct {
   potential old;   /* previous potential */
   potential new;   /* current potential */
-  variable *variables; /* old and new contain num_of_vars */
+  nip_variable* variables; /* old and new contain num_of_vars */
   clique *cliques; /* always between two cliques */
 } sepsettype;
 
@@ -39,8 +39,8 @@ typedef sepsettype *sepset;
 /* List for storing parsed potentials while constructing the graph etc. */
 struct potentialLinkType {
   potential data;
-  variable child;
-  variable* parents;
+  nip_variable child;
+  nip_variable* parents;
   struct potentialLinkType *fwd;
   struct potentialLinkType *bwd;
 };
@@ -62,7 +62,7 @@ typedef potentialListStruct *potentialList;
 /* Method for creating cliques (without pointers to sepsets).
  * vars[] can be in any order.
  */
-clique make_clique(variable vars[], int num_of_vars);
+clique new_clique(nip_variable vars[], int num_of_vars);
 
 
 /* Method for removing cliques and freeing memory. */
@@ -76,7 +76,7 @@ int add_sepset(clique c, sepset s);
 /* Method for creating sepsets: 
    - cliques[] is an array which contains references to BOTH 
      neighbouring cliques */
-sepset make_sepset(variable variables[], int num_of_vars, clique cliques[]);
+sepset make_sepset(nip_variable variables[], int num_of_vars, clique cliques[]);
 
 
 /* Method for removing sepsets and freeing memory. */
@@ -87,12 +87,12 @@ void free_sepset(sepset s);
  * - variables[] is an array of the variables in a suitable order
  * - num_of_vars tells how many variables there are
  * - data[] is the data array in the order according to variables */
-potential create_potential(variable variables[], int num_of_vars, 
+potential create_potential(nip_variable variables[], int num_of_vars, 
 			   double data[]);
 
 
 /* Something very dangerous...
-double *reorder_potential(variable vars[], potential p); 
+double *reorder_potential(nip_variable vars[], potential p); 
 */
 
 /* Method for unmarking a clique: call this to every clique before 
@@ -135,8 +135,8 @@ int collect_evidence(clique c1, sepset s12, clique c2);
  * (<isect> MAY NOT contain any of the variables in <vars>)
  * NOTE: Remember to unmark all cliques before calling this.
  */
-potential gather_joint_probability(clique start, variable *vars, int n_vars,
-				   variable *isect, int n_isect);
+potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
+				   nip_variable *isect, int n_isect);
 
 
 /*
@@ -149,7 +149,7 @@ potential gather_joint_probability(clique start, variable *vars, int n_vars,
  * Sum of the elements in the potential is assumed to be 1. 
  * The "ownership" of the potential changes.
  */
-int initialise(clique c, variable child, potential p, int transient);
+int initialise(clique c, nip_variable child, potential p, int transient);
 
 
 /*
@@ -159,11 +159,11 @@ int initialise(clique c, variable child, potential p, int transient);
  * - The result is placed in the array r
  * - The returned value is an error code.
  */
-int marginalise(clique c, variable v, double r[]);
+int marginalise(clique c, nip_variable v, double r[]);
 
 
 /* Method for backing away from impossibilities in observation. */
-int global_retraction(variable* vars, int nvars, clique* cliques, 
+int global_retraction(nip_variable* vars, int nvars, clique* cliques, 
 		      int ncliques);
 
 /* Computes the so called probability mass of a clique tree */
@@ -174,8 +174,8 @@ double probability_mass(clique* cliques, int ncliques);
  * The observed state of the variable is given as a string.
  * Returns an error code.
  */
-int enter_observation(variable* vars, int nvars, clique* cliques, 
-		      int ncliques, variable v, char *state);
+int enter_observation(nip_variable* vars, int nvars, clique* cliques, 
+		      int ncliques, nip_variable v, char *state);
 
 
 /*
@@ -184,8 +184,8 @@ int enter_observation(variable* vars, int nvars, clique* cliques,
  * (See get_stateindex() at variable.h)
  * Returns an error code.
  */
-int enter_i_observation(variable* vars, int nvars, clique* cliques, 
-			int ncliques, variable v, int index);
+int enter_i_observation(nip_variable* vars, int nvars, clique* cliques, 
+			int ncliques, nip_variable v, int index);
 
 
 /* Function for entering evidence to a clique tree. 
@@ -195,8 +195,8 @@ int enter_i_observation(variable* vars, int nvars, clique* cliques,
  * This function might do a global retraction.
  * Returns an error code.
  */
-int enter_evidence(variable* vars, int nvars, clique* cliques, 
-		   int ncliques, variable v, double evidence[]);
+int enter_evidence(nip_variable* vars, int nvars, clique* cliques, 
+		   int ncliques, nip_variable v, double evidence[]);
 
 
 /* Function for entering a prior to a clique tree. 
@@ -205,8 +205,8 @@ int enter_evidence(variable* vars, int nvars, clique* cliques,
  * Size of the prior array must equal variable->cardinality.
  * Returns an error code.
  */
-int enter_prior(variable* vars, int nvars, clique* cliques, 
-	        int ncliques, variable v, double prior[]);
+int enter_prior(nip_variable* vars, int nvars, clique* cliques, 
+	        int ncliques, nip_variable v, double prior[]);
 
 
 /* Finds a clique containing the family of the given variable.
@@ -216,13 +216,13 @@ int enter_prior(variable* vars, int nvars, clique* cliques,
  *  - num_of_cliques : the size of the array 'cliques'
  *  - var : the variable whose family is to be found
  */
-clique find_family(clique *cliques, int num_of_cliques, variable var);
+clique find_family(clique *cliques, int num_of_cliques, nip_variable var);
 
 
 /* Computes or finds a mapping from the family members to the clique 
  * variables, so that you can use general_marginalise to compute 
  * P(child | pa(child)) from the family clique. */
-int* find_family_mapping(clique family, variable child);
+int* find_family_mapping(clique family, nip_variable child);
 
 
 /* Finds a clique containing the specified set of variables. 
@@ -234,8 +234,8 @@ int* find_family_mapping(clique family, variable child);
  *  - variables : the variables expected to be included in the clique
  *  - num_of_vars : size of the given array of variables
  */
-clique find_clique(clique *cliques, int num_of_cliques, 
-		   variable *variables, int num_of_vars);
+clique find_clique(clique* cliques, int num_of_cliques, 
+		   nip_variable* variables, int num_of_vars);
 
 
 /*
@@ -274,7 +274,7 @@ void print_sepset(sepset s);
  * intersection.
  * Returns an error code.
  */
-int clique_intersection(clique cl1, clique cl2, variable **vars, int *n);
+int clique_intersection(clique cl1, clique cl2, nip_variable **vars, int *n);
 
 
 /* Creates an empty list for storing potentials and corresponding variables 
@@ -284,9 +284,9 @@ potentialList make_potentialList();
 
 /* Adds potentials to the list */
 int append_potential(potentialList l, potential p, 
-		     variable child, variable* parents);
+		     nip_variable child, nip_variable* parents);
 int prepend_potential(potentialList l, potential p, 
-		      variable child, variable* parents);
+		      nip_variable child, nip_variable* parents);
 
 
 /* Frees the memory allocated to a potentialList.

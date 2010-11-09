@@ -4,7 +4,7 @@
 #include <string.h>
 #include "clique.h"
 #include "Graph.h"
-#include "variable.h"
+#include "nipvariable.h"
 #include "potential.h"
 #include "lists.h"
 #include "parser.h"
@@ -27,9 +27,9 @@ int main(int argc, char *argv[]){
     0.5, 0.3, 0.1, 0.6, 0.9, 31, 235, 3523.24, 7657,
     0.2, 3.7, 9.8, 1.4, 5.5, 17, 918, 4798.28, 1111
   };
-  variable vars[3];
-  variablelist varlist;
-  variable* vararray = NULL;
+  nip_variable vars[3];
+  nip_variable_list varlist;
+  nip_variable* vararray = NULL;
   char **symbols;
   char **names;
   char ***states;
@@ -105,33 +105,33 @@ int main(int argc, char *argv[]){
   strncpy(states[2][2], "c3", 3);
 
   printf("\nAllocating and freeing variables:\n");
-  varlist = make_variablelist();
+  varlist = nip_new_variable_list();
   for(i = 0; i < n; i++){
     /* Create variables */
-    append_variable(varlist, 
-	  new_variable(symbols[0], names[0], states[0], cardinality[0]));
-    append_variable(varlist, 
-	  new_variable(symbols[1], names[1], states[1], cardinality[1]));
-    append_variable(varlist, 
-	  new_variable(symbols[2], names[2], states[2], cardinality[2]));
+    nip_append_variable(varlist, 
+	  nip_new_variable(symbols[0], names[0], states[0], cardinality[0]));
+    nip_append_variable(varlist, 
+	  nip_new_variable(symbols[1], names[1], states[1], cardinality[1]));
+    nip_append_variable(varlist, 
+	  nip_new_variable(symbols[2], names[2], states[2], cardinality[2]));
     printf("\rIteration %d of %d                               ", i + 1, n);
     /* Free variables */
-    vararray = list_to_variable_array(varlist);
-    empty_variablelist(varlist);
+    vararray = nip_variable_list_to_array(varlist);
+    nip_empty_variable_list(varlist);
     free(vararray);
   }
   free(varlist);
   printf("\rDone.                                             \n");
 
-  vars[0] = new_variable(symbols[0], names[0], states[0], cardinality[0]);
-  vars[1] = new_variable(symbols[1], names[1], states[1], cardinality[1]);
-  vars[2] = new_variable(symbols[2], names[2], states[2], cardinality[2]);
+  vars[0] = nip_new_variable(symbols[0], names[0], states[0], cardinality[0]);
+  vars[1] = nip_new_variable(symbols[1], names[1], states[1], cardinality[1]);
+  vars[2] = nip_new_variable(symbols[2], names[2], states[2], cardinality[2]);
 
   printf("\nAllocating and freeing cliques:\n");
   for(i = 0; i < n; i++){
     /* Create two cliques and a sepset */
-    cl[0] = make_clique(vars, 2);
-    cl[1] = make_clique(vars+1, 2);
+    cl[0] = new_clique(vars, 2);
+    cl[1] = new_clique(vars+1, 2);
     s = make_sepset(vars+1, 1, cl);
     add_sepset(cl[0], s);
     add_sepset(cl[1], s);
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]){
 
   /* Free some memory */
   for(i = 0; i < 3; i++)
-    free_variable(vars[i]);
+    nip_free_variable(vars[i]);
   
   for(i = 0; i < 3; i++){
     free(states[i][0]);

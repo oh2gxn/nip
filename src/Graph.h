@@ -1,10 +1,10 @@
-/* Graph.h $Id: Graph.h,v 1.23 2008-12-20 12:59:52 jatoivol Exp $
+/* Graph.h $Id: Graph.h,v 1.24 2010-11-09 19:06:08 jatoivol Exp $
  */
 
 #ifndef __GRAPH_H__
 #define __GRAPH_H__
 
-#include "variable.h"
+#include "nipvariable.h"
 #include "clique.h"
 
 #define ADJM(G, i, j) ( (G)->adj_matrix[(i)*(G)->size + (j)] )
@@ -14,7 +14,7 @@ typedef struct {
     unsigned long* var_ind;
     unsigned long min_id;
     unsigned long max_id;
-    variable* variables;
+    nip_variable* variables;
     unsigned size;
     int top;
 } Graph; 
@@ -39,18 +39,18 @@ int get_size(Graph* G);
  * Parameter G: the graph
  */
 
-variable* get_variables(Graph* G);
+nip_variable* get_variables(Graph* G);
 /* Returns the variables used in Graph G;
  * Parameter G: the graph
  */
 
-int get_graph_index(Graph* G, variable v);
+int get_graph_index(Graph* G, nip_variable v);
 /* Returns the index of v in the variable-array 
  * Parameter G: the graph
  * Parameter v: the variable
  */
 
-int get_neighbours(Graph* G, variable* neighbours, variable v);
+int get_neighbours(Graph* G, nip_variable* neighbours, nip_variable v);
 /* Returns the number of neighbours of v.
  * Parameter G: the graph
  * Parameter neighbours: a pointer to a variable array
@@ -58,20 +58,20 @@ int get_neighbours(Graph* G, variable* neighbours, variable v);
  * Parameter v: the variable 
  */
 
-int is_child(Graph* G, variable parent, variable child);
+int is_child(Graph* G, nip_variable parent, nip_variable child);
 /* Returns true, if there is a link from parent to child
  * Parameter G: the graph
  * Parameter parent: the suspected parent
  * Parameter child: the suspected child
  */
 
-int add_variable(Graph* G, variable v);
+int add_variable(Graph* G, nip_variable v);
 /* Adds a new variable (ie. a node) to the graph. 
  * Parameter G: the graph
  * Parameter v: the variable to be added
  */
 
-int add_child(Graph* G, variable parent, variable child);
+int add_child(Graph* G, nip_variable parent, nip_variable child);
 /* Adds a child to a parent, ie. a dependence.
  * Parameter G: the graph
  * Parameter parent: the parent-variable
