@@ -1,4 +1,4 @@
-/* nip.c $Id: nip.c,v 1.212 2010-11-09 19:06:08 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.213 2010-11-11 16:38:07 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -337,7 +337,7 @@ int write_model(nip model, char* filename){
     n = NIP_CARDINALITY(v)-1;
     nip_get_position(v, &x, &y);
     fputs("\n", f);
-    fprintf(f, "%snode %s\n", indent, nip_get_symbol(v));
+    fprintf(f, "%snode %s\n", indent, nip_variable_symbol(v));
     fprintf(f, "%s{\n", indent);
     fprintf(f, "%s    label = \"%s\";\n", indent, v->name);
     fprintf(f, "%s    position = (%d %d);\n", indent, x, y);
@@ -347,7 +347,7 @@ int write_model(nip model, char* filename){
     fprintf(f, " \"%s\" );\n", v->state_names[n]);
     if(v->previous)
       fprintf(f, "%s    NIP_next = \"%s\";\n", indent, 
-	      nip_get_symbol(v->previous));
+	      nip_variable_symbol(v->previous));
     fprintf(f, "%s}\n", indent);
     fflush(f);
   }
@@ -358,7 +358,7 @@ int write_model(nip model, char* filename){
     n = NIP_CARDINALITY(v);
     fputs("\n", f);
     /* independent variables have priors */
-    fprintf(f, "%spotential (%s)\n", indent, nip_get_symbol(v));
+    fprintf(f, "%spotential (%s)\n", indent, nip_variable_symbol(v));
     fprintf(f, "%s{\n", indent);
     fprintf(f, "%s    data = ( ", indent);
     for(j = 0; j < n; j++){
@@ -386,12 +386,12 @@ int write_model(nip model, char* filename){
     nparents = nip_number_of_parents(v);
     fputs("\n", f);
     /* child variables have conditional distributions */
-    fprintf(f, "%spotential (%s | ", indent, nip_get_symbol(v));
+    fprintf(f, "%spotential (%s | ", indent, nip_variable_symbol(v));
     for(j = nparents-1; j > 0; j--){ 
       /* Hugin fellas put parents in reverse order */
-      fprintf(f, "%s ", nip_get_symbol(v->parents[j]));
+      fprintf(f, "%s ", nip_variable_symbol(v->parents[j]));
     }
-    fprintf(f, "%s)\n", nip_get_symbol(v->parents[0]));
+    fprintf(f, "%s)\n", nip_variable_symbol(v->parents[0]));
     fprintf(f, "%s{ \n", indent);
     fprintf(f, "%s    data = (", indent);
 
@@ -432,7 +432,7 @@ int write_model(nip model, char* filename){
 	  fputs(" % ", f);
 	  inverse_mapping(p, j-1, temp);
 	  for(x = nparents-1; x >= 0; x--){
-	    fprintf(f, "%s=%s ", nip_get_symbol(v->parents[x]),
+	    fprintf(f, "%s=%s ", nip_variable_symbol(v->parents[x]),
 		    nip_get_state_name(v->parents[x], temp[x+1]));
 	  }
 	}
@@ -721,7 +721,7 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
     v = observed[i];
     if(i > 0)
       fprintf(f, "%c", FIELD_SEPARATOR);
-    fprintf(f, "%s", nip_get_symbol(v));
+    fprintf(f, "%s", nip_variable_symbol(v));
   }
   fputs("\n", f);
 

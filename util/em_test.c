@@ -75,10 +75,10 @@ int main(int argc, char *argv[]) {
   ts = ts_set[0];
   printf("Hidden variables are:\n");
   for(i = 0; i < ts->num_of_hidden; i++)
-    printf("  %s", nip_get_symbol(ts->hidden[i]));
+    printf("  %s", nip_variable_symbol(ts->hidden[i]));
   printf("\nObserved variables are:\n");
   for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-    printf("  %s", nip_get_symbol(ts->observed[i]));
+    printf("  %s", nip_variable_symbol(ts->observed[i]));
   printf("\n");
 
   /* read the threshold value */

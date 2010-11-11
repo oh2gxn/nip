@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.87 2010-11-09 19:06:08 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.88 2010-11-11 16:38:07 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -554,7 +554,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
     /* too few elements in the specified potential */
     asprintf(&error, 
 	     "NET parser: Not enough elements in potential( %s... )!", 
-	     nip_get_symbol(family[0]));
+	     nip_variable_symbol(family[0]));
     yyerror(error);
     free(family);
     free(parents);
@@ -587,7 +587,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
     /* too few elements in the specified potential */
     asprintf(&error, 
 	     "NET parser: Not enough elements in potential( %s )!", 
-	     nip_get_symbol($3));
+	     nip_variable_symbol($3));
     yyerror(error);
     free(doubles);
     YYABORT;
@@ -1107,7 +1107,7 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
 	if(strcmp(nip_get_state_name(v1, i), nip_get_state_name(v2, i))){
 	  fprintf(stderr, 
 		  "Warning: Corresponding variables %s and %s\n", 
-		  nip_get_symbol(v1), nip_get_symbol(v2));
+		  nip_variable_symbol(v1), nip_variable_symbol(v2));
 	  fprintf(stderr, 
 		  "have different kind of states %s and %s!\n", 
 		  nip_get_state_name(v1,i), nip_get_state_name(v2,i));
@@ -1120,10 +1120,10 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
     else{
       fprintf(stderr, 
 	      "NET parser: Invalid 'NIP_next' field for node %s. ",
-	      nip_get_symbol(v1));
+	      nip_variable_symbol(v1));
       fprintf(stderr, 
 	      "Node %s does not match with it.",
-	      nip_get_symbol(v2));
+	      nip_variable_symbol(v2));
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
     }
@@ -1152,13 +1152,13 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
 #ifdef DEBUG_BISON
 	fprintf(stdout, 
 	      "NET parser: Node %s in I_{t}->\n",
-	      get_symbol(v1->previous));
+	      nip_variable_symbol(v1->previous));
 	fprintf(stdout, 
 	      "NET parser: Node %s in I_{t-1}->\n",
-	      get_symbol(v1));
+	      nip_variable_symbol(v1));
 	fprintf(stdout, 
 	      "NET parser: Node %s in I_{t}<-\n",
-	      get_symbol(v2));
+	      nip_variable_symbol(v2));
 #endif
       }
     }
@@ -1172,7 +1172,7 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
 #ifdef DEBUG_BISON
 	fprintf(stdout, 
 	      "NET parser: Node %s in I_{t}<-\n",
-	      get_symbol(v1));
+	      nip_variable_symbol(v1));
 #endif
 	}
       }
@@ -1229,9 +1229,9 @@ static void print_parsed_stuff(potentialList pl){
     /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
      * Note the temporary use of indices array. */
     for(i = 0; i < list->data->num_of_vars; i++){
-      temp = nip_get_id(variables[i]);
+      temp = nip_variable_id(variables[i]);
       for(j = 0; j < list->data->num_of_vars; j++){
-	if(nip_get_id(variables[j]) > temp)
+	if(nip_variable_id(variables[j]) > temp)
 	  temp_array[j]++; /* counts how many greater variables there are */
       }
     }

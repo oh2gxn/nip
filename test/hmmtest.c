@@ -150,7 +150,7 @@ int main(int argc, char *argv[]){
 
       /* 5. Print the result */
       for(j = 0; j < NIP_CARDINALITY(interesting); j++)
-	printf("P(%s=%s) = %f\n", nip_get_symbol(interesting),
+	printf("P(%s=%s) = %f\n", nip_variable_symbol(interesting),
 	       (interesting->state_names)[j], result[t][i][j]);
       printf("\n");
     }
@@ -272,7 +272,7 @@ int main(int argc, char *argv[]){
       
       /* 5. Print the result */
       for(j = 0; j < NIP_CARDINALITY(interesting); j++)
-	printf("P(%s=%s) = %f\n", nip_get_symbol(interesting),
+	printf("P(%s=%s) = %f\n", nip_variable_symbol(interesting),
 	       (interesting->state_names)[j], result[t][i][j]);
       printf("\n");
     }

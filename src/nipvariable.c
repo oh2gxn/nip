@@ -1,6 +1,6 @@
 /* nipvariable.c 
  * Author: Janne Toivola
- * $Id: nipvariable.c,v 1.1 2010-11-09 19:06:08 jatoivol Exp $
+ * $Id: nipvariable.c,v 1.2 2010-11-11 16:38:07 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -144,23 +144,24 @@ nip_variable nip_copy_variable(nip_variable v){
       free(copy);
       return NULL;
     }
+    for(i = 0; i < v->num_of_parents; i++)
+      copy->parents[i] = v->parents[i];
   }
   else
     copy->parents = NULL;
   copy->family_clique = v->family_clique;
 
   copy->likelihood = (double*) calloc(copy->cardinality, sizeof(double));
-
   if(!(copy->likelihood)){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(copy->parents);
     free(copy);
     return NULL;
-  }  
-
-  /* initialise likelihoods to 1 */
+  }
   for(i = 0; i < copy->cardinality; i++)
     copy->likelihood[i] = v->likelihood[i];
+
+  /* FIXME: also other fields, like copy->prior, copy->previous, etc... */
 
   return copy;
 }
@@ -191,7 +192,7 @@ int nip_equal_variables(nip_variable v1, nip_variable v2){
 }
 
 
-unsigned long nip_get_id(nip_variable v){
+unsigned long nip_variable_id(nip_variable v){
   if(v)
     return v->id;
   return 0;
@@ -215,7 +216,7 @@ int nip_variable_marked(nip_variable v){
 }
 
 
-char* nip_get_symbol(nip_variable v){
+char* nip_variable_symbol(nip_variable v){
   if(v)
     return v->symbol;
   return NULL;
@@ -798,7 +799,7 @@ nip_variable nip_search_variable_list(nip_variable_list l, char *symbol){
     return NULL; /* didn't find the variable (possibly normal) */
   
   /* search for the variable reference */
-  while(strcmp(symbol, nip_get_symbol(v)) != 0){
+  while(strcmp(symbol, nip_variable_symbol(v)) != 0){
     v = nip_next_variable(&it);
     if(v == NULL){
       return NULL; /* didn't find the variable (a normal situation) */

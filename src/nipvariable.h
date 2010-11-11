@@ -1,6 +1,6 @@
 /* nipvariable.h 
  * Author: Janne Toivola
- * $Id: nipvariable.h,v 1.1 2010-11-09 19:06:08 jatoivol Exp $
+ * $Id: nipvariable.h,v 1.2 2010-11-11 16:38:07 jatoivol Exp $
  */
 
 #ifndef __NIPVARIABLE_H__
@@ -53,11 +53,11 @@ struct nip_var {
   int pos_x; /* node position by Hugin */
   int pos_y;
   char mark; /* mark for some algorithms (like DFS and data generation) */
-
   /* TODO: stringpairlist application_specific_properties; */
 };
 typedef struct nip_var nip_varstruct;
 typedef nip_varstruct* nip_variable;
+
 
 
 /* Linked list for storing nip_variables */
@@ -101,8 +101,8 @@ typedef nip_ifliststruct* nip_interface_list;
 
 
 
-/* Creates a new variable:
- * - symbol is a short name e.g. A (= char array {'A', '\0'})
+/* Creates a new variable. Parameters:
+ * - symbol is a short unique string, e.g. A (= char array {'A', '\0'})
  * - name is a more verbose name e.g. "rain" or NULL 
  * - states is an array of strings containing the state names or NULL
  * - cardinality is the number of states/values the variable can have */
@@ -110,10 +110,10 @@ nip_variable nip_new_variable(const char* symbol, const char* name,
 			      char** states, int cardinality);
 
 
-/* Function for copying a variable (if needed). 
+/* Function for copying variable v. 
  * Handle with care: ID etc. issues will appear!
- * - v: the variable to be copied. 
- * Returns the copy, so freeing the original one does not affect the copy.
+ * Returns a new allocated variable, so freeing the original one does 
+ * not affect the copy.
  */
 nip_variable nip_copy_variable(nip_variable v);
 
@@ -133,7 +133,7 @@ int nip_equal_variables(nip_variable v1, nip_variable v2);
 /* An alternative interface for keeping variables and thus 
  * the potentials ordered. Returns the unique id of the variable v.
  */
-unsigned long nip_get_id(nip_variable v);
+unsigned long nip_variable_id(nip_variable v);
 
 
 /* Method for marking a variable. */
@@ -142,17 +142,18 @@ void nip_mark_variable(nip_variable v);
 /* Method for unmarking a variable. */
 void nip_unmark_variable(nip_variable v);
 
-/* Method for checking if a variable is marked. */
+/* Method for checking if a variable is marked. 
+ * Returns zero if not marked. */
 int nip_variable_marked(nip_variable v);
 
 
-/* Returns the symbol of the variable (a reference, not a new char[]). 
- * It is a string (or NULL if nullpointer given). */
-char* nip_get_symbol(nip_variable v);
+/* Returns the symbol of the variable. It is a string reference, 
+ * not a new char[], so don't free() it. */
+char* nip_variable_symbol(nip_variable v);
 
 
 /* Gives the numerical representation of the variable state. 
- * This function is useful when parsing data. 
+ * This function is useful when parsing data. Parameters:
  * - v: the variable
  * - state: the value represented as a string
  * Returns the index in [0 ... <cardinality-1>] or -1 if the 

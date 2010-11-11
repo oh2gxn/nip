@@ -1,4 +1,4 @@
-/* clique.c $Id: clique.c,v 1.33 2010-11-09 19:06:08 jatoivol Exp $
+/* clique.c $Id: clique.c,v 1.34 2010-11-11 16:38:07 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -92,9 +92,9 @@ clique new_clique(nip_variable vars[], int num_of_vars){
   /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
   for(i = 0; i < num_of_vars; i++){
-    temp = nip_get_id(vars[i]);
+    temp = nip_variable_id(vars[i]);
     for(j = 0; j < num_of_vars; j++){
-      if(nip_get_id(vars[j]) > temp)
+      if(nip_variable_id(vars[j]) > temp)
 	indices[j]++; /* counts how many greater variables there are */
     }
   }
@@ -311,9 +311,9 @@ sepset make_sepset(nip_variable vars[], int num_of_vars, clique cliques[]){
   /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
   for(i = 0; i < num_of_vars; i++){
-    temp = nip_get_id(vars[i]);
+    temp = nip_variable_id(vars[i]);
     for(j = 0; j < num_of_vars; j++){
-      if(nip_get_id(vars[j]) > temp)
+      if(nip_variable_id(vars[j]) > temp)
 	indices[j]++; /* counts how many greater variables there are */
     }
   }
@@ -436,9 +436,9 @@ potential create_potential(nip_variable variables[], int num_of_vars,
   /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
   for(i = 0; i < num_of_vars; i++){
-    temp = nip_get_id(variables[i]);
+    temp = nip_variable_id(variables[i]);
     for(j = 0; j < num_of_vars; j++){
-      if(nip_get_id(variables[j]) > temp)
+      if(nip_variable_id(variables[j]) > temp)
 	temp_array[j]++; /* counts how many greater variables there are */
     }
   }

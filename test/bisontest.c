@@ -276,9 +276,9 @@ int main(int argc, char *argv[]){
   test_probability(&result, &size_of_result, interesting, nip_cliques,
 		   nip_num_of_cliques);
 
-  printf("Normalised probability of %s:\n", nip_get_symbol(interesting));
+  printf("Normalised probability of %s:\n", nip_variable_symbol(interesting));
   for(i = 0; i < size_of_result; i++)
-    printf("P(%s=%d) = %f\n", nip_get_symbol(interesting), i, result[i]);
+    printf("P(%s=%d) = %f\n", nip_variable_symbol(interesting), i, result[i]);
 
   printf("\n\n");
 
@@ -330,9 +330,9 @@ int main(int argc, char *argv[]){
   test_probability(&result, &size_of_result, interesting, nip_cliques,
 		   nip_num_of_cliques);
 
-  printf("Normalised probability of %s:\n", nip_get_symbol(interesting));
+  printf("Normalised probability of %s:\n", nip_variable_symbol(interesting));
   for(i = 0; i < size_of_result; i++)
-    printf("P(%s=%d) = %f\n", nip_get_symbol(interesting), i, result[i]);
+    printf("P(%s=%d) = %f\n", nip_variable_symbol(interesting), i, result[i]);
 
   free(result);
   return 0;

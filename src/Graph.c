@@ -1,4 +1,4 @@
-/* Graph.c $Id: Graph.c,v 1.52 2010-11-09 19:06:08 jatoivol Exp $
+/* Graph.c $Id: Graph.c,v 1.53 2010-11-11 16:38:07 jatoivol Exp $
  */
 
 #include <string.h>
@@ -103,7 +103,7 @@ int get_graph_index(Graph* G, nip_variable v) {
 
     if (G->var_ind != NULL)
     {
-        i = G->var_ind[nip_get_id(v) - G->min_id];
+        i = G->var_ind[nip_variable_id(v) - G->min_id];
         return nip_equal_variables(G->variables[i], v)? i: -1;
     }
     else /* Backup linear search */
@@ -166,17 +166,17 @@ int add_child(Graph* G, nip_variable parent, nip_variable child) {
 /*** OPERATIONS (methods) ***/
 
 /*int varcomp(nip_variable v1, nip_variable v2) {
-    return nip_get_id(v1) - nip_get_id(v2);
+    return nip_variable_id(v1) - nip_variable_id(v2);
 }*/
 
 static void sort_gr_variables(Graph* G) {
     int i, id;
 	
-    G->min_id = nip_get_id(G->variables[0]); 
-    G->max_id = nip_get_id(G->variables[0]);
+    G->min_id = nip_variable_id(G->variables[0]); 
+    G->max_id = nip_variable_id(G->variables[0]);
     for (i = 1; i < G->size; i++)
     {
-        id = nip_get_id(G->variables[i]);
+        id = nip_variable_id(G->variables[i]);
         G->min_id = (id < G->min_id)?id:G->min_id;
         G->max_id = (id > G->max_id)?id:G->max_id;
     }
@@ -187,7 +187,7 @@ static void sort_gr_variables(Graph* G) {
       return;
 	
     for (i = 0; i < G->size; i++)
-	   G->var_ind[nip_get_id(G->variables[i]) - G->min_id] = i;
+	   G->var_ind[nip_variable_id(G->variables[i]) - G->min_id] = i;
 
     return;
 }

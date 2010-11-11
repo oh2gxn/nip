@@ -102,10 +102,10 @@ int main(int argc, char *argv[]){
   /* TODO: replace with the new write_timeseries? */
 
   /* Write names of the variables */
-  fprintf(f, "%s", nip_get_symbol(ts->hidden[0]));
+  fprintf(f, "%s", nip_variable_symbol(ts->hidden[0]));
   for(i = 1; i < ts->num_of_hidden; i++){
     temp = ts->hidden[i];
-    fprintf(f, ", %s", nip_get_symbol(temp));
+    fprintf(f, ", %s", nip_variable_symbol(temp));
   }
   fputs("\n", f);
 

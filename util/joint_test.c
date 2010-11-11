@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.16 2010-11-09 19:06:09 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.17 2010-11-11 16:38:07 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 
  * 1) a .net file, 
@@ -105,9 +105,9 @@ int main(int argc, char *argv[]){
   /* Print stuff */
   printf("P(");
   for(i = 0; i < num_of_vars-1; i++){
-    printf("%s, ", nip_get_symbol(vars[i]));
+    printf("%s, ", nip_variable_symbol(vars[i]));
   }
-  printf("%s) equals: \n", nip_get_symbol(vars[num_of_vars-1]));
+  printf("%s) equals: \n", nip_variable_symbol(vars[num_of_vars-1]));
   print_potential(result);
 
   printf("Mass before evidence: m1 = %g\n", m1);

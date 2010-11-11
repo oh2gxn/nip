@@ -119,7 +119,7 @@ int main(int argc, char *argv[]){
       temp = ucs->variables[i];            
       /* Print a value */
       for(j = 0; j < NIP_CARDINALITY(temp); j++)
-	printf("P(%s=%s) = %f\n", nip_get_symbol(temp),
+	printf("P(%s=%s) = %f\n", nip_variable_symbol(temp),
 	       (temp->state_names)[j], ucs->data[t][i][j]);
       printf("\n"); 
     }
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]){
       temp = ucs->variables[i];
       /* Print a value */
       for(j = 0; j < NIP_CARDINALITY(temp); j++)
-	printf("P(%s=%s) = %f\n", nip_get_symbol(temp),
+	printf("P(%s=%s) = %f\n", nip_variable_symbol(temp),
 	       (temp->state_names)[j], ucs->data[t][i][j]);
       printf("\n"); 
     }
