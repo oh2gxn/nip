@@ -1,6 +1,6 @@
 /* nipstring.h 
  * Author: Janne Toivola, Mikko Korpela
- * Version: $Id: nipstring.h,v 1.1 2010-11-22 15:35:56 jatoivol Exp $
+ * Version: $Id: nipstring.h,v 1.2 2010-11-22 17:16:44 jatoivol Exp $
  */
 
 #ifndef __NIPSTRING_H__
@@ -46,7 +46,7 @@ int nip_count_tokens(const char *s, int *chars, int q_strings,
  * Returns NULL if the string contains less than n words.
  * See the parameters of count_tokens.
  */
-int *nip_tokenise(const char s[], int n, int q_strings,
+int* nip_tokenise(const char s[], int n, int q_strings,
 		  char *separators, int n_separators, int sep_tokens,
 		  int wspace_sep);
 
@@ -54,6 +54,6 @@ int *nip_tokenise(const char s[], int n, int q_strings,
  * Splits string s into n null terminated tokens.
  * - indices: an index array (see tokenise(...))
  */
-char **nip_split(const char s[], int indices[], int n);
+char** nip_split(const char s[], int indices[], int n);
 
 #endif /* __NIPSTRING_H__ */

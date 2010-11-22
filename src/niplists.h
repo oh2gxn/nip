@@ -1,6 +1,6 @@
 /* Various linked list data structures used e.g. in parser
  * Author: Janne Toivola
- * Version: $Id: niplists.h,v 1.1 2010-11-22 15:45:21 jatoivol Exp $
+ * Version: $Id: niplists.h,v 1.2 2010-11-22 17:16:44 jatoivol Exp $
  */
 
 #ifndef __NIPLISTS_H__
@@ -16,33 +16,35 @@
 #define NIP_LIST_ELEMENT(l)  ( (l)->data  )
 
 
-/* List of doubles for parsing potential tables etc. */
+/* Element for linked list of doubles */
 struct nip_double_link_type {
-  double data;
-  struct nip_double_link_type *fwd;
-  struct nip_double_link_type *bwd;
+  double data;                      /* the data */
+  struct nip_double_link_type *fwd; /* next link */
+  struct nip_double_link_type *bwd; /* previous link */
 };
 typedef struct nip_double_link_type nip_double_link_struct;
 typedef nip_double_link_struct *nip_double_link;
 
+/* Linked list of doubles */
 struct nip_double_list_type {
-  int length;
-  nip_double_link first;
-  nip_double_link last;
+  int length;            /* length of the list */
+  nip_double_link first; /* first link */
+  nip_double_link last;  /* last link */
 };
 typedef struct nip_double_list_type nip_double_list_struct;
 typedef nip_double_list_struct *nip_double_list;
 
 
-/* List of strings for parsing state names etc. */
+/* Element for linked list of strings */
 struct nip_string_link_type {
-  char* data;
-  struct nip_string_link_type *fwd;
-  struct nip_string_link_type *bwd;
+  char* data;                       /* The string */
+  struct nip_string_link_type *fwd; /* next link */
+  struct nip_string_link_type *bwd; /* previous link */
 };
 typedef struct nip_string_link_type nip_string_link_struct;
 typedef nip_string_link_struct *nip_string_link;
 
+/* Linked list of strings */
 struct nip_string_list_type {
   int length;
   nip_string_link first;
@@ -52,10 +54,10 @@ typedef struct nip_string_list_type nip_string_list_struct;
 typedef nip_string_list_struct *nip_string_list;
 
 
-/* List of strings for parsing <fieldname> = "<value>" pairs. 
+/* List of strings for parsing <key> = "<value>" pairs. 
  * (NIP_next = "<variable name>" gets handled differently) */
 struct nip_string_pair_link_type {
-  char* name;
+  char* key;
   char* value;
   struct nip_string_pair_link_type *fwd;
   struct nip_string_pair_link_type *bwd;
@@ -84,7 +86,7 @@ nip_string_pair_list nip_new_string_pair_list();
  */
 int nip_append_double(nip_double_list l, double d);
 int nip_append_string(nip_string_list l, char* s);
-int nip_append_string_pair(nip_string_pair_list l, char* name, char* value);
+int nip_append_string_pair(nip_string_pair_list l, char* key, char* value);
 
 
 /* Adds a <T> to the beginning of the list 
@@ -92,7 +94,7 @@ int nip_append_string_pair(nip_string_pair_list l, char* name, char* value);
  */
 int nip_prepend_double(nip_double_list l, double d);
 int nip_prepend_string(nip_string_list l, char*  s);
-int nip_prepend_string_pair(nip_string_pair_list l, char* name, char* value);
+int nip_prepend_string_pair(nip_string_pair_list l, char* key, char* value);
 
 
 /* Creates a <T> array out of the list of <T>. 
@@ -115,8 +117,12 @@ void nip_free_string_list(nip_string_list l);
 void nip_free_string_pair_list(nip_string_pair_list l);
 
 
-/* Some helper functions */
+/* Returns 0 if the given string is not found in the list */
 int nip_string_list_contains(nip_string_list l, char* string);
-char* nip_string_pair_value(nip_string_pair_list l, char* name);
+
+/* Makes a linear search through the list of (key,value) string pairs. 
+ * If a matching key is found, a pointer to the value is returned. 
+ * Otherwise, returns NULL. */
+char* nip_string_pair_list_search(nip_string_pair_list l, char* key);
 
 #endif /* __NIPLISTS_H__ */

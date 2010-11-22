@@ -1,7 +1,7 @@
 /* Functions for using list structures
  * (a C++ implementation would use STL)
  * Author: Janne Toivola
- * Version: $Id: niplists.c,v 1.1 2010-11-22 15:45:21 jatoivol Exp $
+ * Version: $Id: niplists.c,v 1.2 2010-11-22 17:16:44 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -104,11 +104,11 @@ int nip_append_string(nip_string_list l, char* s){
   return NIP_NO_ERROR;
 }
 
-int nip_append_string_pair(nip_string_pair_list l, char* name, char* value){
+int nip_append_string_pair(nip_string_pair_list l, char* key, char* value){
   nip_string_pair_link new = 
     (nip_string_pair_link) malloc(sizeof(nip_string_pair_link_struct));
 
-  if(!l || !name || !value){
+  if(!l || !key || !value){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NIP_ERROR_INVALID_ARGUMENT;
   }
@@ -118,7 +118,7 @@ int nip_append_string_pair(nip_string_pair_list l, char* name, char* value){
     return NIP_ERROR_OUTOFMEMORY;
   }
 
-  new->name = name;
+  new->key = key;
   new->value = value;
   new->fwd = NULL;
   new->bwd = l->last;
@@ -191,11 +191,11 @@ int nip_prepend_string(nip_string_list l, char* s){
   return NIP_NO_ERROR;
 }
 
-int nip_prepend_string_pair(nip_string_pair_list l, char* name, char* value){
+int nip_prepend_string_pair(nip_string_pair_list l, char* key, char* value){
   nip_string_pair_link new = 
     (nip_string_pair_link) malloc(sizeof(nip_string_pair_link_struct));
 
-  if(!l || !name | !value){
+  if(!l || !key | !value){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NIP_ERROR_INVALID_ARGUMENT;
   }
@@ -205,7 +205,7 @@ int nip_prepend_string_pair(nip_string_pair_list l, char* name, char* value){
     return NIP_ERROR_OUTOFMEMORY;
   }
 
-  new->name = name;
+  new->key = key;
   new->value = value;
   new->bwd = NULL;
   new->fwd = l->first;
@@ -362,14 +362,14 @@ void nip_free_string_pair_list(nip_string_pair_list l){
   l->last = NULL;
   while(ln != NULL){
     if(ln->fwd != NULL){
-      free(ln->fwd->name); /* both strings freed */
+      free(ln->fwd->key); /* both strings freed */
       free(ln->fwd->value);
       free(ln->fwd);
     }
     ln = ln->bwd;
   }
   if(l->first != NULL){
-    free(l->first->name);
+    free(l->first->key);
     free(l->first->value);
     free(l->first);
     l->first = NULL;
@@ -399,17 +399,17 @@ int nip_string_list_contains(nip_string_list l, char* string){
   return 0; /* not found */
 }
 
-/* Searches the list for a certain field name and returns the corresponding
+/* Searches the list for a certain key and returns the corresponding
  * value string (or NULL, if not found) */
-char* nip_string_pair_value(nip_string_pair_list l, char* name){
+char* nip_string_pair_list_search(nip_string_pair_list l, char* key){
   nip_string_pair_link s = NULL;
 
-  if(!l || !name)
+  if(!l || !key)
     return NULL;
 
   s = l->first;
   while(s != NULL){
-    if(strcmp(name, s->name) == 0){
+    if(strcmp(key, s->key) == 0){
       return s->value; /* found */
     }
     s = s->fwd;

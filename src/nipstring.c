@@ -1,6 +1,6 @@
 /* nipstring.c 
  * Author: Janne Toivola, Mikko Korpela
- * Version: $Id: nipstring.c,v 1.1 2010-11-22 15:35:56 jatoivol Exp $
+ * Version: $Id: nipstring.c,v 1.2 2010-11-22 17:16:44 jatoivol Exp $
  */
 
 #include <ctype.h>
@@ -81,7 +81,7 @@ int nip_count_tokens(const char *s, int *chars, int q_strings,
 }
 
 
-int *nip_tokenise(const char s[], int n, int q_strings,
+int* nip_tokenise(const char s[], int n, int q_strings,
 		  char *separators, int n_separators,
 		  int sep_tokens, int wspace_sep){
   int *indices;
@@ -197,9 +197,9 @@ int *nip_tokenise(const char s[], int n, int q_strings,
   return indices;
 }
 
-char **nip_split(const char s[], int indices[], int n){
+char** nip_split(const char s[], int indices[], int n){
   int i, j, wordlength, begin, end;
-  char **words = (char **) calloc(n, sizeof(char *));
+  char** words = (char **) calloc(n, sizeof(char *));
 
   /* Couldn't allocate memory */
   if(!words){
