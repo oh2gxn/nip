@@ -1,7 +1,7 @@
 /* Functions for using list structures
  * (a C++ implementation would use STL)
  * Author: Janne Toivola
- * Version: $Id: niplists.c,v 1.2 2010-11-22 17:16:44 jatoivol Exp $
+ * Version: $Id: niplists.c,v 1.3 2010-11-22 17:28:46 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -10,10 +10,6 @@
 #include "niplists.h"
 #include "niperrorhandler.h"
 
-
-/* 
- * new <T>list operations 
- */
 
 nip_double_list nip_new_double_list(){
   nip_double_list dl = 
@@ -25,6 +21,7 @@ nip_double_list nip_new_double_list(){
   return dl;
 }
 
+
 nip_string_list nip_new_string_list(){
   nip_string_list sl = 
     (nip_string_list) malloc(sizeof(nip_string_list_struct));
@@ -34,6 +31,7 @@ nip_string_list nip_new_string_list(){
   sl->last   = NULL;
   return sl;
 }
+
 
 nip_string_pair_list nip_new_string_pair_list(){
   nip_string_pair_list sl = 
@@ -45,10 +43,6 @@ nip_string_pair_list nip_new_string_pair_list(){
   return sl;
 }
 
-
-/*
- * append_<T> operations
- */
 
 int nip_append_double(nip_double_list l, double d){
   nip_double_link new = 
@@ -77,6 +71,7 @@ int nip_append_double(nip_double_list l, double d){
   return NIP_NO_ERROR;
 }
 
+
 int nip_append_string(nip_string_list l, char* s){
   nip_string_link new = 
     (nip_string_link) malloc(sizeof(nip_string_link_struct));
@@ -103,6 +98,7 @@ int nip_append_string(nip_string_list l, char* s){
   l->length++;
   return NIP_NO_ERROR;
 }
+
 
 int nip_append_string_pair(nip_string_pair_list l, char* key, char* value){
   nip_string_pair_link new = 
@@ -133,10 +129,6 @@ int nip_append_string_pair(nip_string_pair_list l, char* key, char* value){
 }
 
 
-/*
- * prepend_<T> operations
- */
-
 int nip_prepend_double(nip_double_list l, double d){
   nip_double_link new = 
     (nip_double_link) malloc(sizeof(nip_double_link_struct));
@@ -164,6 +156,7 @@ int nip_prepend_double(nip_double_list l, double d){
   return NIP_NO_ERROR;
 }
 
+
 int nip_prepend_string(nip_string_list l, char* s){
   nip_string_link new = 
     (nip_string_link) malloc(sizeof(nip_string_link_struct));
@@ -190,6 +183,7 @@ int nip_prepend_string(nip_string_list l, char* s){
   l->length++;
   return NIP_NO_ERROR;
 }
+
 
 int nip_prepend_string_pair(nip_string_pair_list l, char* key, char* value){
   nip_string_pair_link new = 
@@ -220,11 +214,6 @@ int nip_prepend_string_pair(nip_string_pair_list l, char* key, char* value){
 }
 
 
-
-/*
- * list_to_<T>_array conversions
- */
-
 double* nip_double_list_to_array(nip_double_list l){
   int i;
   nip_double_link ln;
@@ -252,6 +241,7 @@ double* nip_double_list_to_array(nip_double_list l){
   return new;
 }
 
+
 char** nip_string_list_to_array(nip_string_list l){
   int i;
   nip_string_link ln;
@@ -273,16 +263,12 @@ char** nip_string_list_to_array(nip_string_list l){
 
   ln = l->first;
   for(i = 0; i < l->length; i++){
-    new[i] = ln->data; /* the pointer is copied here */
+    new[i] = ln->data; /* the pointer is copied here! */
     ln = ln->fwd;
   }
   return new;
 }
 
-
-/*
- * empty_<T>list operations... don't free the dynamically allocated contents
- */
 
 void nip_empty_double_list(nip_double_list l){
   nip_double_link ln;
@@ -302,6 +288,7 @@ void nip_empty_double_list(nip_double_list l){
   l->length = 0;
   return;
 }
+
 
 void nip_empty_string_list(nip_string_list l){
   nip_string_link ln;
@@ -351,6 +338,7 @@ void nip_free_string_list(nip_string_list l){
   return;
 }
 
+
 void nip_free_string_pair_list(nip_string_pair_list l){
   nip_string_pair_link ln;
 
@@ -382,7 +370,6 @@ void nip_free_string_pair_list(nip_string_pair_list l){
 }
 
 
-/* Checks if the given string is in the list */
 int nip_string_list_contains(nip_string_list l, char* string){
   nip_string_link s = NULL;
 
@@ -398,6 +385,7 @@ int nip_string_list_contains(nip_string_list l, char* string){
   }
   return 0; /* not found */
 }
+
 
 /* Searches the list for a certain key and returns the corresponding
  * value string (or NULL, if not found) */
