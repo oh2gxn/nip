@@ -1,17 +1,18 @@
-/* fileio.h $Id: fileio.h,v 1.13 2008-12-20 12:59:53 jatoivol Exp $
+/* nipstring.h 
+ * Author: Janne Toivola, Mikko Korpela
+ * Version: $Id: nipstring.h,v 1.1 2010-11-22 15:35:56 jatoivol Exp $
  */
 
-#ifndef __FILEIO_H__
+#ifndef __NIPSTRING_H__
 
-#define __FILEIO_H__
-#define LINELENGTH 10000
+#define __NIPSTRING_H__
 
 /*
  * Counts the number of words in string s. Words are separated by white space.
  * String s must be null terminated. If chars is not a null pointer,
  * the number of characters in the string is placed there.
  */
-int count_words(const char *s, int *chars);
+int nip_count_words(const char *s, int *chars);
 
 /*
  * Counts the number of tokens in a null terminated string.
@@ -33,9 +34,9 @@ int count_words(const char *s, int *chars);
  *     if != 0, whitespace is a separator of tokens,
  *     but is not considered a token itself
  */
-int count_tokens(const char *s, int *chars, int q_strings,
-		 char *separators, int n_separators, int sep_tokens,
-		 int wspace_sep);
+int nip_count_tokens(const char *s, int *chars, int q_strings,
+		     char *separators, int n_separators, int sep_tokens,
+		     int wspace_sep);
 
 /*
  * Extracts n first words or tokens of string s. Returns an array of indices
@@ -45,14 +46,14 @@ int count_tokens(const char *s, int *chars, int q_strings,
  * Returns NULL if the string contains less than n words.
  * See the parameters of count_tokens.
  */
-int *tokenise(const char s[], int n, int q_strings,
-	      char *separators, int n_separators, int sep_tokens,
-	      int wspace_sep);
+int *nip_tokenise(const char s[], int n, int q_strings,
+		  char *separators, int n_separators, int sep_tokens,
+		  int wspace_sep);
 
 /*
  * Splits string s into n null terminated tokens.
  * - indices: an index array (see tokenise(...))
  */
-char **split(const char s[], int indices[], int n);
+char **nip_split(const char s[], int indices[], int n);
 
-#endif /* __FILEIO_H__ */
+#endif /* __NIPSTRING_H__ */

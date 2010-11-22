@@ -1,6 +1,6 @@
 /* nipvariable.h 
  * Author: Janne Toivola
- * $Id: nipvariable.h,v 1.2 2010-11-11 16:38:07 jatoivol Exp $
+ * $Id: nipvariable.h,v 1.3 2010-11-22 15:35:56 jatoivol Exp $
  */
 
 #ifndef __NIPVARIABLE_H__
@@ -158,12 +158,12 @@ char* nip_variable_symbol(nip_variable v);
  * - state: the value represented as a string
  * Returns the index in [0 ... <cardinality-1>] or -1 if the 
  * variable doesn't have such a state. */
-int nip_get_state_index(nip_variable v, char *state);
+int nip_variable_state_index(nip_variable v, char *state);
 
 
 /* The reciprocal of the function above... 
  */
-char* nip_get_state_name(nip_variable v, int index);
+char* nip_variable_state_name(nip_variable v, int index);
 
 
 /* Method for searching a variable from an array according to the symbol. 
@@ -191,11 +191,11 @@ int nip_number_of_parents(nip_variable v);
 
 
 /* Sets the position for GUI (a.k.a node position in Hugin NET file) */
-void nip_set_position(nip_variable v, int x, int y);
+void nip_set_variable_position(nip_variable v, int x, int y);
 
 
 /* Gets you the position for GUI (a.k.a node position in Hugin NET file) */
-void nip_get_position(nip_variable v, int* x, int* y);
+void nip_get_variable_position(nip_variable v, int* x, int* y);
 
 
 /* Sets the parents for a variable. The variable references to the parents 

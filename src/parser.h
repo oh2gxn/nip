@@ -4,7 +4,7 @@
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: parser.h,v 1.55 2010-11-09 19:06:08 jatoivol Exp $
+ * $Id: parser.h,v 1.56 2010-11-22 15:35:56 jatoivol Exp $
  */
 
 #ifndef __PARSER_H__
@@ -19,7 +19,7 @@
 
 /* there are some reasons to include stuff here (lack of huginnet.h...) */
 #include "nipvariable.h"
-#include "lists.h"
+#include "niplists.h"
 #include <stdio.h>
 
 

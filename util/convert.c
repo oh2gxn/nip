@@ -107,7 +107,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
   for(i = 0; i < NIP_CARDINALITY(v); i++){
     if(i > 0)
       fprintf(f, "%c", FIELD_SEPARATOR);
-    fprintf(f, "%s", nip_get_state_name(v, i));
+    fprintf(f, "%s", nip_variable_state_name(v, i));
   }
   fputs("\n", f);
 

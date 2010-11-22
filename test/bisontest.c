@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "parser.h"
 #include "clique.h"
+#include "niplists.h"
 #include "nipvariable.h"
 #include "potential.h"
 #include "niperrorhandler.h"
@@ -193,7 +194,7 @@ int main(int argc, char *argv[]){
   nip_num_of_cliques = get_cliques(&nip_cliques);
   var_list = get_parsed_variables();
   it = var_list->first;
-  nvars = LIST_LENGTH(var_list);
+  nvars = NIP_LIST_LENGTH(var_list);
   vars = (nip_variable*) calloc(nvars, sizeof(nip_variable));
   
   for(i = 0; i < nvars; i++)

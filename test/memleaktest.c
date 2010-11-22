@@ -6,7 +6,7 @@
 #include "Graph.h"
 #include "nipvariable.h"
 #include "potential.h"
-#include "lists.h"
+#include "niplists.h"
 #include "parser.h"
 #include "nip.h"
 

@@ -25,7 +25,7 @@
 #include <float.h>
 #include <math.h>
 #include "nip.h"
-#include "lists.h"
+#include "niplists.h"
 #include "nipvariable.h"
 
 int main(int argc, char *argv[]) {
@@ -37,8 +37,8 @@ int main(int argc, char *argv[]) {
   double threshold = 0;
   double min_log_likelihood = 0;
   double last = 0;
-  doublelist learning_curve = NULL;
-  doublelink link = NULL;
+  nip_double_list learning_curve = NULL;
+  nip_double_link link = NULL;
   char* tailptr = NULL;
   long seed;
 
@@ -114,15 +114,15 @@ int main(int argc, char *argv[]) {
   for(i = 0; i < model->num_of_vars; i++)
     nip_mark_variable(model->variables[i]); /* Make sure all the data is used */
 
-  learning_curve = make_doublelist();
+  learning_curve = nip_new_double_list();
   t = 0;
   do{
     t++;
     last = 0; /* init */
 
     /* free the list if necessary */
-    if(LIST_LENGTH(learning_curve) > 0){
-      empty_doublelist(learning_curve);
+    if(NIP_LIST_LENGTH(learning_curve) > 0){
+      nip_empty_double_list(learning_curve);
     }
 
     /* EM algorithm */
@@ -135,13 +135,13 @@ int main(int argc, char *argv[]) {
 	free_timeseries(ts_set[i]);
       free(ts_set);
       free_model(model);
-      empty_doublelist(learning_curve);
+      nip_empty_double_list(learning_curve);
       free(learning_curve);
       return -1;
     }
 
     /* find out the last value in learning curve */
-    if(LIST_LENGTH(learning_curve) == 0){
+    if(NIP_LIST_LENGTH(learning_curve) == 0){
       printf("Run %d failed 0.0  with 0 iterations, delta = 0.0 \n", t);
     }
     else{
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
   if(i != NIP_NO_ERROR){
     fprintf(stderr, "Failed to write the model into %s\n", argv[5]);
     nip_report_error(__FILE__, __LINE__, i, 1);
-    empty_doublelist(learning_curve);
+    nip_empty_double_list(learning_curve);
     free(learning_curve);
     for(i = 0; i < n; i++)
       free_timeseries(ts_set[i]);
@@ -198,7 +198,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  empty_doublelist(learning_curve);
+  nip_empty_double_list(learning_curve);
   free(learning_curve);
   for(i = 0; i < n; i++)
     free_timeseries(ts_set[i]);

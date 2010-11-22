@@ -1,6 +1,7 @@
-/* Functions for the bison parser.
+/* Some helper functions for the Bison parser.
  * Also contains other functions for handling different files.
- * $Id: parser.c,v 1.120 2010-11-09 19:06:08 jatoivol Exp $
+ * Author: Janne Toivola
+ * Version: $Id: parser.c,v 1.121 2010-11-22 15:35:56 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -8,8 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "parser.h"
-#include "lists.h"
-#include "fileio.h"
+#include "niplists.h"
+#include "nipstring.h"
 #include "niperrorhandler.h"
 
 /* #define DEBUG_PARSER */
@@ -35,7 +36,7 @@ datafile *open_datafile(char *filename, char separator,
   int dividend;
   int i, j, state;
   int empty_lines_read = 0;
-  stringlist *statenames = NULL;
+  nip_string_list *statenames = NULL;
   datafile *f = NULL;
 
   f = (datafile *) malloc(sizeof(datafile));
@@ -100,7 +101,8 @@ datafile *open_datafile(char *filename, char separator,
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
       /* treat the white space as separators */
-      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 1);
+      num_of_tokens = nip_count_tokens(last_line, NULL, 0, 
+				       &separator, 1, 0, 1);
       (f->line_now)++;
 
       /* JJT  1.9.2004: A sort of bug fix. Ignore empty lines */
@@ -147,11 +149,12 @@ datafile *open_datafile(char *filename, char separator,
 
     while(fgets(last_line, MAX_LINELENGTH, f->file)){
       /* treat the white space as separators */
-      num_of_tokens = count_tokens(last_line, NULL, 0, &separator, 1, 0, 1);
+      num_of_tokens = nip_count_tokens(last_line, NULL, 0, 
+				       &separator, 1, 0, 1);
 
       if(num_of_tokens > 0){
 	token_bounds =
-	  tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 1);
+	  nip_tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 1);
 	if(!token_bounds){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	  close_datafile(f);
@@ -194,7 +197,8 @@ datafile *open_datafile(char *filename, char separator,
 	  return NULL;
 	}
 
-	statenames = (stringlist *) calloc(num_of_tokens, sizeof(stringlist));
+	statenames = 
+	  (nip_string_list *) calloc(num_of_tokens, sizeof(nip_string_list));
 
 	if(!statenames){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
@@ -204,7 +208,7 @@ datafile *open_datafile(char *filename, char separator,
 	}
 
 	for(i = 0; i < f->num_of_nodes; i++)
-	  statenames[i] = make_stringlist();
+	  statenames[i] = nip_new_string_list();
 
 	f->num_of_states = (int *) calloc(num_of_tokens, sizeof(int));
 
@@ -302,13 +306,13 @@ datafile *open_datafile(char *filename, char separator,
 
 	  /* If the string has not yet been observed, add it to a list 
 	   * (ownership is passed on, string is not freed here) */
-	  if(!(stringlist_contains(statenames[i], token) ||
+	  if(!(nip_string_list_contains(statenames[i], token) ||
 	       nullobservation(token))){
-	    if(prepend_string(statenames[i], token) != NIP_NO_ERROR){
+	    if(nip_prepend_string(statenames[i], token) != NIP_NO_ERROR){
 	      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	      close_datafile(f);
 	      for(i = 0; i < f->num_of_nodes; i++)
-		free_stringlist(statenames[i]);
+		nip_free_string_list(statenames[i]);
 	      free(statenames);
 	      free(token_bounds);
 	      free(token);
@@ -322,18 +326,18 @@ datafile *open_datafile(char *filename, char separator,
 
     /* Count number of states in each variable. */
     for(i = 0; i < f->num_of_nodes; i++){
-      f->num_of_states[i] = LIST_LENGTH(statenames[i]);
+      f->num_of_states[i] = NIP_LIST_LENGTH(statenames[i]);
     }
 
     for(i = 0; i < f->num_of_nodes; i++){
-      f->node_states[i] = list_to_string_array(statenames[i]);
+      f->node_states[i] = nip_string_list_to_array(statenames[i]);
     }
   }
 
   /* JJT: Added 13.8.2004 because of possible memory leaks. 
    * JJT: Updated 5.1.2007 with the new stringlist implementation */
   for(i = 0; i < f->num_of_nodes; i++){
-    empty_stringlist(statenames[i]);
+    nip_empty_string_list(statenames[i]);
   }
   free(statenames);
 
@@ -438,7 +442,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
       f->line_now++;
     
     /* treat the white space as separators */
-    num_of_tokens = count_tokens(line, NULL, 0, &separator, 1, 0, 1);
+    num_of_tokens = nip_count_tokens(line, NULL, 0, &separator, 1, 0, 1);
     
     /* Skip the first line if it contains node labels. */
     if((f->line_now == f->label_line)  &&  f->firstline_labels)
@@ -450,7 +454,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
     return 0;
 
   /* treat the white space as separators */
-  token_bounds = tokenise(line, num_of_tokens, 0, &separator, 1, 0, 1);
+  token_bounds = nip_tokenise(line, num_of_tokens, 0, &separator, 1, 0, 1);
   
   if(!token_bounds){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
@@ -559,7 +563,7 @@ char *next_token(int *token_length, FILE *f){
       return NULL;
     }
     /* How many tokens in the line? */
-    tokens_left = count_tokens(last_line, NULL, 1, "(){}=,;", 7, 1, 1);
+    tokens_left = nip_count_tokens(last_line, NULL, 1, "(){}=,;", 7, 1, 1);
 
     /* Check whether the line has any tokens. If not, read a new line
      * (go to beginning of loop) */
@@ -571,7 +575,7 @@ char *next_token(int *token_length, FILE *f){
 	indexarray_original = NULL;
       }
 
-      indexarray = tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1, 1);
+      indexarray = nip_tokenise(last_line, tokens_left, 1, "(){}=,;", 7, 1, 1);
       indexarray_original = indexarray;
 
       /* Check if tokenise failed. If it failed, we have no other option

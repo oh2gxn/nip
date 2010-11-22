@@ -28,7 +28,6 @@
 #include <float.h>
 #include <math.h>
 #include "nip.h"
-#include "lists.h"
 #include "nipvariable.h"
 
 int main(int argc, char *argv[]) {

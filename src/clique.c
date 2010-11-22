@@ -1,4 +1,4 @@
-/* clique.c $Id: clique.c,v 1.34 2010-11-11 16:38:07 jatoivol Exp $
+/* clique.c $Id: clique.c,v 1.35 2010-11-22 15:35:56 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -932,7 +932,7 @@ int global_retraction(nip_variable* vars, int nvars, clique* cliques,
 
 int enter_observation(nip_variable* vars, int nvars, clique* cliques, 
 		      int ncliques, nip_variable v, char *state){
-  int index = nip_get_state_index(v, state);
+  int index = nip_variable_state_index(v, state);
   if(index < 0)
     return NIP_NO_ERROR;
   return enter_i_observation(vars, nvars, cliques, ncliques, v, index);

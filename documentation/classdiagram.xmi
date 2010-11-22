@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<XMI verified="false" xmi.version="1.2" timestamp="2010-11-11T18:21:18" xmlns:UML="http://schema.omg.org/spec/UML/1.3" >
+<XMI verified="false" xmi.version="1.2" timestamp="2010-11-22T15:54:38" xmlns:UML="http://schema.omg.org/spec/UML/1.3" >
  <XMI.header>
   <XMI.documentation>
    <XMI.exporter>umbrello uml modeller http://uml.sf.net</XMI.exporter>
@@ -127,27 +127,27 @@
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="DVsafZ3CsdYj" type="lFJTRtIs5Sp4" value="" name="v" />
            </UML:BehavioralFeature.parameter>
           </UML:Operation>
-          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="7rdNspCqWGFj" name="get_symbol" >
+          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="7rdNspCqWGFj" name="variable_symbol" >
            <UML:BehavioralFeature.parameter>
             <UML:Parameter kind="return" xmi.id="rRn3fTr4JSXu" type="ofpMBfFQFPzl" />
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="zIz2Spd0WgCA" type="lFJTRtIs5Sp4" value="" name="v" />
            </UML:BehavioralFeature.parameter>
           </UML:Operation>
-          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="n8uaIk5ZxmOB" name="get_state_index" >
+          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="n8uaIk5ZxmOB" name="variable_state_index" >
            <UML:BehavioralFeature.parameter>
             <UML:Parameter kind="return" xmi.id="9s69xLfyNa9I" type="WPl7YPwYB6Y1" />
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="aWPZoMZEBCEh" type="lFJTRtIs5Sp4" value="" name="v" />
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="qRqbTdjNCz5H" type="ofpMBfFQFPzl" value="" name="state" />
            </UML:BehavioralFeature.parameter>
           </UML:Operation>
-          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="5N560Yy5rOcl" name="get_state_name" >
+          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="5N560Yy5rOcl" name="variable_state_name" >
            <UML:BehavioralFeature.parameter>
             <UML:Parameter kind="return" xmi.id="OVarLHGScaxW" type="ofpMBfFQFPzl" />
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="qhQ9MMWwWmMP" type="lFJTRtIs5Sp4" value="" name="v" />
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="T2aNLdkOijwe" type="WPl7YPwYB6Y1" value="" name="index" />
            </UML:BehavioralFeature.parameter>
           </UML:Operation>
-          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="4jtTDt2aCdJb" name="get_variable" >
+          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="4jtTDt2aCdJb" name="search_variable_array" >
            <UML:BehavioralFeature.parameter>
             <UML:Parameter kind="return" xmi.id="IkWsM8D4fG56" type="lFJTRtIs5Sp4" />
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="0Ama05qGXQoU" type="9R9Rgl5sqDGA" value="" name="vars" />
@@ -173,14 +173,14 @@
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="Me8biCsOj95r" type="lFJTRtIs5Sp4" value="" name="v" />
            </UML:BehavioralFeature.parameter>
           </UML:Operation>
-          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="bDPewgfQUzep" name="set_position" >
+          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="bDPewgfQUzep" name="set_variable_position" >
            <UML:BehavioralFeature.parameter>
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="rO6ZZyxG507U" type="lFJTRtIs5Sp4" value="" name="v" />
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="nDkMO90IoeiG" type="WPl7YPwYB6Y1" value="" name="x" />
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="dM5nYJIPgOyF" type="WPl7YPwYB6Y1" value="" name="y" />
            </UML:BehavioralFeature.parameter>
           </UML:Operation>
-          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="tIE0SVmMPZQ2" name="get_position" >
+          <UML:Operation visibility="public" isSpecification="false" isQuery="false" isAbstract="false" isLeaf="false" ownerScope="classifier" isRoot="false" xmi.id="tIE0SVmMPZQ2" name="get_variable_position" >
            <UML:BehavioralFeature.parameter>
             <UML:Parameter visibility="private" isSpecification="false" xmi.id="5YSoJQhQlMAO" type="lFJTRtIs5Sp4" value="" name="v" />
             <UML:Parameter visibility="private" isSpecification="false" kind="out" xmi.id="FPADpf0B4Xb4" type="WPl7YPwYB6Y1" value="" name="x" />
@@ -255,43 +255,55 @@
        </UML:Namespace.ownedElement>
       </UML:Package>
       <UML:Class visibility="public" isSpecification="false" namespace="Logical View" isAbstract="false" isLeaf="false" isRoot="false" xmi.id="zcSDkcqYW63G" name="void" />
+      <UML:Association visibility="public" isSpecification="false" namespace="Logical View" xmi.id="AjTkQ6moAmR6" name="" >
+       <UML:Association.connection>
+        <UML:AssociationEnd changeability="changeable" visibility="public" isNavigable="true" isSpecification="false" xmi.id="ANlu5gLMtKSE" type="lFJTRtIs5Sp4" name="" aggregation="aggregate" />
+        <UML:AssociationEnd changeability="changeable" visibility="public" isNavigable="true" isSpecification="false" xmi.id="TcKHspc2Y6kx" type="lFJTRtIs5Sp4" name="" aggregation="none" />
+       </UML:Association.connection>
+      </UML:Association>
+      <UML:Association visibility="public" isSpecification="false" namespace="Logical View" xmi.id="7UUmgbqhpP6I" name="" >
+       <UML:Association.connection>
+        <UML:AssociationEnd changeability="changeable" visibility="public" isNavigable="true" isSpecification="false" xmi.id="DKtzBQkYuH5T" type="lFJTRtIs5Sp4" name="" aggregation="aggregate" />
+        <UML:AssociationEnd changeability="changeable" visibility="public" isNavigable="true" isSpecification="false" xmi.id="YJhqOqvTIPGy" type="lFJTRtIs5Sp4" name="" aggregation="none" />
+       </UML:Association.connection>
+      </UML:Association>
      </UML:Namespace.ownedElement>
      <XMI.extension xmi.extender="umbrello" >
       <diagrams>
-       <diagram showopsig="1" linecolor="#ff0000" snapx="10" showattribassocs="1" snapy="10" linewidth="0" showattsig="1" showpubliconly="1" showpackage="1" showstereotype="1" name="class diagram" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" canvasheight="1010" canvaswidth="1194" localid="" snapcsgrid="0" showgrid="0" showops="1" usefillcolor="1" fillcolor="#ffff00" zoom="100" xmi.id="mA0sS038m7mz" documentation="" showscope="1" snapgrid="0" showatts="1" type="1" >
+       <diagram showopsig="1" linecolor="#ff0000" snapx="10" showattribassocs="1" snapy="10" linewidth="0" showattsig="1" showpubliconly="1" showpackage="1" showstereotype="1" name="class diagram" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" canvasheight="979" canvaswidth="1194" localid="" snapcsgrid="0" showgrid="0" showops="1" usefillcolor="1" fillcolor="#ffff00" zoom="100" xmi.id="mA0sS038m7mz" documentation="" showscope="1" snapgrid="0" showatts="1" type="1" >
         <widgets>
-         <classwidget linecolor="#ff0000" usesdiagramfillcolor="0" linewidth="none" showoperations="1" usesdiagramusefillcolor="0" showpubliconly="1" showpackage="1" x="190" showattsigs="601" showstereotype="1" y="250" showattributes="1" font="DejaVu Sans,8,-1,5,75,0,0,0,0,0" width="574" isinstance="0" usefillcolor="1" fillcolor="#ffff00" xmi.id="lFJTRtIs5Sp4" showscope="1" height="756" showopsigs="601" />
+         <classwidget linecolor="#ff0000" usesdiagramfillcolor="0" linewidth="none" showoperations="1" usesdiagramusefillcolor="0" showpubliconly="1" showpackage="1" x="203" showattsigs="601" showstereotype="1" y="219" showattributes="1" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" width="574" isinstance="0" usefillcolor="1" fillcolor="#ffff00" xmi.id="lFJTRtIs5Sp4" showscope="1" height="756" showopsigs="601" />
          <classwidget linecolor="none" usesdiagramfillcolor="1" linewidth="none" showoperations="1" usesdiagramusefillcolor="1" showpubliconly="1" showpackage="1" x="853" showattsigs="601" showstereotype="1" y="318" showattributes="1" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" width="66" isinstance="0" usefillcolor="1" fillcolor="none" xmi.id="HQr0EUoYfTo4" showscope="1" height="28" showopsigs="601" />
         </widgets>
         <messages/>
         <associations>
-         <assocwidget indexa="1" indexb="2" visibilityA="0" widgetaid="lFJTRtIs5Sp4" visibilityB="0" linecolor="none" changeabilityA="900" totalcounta="2" xmi.id="ZaRWg7tuH1AV" changeabilityB="900" widgetbid="lFJTRtIs5Sp4" totalcountb="3" type="510" linewidth="none" >
+         <assocwidget indexa="2" indexb="1" visibilityA="0" widgetaid="lFJTRtIs5Sp4" visibilityB="0" linecolor="none" changeabilityA="900" totalcounta="3" xmi.id="ZaRWg7tuH1AV" changeabilityB="900" widgetbid="lFJTRtIs5Sp4" totalcountb="2" type="510" linewidth="none" >
           <linepath>
-           <startpoint startx="333" starty="250" />
-           <endpoint endx="620" endy="250" />
-           <point x="365" y="180" />
-           <point x="619" y="181" />
+           <startpoint startx="203" starty="408" />
+           <endpoint endx="203" endy="786" />
+           <point x="136" y="408" />
+           <point x="136" y="786" />
           </linepath>
-          <floatingtext linecolor="none" usesdiagramfillcolor="1" linewidth="none" usesdiagramusefillcolor="1" x="627" showstereotype="1" y="193" text="previous" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" pretext="+" role="710" width="66" isinstance="0" posttext="" usefillcolor="1" fillcolor="none" xmi.id="2yDdIqrtVI11" height="18" />
+          <floatingtext linecolor="none" usesdiagramfillcolor="1" linewidth="none" usesdiagramusefillcolor="1" x="135" showstereotype="1" y="789" text="previous" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" pretext="+" role="710" width="66" isinstance="0" posttext="" usefillcolor="1" fillcolor="none" xmi.id="IkevBVHwEMiQ" height="18" />
          </assocwidget>
-         <assocwidget indexa="2" indexb="2" visibilityA="0" widgetaid="lFJTRtIs5Sp4" visibilityB="0" linecolor="none" changeabilityA="900" totalcounta="3" xmi.id="zWZCCo0OkF6C" changeabilityB="900" widgetbid="lFJTRtIs5Sp4" totalcountb="3" type="510" linewidth="none" >
+         <assocwidget indexa="3" indexb="1" visibilityA="0" widgetaid="lFJTRtIs5Sp4" visibilityB="0" linecolor="none" changeabilityA="900" totalcounta="4" xmi.id="zWZCCo0OkF6C" changeabilityB="900" widgetbid="lFJTRtIs5Sp4" totalcountb="2" type="510" linewidth="none" >
           <linepath>
-           <startpoint startx="333" starty="250" />
-           <endpoint endx="620" endy="250" />
-           <point x="247" y="200" />
-           <point x="532" y="208" />
+           <startpoint startx="777" starty="408" />
+           <endpoint endx="777" endy="786" />
+           <point x="845" y="408" />
+           <point x="845" y="786" />
           </linepath>
-          <floatingtext linecolor="none" usesdiagramfillcolor="1" linewidth="none" usesdiagramusefillcolor="1" x="516" showstereotype="1" y="223" text="next" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" pretext="+" role="710" width="42" isinstance="0" posttext="" usefillcolor="1" fillcolor="none" xmi.id="WHI2edjlZP4T" height="18" />
+          <floatingtext linecolor="none" usesdiagramfillcolor="1" linewidth="none" usesdiagramusefillcolor="1" x="788" showstereotype="1" y="788" text="next" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" pretext="+" role="710" width="42" isinstance="0" posttext="" usefillcolor="1" fillcolor="none" xmi.id="aDIKOhaOPPaU" height="18" />
          </assocwidget>
-         <assocwidget indexa="0" indexb="0" visibilityA="0" widgetaid="lFJTRtIs5Sp4" visibilityB="0" linecolor="none" changeabilityA="900" totalcounta="0" xmi.id="cksXyOokk6Bd" changeabilityB="900" widgetbid="lFJTRtIs5Sp4" totalcountb="0" type="501" linewidth="none" >
+         <assocwidget indexa="4" indexb="0" visibilityA="0" widgetaid="lFJTRtIs5Sp4" visibilityB="0" linecolor="none" changeabilityA="900" totalcounta="5" xmi.id="cksXyOokk6Bd" changeabilityB="900" widgetbid="lFJTRtIs5Sp4" totalcountb="0" type="501" linewidth="none" >
           <linepath>
-           <startpoint startx="333" starty="250" />
-           <endpoint endx="620" endy="250" />
-           <point x="333" y="200" />
-           <point x="620" y="200" />
+           <startpoint startx="346" starty="219" />
+           <endpoint endx="633" endy="219" />
+           <point x="346" y="169" />
+           <point x="633" y="169" />
           </linepath>
-          <floatingtext linecolor="none" usesdiagramfillcolor="1" linewidth="none" usesdiagramusefillcolor="1" x="622" showstereotype="1" y="230" text="0..1" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" pretext="" role="702" width="30" isinstance="0" posttext="" usefillcolor="1" fillcolor="none" xmi.id="B0eHEm1sARJy" height="18" />
-          <floatingtext linecolor="none" usesdiagramfillcolor="1" linewidth="none" usesdiagramusefillcolor="1" x="567" showstereotype="1" y="230" text="parents" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" pretext="+" role="710" width="60" isinstance="0" posttext="" usefillcolor="1" fillcolor="none" xmi.id="Zy2MQsIbsut5" height="18" />
+          <floatingtext linecolor="none" usesdiagramfillcolor="1" linewidth="none" usesdiagramusefillcolor="1" x="640" showstereotype="1" y="177" text="0..1" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" pretext="" role="702" width="30" isinstance="0" posttext="" usefillcolor="1" fillcolor="none" xmi.id="kytwKZLuldC7" height="18" />
+          <floatingtext linecolor="none" usesdiagramfillcolor="1" linewidth="none" usesdiagramusefillcolor="1" x="566" showstereotype="1" y="176" text="parents" font="DejaVu Sans,8,-1,5,50,0,0,0,0,0" pretext="+" role="710" width="60" isinstance="0" posttext="" usefillcolor="1" fillcolor="none" xmi.id="X9wHX6dnoFgz" height="18" />
          </assocwidget>
         </associations>
        </diagram>
@@ -314,7 +326,7 @@
   </UML:Model>
  </XMI.content>
  <XMI.extensions xmi.extender="umbrello" >
-  <docsettings viewid="mA0sS038m7mz" uniqueid="Zy2MQsIbsut5" documentation="" />
+  <docsettings viewid="mA0sS038m7mz" uniqueid="YnIe1Q4UxlCX" documentation="" />
   <listview>
    <listitem open="1" type="800" label="Views" >
     <listitem open="1" type="801" id="Logical View" >

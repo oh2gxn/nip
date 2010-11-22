@@ -1,10 +1,10 @@
-/* iotest.c $Id: iotest.c,v 1.6 2008-12-20 13:05:24 jatoivol Exp $
+/* iotest.c $Id: iotest.c,v 1.7 2010-11-22 15:35:56 jatoivol Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "fileio.h"
+#include "nipstring.h"
 
 #define PRINTWORDS 20
 #define BUF_SIZE 10000
@@ -37,9 +37,9 @@ int main(int argc, char **argv){
     printf("%s\n", s);
 
 #if defined(TOKENS)
-    wordtemp = count_tokens(s, &chartemp, 1, "(){}=,;", 7, 1, 1);
+    wordtemp = nip_count_tokens(s, &chartemp, 1, "(){}=,;", 7, 1, 1);
 #else
-    wordtemp = count_words(s, &chartemp);
+    wordtemp = nip_count_words(s, &chartemp);
 #endif
 
     if(wordtemp == 0)
@@ -47,13 +47,13 @@ int main(int argc, char **argv){
 
     if(!only_count){
 #if defined(TOKENS)
-      wordbounds = tokenise(s, wordtemp, 1, "(){}=,;", 7, 1, 1);
+      wordbounds = nip_tokenise(s, wordtemp, 1, "(){}=,;", 7, 1, 1);
 #else
-      wordbounds = tokenise(s, wordtemp, 0, NULL, 0, 0, 1);
+      wordbounds = nip_tokenise(s, wordtemp, 0, NULL, 0, 0, 1);
 #endif
 
       if(words < PRINTWORDS){
-	wordarray = split(s, wordbounds, wordtemp);
+	wordarray = nip_split(s, wordbounds, wordtemp);
 	for(i = 0; i < wordtemp; i++){
 	  if(words < PRINTWORDS)
 	    splitwords[words] = wordarray[i];

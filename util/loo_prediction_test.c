@@ -20,6 +20,7 @@
 #include <string.h>
 #include "parser.h"
 #include "clique.h"
+#include "niplists.h"
 #include "nipvariable.h"
 #include "potential.h"
 #include "niperrorhandler.h"
@@ -48,8 +49,8 @@ int main(int argc, char *argv[]){
   time_series *loo_set = NULL; /* just a bunch of temporary pointers */
   uncertain_series *ucs_set = NULL;
 
-  doublelist learning_curve = NULL;
-  doublelink link = NULL;
+  nip_double_list learning_curve = NULL;
+  nip_double_link link = NULL;
 
   /*****************************************/
   /* Parse the model from a Hugin NET file */
@@ -141,7 +142,7 @@ int main(int argc, char *argv[]){
   loglikelihood = 0; /* init */
   seed = random_seed(NULL);
   printf("  Random seed = %ld\n", seed);
-  learning_curve = make_doublelist();
+  learning_curve = nip_new_double_list();
 
   for(i = 0; i < n_max; i++){
 
@@ -162,8 +163,8 @@ int main(int argc, char *argv[]){
       last = 0; /* init */
 
       /* free the list if necessary */
-      if(LIST_LENGTH(learning_curve) > 0)
-	empty_doublelist(learning_curve);
+      if(NIP_LIST_LENGTH(learning_curve) > 0)
+	nip_empty_double_list(learning_curve);
       
       /* the EM algorithm */
       e = em_learn(loo_set, n_max-1, threshold, learning_curve);
@@ -176,19 +177,19 @@ int main(int argc, char *argv[]){
 	free(ucs_set);
 	free(loo_set);
 	free_model(model);
-	empty_doublelist(learning_curve);
+	nip_empty_double_list(learning_curve);
 	free(learning_curve);
 	return -1;
       }
       
       /* find out the last value in learning curve */
-      if(LIST_LENGTH(learning_curve) > 0){
+      if(NIP_LIST_LENGTH(learning_curve) > 0){
 
 	/* Hack hack. This breaks the list abstraction... */
-	link = learning_curve->first;
-	while(link->fwd != NULL)
-	  link = link->fwd;
-	last = link->data;
+	link = NIP_LIST_ITERATOR(learning_curve);
+	while(NIP_LIST_HAS_NEXT(link))
+	  link = NIP_LIST_NEXT(link);
+	last = NIP_LIST_ELEMENT(link);
       }
 
     } while(e == NIP_ERROR_BAD_LUCK || last < min_log_likelihood);
@@ -217,8 +218,8 @@ int main(int argc, char *argv[]){
   printf("done.\n"); /* new line for the prompt */
 
   /* free some memory */
-  if(LIST_LENGTH(learning_curve) > 0)
-    empty_doublelist(learning_curve);
+  if(NIP_LIST_LENGTH(learning_curve) > 0)
+    nip_empty_double_list(learning_curve);
   free(learning_curve);
   for(i = 0; i < n_max; i++){
     free_timeseries(ts_set[i]);

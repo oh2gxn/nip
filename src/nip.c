@@ -1,4 +1,4 @@
-/* nip.c $Id: nip.c,v 1.213 2010-11-11 16:38:07 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.214 2010-11-22 15:35:56 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -10,8 +10,8 @@
 #include <unistd.h>
 
 #include "nip.h"
-#include "lists.h"
 #include "clique.h"
+#include "niplists.h"
 #include "nipvariable.h"
 #include "niperrorhandler.h"
 #include "huginnet.tab.h"
@@ -131,7 +131,7 @@ nip parse_model(char* file){
   /* 2. Get the parsed stuff and make a model out of them */
   new->num_of_cliques = get_cliques(&(new->cliques));
   vl = get_parsed_variables();
-  new->num_of_vars = LIST_LENGTH(vl);
+  new->num_of_vars = NIP_LIST_LENGTH(vl);
   new->variables = nip_variable_list_to_array(vl);
   nip_empty_variable_list(vl); /* free the list? */
 
@@ -335,7 +335,7 @@ int write_model(nip model, char* filename){
   for(i = 0; i < model->num_of_vars; i++){
     v = model->variables[i];
     n = NIP_CARDINALITY(v)-1;
-    nip_get_position(v, &x, &y);
+    nip_get_variable_position(v, &x, &y);
     fputs("\n", f);
     fprintf(f, "%snode %s\n", indent, nip_variable_symbol(v));
     fprintf(f, "%s{\n", indent);
@@ -433,7 +433,7 @@ int write_model(nip model, char* filename){
 	  inverse_mapping(p, j-1, temp);
 	  for(x = nparents-1; x >= 0; x--){
 	    fprintf(f, "%s=%s ", nip_variable_symbol(v->parents[x]),
-		    nip_get_state_name(v->parents[x], temp[x+1]));
+		    nip_variable_state_name(v->parents[x], temp[x+1]));
 	  }
 	}
 	/* cut the line and indent */
@@ -625,7 +625,7 @@ int read_timeseries(nip model, char* filename,
 	  if(i == m) 
 	    break; /* the line was too short */
 	  if(v)
-	    ts->data[j][k++] = nip_get_state_index(v, tokens[i]);
+	    ts->data[j][k++] = nip_variable_state_index(v, tokens[i]);
 	  /* note that these are coupled with ts->observed */
 	  
 	  /* Q: Should missing data be allowed?   A: Yes. */
@@ -747,7 +747,7 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
 	if(i > 0)
 	  fprintf(f, "%c", FIELD_SEPARATOR);
 	if(d >= 0)
-	  fprintf(f, "%s", nip_get_state_name(v, d));      
+	  fprintf(f, "%s", nip_variable_state_name(v, d));      
 	else
 	  fputs("null", f);
       }
@@ -838,7 +838,7 @@ int write_uncertainseries(uncertain_series *ucs_set, int n_series,
   for(i = 0; i < n; i++){
     if(i > 0)
       fprintf(f, "%c", FIELD_SEPARATOR);
-    fprintf(f, "%s", nip_get_state_name(v, i));
+    fprintf(f, "%s", nip_variable_state_name(v, i));
   }
   fputs("\n", f);
 
@@ -910,7 +910,7 @@ int set_observation(time_series ts, nip_variable v, int time,
     if(nip_equal_variables(v, ts->observed[i]))
       j = i;
 
-  i = nip_get_state_index(v, observation);
+  i = nip_variable_state_index(v, observation);
   /* a valid variable? a valid observation for that variable? */
   if((j < 0) || (i < 0))
     return NIP_ERROR_INVALID_ARGUMENT;
@@ -2032,7 +2032,7 @@ static int m_step(potential* parameters, nip model){
 /* Trains the given model (ts[0]->model) according to the given set of 
  * time series (ts[*]) with EM-algorithm. Returns an error code. */
 int em_learn(time_series *ts, int n_ts, double threshold,
-	     doublelist learning_curve){
+	     nip_double_list learning_curve){
   int e, i, n, v;
   int *card;
   int ts_steps;
@@ -2050,8 +2050,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 
   if(learning_curve != NULL){
     /* Take care it's empty */
-    if(LIST_LENGTH(learning_curve) > 0)
-      empty_doublelist(learning_curve);
+    if(NIP_LIST_LENGTH(learning_curve) > 0)
+      nip_empty_double_list(learning_curve);
   }
 
   /* Reserve some memory for calculation */
@@ -2115,7 +2115,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       }
       free(parameters);
       if(learning_curve != NULL)
-	empty_doublelist(learning_curve);
+	nip_empty_double_list(learning_curve);
       return e;
     }
 
@@ -2147,7 +2147,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	free(parameters);
 	if(e != NIP_ERROR_BAD_LUCK){
 	  if(learning_curve != NULL)
-	    empty_doublelist(learning_curve);
+	    nip_empty_double_list(learning_curve);
 	}
 	/* else let the list be */
 
@@ -2164,14 +2164,14 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 
     /* Add an element to the linked list */
     if(learning_curve != NULL){
-      e = append_double(learning_curve, loglikelihood / ts_steps);
+      e = nip_append_double(learning_curve, loglikelihood / ts_steps);
       if(e != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, e, 1);
 	for(v = 0; v < model->num_of_vars; v++){
 	  free_potential(parameters[v]);
 	}
 	free(parameters);
-	empty_doublelist(learning_curve);
+	nip_empty_double_list(learning_curve);
 	return e;
       }
     }

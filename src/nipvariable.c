@@ -1,6 +1,6 @@
 /* nipvariable.c 
  * Author: Janne Toivola
- * $Id: nipvariable.c,v 1.2 2010-11-11 16:38:07 jatoivol Exp $
+ * $Id: nipvariable.c,v 1.3 2010-11-22 15:35:56 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -223,7 +223,7 @@ char* nip_variable_symbol(nip_variable v){
 }
 
 
-int nip_get_state_index(nip_variable v, char *state){
+int nip_variable_state_index(nip_variable v, char *state){
   int i;
   if(!v->state_names)
     return -1;
@@ -234,7 +234,7 @@ int nip_get_state_index(nip_variable v, char *state){
 }
 
 
-char* nip_get_state_name(nip_variable v, int index){
+char* nip_variable_state_name(nip_variable v, int index){
   if(!v->state_names)
     return NULL;
   return v->state_names[index];
@@ -304,7 +304,7 @@ int nip_number_of_parents(nip_variable v){
 }
 
 
-void nip_set_position(nip_variable v, int x, int y){
+void nip_set_variable_position(nip_variable v, int x, int y){
   if(v){
     v->pos_x = x;
     v->pos_y = y;
@@ -314,7 +314,7 @@ void nip_set_position(nip_variable v, int x, int y){
 }
 
 
-void nip_get_position(nip_variable v, int* x, int* y){
+void nip_get_variable_position(nip_variable v, int* x, int* y){
   if(v && x && y){
     *x = v->pos_x;
     *y = v->pos_y;

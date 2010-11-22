@@ -1,4 +1,4 @@
-/* nip.h $Id: nip.h,v 1.63 2010-11-09 19:06:08 jatoivol Exp $
+/* nip.h $Id: nip.h,v 1.64 2010-11-22 15:35:56 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -6,6 +6,7 @@
 
 #include "parser.h"
 #include "clique.h"
+#include "niplists.h"
 #include "nipvariable.h"
 #include "niperrorhandler.h"
 #include <stdlib.h>
@@ -254,7 +255,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * ignored and you can thus easily omit evidence for an entire variable.
  */
 int em_learn(time_series *ts, int n_ts, double threshold, 
-	     doublelist learning_curve);
+	     nip_double_list learning_curve);
 
 
 /* Tells the likelihood of observations (not normalised). 

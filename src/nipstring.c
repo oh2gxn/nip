@@ -1,22 +1,24 @@
-/* fileio.c $Id: fileio.c,v 1.21 2010-11-09 19:06:08 jatoivol Exp $
+/* nipstring.c 
+ * Author: Janne Toivola, Mikko Korpela
+ * Version: $Id: nipstring.c,v 1.1 2010-11-22 15:35:56 jatoivol Exp $
  */
 
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "fileio.h"
+#include "nipstring.h"
 #include "niperrorhandler.h"
 
 /* #define DEBUG_IO */
 
-int count_words(const char *s, int *chars){
-  return count_tokens(s, chars, 0, NULL, 0, 0, 1);
+int nip_count_words(const char *s, int *chars){
+  return nip_count_tokens(s, chars, 0, NULL, 0, 0, 1);
 }
 
-int count_tokens(const char *s, int *chars, int q_strings,
-		 char *separators, int n_separators, int sep_tokens,
-		 int wspace_sep){
+int nip_count_tokens(const char *s, int *chars, int q_strings,
+		     char *separators, int n_separators, int sep_tokens,
+		     int wspace_sep){
   int i;
   int tokens = 0, state = 0;
   int separator_found = 0;
@@ -79,9 +81,9 @@ int count_tokens(const char *s, int *chars, int q_strings,
 }
 
 
-int *tokenise(const char s[], int n, int q_strings,
-	      char *separators, int n_separators,
-	      int sep_tokens, int wspace_sep){
+int *nip_tokenise(const char s[], int n, int q_strings,
+		  char *separators, int n_separators,
+		  int sep_tokens, int wspace_sep){
   int *indices;
   int i = 0, j = 0, state = 0, arraysize = 2*n, k;
   int separator_found = 0;
@@ -195,7 +197,7 @@ int *tokenise(const char s[], int n, int q_strings,
   return indices;
 }
 
-char **split(const char s[], int indices[], int n){
+char **nip_split(const char s[], int indices[], int n){
   int i, j, wordlength, begin, end;
   char **words = (char **) calloc(n, sizeof(char *));
 

@@ -5,7 +5,7 @@
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.64 2010-11-09 19:06:08 jatoivol Exp $
+# $Id: Makefile,v 1.65 2010-11-22 15:35:55 jatoivol Exp $
 
 
 # The C compiler and flags for compiling the library
@@ -43,7 +43,7 @@ all: test util
 
 
 # Rules for the library object files
-src/fileio.o: src/fileio.c src/fileio.h
+src/nipstring.o: src/nipstring.c src/nipstring.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/niperrorhandler.o: src/niperrorhandler.c src/niperrorhandler.h
@@ -79,7 +79,7 @@ $(HUG_OBJ): $(HUG_SRC) $(HUG_HDR)
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 # ...the rest of the library objects
-src/lists.o: src/lists.c src/lists.h
+src/niplists.o: src/niplists.c src/niplists.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/parser.o: src/parser.c src/parser.h
@@ -90,7 +90,7 @@ src/nip.o: src/nip.c src/nip.h
 
 
 # Rules to create the static and shared libraries
-LIB_SRCS = src/fileio.c \
+LIB_SRCS = src/nipstring.c \
 src/niperrorhandler.c \
 src/potential.c \
 src/nipvariable.c \
@@ -99,7 +99,7 @@ src/Heap.c \
 src/cls2clq.c \
 src/Graph.c \
 $(HUG_SRC) \
-src/lists.c \
+src/niplists.c \
 src/parser.c \
 src/nip.c
 LIB_HDRS = $(LIB_SRCS:.c=.h)

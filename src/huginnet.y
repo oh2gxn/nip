@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.88 2010-11-11 16:38:07 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.89 2010-11-22 15:35:56 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -9,11 +9,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lists.h"
-#include "parser.h"
-#include "clique.h"
+#include "niplists.h"
 #include "nipvariable.h"
 #include "niperrorhandler.h"
+#include "parser.h"
+#include "clique.h"
 #include "Graph.h"
 
 /* The current input file 
@@ -34,17 +34,17 @@ static int nip_node_position_y = 100;
 static int nip_node_size_x = 80;
 static int nip_node_size_y = 60;
 
-static doublelist nip_parsed_doubles = NULL;
+static nip_double_list nip_parsed_doubles = NULL;
 static int        nip_data_size      = 0;
 
-static stringlist nip_parsed_strings = NULL;
+static nip_string_list nip_parsed_strings = NULL;
 static char**     nip_statenames = NULL;
 static int        nip_n_statenames = 0;
 
 /* All the unrecognized MY_field = "value" pairs */
-static stringpairlist nip_ignored_net_fields = NULL;
-static stringpairlist nip_ignored_node_fields = NULL;
-static stringpairlist nip_ignored_potential_fields = NULL;
+static nip_string_pair_list nip_ignored_net_fields = NULL;
+static nip_string_pair_list nip_ignored_node_fields = NULL;
+static nip_string_pair_list nip_ignored_potential_fields = NULL;
 
 static char* nip_label;       /* node label contents */
 static char* nip_persistence; /* NIP_next contents   */
@@ -285,7 +285,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     YYABORT;
   }
   /* set the parsed position values */
-  nip_set_position(v, nip_node_position_x, nip_node_position_y);
+  nip_set_variable_position(v, nip_node_position_x, nip_node_position_y);
   nip_node_position_x = 100; nip_node_position_y = 100; /* reset */
 
   if(nip_parsed_vars == NULL)
@@ -355,7 +355,7 @@ nodeDeclaration:    token_node UNQUOTED_STRING '{' node_params '}' {
     YYABORT;
   }
   /* set the parsed position values */
-  nip_set_position(v, nip_node_position_x, nip_node_position_y);
+  nip_set_variable_position(v, nip_node_position_x, nip_node_position_y);
   nip_node_position_x = 100; nip_node_position_y = 100; /* reset */
 
   if(nip_parsed_vars == NULL)
@@ -479,11 +479,11 @@ persistenceDeclaration: token_persistence '=' QUOTED_STRING ';' { $$ = $3; }
 statesDeclaration:    token_states '=' '(' strings ')' ';' { 
 
   /* makes an array of strings out of the parsed list of strings */
-  nip_statenames = list_to_string_array(nip_parsed_strings);
+  nip_statenames = nip_string_list_to_array(nip_parsed_strings);
   nip_n_statenames = nip_parsed_strings->length;
 
   /* free the list (not the strings) */
-  empty_stringlist(nip_parsed_strings);
+  nip_empty_string_list(nip_parsed_strings);
   free(nip_parsed_strings); nip_parsed_strings = NULL;
 
   if(!nip_statenames){
@@ -708,9 +708,9 @@ string:        QUOTED_STRING {
 	       int retval;
 
 	       if(nip_parsed_strings == NULL)
-		 nip_parsed_strings = make_stringlist();
+		 nip_parsed_strings = nip_new_string_list();
 
-	       retval = append_string(nip_parsed_strings, $1);
+	       retval = nip_append_string(nip_parsed_strings, $1);
 	       if(retval != NIP_NO_ERROR){
 		 nip_report_error(__FILE__, __LINE__, retval, 1);
 		 YYABORT;
@@ -730,9 +730,9 @@ num:       NUMBER {
 
 	     /* If the list is not created yet */
 	     if(nip_parsed_doubles == NULL)
-	       nip_parsed_doubles = make_doublelist();
+	       nip_parsed_doubles = nip_new_double_list();
 
-	     retval = append_double(nip_parsed_doubles, $1);
+	     retval = nip_append_double(nip_parsed_doubles, $1);
 	     if(retval != NIP_NO_ERROR){
 	       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	       YYABORT;
@@ -754,9 +754,9 @@ value:         QUOTED_STRING { free($1); }
 
 dataList: token_data '=' '(' numbers ')' ';' {
   /* Note: this doesn't normalise them in any way */
-  double *doubles = list_to_double_array(nip_parsed_doubles);
+  double *doubles = nip_double_list_to_array(nip_parsed_doubles);
   nip_data_size = nip_parsed_doubles->length;
-  empty_doublelist(nip_parsed_doubles); 
+  nip_empty_double_list(nip_parsed_doubles); 
   free(nip_parsed_doubles); nip_parsed_doubles = NULL;
   if(!doubles){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
@@ -1097,20 +1097,22 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
   }
 
   /* Add time relations to variables. */
-  initlist = LIST_ITERATOR(il);
+  initlist = NIP_LIST_ITERATOR(il);
   while(initlist != NULL){
     v1 = initlist->var;
     v2 = nip_search_variable_list(vl, initlist->next);
     if(v1->cardinality == v2->cardinality){
       /* check if the interface variables really match */
       for(i = 0; i < v1->cardinality; i++){
-	if(strcmp(nip_get_state_name(v1, i), nip_get_state_name(v2, i))){
+	if(strcmp(nip_variable_state_name(v1, i), 
+		  nip_variable_state_name(v2, i))){
 	  fprintf(stderr, 
 		  "Warning: Corresponding variables %s and %s\n", 
 		  nip_variable_symbol(v1), nip_variable_symbol(v2));
 	  fprintf(stderr, 
 		  "have different kind of states %s and %s!\n", 
-		  nip_get_state_name(v1,i), nip_get_state_name(v2,i));
+		  nip_variable_state_name(v1,i), 
+		  nip_variable_state_name(v2,i));
 	}
       }
       /* the core */
@@ -1131,7 +1133,7 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
   }
 
   /* Find out which variables belong to incoming/outgoing interfaces */
-  it = LIST_ITERATOR(vl);
+  it = NIP_LIST_ITERATOR(vl);
   v2 = nip_next_variable(&it); /* get a variable */
   while(v2 != NULL){
     m = 0;
