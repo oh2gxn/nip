@@ -1,4 +1,4 @@
-/* potential.c $Id: potential.c,v 1.69 2010-11-09 19:06:08 jatoivol Exp $
+/* potential.c $Id: potential.c,v 1.70 2010-11-23 11:26:13 jatoivol Exp $
  * Functions for handling potentials. 
  */
 
@@ -60,7 +60,7 @@ potential make_potential(int cardinality[], int num_of_vars, double data[]){
   int size_of_data = 1;
   int *cardinal;
   double *dpointer = NULL;
-  potential p = (potential) malloc(sizeof(ptype));
+  potential p = (potential) malloc(sizeof(potential_struct));
 
   if(!p){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);

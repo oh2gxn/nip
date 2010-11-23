@@ -1,4 +1,4 @@
-/* potential.h $Id: potential.h,v 1.39 2008-12-20 12:59:53 jatoivol Exp $
+/* potential.h $Id: potential.h,v 1.40 2010-11-23 11:26:13 jatoivol Exp $
  */
 
 #ifndef __POTENTIAL_H__
@@ -19,10 +19,10 @@ typedef struct pot_array_t {
   double *data;
 
   /* TODO: stringpairlist application_specific_properties; ? */
-} ptype;
+} potential_struct;
 
-/* typedef struct pot_array ptype; */
-typedef ptype* potential;
+/* typedef struct pot_array_t potential_struct; */
+typedef potential_struct* potential;
 
 /* Make a num_of_vars -dimension potential array. 
  * The potential array data[] can be null, if it is not known. */
