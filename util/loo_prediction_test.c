@@ -22,7 +22,6 @@
 #include "clique.h"
 #include "niplists.h"
 #include "nipvariable.h"
-#include "potential.h"
 #include "niperrorhandler.h"
 #include "nip.h"
 

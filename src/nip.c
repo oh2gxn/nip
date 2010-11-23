@@ -1,4 +1,4 @@
-/* nip.c $Id: nip.c,v 1.214 2010-11-22 15:35:56 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.215 2010-11-23 15:57:56 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -13,6 +13,7 @@
 #include "clique.h"
 #include "niplists.h"
 #include "nipvariable.h"
+#include "nippotential.h"
 #include "niperrorhandler.h"
 #include "huginnet.tab.h"
 
@@ -33,13 +34,14 @@ extern int get_cliques(clique** clique_array_pointer);
 extern void get_parsed_node_size(int* x, int* y);
 
 static int start_timeslice_message_pass(nip model, direction dir, 
-					potential sepset);
+					nip_potential sepset);
 static int finish_timeslice_message_pass(nip model, direction dir,
-					 potential num, potential den);
+					 nip_potential num, 
+					 nip_potential den);
 
-static int e_step(time_series ts, potential* parameters, 
+static int e_step(time_series ts, nip_potential* parameters, 
 		  double* loglikelihood);
-static int m_step(potential* results, nip model);
+static int m_step(nip_potential* results, nip model);
 
 
 
@@ -63,7 +65,7 @@ void total_reset(nip model){
   clique c;
   for(i = 0; i < model->num_of_cliques; i++){
     c = model->cliques[i];
-    uniform_potential(c->original_p, 1.0);
+    nip_uniform_potential(c->original_p, 1.0);
   }
   /* Q: Reset priors? */
   reset_model(model); /* Could that be enough? */
@@ -287,7 +289,7 @@ int write_model(nip model, char* filename){
   int *temp = NULL;
   int *map = NULL;
   clique c = NULL;
-  potential p = NULL;
+  nip_potential p = NULL;
   char *indent;
 
 #ifdef NET_LANG_V1
@@ -407,15 +409,15 @@ int write_model(nip model, char* filename){
     /* ...then the parents */
     for(j = 0; j < nparents; j++)
       temp[j+1] = NIP_CARDINALITY(v->parents[j]);
-    p = make_potential(temp, nparents+1, NULL);
+    p = nip_new_potential(temp, nparents+1, NULL);
 
     /* compute the distribution */
     c = find_family(model->cliques, model->num_of_cliques, v);
     map = find_family_mapping(c, v);
-    general_marginalise(c->original_p, p, map);
+    nip_general_marginalise(c->original_p, p, map);
 
     /* normalisation (NOTE: should be part of potential.c) */
-    normalise_cpd(p);
+    nip_normalise_cpd(p);
 
     /* print the stuff (TODO: hide the access to private data?) */
     y = 0; /* counter for number of values printed on a line */
@@ -430,7 +432,7 @@ int write_model(nip model, char* filename){
 	  /* print comments about parent values for previous line 
 	   * NOTE: the last comment is left out */
 	  fputs(" % ", f);
-	  inverse_mapping(p, j-1, temp);
+	  nip_inverse_mapping(p, j-1, temp);
 	  for(x = nparents-1; x >= 0; x--){
 	    fprintf(f, "%s=%s ", nip_variable_symbol(v->parents[x]),
 		    nip_variable_state_name(v->parents[x], temp[x+1]));
@@ -448,7 +450,7 @@ int write_model(nip model, char* filename){
     fputs(");\n", f);
     fprintf(f, "%s}\n", indent);
     free(temp);
-    free_potential(p);
+    nip_free_potential(p);
     fflush(f);
   }
 
@@ -1001,7 +1003,7 @@ int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask){
 
 /* Starts a message pass between timeslices */
 static int start_timeslice_message_pass(nip model, direction dir,
-					potential alpha_or_gamma){
+					nip_potential alpha_or_gamma){
   int *mapping;
   clique c;
   int nvars = model->outgoing_interface_size;
@@ -1009,7 +1011,7 @@ static int start_timeslice_message_pass(nip model, direction dir,
 
   /* What if there are no subsequent time slices? */
   if(nvars == 0){
-    uniform_potential(alpha_or_gamma, 1.0);
+    nip_uniform_potential(alpha_or_gamma, 1.0);
     return NIP_NO_ERROR;
   }
 
@@ -1026,11 +1028,11 @@ static int start_timeslice_message_pass(nip model, direction dir,
   mapping = nip_mapper(c->variables, vars, c->p->num_of_vars, nvars);
 
   /* the marginalisation */
-  general_marginalise(c->p, alpha_or_gamma, mapping);
+  nip_general_marginalise(c->p, alpha_or_gamma, mapping);
   free(mapping); /* should mapping-array be a part of sepsets? */
 
   /* normalisation in order to avoid drifting towards zeros */
-  normalise_potential(alpha_or_gamma);
+  nip_normalise_potential(alpha_or_gamma);
 
   return NIP_NO_ERROR;
 }
@@ -1038,7 +1040,8 @@ static int start_timeslice_message_pass(nip model, direction dir,
 
 /* Finishes the message pass between timeslices */
 static int finish_timeslice_message_pass(nip model, direction dir,
-					 potential num, potential den){
+					 nip_potential num, 
+					 nip_potential den){
   int *mapping;
   clique c;
   int nvars = model->outgoing_interface_size;
@@ -1061,7 +1064,7 @@ static int finish_timeslice_message_pass(nip model, direction dir,
   mapping = nip_mapper(c->variables, vars, c->p->num_of_vars, nvars);
 
   /* the multiplication (and division, if den != NULL) */
-  update_potential(num, den, c->p, mapping);
+  nip_update_potential(num, den, c->p, mapping);
   free(mapping);  
   return NIP_NO_ERROR;
 }
@@ -1075,7 +1078,7 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
   int* cardinalities = NULL;
   double m1, m2;
   nip_variable temp;
-  potential alpha = NULL;
+  nip_potential alpha = NULL;
   clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
@@ -1166,7 +1169,8 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
   }
 
   /* Initialise the intermediate potential */
-  alpha = make_potential(cardinalities, model->outgoing_interface_size, NULL);
+  alpha = nip_new_potential(cardinalities, model->outgoing_interface_size, 
+			    NULL);
   free(cardinalities);
 
   /*****************/
@@ -1193,7 +1197,7 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
 				       alpha, NULL    ) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
-	free_potential(alpha);
+	nip_free_potential(alpha);
 	return NULL;
       }
     }
@@ -1252,7 +1256,7 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
       marginalise(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
-      normalise_array(results->data[t][i], NIP_CARDINALITY(temp));
+      nip_normalise_array(results->data[t][i], NIP_CARDINALITY(temp));
     } 
 
     /* Start a message pass between time slices (compute new alpha) */
@@ -1260,7 +1264,7 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
 				    alpha) != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free_uncertainseries(results);
-      free_potential(alpha);
+      nip_free_potential(alpha);
       return NULL;
     }
 
@@ -1276,7 +1280,7 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
     reset_model(model);
     use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
   }
-  free_potential(alpha); 
+  nip_free_potential(alpha); 
 
   return results;
 }
@@ -1291,7 +1295,7 @@ uncertain_series forward_backward_inference(time_series ts,
   int *cardinalities = NULL;
   double m1, m2;
   nip_variable temp;
-  potential *alpha_gamma = NULL;
+  nip_potential *alpha_gamma = NULL;
   clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
@@ -1380,13 +1384,14 @@ uncertain_series forward_backward_inference(time_series ts,
   }
 
   /* Allocate some space for the intermediate potentials */
-  alpha_gamma = (potential *) calloc(ts->length + 1, sizeof(potential));
+  alpha_gamma = (nip_potential *) calloc(ts->length + 1, 
+					 sizeof(nip_potential));
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++){
-    alpha_gamma[t] = make_potential(cardinalities, 
-				    model->outgoing_interface_size, 
-				    NULL);
+    alpha_gamma[t] = nip_new_potential(cardinalities, 
+				       model->outgoing_interface_size, 
+				       NULL);
   }
   free(cardinalities);
 
@@ -1406,7 +1411,7 @@ uncertain_series forward_backward_inference(time_series ts,
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(alpha_gamma[i]);
+	  nip_free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
 	return NULL;
       }
@@ -1445,7 +1450,7 @@ uncertain_series forward_backward_inference(time_series ts,
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free_uncertainseries(results);
       for(i = 0; i <= ts->length; i++)
-	free_potential(alpha_gamma[i]);
+	nip_free_potential(alpha_gamma[i]);
       free(alpha_gamma);
       return NULL;
     }
@@ -1472,7 +1477,7 @@ uncertain_series forward_backward_inference(time_series ts,
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(alpha_gamma[i]);
+	  nip_free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
 	return NULL;
       }
@@ -1489,7 +1494,7 @@ uncertain_series forward_backward_inference(time_series ts,
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(alpha_gamma[i]);
+	  nip_free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
 	return NULL;
       }
@@ -1514,7 +1519,7 @@ uncertain_series forward_backward_inference(time_series ts,
       marginalise(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
-      normalise_array(results->data[t][i], NIP_CARDINALITY(temp));
+      nip_normalise_array(results->data[t][i], NIP_CARDINALITY(temp));
     }
     /* End of the CORE */
 
@@ -1525,7 +1530,7 @@ uncertain_series forward_backward_inference(time_series ts,
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(alpha_gamma[i]);
+	  nip_free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
 	return NULL;
       }
@@ -1540,7 +1545,7 @@ uncertain_series forward_backward_inference(time_series ts,
 
   /* free the intermediate potentials */
   for(t = 0; t <= ts->length; t++)
-    free_potential(alpha_gamma[t]);
+    nip_free_potential(alpha_gamma[t]);
   free(alpha_gamma);
 
   return results;
@@ -1671,7 +1676,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts){
  *   because they can't deliver the results without global variables
  * - some parts of the code could be (and have been) transformed into 
  *   separate procedures */
-static int e_step(time_series ts, potential* parameters, 
+static int e_step(time_series ts, nip_potential* parameters, 
 		  double* loglikelihood){
   int i, t;
   int error;
@@ -1681,9 +1686,9 @@ static int e_step(time_series ts, potential* parameters,
   int *mapping;
   nip_variable* observed = NULL;
   nip_variable v;
-  potential *alpha_gamma = NULL;
-  potential *results = NULL;
-  potential p;
+  nip_potential *alpha_gamma = NULL;
+  nip_potential *results = NULL;
+  nip_potential p;
   clique c = NULL;
   nip model = ts->model;
   double m1, m2;
@@ -1692,7 +1697,7 @@ static int e_step(time_series ts, potential* parameters,
   nobserved = ts->num_of_observed;
   observed = (nip_variable*) calloc(nobserved, sizeof(nip_variable));
   data     = (int*) calloc(nobserved, sizeof(int));
-  results = (potential*) calloc(model->num_of_vars, sizeof(potential));
+  results = (nip_potential*) calloc(model->num_of_vars, sizeof(nip_potential));
   if(!(results && data && observed && loglikelihood)){
     if(loglikelihood){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
@@ -1709,12 +1714,13 @@ static int e_step(time_series ts, potential* parameters,
   }
   for(i = 0; i < model->num_of_vars; i++){
     p = parameters[i];
-    results[i] = make_potential(NIP_CARDINALITY(p), p->num_of_vars, NULL);
+    results[i] = nip_new_potential(NIP_CARDINALITY(p), p->num_of_vars, NULL);
     /* in principle, make_potential can return NULL */
   }  
 
   /* Allocate some space for the intermediate potentials between timeslices */
-  alpha_gamma = (potential *) calloc(ts->length + 1, sizeof(potential));
+  alpha_gamma = (nip_potential *) calloc(ts->length + 1, 
+					 sizeof(nip_potential));
 
   /* Allocate an array for describing the dimensions of alpha & gamma */
   if(model->outgoing_interface_size > 0){
@@ -1723,7 +1729,7 @@ static int e_step(time_series ts, potential* parameters,
     if(!cardinalities){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       for(i = 0; i < model->num_of_vars; i++)
-	free_potential(results[i]);
+	nip_free_potential(results[i]);
       free(results);
       free(data);
       free(observed);
@@ -1737,9 +1743,9 @@ static int e_step(time_series ts, potential* parameters,
 
   /* Initialise intermediate potentials */
   for(t = 0; t <= ts->length; t++)
-    alpha_gamma[t] = make_potential(cardinalities, 
-				    model->outgoing_interface_size, 
-				    NULL);
+    alpha_gamma[t] = nip_new_potential(cardinalities, 
+				       model->outgoing_interface_size, 
+				       NULL);
   free(cardinalities);
 
   /*****************/
@@ -1757,12 +1763,12 @@ static int e_step(time_series ts, potential* parameters,
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	/* i is useless at this point */
 	for(i = 0; i < model->num_of_vars; i++)
-	  free_potential(results[i]);
+	  nip_free_potential(results[i]);
 	free(results);
 	free(data);
 	free(observed);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(alpha_gamma[i]);
+	  nip_free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
 	return NIP_ERROR_GENERAL;
       }
@@ -1788,12 +1794,12 @@ static int e_step(time_series ts, potential* parameters,
        (m2 <= 0) || 
        (*loglikelihood > 0)){
       for(i = 0; i < model->num_of_vars; i++)
-	free_potential(results[i]);
+	nip_free_potential(results[i]);
       free(results);
       free(data);
       free(observed);
       for(i = 0; i <= ts->length; i++)
-	free_potential(alpha_gamma[i]);
+	nip_free_potential(alpha_gamma[i]);
       free(alpha_gamma);
 
 
@@ -1805,7 +1811,7 @@ static int e_step(time_series ts, potential* parameters,
       printf("ll = %g\n", *loglikelihood);
       for(i = 0; i < model->num_of_cliques; i++){
 	print_clique(model->cliques[i]);
-	print_potential(model->cliques[i]->original_p);
+	nip_fprintf_potential(stdout, model->cliques[i]->original_p);
       }
 #endif
 
@@ -1818,12 +1824,12 @@ static int e_step(time_series ts, potential* parameters,
 				    alpha_gamma[t]) != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       for(i = 0; i < model->num_of_vars; i++)
-	free_potential(results[i]);
+	nip_free_potential(results[i]);
       free(results);
       free(data);
       free(observed);
       for(i = 0; i <= ts->length; i++)
-	free_potential(alpha_gamma[i]);
+	nip_free_potential(alpha_gamma[i]);
       free(alpha_gamma);
       return NIP_ERROR_GENERAL;
     }
@@ -1848,12 +1854,12 @@ static int e_step(time_series ts, potential* parameters,
 				       NULL)            != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	for(i = 0; i < model->num_of_vars; i++)
-	  free_potential(results[i]);
+	  nip_free_potential(results[i]);
 	free(results);
 	free(data);
 	free(observed);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(alpha_gamma[i]);
+	  nip_free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
 	return NIP_ERROR_GENERAL;
       }
@@ -1868,12 +1874,12 @@ static int e_step(time_series ts, potential* parameters,
 				       alpha_gamma[t]) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	for(i = 0; i < model->num_of_vars; i++)
-	  free_potential(results[i]);
+	  nip_free_potential(results[i]);
 	free(results);
 	free(data);
 	free(observed);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(alpha_gamma[i]);
+	  nip_free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
 	return NIP_ERROR_GENERAL;
       }
@@ -1899,7 +1905,7 @@ static int e_step(time_series ts, potential* parameters,
       
       /* 3. General Marginalisation from the timeslice */
       mapping = find_family_mapping(c, v);
-      general_marginalise(c->p, p, mapping);
+      nip_general_marginalise(c->p, p, mapping);
 
 
 #ifdef DEBUG_NIP
@@ -1920,10 +1926,10 @@ static int e_step(time_series ts, potential* parameters,
       /********************/
       /* 4. Normalisation */
       /********************/
-      normalise_potential(p); /* Does this cause numerical problems? */
+      nip_normalise_potential(p); /* Does this cause numerical problems? */
 
       /* 5. THE SUM of expected counts over time */
-      sum_potential(parameters[i], p); /* "parameters[i] += p" */
+      nip_sum_potential(parameters[i], p); /* "parameters[i] += p" */
     }
     /*** Finished writing results for this timestep ***/
 
@@ -1933,12 +1939,12 @@ static int e_step(time_series ts, potential* parameters,
 				      alpha_gamma[t]) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	for(i = 0; i < model->num_of_vars; i++)
-	  free_potential(results[i]);
+	  nip_free_potential(results[i]);
 	free(results);
 	free(data);
 	free(observed);
 	for(i = 0; i <= ts->length; i++)
-	  free_potential(alpha_gamma[i]);
+	  nip_free_potential(alpha_gamma[i]);
 	free(alpha_gamma);
 	return NIP_ERROR_GENERAL;
       }
@@ -1953,21 +1959,21 @@ static int e_step(time_series ts, potential* parameters,
 
   /* free the space for calculations */
   for(i = 0; i < model->num_of_vars; i++)
-    free_potential(results[i]);
+    nip_free_potential(results[i]);
   free(results);
   free(data);
   free(observed);
 
   /* free the intermediate potentials */
   for(t = 0; t <= ts->length; t++)
-    free_potential(alpha_gamma[t]);
+    nip_free_potential(alpha_gamma[t]);
   free(alpha_gamma);
 
   return NIP_NO_ERROR;
 }
 
 
-static int m_step(potential* parameters, nip model){
+static int m_step(nip_potential* parameters, nip model){
   int i, j, k;
   int* fam_map;
   clique fam_clique = NULL;
@@ -1992,7 +1998,7 @@ static int m_step(potential* parameters, nip model){
   for(i = 0; i < model->num_of_vars; i++){
     /* k = NIP_CARDINALITY(model->variables[i]); */
     /* child is the first variable in the potential? */
-    normalise_cpd(parameters[i]);
+    nip_normalise_cpd(parameters[i]);
     /** JJT: Not so sure if this is correct! **/
   }
 
@@ -2008,8 +2014,8 @@ static int m_step(potential* parameters, nip model){
       fam_map = find_family_mapping(fam_clique, child);
 
       /* Update the conditional probability distributions (dependencies) */
-      j = init_potential(parameters[i], fam_clique->p, fam_map);
-      k = init_potential(parameters[i], fam_clique->original_p, fam_map);
+      j = nip_init_potential(parameters[i], fam_clique->p, fam_map);
+      k = nip_init_potential(parameters[i], fam_clique->original_p, fam_map);
       if(j != NIP_NO_ERROR || k != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
@@ -2019,7 +2025,7 @@ static int m_step(potential* parameters, nip model){
     }
     else{
       /* Update the priors of independent variables */
-      total_marginalise(parameters[i], child->prior, 0); /* correct? */
+      nip_total_marginalise(parameters[i], child->prior, 0); /* correct? */
       /*for(j = 0; j < NIP_CARDINALITY(child); j++)
 	  child->prior[j] = parameters[i]->data[j];*/
     }
@@ -2031,7 +2037,7 @@ static int m_step(potential* parameters, nip model){
 
 /* Trains the given model (ts[0]->model) according to the given set of 
  * time series (ts[*]) with EM-algorithm. Returns an error code. */
-int em_learn(time_series *ts, int n_ts, double threshold,
+int em_learn(time_series* ts, int n_ts, double threshold,
 	     nip_double_list learning_curve){
   int e, i, n, v;
   int *card;
@@ -2039,7 +2045,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
   double old_loglikelihood; 
   double loglikelihood = -DBL_MAX;
   double probe = 0;
-  potential *parameters = NULL;
+  nip_potential* parameters = NULL;
   nip model = NULL;
 
   if(!ts[0] || !ts[0]->model){
@@ -2055,7 +2061,8 @@ int em_learn(time_series *ts, int n_ts, double threshold,
   }
 
   /* Reserve some memory for calculation */
-  parameters = (potential*) calloc(model->num_of_vars, sizeof(potential));
+  parameters = (nip_potential*) calloc(model->num_of_vars, 
+				       sizeof(nip_potential));
   if(!parameters){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NIP_ERROR_OUTOFMEMORY;
@@ -2067,7 +2074,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     if(!card){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       while(v > 0)
-	free_potential(parameters[--v]);
+	nip_free_potential(parameters[--v]);
       free(parameters);
       return NIP_ERROR_OUTOFMEMORY;
     }
@@ -2079,7 +2086,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /* variable->parents should be null only if n==1 
      * => no for-loop => no null dereference */
 
-    parameters[v] = make_potential(card, n, NULL);
+    parameters[v] = nip_new_potential(card, n, NULL);
     free(card);
   }
 
@@ -2089,7 +2096,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
    *       How to identify a "bad" zero? */
   /*random_seed(NULL);*/
   for(v = 0; v < model->num_of_vars; v++){
-    random_potential(parameters[v]);
+    nip_random_potential(parameters[v]);
     /* the M-step will take care of the normalisation */
   }
 
@@ -2111,7 +2118,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     if(e != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, e, 1);
       for(v = 0; v < model->num_of_vars; v++){
-	free_potential(parameters[v]);
+	nip_free_potential(parameters[v]);
       }
       free(parameters);
       if(learning_curve != NULL)
@@ -2125,7 +2132,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
     /* Initialise the parameter potentials to "zero" for  
      * accumulating the "average parameters" in the E-step */
     for(v = 0; v < model->num_of_vars; v++){
-      uniform_potential(parameters[v], 1.0); /* Q: Use pseudo counts? */
+      nip_uniform_potential(parameters[v], 1.0); /* Q: Use pseudo counts? */
 
       /*memset(parameters[v]->data, 0, n * sizeof(double)); BS */
 
@@ -2142,7 +2149,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
 	  nip_report_error(__FILE__, __LINE__, e, 1);
 	/* don't report invalid random parameters */
 	for(v = 0; v < model->num_of_vars; v++){
-	  free_potential(parameters[v]);
+	  nip_free_potential(parameters[v]);
 	}
 	free(parameters);
 	if(e != NIP_ERROR_BAD_LUCK){
@@ -2168,7 +2175,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
       if(e != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, e, 1);
 	for(v = 0; v < model->num_of_vars; v++){
-	  free_potential(parameters[v]);
+	  nip_free_potential(parameters[v]);
 	}
 	free(parameters);
 	nip_empty_double_list(learning_curve);
@@ -2182,7 +2189,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
        loglikelihood == -HUGE_DOUBLE){ /* some "impossible" data */
 
       for(v = 0; v < model->num_of_vars; v++){
-	free_potential(parameters[v]);
+	nip_free_potential(parameters[v]);
       }
       free(parameters);
       /* Return the list as it is */
@@ -2198,7 +2205,7 @@ int em_learn(time_series *ts, int n_ts, double threshold,
   /*** When should we stop? ***/
 
   for(v = 0; v < model->num_of_vars; v++){
-    free_potential(parameters[v]);
+    nip_free_potential(parameters[v]);
   }
   free(parameters);
 
@@ -2246,16 +2253,16 @@ double *get_probability(nip model, nip_variable v){
   marginalise(clique_of_interest, v, result);
 
   /* 3. Normalisation */
-  normalise_array(result, cardinality);
+  nip_normalise_array(result, cardinality);
 
   /* 4. Return the result */
   return result;
 }
 
 
-potential get_joint_probability(nip model, nip_variable *vars, 
+nip_potential get_joint_probability(nip model, nip_variable *vars, 
 				int num_of_vars){
-  potential p;
+  nip_potential p;
   int i;
 
   /* Unmark all cliques */
@@ -2270,7 +2277,7 @@ potential get_joint_probability(nip model, nip_variable *vars,
   }
   
   /* Normalisation (???) */
-  normalise_potential(p);
+  nip_normalise_potential(p);
   return p;
 }
 
@@ -2279,7 +2286,7 @@ potential get_joint_probability(nip model, nip_variable *vars,
 time_series generate_data(nip model, int length){
   int i, j, k, t;
   int *cardinalities = NULL;
-  potential alpha = NULL;
+  nip_potential alpha = NULL;
   int nvars = model->num_of_vars;
   nip_variable *vars = NULL;
   /* reserved the possibility to pass the set of variables 
@@ -2376,7 +2383,8 @@ time_series generate_data(nip model, int length){
 
   for(i = 0; i < model->outgoing_interface_size; i++)
     cardinalities[i] = NIP_CARDINALITY(model->outgoing_interface[i]);
-  alpha = make_potential(cardinalities, model->outgoing_interface_size, NULL);
+  alpha = nip_new_potential(cardinalities, model->outgoing_interface_size, 
+			    NULL);
   free(cardinalities);
   
   /* new seed number for rand and clear the previous evidence */
@@ -2393,7 +2401,7 @@ time_series generate_data(nip model, int length){
 				       alpha, NULL) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_timeseries(ts);
-	free_potential(alpha);
+	nip_free_potential(alpha);
 	return NULL;
       }
     }
@@ -2418,7 +2426,7 @@ time_series generate_data(nip model, int length){
     if(start_timeslice_message_pass(model, forward, alpha) != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free_timeseries(ts);
-      free_potential(alpha);
+      nip_free_potential(alpha);
       return NULL;
     }
 
@@ -2426,7 +2434,7 @@ time_series generate_data(nip model, int length){
     reset_model(model);
     use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
   }
-  free_potential(alpha);
+  nip_free_potential(alpha);
   return ts;
 }
 
@@ -2493,12 +2501,12 @@ void print_cliques(nip model){
   for(i = 0; i < num_of_cliques; i++){
     c = cliques[i];
     print_clique(c);
-    print_potential(c->p);
+    nip_fprintf_potential(stdout, c->p);
     sepsetlist = c->sepsets;
     while(sepsetlist){
       s = (sepset)sepsetlist->data;
       print_sepset(s);
-      print_potential(s->new);      
+      nip_fprintf_potential(stdout, s->new);      
       sepsetlist = sepsetlist->fwd;
     }
     printf("\n");

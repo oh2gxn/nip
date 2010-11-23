@@ -10,7 +10,7 @@ x */
 #include "parser.h"
 #include "clique.h"
 #include "nipvariable.h"
-#include "potential.h"
+#include "nippotential.h"
 #include "niperrorhandler.h"
 #include "nip.h"
 
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]){
       marginalise(clique_of_interest, interesting, result[t][i]);
 
       /* 4. Normalisation */
-      normalise_array(result[t][i], NIP_CARDINALITY(interesting));
+      nip_normalise_array(result[t][i], NIP_CARDINALITY(interesting));
 
       /* 5. Print the result */
       for(j = 0; j < NIP_CARDINALITY(interesting); j++)
@@ -268,7 +268,7 @@ int main(int argc, char *argv[]){
       marginalise(clique_of_interest, interesting, result[t][i]);
       
       /* 4. Normalisation */
-      normalise_array(result[t][i], NIP_CARDINALITY(interesting));
+      nip_normalise_array(result[t][i], NIP_CARDINALITY(interesting));
       
       /* 5. Print the result */
       for(j = 0; j < NIP_CARDINALITY(interesting); j++)

@@ -15,7 +15,6 @@
 #include "parser.h"
 #include "clique.h"
 #include "nipvariable.h"
-#include "potential.h"
 #include "niperrorhandler.h"
 #include "nip.h"
 

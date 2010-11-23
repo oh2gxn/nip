@@ -1,11 +1,12 @@
 # Makefile for the "nip" project.
 #
 # TODO
+# - Automake?
 # + make a library out of the basic source files
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.65 2010-11-22 15:35:55 jatoivol Exp $
+# $Id: Makefile,v 1.66 2010-11-23 15:57:56 jatoivol Exp $
 
 
 # The C compiler and flags for compiling the library
@@ -49,7 +50,7 @@ src/nipstring.o: src/nipstring.c src/nipstring.h
 src/niperrorhandler.o: src/niperrorhandler.c src/niperrorhandler.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
-src/potential.o: src/potential.c src/potential.h
+src/nippotential.o: src/nippotential.c src/nippotential.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/nipvariable.o: src/nipvariable.c src/nipvariable.h
@@ -92,7 +93,7 @@ src/nip.o: src/nip.c src/nip.h
 # Rules to create the static and shared libraries
 LIB_SRCS = src/nipstring.c \
 src/niperrorhandler.c \
-src/potential.c \
+src/nippotential.c \
 src/nipvariable.c \
 src/clique.c \
 src/Heap.c \

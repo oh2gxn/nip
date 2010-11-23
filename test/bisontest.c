@@ -3,7 +3,7 @@
 #include "clique.h"
 #include "niplists.h"
 #include "nipvariable.h"
-#include "potential.h"
+#include "nippotential.h"
 #include "niperrorhandler.h"
 #include "huginnet.tab.h"
 
@@ -74,7 +74,7 @@ static void test_probability(double **result, int *size_of_result,
   marginalise(clique_of_interest, var, *result);
 
   /* normalisation */
-  normalise_array(*result, *size_of_result);
+  nip_normalise_array(*result, *size_of_result);
 
 }
 
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]){
       printf("%s ", get_symbol(clique_get_variable(nip_cliques[i], j)));
     printf("and %s.\n", get_symbol(clique_get_variable(nip_cliques[i], j)));
     
-    print_potential(nip_cliques[i]->p);
+    nip_fprintf_potential(stdout, nip_cliques[i]->p);
   }
 #endif /* PRINT_POTENTIALS */
   /* *********************************************************** */

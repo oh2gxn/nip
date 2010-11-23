@@ -1,4 +1,4 @@
-/* clique.c $Id: clique.c,v 1.35 2010-11-22 15:35:56 jatoivol Exp $
+/* clique.c $Id: clique.c,v 1.36 2010-11-23 15:57:56 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
@@ -10,7 +10,7 @@
 #include <math.h>
 #include "clique.h"
 #include "nipvariable.h"
-#include "potential.h"
+#include "nippotential.h"
 #include "niperrorhandler.h"
 #include "Heap.h"
 
@@ -118,8 +118,8 @@ clique new_clique(nip_variable vars[], int num_of_vars){
     c->variables[i] = vars[reorder[i]];
   }
   
-  c->p = make_potential(cardinality, num_of_vars, NULL);
-  c->original_p = make_potential(cardinality, num_of_vars, NULL);
+  c->p = nip_new_potential(cardinality, num_of_vars, NULL);
+  c->original_p = nip_new_potential(cardinality, num_of_vars, NULL);
 
   /* Propagation of error */
   if(c->p == NULL || c->original_p == NULL){
@@ -127,8 +127,8 @@ clique new_clique(nip_variable vars[], int num_of_vars){
     free(indices);
     free(reorder);
     free(c->variables);
-    free_potential(c->p);
-    free_potential(c->original_p);
+    nip_free_potential(c->p);
+    nip_free_potential(c->original_p);
     free(c);
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
@@ -170,8 +170,8 @@ void free_clique(clique c){
     l1=l2;
   }
   /* clean the rest */
-  free_potential(c->p);
-  free_potential(c->original_p);
+  nip_free_potential(c->p);
+  nip_free_potential(c->original_p);
   free(c->variables);
   free(c);
   return;
@@ -328,8 +328,8 @@ sepset make_sepset(nip_variable vars[], int num_of_vars, clique cliques[]){
     s->variables[i] = vars[reorder[i]];
   }
 
-  s->old = make_potential(cardinality, num_of_vars, NULL);
-  s->new = make_potential(cardinality, num_of_vars, NULL);
+  s->old = nip_new_potential(cardinality, num_of_vars, NULL);
+  s->new = nip_new_potential(cardinality, num_of_vars, NULL);
 
   /* Propagation of error */
   if(s->old == NULL || s->new == NULL){
@@ -338,8 +338,8 @@ sepset make_sepset(nip_variable vars[], int num_of_vars, clique cliques[]){
     free(reorder);
     free(s->cliques);
     free(s->variables);
-    free_potential(s->old);
-    free_potential(s->new);
+    nip_free_potential(s->old);
+    nip_free_potential(s->new);
     free(s);
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
@@ -360,8 +360,8 @@ void free_sepset(sepset s){
     if(s->old->num_of_vars)
       free(s->variables);
     
-    free_potential(s->old);
-    free_potential(s->new);
+    nip_free_potential(s->old);
+    nip_free_potential(s->new);
     free(s->cliques);
     free(s);
   }
@@ -369,8 +369,8 @@ void free_sepset(sepset s){
 }
 
 
-potential create_potential(nip_variable variables[], int num_of_vars, 
-			   double data[]){
+nip_potential create_potential(nip_variable variables[], int num_of_vars, 
+			       double data[]){
   /*
    * Suppose we get an array of variables with IDs {5, 2, 3, 4, 0, 1}.
    * In this case, temp_array will be              {5, 2, 3, 4, 0, 1},
@@ -398,7 +398,7 @@ potential create_potential(nip_variable variables[], int num_of_vars,
   int *reorder;
 
   unsigned long temp;
-  potential p;
+  nip_potential p;
 
   if((cardinality = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
@@ -453,7 +453,7 @@ potential create_potential(nip_variable variables[], int num_of_vars,
   }
 
   /* Create a potential */
-  p = make_potential(cardinality, num_of_vars, NULL);
+  p = nip_new_potential(cardinality, num_of_vars, NULL);
 
   /* Propagation of error */
   if(p == NULL){
@@ -484,7 +484,7 @@ potential create_potential(nip_variable variables[], int num_of_vars,
        * Find out indices (in the internal order of the program,
        * determined by the variable IDs).
        */
-      inverse_mapping(p, i, indices); 
+      nip_inverse_mapping(p, i, indices); 
 
       /* calculate the address in the original array */
       index = 0;
@@ -511,7 +511,7 @@ potential create_potential(nip_variable variables[], int num_of_vars,
 
 
 /* NOTE: don't use this. This is just a bad idea we had... */
-double *reorder_potential(nip_variable vars[], potential p){
+double *reorder_potential(nip_variable vars[], nip_potential p){
 
   int old_flat_index, new_flat_index;
   int i, j;
@@ -562,7 +562,7 @@ double *reorder_potential(nip_variable vars[], potential p){
   for(old_flat_index = 0; old_flat_index < p->size_of_data; old_flat_index++){
 
     /* 1. old_flat_index -> old_indices (inverse_mapping) */
-    inverse_mapping(p, old_flat_index, old_indices);
+    nip_inverse_mapping(p, old_flat_index, old_indices);
 
     /* FIXME: This is totally wrong. */
     /* 2. "old_indices" is re-ordered according to "variables"
@@ -768,7 +768,7 @@ static int message_pass(clique c1, sepset s, clique c2){
   int *mapping;
 
   /* save the newer potential as old by switching the pointers */
-  potential temp;
+  nip_potential temp;
   temp = s->old;
   s->old = s->new;
   s->new = temp;
@@ -781,7 +781,7 @@ static int message_pass(clique c1, sepset s, clique c2){
 		       c1->p->num_of_vars, s->new->num_of_vars);
 
   /* Information flows from clique c1 to sepset s. */
-  retval = general_marginalise(c1->p, s->new, mapping);
+  retval = nip_general_marginalise(c1->p, s->new, mapping);
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(mapping);
@@ -805,7 +805,7 @@ static int message_pass(clique c1, sepset s, clique c2){
   }
 
   /* Information flows from sepset s to clique c2. */
-  retval = update_potential(s->new, s->old, c2->p, mapping);
+  retval = nip_update_potential(s->new, s->old, c2->p, mapping);
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(mapping);
@@ -818,7 +818,7 @@ static int message_pass(clique c1, sepset s, clique c2){
 }
 
 
-int initialise(clique c, nip_variable child, potential p, int transient){
+int initialise(clique c, nip_variable child, nip_potential p, int transient){
   int i, j = 0, k = 0;
   int *mapping = NULL;
   int retval;
@@ -855,7 +855,7 @@ int initialise(clique c, nip_variable child, potential p, int transient){
   }
 
   /* rest the case */
-  retval = init_potential(p, c->p, mapping);
+  retval = nip_init_potential(p, c->p, mapping);
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(mapping);
@@ -865,7 +865,7 @@ int initialise(clique c, nip_variable child, potential p, int transient){
   /* Some extra work is done here,
    * because only the last initialisation counts. */
   if(!transient){
-    retval = init_potential(p, c->original_p, mapping);
+    retval = nip_init_potential(p, c->original_p, mapping);
     if(retval != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free(mapping);
@@ -891,7 +891,7 @@ int marginalise(clique c, nip_variable v, double r[]){
     return NIP_ERROR_INVALID_ARGUMENT;
   }
   
-  retval = total_marginalise(c->p, r, index);
+  retval = nip_total_marginalise(c->p, r, index);
   if(retval != NIP_NO_ERROR)
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
@@ -920,7 +920,7 @@ int global_retraction(nip_variable* vars, int nvars, clique* cliques,
     c = find_family(cliques, ncliques, v);
     index = var_index(c, v);
 
-    retval = update_evidence(v->likelihood, NULL, c->p, index);
+    retval = nip_update_evidence(v->likelihood, NULL, c->p, index);
     if(retval != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
@@ -994,7 +994,7 @@ int enter_evidence(nip_variable* vars, int nvars, clique* cliques,
    * MUST be done before update_likelihood.
    */
   if(!retraction){
-    retval = update_evidence(evidence, v->likelihood, c->p, index);
+    retval = nip_update_evidence(evidence, v->likelihood, c->p, index);
     if(retval != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
@@ -1054,7 +1054,7 @@ int enter_prior(nip_variable* vars, int nvars, clique* cliques,
    * effects of which may not disappear if it gets multiplied again
    * when the variable is observed and actual evidence entered.
    */
-  e = update_evidence(prior, NULL, c->p, index);
+  e = nip_update_evidence(prior, NULL, c->p, index);
   if(e != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, e, 1);
     return e;
@@ -1414,16 +1414,17 @@ double probability_mass(clique* cliques, int ncliques){
  ** remember the found variables and prune the DFS after all necessary 
  ** variables have been encountered.
  **/
-potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
-				   nip_variable *isect, int n_isect){  
+nip_potential gather_joint_probability(clique start, 
+				       nip_variable *vars, int n_vars,
+				       nip_variable *isect, int n_isect){  
   /* a lot of copy-paste from jtree_dfs */
   int i, j, k, m, n;
   int retval;
   int *mapping = NULL;
   int *cardinality = NULL;
-  potential product = NULL;
-  potential sum = NULL;
-  potential rest = NULL;
+  nip_potential product = NULL;
+  nip_potential sum = NULL;
+  nip_potential rest = NULL;
   nip_variable *union_vars = NULL; 
   int nuv;
   nip_variable *rest_vars = NULL; /* for recursion */
@@ -1440,7 +1441,7 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
     return NULL;
   }
   if(n_vars == 0)
-    return make_potential(NULL, 0, NULL); /* NOTE: verify correctness!? */
+    return nip_new_potential(NULL, 0, NULL); /* NOTE: verify correctness!? */
   if(vars == NULL){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NULL;
@@ -1507,7 +1508,7 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
     cardinality[i] = NIP_CARDINALITY(union_vars[i]);
 
   /* ### possibly HUGE potential array ! ### */
-  product = make_potential(cardinality, nuv, NULL); 
+  product = nip_new_potential(cardinality, nuv, NULL); 
 
   /* free(cardinality);
    * reuse the larger cardinality array: nuv >= n_vars */
@@ -1521,7 +1522,7 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinality);
     free(union_vars);
-    free_potential(product);
+    nip_free_potential(product);
     return NULL;
   }
   /* perhaps this could have beed done earlier... */
@@ -1535,12 +1536,12 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
   }
 
   /* 2.2 Do the multiplication of potentials */
-  retval = update_potential(start->p, NULL, product, mapping);
+  retval = nip_update_potential(start->p, NULL, product, mapping);
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(cardinality);
     free(union_vars);
-    free_potential(product);
+    nip_free_potential(product);
     return NULL;
   }
   /* free(mapping);
@@ -1568,13 +1569,13 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
 	}
 
 	/* 3.2 Division with sepset potential */
-	retval = update_potential(NULL, s->new, product, mapping);
+	retval = nip_update_potential(NULL, s->new, product, mapping);
 	if(retval != NIP_NO_ERROR){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	  free(cardinality);
 	  free(union_vars);
 	  free(mapping);
-	  free_potential(product);
+	  nip_free_potential(product);
 	  return NULL;
 	}
 
@@ -1600,7 +1601,7 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
 	  free(cardinality);
 	  free(union_vars);
 	  free(mapping);
-	  free_potential(product);
+	  nip_free_potential(product);
 	  return NULL;
 	}
 	n = 0;
@@ -1634,18 +1635,18 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
 	}
 
 	/* 3.6 Multiplication with the recursive results */
-	retval = update_potential(rest, NULL, product, mapping);
+	retval = nip_update_potential(rest, NULL, product, mapping);
 	if(retval != NIP_NO_ERROR){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	  free(cardinality);
 	  free(union_vars);
 	  free(mapping);
-	  free_potential(product);
-	  free_potential(rest);
+	  nip_free_potential(product);
+	  nip_free_potential(rest);
 	  return NULL;
 	}
 	free(rest_vars);
-	free_potential(rest);
+	nip_free_potential(rest);
       }
     }
 
@@ -1668,7 +1669,7 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
     for(i = 0; i < n_isect; i++)
       cardinality[n_vars + i] = NIP_CARDINALITY(isect[i]);
     /* possibly LARGE potential array ! */
-    sum = make_potential(cardinality, n_vars + n_isect, NULL); 
+    sum = nip_new_potential(cardinality, n_vars + n_isect, NULL); 
     free(cardinality);
     
     /* 4.2 Form the mapping between product and sum potentials */
@@ -1676,16 +1677,16 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
       mapping[i] = i; /* Trivial because of the union operation above */
     
     /* 4.3 Marginalise */
-    retval = general_marginalise(product, sum, mapping);
+    retval = nip_general_marginalise(product, sum, mapping);
     if(retval != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free(mapping);
-      free_potential(product);
-      free_potential(sum);
+      nip_free_potential(product);
+      nip_free_potential(sum);
       return NULL;
     }
     /* The gain of having a join tree in the first place: */
-    free_potential(product);
+    nip_free_potential(product);
   }
   
   /* 4.4 Normalise (?) */
@@ -1760,7 +1761,7 @@ potentialList make_potentialList(){
 }
 
 
-int append_potential(potentialList l, potential p, 
+int append_potential(potentialList l, nip_potential p, 
 		     nip_variable child, nip_variable* parents){
   potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
 
@@ -1791,7 +1792,7 @@ int append_potential(potentialList l, potential p,
 }
 
 
-int prepend_potential(potentialList l, potential p, 
+int prepend_potential(potentialList l, nip_potential p, 
 		      nip_variable child, nip_variable* parents){
   potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
 
@@ -1832,14 +1833,14 @@ void free_potentialList(potentialList l){
   l->last = NULL;
   while(ln != NULL){
     if(ln->fwd != NULL){
-      free_potential(ln->fwd->data);
+      nip_free_potential(ln->fwd->data);
       free(ln->fwd->parents);
       free(ln->fwd);
     }
     ln = ln->bwd;
   }
   if(l->first != NULL){
-    free_potential(l->first->data);
+    nip_free_potential(l->first->data);
     free(l->first->parents);
     free(l->first);
     l->first = NULL;

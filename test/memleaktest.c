@@ -5,7 +5,7 @@
 #include "clique.h"
 #include "Graph.h"
 #include "nipvariable.h"
-#include "potential.h"
+#include "nippotential.h"
 #include "niplists.h"
 #include "parser.h"
 #include "nip.h"
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
   char **symbols;
   char **names;
   char ***states;
-  potential p;
+  nip_potential p;
   clique cl[2];
   clique *cl2 = NULL;
   sepset s;
@@ -60,10 +60,10 @@ int main(int argc, char *argv[]){
   printf("Allocating and freeing potentials:\n");
   for(i = 0; i < n; i++){
     /* Create a potential */
-    p = make_potential(cardinality, num_of_vars, data);
+    p = nip_new_potential(cardinality, num_of_vars, data);
     printf("\rIteration %d of %d                               ", i + 1, n);
     /* Free the potential */
-    free_potential(p);
+    nip_free_potential(p);
   }
   printf("\rDone.                                             \n");
 

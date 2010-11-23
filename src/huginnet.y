@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.89 2010-11-22 15:35:56 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.90 2010-11-23 15:57:56 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -11,6 +11,7 @@
 #include <string.h>
 #include "niplists.h"
 #include "nipvariable.h"
+#include "nippotential.h"
 #include "niperrorhandler.h"
 #include "parser.h"
 #include "clique.h"
@@ -521,7 +522,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   nip_variable *parents = NULL;
   double *doubles = $8;
   char* error = NULL;
-  potential p = NULL;
+  nip_potential p = NULL;
 
   if(nip_parent_vars != NULL)
     nparents = nip_parent_vars->length;
@@ -566,7 +567,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
     nip_parsed_potentials = make_potentialList();
 
   p = create_potential(family, nparents + 1, doubles);
-  normalise_cpd(p); /* useless? */
+  nip_normalise_cpd(p); /* useless? */
   retval = append_potential(nip_parsed_potentials, p, family[0], parents);
 
   free(doubles); /* the data was copied at create_potential */
@@ -582,7 +583,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   nip_variable *family;
   double *doubles = $6;
   char* error = NULL;
-  potential p = NULL;
+  nip_potential p = NULL;
   if(NIP_CARDINALITY($3) > nip_data_size){
     /* too few elements in the specified potential */
     asprintf(&error, 
@@ -596,7 +597,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   if(nip_parsed_potentials == NULL)
     nip_parsed_potentials = make_potentialList();
   p = create_potential(family, 1, doubles);
-  normalise_potential(p); /* <=> normalise_cpd(p) in this case */
+  nip_normalise_potential(p); /* <=> normalise_cpd(p) in this case */
   retval = append_potential(nip_parsed_potentials, p, family[0], NULL); 
   free(doubles); /* the data was copied at create_potential */
   if(retval != NIP_NO_ERROR){
@@ -626,7 +627,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   int nparents = 0;
   nip_variable *family = NULL;
   nip_variable *parents = NULL;
-  potential p = NULL;
+  nip_potential p = NULL;
 
   if(nip_parent_vars != NULL)
     nparents = nip_parent_vars->length;
@@ -658,7 +659,7 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
     nip_parsed_potentials = make_potentialList();
 
   p = create_potential(family, nparents + 1, NULL);
-  normalise_cpd(p); /* useless? */
+  nip_normalise_cpd(p); /* useless? */
   retval = append_potential(nip_parsed_potentials, p, family[0], parents);
 
   nip_empty_variable_list(nip_parent_vars);
@@ -1241,7 +1242,7 @@ static void print_parsed_stuff(potentialList pl){
     /* Go through every number in the potential array. */
     for(i = 0; i < list->data->size_of_data; i++){
       
-      inverse_mapping(list->data, i, indices);
+      nip_inverse_mapping(list->data, i, indices);
 
       printf("P( %s = %s", list->child->symbol, 
 	     (list->child->state_names)[indices[temp_array[0]]]);

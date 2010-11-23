@@ -57,7 +57,7 @@ int main(){
   sepset sepset_pile[2];
 
   /* initialization: This information is usually parsed from a file. */
-  potential model[4]; /* the fourth potential is extra */
+  nip_potential model[4]; /* the fourth potential is extra */
 
   nip_variable set_of_variables[3];
 
@@ -102,16 +102,16 @@ int main(){
   cardinality[0] = 3;
   cardinality[1] = 4;
   cardinality[2] = 2; /* note1 */
-  model[0] = make_potential(cardinality, 3, potentialA);
+  model[0] = nip_new_potential(cardinality, 3, potentialA);
 
   cardinality[0] = 4;
   cardinality[1] = 2; /* note1 */
   cardinality[2] = 3;
-  model[1] = make_potential(cardinality, 3, potentialC);
+  model[1] = nip_new_potential(cardinality, 3, potentialC);
 
   cardinality[0] = 3;
   cardinality[1] = 2;
-  model[2] = make_potential(cardinality, 2, potentialE);
+  model[2] = nip_new_potential(cardinality, 2, potentialE);
 
   /* The extra potential for testing (should be equal to model[1]) */
   /* variables C, B, D, and the data which is ordered accordingly */
@@ -180,7 +180,7 @@ int main(){
   /*  printf("result[%d] = %f\n", i, result[i]); */
 
   /* normalization */
-  normalise_array(result, 3); /* note1 */
+  nip_normalise_array(result, 3); /* note1 */
 
   /* DEBUG */
   /* printf("ABC after propagation:\n"); */

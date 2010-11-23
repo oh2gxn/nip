@@ -1,24 +1,26 @@
-/* clique.h $Id: clique.h,v 1.11 2010-11-09 19:06:08 jatoivol Exp $
+/* clique.h 
+ * Author: Janne Toivola, Mikko Korpela
+ * Version: $Id: clique.h,v 1.12 2010-11-23 15:57:56 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
 #define __CLIQUE_H__
 
-#include "potential.h"
+#include "nippotential.h"
 #include "nipvariable.h"
 
 struct sepsetlist {
-  void *data; /* void is needed because of the order of definitions */
+  void* data; /* void is needed because of the order of definitions */
   struct sepsetlist *fwd;
   struct sepsetlist *bwd;
 };
 
 typedef struct sepsetlist element;
-typedef element *sepset_link;
+typedef element* sepset_link;
 
 typedef struct {
-  potential p;
-  potential original_p;
+  nip_potential p;
+  nip_potential original_p;
   nip_variable* variables; /* p contains num_of_vars */
   sepset_link sepsets;
   int num_of_sepsets;
@@ -27,8 +29,8 @@ typedef struct {
 typedef cliquetype *clique;
 
 typedef struct {
-  potential old;   /* previous potential */
-  potential new;   /* current potential */
+  nip_potential old;   /* previous potential */
+  nip_potential new;   /* current potential */
   nip_variable* variables; /* old and new contain num_of_vars */
   clique *cliques; /* always between two cliques */
 } sepsettype;
@@ -38,7 +40,7 @@ typedef sepsettype *sepset;
 
 /* List for storing parsed potentials while constructing the graph etc. */
 struct potentialLinkType {
-  potential data;
+  nip_potential data;
   nip_variable child;
   nip_variable* parents;
   struct potentialLinkType *fwd;
@@ -87,12 +89,12 @@ void free_sepset(sepset s);
  * - variables[] is an array of the variables in a suitable order
  * - num_of_vars tells how many variables there are
  * - data[] is the data array in the order according to variables */
-potential create_potential(nip_variable variables[], int num_of_vars, 
-			   double data[]);
+nip_potential create_potential(nip_variable variables[], int num_of_vars, 
+			       double data[]);
 
 
 /* Something very dangerous...
-double *reorder_potential(nip_variable vars[], potential p); 
+double *reorder_potential(nip_variable vars[], nip_potential p); 
 */
 
 /* Method for unmarking a clique: call this to every clique before 
@@ -135,8 +137,9 @@ int collect_evidence(clique c1, sepset s12, clique c2);
  * (<isect> MAY NOT contain any of the variables in <vars>)
  * NOTE: Remember to unmark all cliques before calling this.
  */
-potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
-				   nip_variable *isect, int n_isect);
+nip_potential gather_joint_probability(clique start, nip_variable *vars, 
+				       int n_vars,
+				       nip_variable *isect, int n_isect);
 
 
 /*
@@ -149,7 +152,7 @@ potential gather_joint_probability(clique start, nip_variable *vars, int n_vars,
  * Sum of the elements in the potential is assumed to be 1. 
  * The "ownership" of the potential changes.
  */
-int initialise(clique c, nip_variable child, potential p, int transient);
+int initialise(clique c, nip_variable child, nip_potential p, int transient);
 
 
 /*
@@ -283,9 +286,9 @@ potentialList make_potentialList();
 
 
 /* Adds potentials to the list */
-int append_potential(potentialList l, potential p, 
+int append_potential(potentialList l, nip_potential p, 
 		     nip_variable child, nip_variable* parents);
-int prepend_potential(potentialList l, potential p, 
+int prepend_potential(potentialList l, nip_potential p, 
 		      nip_variable child, nip_variable* parents);
 
 

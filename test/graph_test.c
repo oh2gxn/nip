@@ -3,9 +3,8 @@
 #include <assert.h>
 #include <string.h>
 #include "Graph.h"
-#include "nipvariable.h"
 #include "clique.h"
-#include "potential.h"
+#include "nipvariable.h"
 
 /* some graph test..? */
 void print_adjm(Graph* G) {

@@ -16,17 +16,21 @@
 
 TODO:
 * Document the code structure with UML "class" diagram
-  - variable
   - potential
-
+  + lists
+  + fileio -> string
+  + variable
+  
 * Consistent conventions in naming functions, variables, and data structures?
   - make the naming conventions uniform, e.g. 
     state_names instead of statenames or stateNames
   - prefix everything with "nip" to simulate namespace
   + errorhandler.h -> niperrorhandler.h
+  + lists.h -> niplists.h
+  + fileio.h -> nipstring.h
   + variable.h -> nipvariable.h
   - potential.h -> nippotential.h
-  - clique.h -> nipclique.h
+  - clique.h -> nipjointree.h ???
   - Heap.h -> nipheap.h
   - Graph.h -> nipgraph.h
   - ...
@@ -46,6 +50,9 @@ TODO:
   - write_X() functions could take file id's instead of file names...
     (opening a file or other output would be users responsibility)
 
+* clique.c could hide potential.c completely?
+  - timeslice sepsets could be handled in clique.c
+
 * Refactorisation: replacing a lot of copy-paste code with these...
   - variable_union(), 
   - variable_isect(), and
@@ -53,7 +60,7 @@ TODO:
 
 * Printing potential tables should be contained in potential.c
   - Problem: how to include comments about parent values?
-  - Solution: refactor potentials to use variables!!!
+  - Solution: do the stuff in clique.c...
 
 * Hugin Net parser should use a struct instead of global variables!
 

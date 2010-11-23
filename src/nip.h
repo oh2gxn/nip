@@ -1,4 +1,6 @@
-/* nip.h $Id: nip.h,v 1.64 2010-11-22 15:35:56 jatoivol Exp $
+/* nip.h 
+ * Author: Janne Toivola
+ * Version: $Id: nip.h,v 1.65 2010-11-23 15:57:56 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -8,6 +10,7 @@
 #include "clique.h"
 #include "niplists.h"
 #include "nipvariable.h"
+#include "nippotential.h"
 #include "niperrorhandler.h"
 #include <stdlib.h>
 
@@ -254,7 +257,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * NOTE: only evidence for the marked variables is used. Unmarked are
  * ignored and you can thus easily omit evidence for an entire variable.
  */
-int em_learn(time_series *ts, int n_ts, double threshold, 
+int em_learn(time_series* ts, int n_ts, double threshold, 
 	     nip_double_list learning_curve);
 
 
@@ -274,7 +277,7 @@ double model_prob_mass(nip model);
  * The returned array is of size v->cardinality.
  * In case of problems, NULL is returned.
  */
-double *get_probability(nip model, nip_variable v);
+double* get_probability(nip model, nip_variable v);
 
 
 /*
@@ -289,7 +292,8 @@ double *get_probability(nip model, nip_variable v);
  * The variables of the potential are in the same order as they were given.
  * In case of problems, NULL is returned.
  */
-potential get_joint_probability(nip model, nip_variable *vars, int num_of_vars);
+nip_potential get_joint_probability(nip model, nip_variable *vars, 
+				    int num_of_vars);
 
 
 /* Generates time series data according to a model. 

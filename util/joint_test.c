@@ -1,5 +1,5 @@
 /*
- * joint_test.c $Id: joint_test.c,v 1.17 2010-11-11 16:38:07 jatoivol Exp $
+ * joint_test.c $Id: joint_test.c,v 1.18 2010-11-23 15:57:57 jatoivol Exp $
  * Testing the calculation of joint probabilities.
  * Command line parameters: 
  * 1) a .net file, 
@@ -13,7 +13,7 @@
 #include "parser.h"
 #include "clique.h"
 #include "nipvariable.h"
-#include "potential.h"
+#include "nippotential.h"
 #include "niperrorhandler.h"
 #include "nip.h"
 
@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
 
   int i, n;
   int num_of_vars = 0;
-  potential result = NULL;
+  nip_potential result = NULL;
 
   nip model = NULL;
   time_series ts = NULL;
@@ -108,14 +108,14 @@ int main(int argc, char *argv[]){
     printf("%s, ", nip_variable_symbol(vars[i]));
   }
   printf("%s) equals: \n", nip_variable_symbol(vars[num_of_vars-1]));
-  print_potential(result);
+  nip_fprintf_potential(stdout, result);
 
   printf("Mass before evidence: m1 = %g\n", m1);
   printf("Mass after evidence : m2 = %g\n", m2);
   printf("Log. likelihood: ln(m2/m1) = %g\n", log(m2/m1));
   
   free(vars);
-  free_potential(result);
+  nip_free_potential(result);
   for(i = 0; i < n; i++)
     free_timeseries(ts_set[i]);
   free(ts_set);
