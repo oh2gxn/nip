@@ -29,7 +29,7 @@ TODO:
   + lists.h -> niplists.h
   + fileio.h -> nipstring.h
   + variable.h -> nipvariable.h
-  - potential.h -> nippotential.h
+  + potential.h -> nippotential.h
   - clique.h -> nipjointree.h ???
   - Heap.h -> nipheap.h
   - Graph.h -> nipgraph.h
