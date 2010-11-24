@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.1 2010-11-24 12:10:25 jatoivol Exp $
+% $Id: doc.tex,v 1.2 2010-11-24 13:23:54 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -84,7 +84,7 @@
 
 \begin{centering}
 \huge
-\textbf{System description}\\ % Any better names for this?
+\textbf{Software library documentation}\\ % Any better names for this?
 \end{centering}
 
 \parbox{5cm}{\ }
@@ -116,19 +116,22 @@ Date: \today
 \newpage
 \chapter{General description}
 This document describes a software library developed by the authors at the
-laboratory of computer and information science (CIS) at Helsinki University
-of Technology. The software library provides tools for Bayesian inference
-within the domain of multivariate discrete time series...
+Laboratory of Computer and Information Science (CIS) at Helsinki University
+of Technology, later known as Department of Information and Computer
+Science (ICS) at Aalto University. The software library provides tools for
+Bayesian inference within the domain of multivariate discrete time
+series data...
 % What?
 
 
 \section{Overview}
-The implementation can be seen as a set of layers divided in levels of
+The architecture can be seen as a set of layers divided in levels of
 abstraction (see Fig.~\ref{fig1}). The lowest level of computation is done
 with so-called potentials and therefore the abstract data type (ADT) 
 {\it potential} is used throughout the system. Another common data type is 
-{\it variable} which contains information e.g. about the name of a variable 
-and its states.
+{\it variable} which contains information e.g. about the name of a random 
+variable (a node in a Bayesian network model, not source code variable) and 
+its states (categorical values of the random variable).
 %
 \begin{figure} [!ht]
   \begin{center}
