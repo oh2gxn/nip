@@ -1,6 +1,10 @@
 /* nipvariable.h 
+ *
+ * Representation of categorical random variables 
+ * in Dynamic Bayes Network models
+ *
  * Author: Janne Toivola
- * $Id: nipvariable.h,v 1.3 2010-11-22 15:35:56 jatoivol Exp $
+ * $Id: nipvariable.h,v 1.4 2010-11-25 18:36:40 jatoivol Exp $
  */
 
 #ifndef __NIPVARIABLE_H__

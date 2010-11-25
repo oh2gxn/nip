@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.2 2010-11-24 13:23:54 jatoivol Exp $
+% $Id: doc.tex,v 1.3 2010-11-25 18:36:40 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -141,14 +141,14 @@ its states (categorical values of the random variable).
   \end{center}
 \end{figure}
 
-Files {\it Graph.h} and {\it Graph.c} contain part of the software
-responsible for Bayesian network representation and transformation into a
-so-called {\it join tree}. Various operations for handling join trees is
-located in {\it clique.h} and {\it clique.c}. Abstractions provided by
-potential, clique, graph and variable subsystems are used by the 
-{\it parser} subsystem for reading models and data from input files. 
-Finally the {\it nip} subsystem (files nip.h and nip.c) provides
-abstraction for time series and most of the other things mentioned above.
+The {\it graph} layer contains the part of the software library responsible
+for Bayesian network representation and transformation into a so-called
+{\it join tree}. Various operations for handling join trees are located in
+{\it clique.h} and {\it clique.c}. Abstractions provided by potential,
+clique, graph and variable subsystems are used by the {\it parser}
+subsystem for reading models and data from input files.  Finally the {\it
+  nip} subsystem (files nip.h and nip.c) provides abstraction for time
+series and most of the other things mentioned above.
 
 The following sections will explain each of the subsystems in close
 detail. Probably the most important parts for the user of this software
@@ -161,54 +161,56 @@ library are the ones describing variables and NIP abstractions.
 
 \section{Variables}
 \subsection{General}
-All the variables $V$ are assumed to be discrete and have a certain
-number of states: $c_V$ which is also known as the {\it cardinality} 
-of the variable $V$. Thus the probability distribution i.e. likelihood 
-$\lambda_V$ of a variable $V$ can be represented as a table of values 
-and the size of the table is $c_V$. Furthermore, the sum of the values 
-in the table equals one:
+All the random variables $V$ are assumed to be discrete and have a certain
+number of states: $c_V$ which is also known as the {\it cardinality} of the
+variable $V$. Thus the probability distribution (likelihood) $\lambda_V$ of
+a variable $V$ can be represented as a table of positive values and the
+size of the table is $c_V$. Furthermore, the sum of the values in the table
+equals one (so in principle, $c_V-1$ degrees of freedom):
 \begin{equation}
 \sum_{v=0}^{c_V-1} \lambda_V[v] = 1.
 \end{equation}
 
-The main idea of the whole system is to describe dependencies between
-variables. This is achieved by {\it graphs}, {\it potentials}, and 
-{\it cliques} presented in the following sections. Shortly, the variables
-are said to be {\it children} depending on their {\it parent} variables. A
-variable $V$ and its parents $\mathbf{\Pi}_V$ form a set of variables 
-$\mathbf{F}_V$ naturally called the {\it family of V}. There's more about
-the quantitative relationship in the following sections.
+The main idea of the whole software library is to describe dependencies
+between random variables. This is achieved by {\it graphs}, {\it
+  potentials}, and {\it cliques} presented in the following
+sections. Shortly, the variables are said to be {\it children}, whose
+states depend on the values of their {\it parent} variables. A variable $V$
+and its parents $\mathbf{\Pi}_V$ form a set of variables $\mathbf{F}_V$
+naturally called the {\it family} of $V$. There's more about the
+quantitative relationship in the following sections.
+
 
 \subsection{Functionality description}
 
 \subsubsection{The data structure}
-The data type \cdatatype{variable} defined in \cfilename{variable.h} 
+The data type \cdatatype{nip\_variable} defined in \cfilename{nipvariable.h} 
 is a pointer to a struct which has the following fields: 
 \begin{description}
 \item[symbol] is a short string used for identifying the variable. Maximum
-  length is defined as \cdefine{VAR\_SYMBOL\_LENGTH} in 
-  \cfilename{variable.h}. To ensure the correct operation of the system, the 
-  symbol should be unique.
+  length is defined as \cdefine{NIP\_VAR\_TEXT\_LENGTH} in
+  \cfilename{nipvariable.h}. To ensure the correct operation of the system,
+  the symbol must be unique.
 
-\item[name] is usually a longer name to describe the variable: it is
-  called {\it label} in the Hugin net language files. This is NOT used for 
-  identification of the variables and it doesn't need to be unique. 
-  The maximum length is defined as \cdefine{VAR\_NAME\_LENGTH} in 
-  \cfilename{variable.h}.
+\item[name] is usually a longer name to describe the variable: it is called
+  {\it label} in the Hugin net language files. This is NOT used for
+  identification of the variables and it doesn't need to be unique.  The
+  maximum length is defined as \cdefine{NIP\_VAR\_TEXT\_LENGTH} in
+  \cfilename{nipvariable.h}.
 
-\item[statenames] is an array of strings containing names for all
-  possible states of the variable. The identification of data relies on
-  these strings. The size of the statenames array i.e. number of
-  strings should be the same as the number of states indicated by
-  cardinality field described below.
+\item[state\_names] is an array of strings containing names for all
+  possible states of the variable. The software relies on these strings,
+  while e.g. parsing input data. The size of the statenames array
+  (number of strings) must be the same as the number of states
+  indicated by cardinality field described below.
 
 \item[cardinality] is a positive integer which tells how many states
   the variable can have. It plays an important role in all calculations
   so it better be correct: the value is not meant to be altered.
 
 \item[id] is an \cdatatype{unsigned long} used for identification
-  inside the system. It is set automatically by the \cfunction{new\_variable} 
-  function and should not be tampered after that.
+  internally by the system. It is set automatically by the
+  \cfunction{new\_variable} function and should not be tampered after that.
 
 \item[likelihood] is a \cdatatype{double} array describing the probability
   distribution of the states of the variable. It is used only for
@@ -216,19 +218,30 @@ is a pointer to a struct which has the following fields:
   variables remain filled with ones. Size of the array equals
   cardinality, of course.
 
+\item[prior] is a \cdatatype{double} array describing the probability
+  distribution of the states of independent variables (the ones without
+  parents). The numbers are model parameters not depending on any evidence
+  and should be modified only during parameter estimation (learning).
+
+\item[prior\_entered] is an \cdatatype{integer} flag indicating if the
+  prior has been taken into account during the inference computations.
+
 \item[previous] is used for describing the repetitive structure in
   timeslice models. It is a pointer to the variable which this variable
-  will replace in previous timeslice. The pointer is \cdatatype{NULL} if 
-  the model has no repetitive structure or dependencies between time steps.
+  will replace in previous timeslice. The pointer is \cdatatype{NULL} if
+  the variable does not belong to the so-called {\it interface} variables
+  conveying dependencies between time steps, or if the model has no
+  repetitive structure or dependencies between time steps.
 
 \item[next] is a same kind of pointer as \cstructfield{previous} above, 
   but this one tells which variable will be replaced in the next timeslice.
-  The \cstructfield{previous} and \cstructfield{next} pointers should be 
+  The \cstructfield{previous} and \cstructfield{next} pointers must be 
   symmetrical i.e. if \examplecode{a->next == b} then 
   \examplecode{b->previous == a}.
 
-\item[parents] is an array of references to the parent variables 
-  (\examplecode{variable[]}) or a null pointer if there are no parents.
+\item[parents] is an array of references to the parent variables
+  (\examplecode{nip\_variable[]}) or a null pointer if there are no parents
+  for this variable.
 
 \item[num\_of\_parents] is a positive \cdatatype{integer} which tells the 
   number of parents and thus the size of the \cstructfield{parents} array.
@@ -237,9 +250,14 @@ is a pointer to a struct which has the following fields:
   cliques of variables. The pointer is initially NULL and is set only when 
   the family clique is found the first time.
 
-\item[family\_mapping] is an integer array telling which variables of the
-  clique belong to the family and in which order. This is only a
-  memoization trick for some join tree operations.
+\item[family\_mapping] is an \cdatatype{integer} array telling which
+  variables of the clique belong to the family and in which order. This is
+  only a memoization trick for some join tree operations.
+
+\item[interface\_status] is an \cdatatype{integer} bit mask describing the
+  roles of the variable in connecting two consecutive time slices. The
+  possible values are defined as \cdefine{NIP\_INTERFACE\_*} in
+  \cfilename{nipvariable.h}
 
 \item[pos\_x] is an integer describing horizontal position of the graph
   node on computer display. This is also known as the {\it node position}
@@ -248,14 +266,15 @@ is a pointer to a struct which has the following fields:
 \item[pos\_y] is an integer describing vertical position of the graph node
   on computer display. (a.k.a. the {\it node position} in Hugin net files)
 
-\item[mark] is a field of type \cdatatype{char}. It can be used by
-  algorithms like DFS or the one that generates artificial data 
-  according to a model.
+\item[mark] is a field of type \cdatatype{char}. It can be used as a flag
+  by algorithms traversing the dependency graph, like DFS or the algorithm
+  that generates artificial data according to a model.
 \end{description}
 
-\cfilename{variable.h} provides also data types for implementing lists of
-variables. Both \cdatatype{varlink} and \cdatatype{variable\_iterator} are
-pointers to structs which contain following fields:
+\cfilename{nipvariable.h} provides also data types for implementing linked
+lists of variables. Both \cdatatype{nip\_variable\_link} and
+\cdatatype{nip\_variable\_iterator} are pointers to structs which contain
+the following fields:
 \begin{description}
 \item[data] is the variable (i.e. pointer to a variable struct) 
 contained by the list element.
@@ -266,6 +285,7 @@ at the end of the list.
 \item[bwd] is a pointer to the previous element in the list or 
 \cdatatype{NULL} at the beginning of the list.
 \end{description}
+
 Variable iterators are meant to be used the same way as list iterators
 in Java: you can get the next element contained by the list by just 
 calling \examplecode{next\_variable(iterator)}. On the other hand, iterators
@@ -273,128 +293,220 @@ are NOT meant to be the only reference to a list because it will
 advance in the list, pointing always to the next element and eventually
 be a null pointer.
 
+The actual linked list is implemented as a wrapper struct
+\cdatatype{nip\_variable\_list} containing the following fields:
+\begin{description}
+\item[length] is an \cdatatype{integer} counting the length of the list
+
+\item[first] is a \cdatatype{nip\_variable\_link} representing the first
+  element in the list
+
+\item[last] is a \cdatatype{nip\_variable\_link} representing the last
+  element in the list
+\end{description}
 
 \subsubsection{The functions}
-The functions provided in \cfilename{variable.c} are
+The functions provided in \cfilename{nipvariable.c} are
 %The interface + how the stuff works...
 \begin{description}
-\item[new\_variable(symbol, name, states, cardinality)] creates a variable
-  identified with the \cparameter{symbol} string. The \cparameter{name}
-  string will be copied as the name field of the new variable. Both the
-  \cparameter{symbol} and \cparameter{name} strings may be truncated to the
-  allowed length. The states of the new variable will be named according to
-  the given string array \cparameter{states}.  All the given strings are
-  copied, so remember to free them after they become useless. Initially, the 
-  variable will not have parents, so you have to set them separately.
+\item[nip\_new\_variable(symbol, name, states, cardinality)] creates a
+  \cdatatype{nip\_variable} identified with the \cparameter{symbol}
+  string. The \cparameter{name} string will be copied as the name field of
+  the new variable. Both the \cparameter{symbol} and \cparameter{name}
+  strings may be truncated to the allowed length. The states of the new
+  variable will be named according to the given string array
+  \cparameter{states}. All the given strings are copied, so remember to
+  free them after they become useless. Initially, the variable will not
+  have parents, so you have to set them separately.
 
-\item[copy\_variable(v)] returns an exact copy of the
-  variable~\cparameter{v}. Note that also the id~field is copied and
-  consequently there may not be two copies of the same variable in the same
-  model.
+\item[nip\_copy\_variable(v)] returns an exact copy of the
+  variable~\cparameter{v}. Note that also the \cparameter{id}~field is
+  copied and consequently there may not be two copies of the same variable
+  in the same model.
 
-\item[free\_variable(v)] frees the memory allocated for the
+\item[nip\_free\_variable(v)] frees the memory allocated for the
   variable~\cparameter{v}.
 
-\item[equal\_variables(v1, v2)] returns 0 if either of the variables
-  are null. Otherwise it will tell if the variables have equal id fields
-  or not.
+\item[nip\_equal\_variables(v1, v2)] returns 0 if either of the variables
+  are null pointers. Otherwise it will tell if the variables have equal id
+  fields or not. Note that this is NOT for testing the equality of the
+  states of the variables (whatever that would mean in a probabilistic
+  setting).
 
-\item[get\_id(v)] will return the unsigned long id field of the
-  variable~\cparameter{v}.
+\item[nip\_variable\_id(v)] will return the \cdatatype{unsigned long} id
+  field of the variable~\cparameter{v}.
 
-\item[mark\_variable(v)] marks the variable~\cparameter{v}. You can use
+\item[nip\_mark\_variable(v)] marks the variable~\cparameter{v}. You can use
   this if some algorithm needs to know which variables have been dealt
-  with.
+  with while traversing through a network.
 
-\item[unmark\_variable(v)] clears the mark for the variable~\cparameter{v}.
+\item[nip\_unmark\_variable(v)] clears the mark for the
+  variable~\cparameter{v}.
 
-\item[variable\_marked(v)] tells if the variable~\cparameter{v} is marked
-  or not (returns the integer 0 if not).
+\item[nip\_variable\_marked(v)] tells if the variable~\cparameter{v} is
+  marked or not (returns the integer 0 if not).
 
-\item[get\_symbol(v)] returns the symbol of the variable~\cparameter{v}. It
-  will not make a copy of the string so don't mess with the contents.
+\item[nip\_variable\_symbol(v)] returns the symbol of the
+  variable~\cparameter{v}. It will not make a copy of the string, so don't
+  mess with the contents!
 
-\item[get\_stateindex(v, state)] tells the place of the string
+\item[nip\_variable\_state\_index(v, state)] tells the place of the string
   \cparameter{state} in the state name array of the
   variable~\cparameter{v}. This index can be used for interpreting various
-  arrays describing probability distributions. 
+  arrays describing probability distributions.
 
-\item[total\_num\_of\_vars()] is used only for aiding the Hugin net
-  language file parser to return the total number of newly created
-  variables. All the variables (created with the \cfunction{new\_variable}
-  function) are accumulated in a list and this function can tell the size of
-  that list.
+\item[nip\_variable\_state\_name(v, index)] gives the i-th state name
+  string of the variable~\cparameter{v} (the reverse of the above
+  function). This index can be used for interpreting various arrays
+  describing probability distributions.
 
-\item[get\_first\_variable()] gives the first element in the list of newly
-  created variables mentioned above.
+% Gone are the days with global variables:
+%\item[total\_num\_of\_vars()] is used only for aiding the Hugin net
+%  language file parser to return the total number of newly created
+%  variables. All the variables (created with the \cfunction{new\_variable}
+%  function) are accumulated in a list and this function can tell the size of
+%  that list.
+%
+%\item[get\_first\_variable()] gives the first element in the list of newly
+%  created variables mentioned above.
+%
+%\item[get\_last\_variable()] gives the last element in the list of newly
+%  created variables mentioned above.
+%
+%\item[reset\_variable\_list()] will replace the list of recently created
+%  variables with \cdatatype{NULL} and set the size of the list to zero. This
+%  is used only for resetting the list after copying the list pointer to a new
+%  model. Otherwise all the models would share the same list of parsed
+%  variables.
+%
+%\item[get\_parser\_variable(symbol)] aids the net language parser to find a
+%  variable, identified by the \cparameter{symbol} string, in the list of
+%  newly created variables.
 
-\item[get\_last\_variable()] gives the last element in the list of newly
-  created variables mentioned above.
-
-\item[reset\_variable\_list()] will replace the list of recently created
-  variables with \cdatatype{NULL} and set the size of the list to zero. This
-  is used only for resetting the list after copying the list pointer to a new
-  model. Otherwise all the models would share the same list of parsed
-  variables.
-
-\item[next\_variable(it)] will give the next variable pointed by the
-  variable iterator~\cparameter{it} and advance the pointer to the next
-  variable in the list. The function returns \cdatatype{NULL} if the iterator
-  runs out of variables.
-
-\item[get\_parser\_variable(symbol)] aids the net language parser to find a
-  variable, identified by the \cparameter{symbol} string, in the list of
-  newly created variables.
-
-\item[get\_variable(vars, nvars, symbol)] searches the \cdatatype{variable
-  array}~\cparameter{vars} for a variable identified by the string
-  \cparameter{symbol}. Also the size of the array has to be specified as the
-  \cdatatype{integer}~\cparameter{nvars}.
+\item[nip\_search\_variable\_array(vars, nvars, symbol)] searches the
+  \cdatatype{variable array}~\cparameter{vars} for a variable identified by
+  the string \cparameter{symbol}. Also the size of the array has to be
+  specified as the \cdatatype{integer}~\cparameter{nvars}.
   
-\item[update\_likelihood(v, likelihood)] will set the likelihood array of
-  variable~\cparameter{v} according to the given double array
+\item[nip\_update\_likelihood(v, likelihood)] will set the likelihood array
+  of variable~\cparameter{v} according to the given double array
   \cparameter{likelihood}. Size of the given array should be the same (or
-  more) than the cardinality of the variable.
+  more) than the cardinality of the variable. Contents are copied, so the
+  parameter array may be freed after calling this function.
 
-\item[reset\_likelihood(v)] fills the likelihood array of the
+\item[nip\_reset\_likelihood(v)] fills the likelihood array of the
   variable~\cparameter{v} with ones. This means that the likelihood of the
   variable states will be uniform.
 
-\item[number\_of\_values(v)] returns the cardinality of the
-  variable~\cparameter{v}. It is the exact number of states the variable has
-  and will always have.
+% replaced by NIP\_CARDINALITY() macro
+%\item[number\_of\_values(v)] returns the cardinality of the
+%  variable~\cparameter{v}. It is the exact number of states the variable has
+%  and will always have.
 
-\item[number\_of\_parents(v)] tells how many parents the
+\item[nip\_number\_of\_parents(v)] tells how many parents the
   variable~\cparameter{v} has.
   
-\item[set\_position(v, x, y)] will set the integer position
+\item[nip\_set\_variable\_position(v, x, y)] will set the integer position
   values~\cparameter{x} and \cparameter{y} of the variable~\cparameter{v}.
 
-\item[get\_position(v, x, y)] will write the position values of the
-  variable~\cparameter{v} into the integers referenced by the pointers 
-  \cparameter{x} and \cparameter{y}.
+\item[nip\_get\_variable\_position(v, x, y)] will write the position values
+  of the variable~\cparameter{v} into the integers referenced by the
+  pointers \cparameter{x} and \cparameter{y}.
 
-\item[set\_parents(v, parents, nparents)] sets the parents for the
+\item[nip\_set\_parents(v, parents, nparents)] sets the parents for the
   variable~\cparameter{v} by copying the references from the
   \cparameter{parents}, which is an \cdatatype{array of variables}. 
   Size of the array must be specified by the \cparameter{nparents} 
   \cdatatype{integer}.
 
-\item[get\_parents(v)] returns a reference to the parents of the 
-  variable~\cparameter{v}. After you get the pointer to the array of 
-  parents, DO NOT alter the content of the array. Note that the size of the
-  array can be found out with the \cfunction{number\_of\_parents} function.
+\item[nip\_get\_parents(v)] returns a reference to the parents of the
+  variable~\cparameter{v}. After the pointer to the array of parents is
+  returned, DO NOT alter the content of the array, since it is not a new
+  copy. Note that the size of the array can be found out with the
+  \cfunction{nip\_number\_of\_parents} function.
 
-\item[set\_prior(v, prior)] sets the prior probability distribution for the 
-  variable~\cparameter{v} according to the given \cdatatype{double array} 
-  \cparameter{prior}. The array must have one element for each of the
-  states of the variable. Old prior array will be de-allocated if it exists
-  and the given array \cparameter{prior} is copied.
+\item[nip\_set\_prior(v, prior)] sets the prior probability distribution
+  for the variable~\cparameter{v} according to the given \cdatatype{double
+  array} \cparameter{prior}. The array must have one element for each of
+  the states of the variable. Old prior array will be de-allocated if it
+  exists and the given array \cparameter{prior} is copied.
 
-\item[get\_prior(v)] gives a base pointer to the \cdatatype{double array}
-  describing the prior distribution of given variable \cparameter{v}.
-  Don't mess with the contents of the array unless you need to alter the 
-  prior distribution.
+\item[nip\_get\_prior(v)] gives a base pointer to the \cdatatype{double
+  array} describing the prior distribution of given variable
+  \cparameter{v}.  Don't mess with the contents of the array unless you
+  need to alter the prior distribution (more conveniently achieved with the
+  above function).
+
+\item[nip\_sort\_variables(vars, nvars)] returns a new sorted copy of the
+  \cdatatype{variable array} \cparameter{vars}. Size of the array
+  \cparameter{nvars} must be specified. The sorting is done according to
+  variable IDs.
+
+\item[nip\_variable\_union(a, b, na, nb, nc)] takes two \cdatatype{variable
+    arrays} \cparameter{a} and \cparameter{b} (and their sizes
+  \cparameter{na} and \cparameter{nb} respectively) and returns a newly
+  allocated array of variables containing the union ($c = a \cup b$). The
+  size of the union is written to the integer referenced by the pointer
+  \cparameter{nc}.
+
+\item[nip\_variable\_isect(a, b, na, nb, nc)] takes two \cdatatype{variable
+    arrays} \cparameter{a} and \cparameter{b} (and their sizes
+  \cparameter{na} and \cparameter{nb} respectively) and returns a newly
+  allocated array of variables containing the intersection ($c = a \cap
+  b$). The size of the intersection is written to the integer referenced by
+  the pointer \cparameter{nc}.
+
+\item[nip\_mapper(set, subset, nset, nsubset)] returns a newly allocated
+  \cdatatype{integer array} of size \cparameter{nsubset} containing the
+  indexes of variables \cparameter{subset} in the other array
+  \cparameter{set}. Conceptually, the resulting array maps the subset in
+  the superset: $subset = set[map]$. This is useful in deciding how the
+  geometry of a sepset potential array corresponds to clique potential
+  array.
+
+\item[nip\_new\_variable\_list()] creates a new empty list of variables.
+
+\item[nip\_new\_interface\_list()] creates a new empty list of
+  (variable,string) pairs. These are useful for referencing a list of other
+  variables, while some of them are yet to be created.
+
+\item[nip\_append\_variable(l, v)] appends the variable \cparameter{v} to
+  the end of list \cparameter{l}.
+
+\item[nip\_append\_interface(l, v, next)] appends the variable
+  \cparameter{v} and string \cparameter{next} to the end of list
+  \cparameter{l}.
+
+\item[nip\_prepend\_variable(l, v)] prepends the variable \cparameter{v} to
+  the beginning of list \cparameter{l}.
+
+\item[nip\_prepend\_interface(l, v, next)] prepends the variable
+  \cparameter{v} and string \cparameter{next} to the beginning of list
+  \cparameter{l}.
+
+\item[nip\_variable\_list\_to\_array(l)] takes the linked list of variables
+  \cparameter{l} and puts them into a newly allocated array in the same
+  order. Size of the array can be found with
+  \examplecode{NIP\_LIST\_LENGTH(l)} macro defined in
+  \cfilename{niplists.h}.
+
+\item[nip\_empty\_variable\_list(l)] makes the linked list \cparameter{l}
+  empty, but does not free the memory allocated to the actual contents
+  (variables).
+
+\item[nip\_free\_interface\_list(l)] frees the memory allocated to the
+  linked list of variables and strings \cparameter{l}. Also the strings are
+  freed, but the variables are not. This suits the needs of the parser
+  developed for reading model descriptions.
+
+\item[nip\_next\_variable(it)] will give the next variable pointed by the
+  variable iterator~\cparameter{it} and advance the pointer to the next
+  variable in the list. The function returns \cdatatype{NULL} when the
+  iterator runs out of variables.
+
+\item[nip\_search\_variable\_list(l, symbol)] can be used for searching a
+  variable (referenced by \cparameter{symbol} string) from linked list
+  \cparameter{l}.
 \end{description}
 
 

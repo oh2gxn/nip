@@ -1,8 +1,11 @@
 /* nippotential.h
+ *
  * Functions for handling potentials: 
- * probability tables for distributions of categorical variables
- * Author: Janne Toivola
- * Version: $Id: nippotential.h,v 1.1 2010-11-23 17:25:52 jatoivol Exp $
+ * probability tables for distributions of categorical or discrete 
+ * random variables
+ *
+ * Author: Janne Toivola, Mikko Korpela
+ * Version: $Id: nippotential.h,v 1.2 2010-11-25 18:36:40 jatoivol Exp $
  */
 
 #ifndef __NIPPOTENTIAL_H__
