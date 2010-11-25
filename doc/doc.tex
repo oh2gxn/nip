@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.3 2010-11-25 18:36:40 jatoivol Exp $
+% $Id: doc.tex,v 1.4 2010-11-25 18:42:12 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -511,13 +511,14 @@ The functions provided in \cfilename{nipvariable.c} are
 
 
 \subsection{Other possibilities}
-The Hugin net language parser is made with Bison and consequently the
-\cfunction{yyparse} function is not able to return a list of variables
-etc. This makes it awkward to pass the results of parsing to the rest of
-the program. Our solution is to create a list of parsed variables in
-\cfilename{variable.c} by appending every newly created variable to it. The
-list could also be at \cfilename{parser.c} in order to avoid having weird
-functions like \cfunction{get\_parser\_variable}.
+%The Hugin net language parser is made with Bison and consequently the
+%\cfunction{yyparse} function is not able to return a list of variables
+%etc. This makes it awkward to pass the results of parsing to the rest of
+%the program. Our solution is to create a list of parsed variables in
+%\cfilename{variable.c} by appending every newly created variable to it. The
+%list could also be at \cfilename{parser.c} in order to avoid having weird
+%functions like \cfunction{get\_parser\_variable}.
+%% The global variable was moved elsewhere.
 
 % length limitations of symbols, variable and state names?
 We decided to have limitations for the lengths of variable symbols, labels

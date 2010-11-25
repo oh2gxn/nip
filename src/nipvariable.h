@@ -4,7 +4,7 @@
  * in Dynamic Bayes Network models
  *
  * Author: Janne Toivola
- * $Id: nipvariable.h,v 1.4 2010-11-25 18:36:40 jatoivol Exp $
+ * $Id: nipvariable.h,v 1.5 2010-11-25 18:42:12 jatoivol Exp $
  */
 
 #ifndef __NIPVARIABLE_H__
@@ -292,8 +292,11 @@ void nip_empty_variable_list(nip_variable_list l);
 void nip_free_interface_list(nip_interface_list l);
 
 
-/* Functions for iterating and searching... */
+/* Function for iterating through a linked list. */
 nip_variable nip_next_variable(nip_variable_iterator* it);
+
+/* Function for searching a variable with certain symbol in a linked list.
+ * Returns NULL if not found. */
 nip_variable nip_search_variable_list(nip_variable_list l, char *symbol);
 
 #endif /* __VARIABLE_H__ */
