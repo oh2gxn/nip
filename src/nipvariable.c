@@ -1,13 +1,11 @@
 /* nipvariable.c 
- * Author: Janne Toivola
- * $Id: nipvariable.c,v 1.3 2010-11-22 15:35:56 jatoivol Exp $
+ * Authors: Janne Toivola, Mikko Korpela
+ * Version: $Id: nipvariable.c,v 1.4 2010-11-26 17:06:02 jatoivol Exp $
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+
 #include "nipvariable.h"
-#include "niperrorhandler.h"
+
 
 static int nip_set_variable_text(char** record, const char *name);
 

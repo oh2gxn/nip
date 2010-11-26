@@ -6,7 +6,7 @@
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.66 2010-11-23 15:57:56 jatoivol Exp $
+# $Id: Makefile,v 1.67 2010-11-26 17:06:00 jatoivol Exp $
 
 
 # The C compiler and flags for compiling the library
@@ -65,7 +65,7 @@ src/Heap.o: src/Heap.c src/Heap.h
 src/cls2clq.o: src/cls2clq.c src/cls2clq.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
-src/Graph.o: src/Graph.c src/Graph.h
+src/nipgraph.o: src/nipgraph.c src/nipgraph.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 # use Bison parser generator
@@ -98,7 +98,7 @@ src/nipvariable.c \
 src/clique.c \
 src/Heap.c \
 src/cls2clq.c \
-src/Graph.c \
+src/nipgraph.c \
 $(HUG_SRC) \
 src/niplists.c \
 src/parser.c \

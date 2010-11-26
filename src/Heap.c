@@ -1,14 +1,8 @@
-/* Heap.c $Id: Heap.c,v 1.14 2010-11-09 19:06:08 jatoivol Exp $
+/* Heap.c $Id: Heap.c,v 1.15 2010-11-26 17:06:02 jatoivol Exp $
  */
 
-#include <stdlib.h>
-#include "nipvariable.h"
-#include "Graph.h"
 #include "Heap.h"
-#include "niperrorhandler.h"
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
+
 
 static void free_useless_sepsets(Heap *H);
 static int lessthan(Heap_item h1, Heap_item h2);

@@ -1,5 +1,12 @@
+/* Simple error reporting utilities
+ * Author: Janne Toivola
+ * Version: $Id: niperrorhandler.h,v 1.2 2010-11-26 17:06:02 jatoivol Exp $
+ * */
+
 #ifndef __NIPERRORHANDLER_H__
 #define __NIPERRORHANDLER_H__
+
+#include <stdio.h>
 
 /* Is there something like errno.h ?? */
 #define NIP_NO_ERROR 0

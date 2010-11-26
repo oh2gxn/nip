@@ -1,14 +1,11 @@
 /* Functions for using list structures
  * (a C++ implementation would use STL)
  * Author: Janne Toivola
- * Version: $Id: niplists.c,v 1.3 2010-11-22 17:28:46 jatoivol Exp $
+ * Version: $Id: niplists.c,v 1.4 2010-11-26 17:06:02 jatoivol Exp $
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #include "niplists.h"
-#include "niperrorhandler.h"
 
 
 nip_double_list nip_new_double_list(){

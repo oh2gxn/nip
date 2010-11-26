@@ -1,22 +1,16 @@
-/* Graph.c $Id: Graph.c,v 1.53 2010-11-11 16:38:07 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.1 2010-11-26 17:06:02 jatoivol Exp $
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include "Graph.h"
-#include "nipvariable.h"
-#include "clique.h"
-#include "Heap.h"
-#include "cls2clq.h"
-#include "niperrorhandler.h"
 
-static void sort_gr_variables(Graph* G);
+#include "nipgraph.h"
+
+
+static void nip_sort_graph_variables(nip_graph* G);
 
 /*** GRAPH MANAGEMENT ***/
 
-Graph* new_graph(unsigned n) {
-    Graph* newgraph = (Graph*) malloc(sizeof(Graph));
+nip_graph* nip_new_graph(unsigned n) {
+    nip_graph* newgraph = (nip_graph*) malloc(sizeof(nip_graph));
     if(!newgraph)
       return NULL;
 
@@ -42,9 +36,9 @@ Graph* new_graph(unsigned n) {
     return newgraph;
 }
 
-Graph* copy_graph(Graph* G) {
+nip_graph* nip_copy_graph(nip_graph* G) {
     int n, var_ind_size;
-    Graph* G_copy;
+    nip_graph* G_copy;
 
     n = G->size;
     G_copy = new_graph(n);
@@ -71,10 +65,9 @@ Graph* copy_graph(Graph* G) {
     return G_copy;
 }
 
-void free_graph(Graph* G) { 
+void nip_free_graph(nip_graph* G) { 
   if(G == NULL)
     return;
-  
   free(G->adj_matrix);
   free(G->variables);
   free(G->var_ind); /* JJT: I added this here, but is it correct..? */
@@ -83,15 +76,15 @@ void free_graph(Graph* G) {
 
 /*** GETTERS ***/
 
-int get_size(Graph* G) {
+int nip_graph_size(nip_graph* G) {
     return G->size;
 }
 
-nip_variable* get_variables(Graph* G) {
+nip_variable* nip_graph_variables(nip_graph* G) {
     return G->variables;
 }
 
-int get_graph_index(Graph* G, nip_variable v) {
+int nip_graph_index(nip_graph* G, nip_variable v) {
     int i;
 
     /* NOTE: Relies on variable ids being nearly consecutive
@@ -114,29 +107,33 @@ int get_graph_index(Graph* G, nip_variable v) {
     return -1;
 } 
 
-int get_neighbours(Graph* G, nip_variable* neighbours, nip_variable v) {
+
+int nip_get_neighbours(nip_graph* G, 
+		       nip_variable* neighbours, 
+		       nip_variable v) {
     int i, j;
-    int n = get_size(G);
-    int vi = get_graph_index(G, v);
+    int n = nip_get_graph_size(G);
+    int vi = nip_graph_index(G, v);
 
     j = 0;
     for (i = 0; i < n; i++)
-        if (ADJM(G, vi, i))
+        if (NIP_ADJM(G, vi, i))
             neighbours[j++] = G->variables[i];
 
     return j; /* # of neighbours */
 }
 
-int is_child(Graph* G, nip_variable parent, nip_variable child) {
+
+int nip_graph_is_child(nip_graph* G, nip_variable parent, nip_variable child) {
     int i,j;
-    i = get_graph_index(G, parent); /* XX kts. refaktorointi ylhäältä */
-    j = get_graph_index(G, child);
-    return ADJM(G, i, j);
+    i = nip_graph_index(G, parent); /* XX see refactorisation above */
+    j = nip_graph_index(G, child);
+    return NIP_ADJM(G, i, j);
 }
 
 /*** SETTERS ***/
 
-int add_variable(Graph* G, nip_variable v) {
+int nip_graph_add_variable(nip_graph* G, nip_variable v){
     if (G->top == G->size)
       return NIP_ERROR_GENERAL; /* Cannot add more items. */
 
@@ -144,21 +141,21 @@ int add_variable(Graph* G, nip_variable v) {
     G->top++;
 
     if (G->top == G->size)
-		sort_gr_variables(G);
+      nip_sort_graph_variables(G);
 
     return NIP_NO_ERROR;
 }
 
-int add_child(Graph* G, nip_variable parent, nip_variable child) {
+int nip_graph_add_child(nip_graph* G, nip_variable parent, nip_variable child){
     int parent_i, child_i;
 
-    parent_i = get_graph_index(G, parent);
-    child_i = get_graph_index(G, child);
+    parent_i = nip_graph_index(G, parent);
+    child_i = nip_graph_index(G, child);
 
     if (parent_i == -1 || child_i == -1)
 	   return NIP_ERROR_GENERAL;
 
-    ADJM(G, parent_i, child_i) = 1;
+    NIP_ADJM(G, parent_i, child_i) = 1;
 
     return NIP_NO_ERROR;
 }
@@ -169,7 +166,7 @@ int add_child(Graph* G, nip_variable parent, nip_variable child) {
     return nip_variable_id(v1) - nip_variable_id(v2);
 }*/
 
-static void sort_gr_variables(Graph* G) {
+static void nip_sort_graph_variables(nip_graph* G) {
     int i, id;
 	
     G->min_id = nip_variable_id(G->variables[0]); 
@@ -192,58 +189,58 @@ static void sort_gr_variables(Graph* G) {
     return;
 }
 
-Graph* make_undirected(Graph* G) {
-    Graph* Gu;   
+nip_graph* make_graph_undirected(nip_graph* G) {
+    nip_graph* Gu;   
     int i,j,n;
     
     if (G == NULL || G->variables == NULL)
         return NULL;
 
     n = G->size;
-    Gu = copy_graph(G);
+    Gu = nip_copy_graph(G);
 
     /* Create the undirected graph */
     for (i = 0; i < n; i++)
         for (j = 0; j < n; j++)
-            ADJM(Gu, i, j) = ADJM(G, i, j) || ADJM(G, j, i);
+            NIP_ADJM(Gu, i, j) = NIP_ADJM(G, i, j) || NIP_ADJM(G, j, i);
 
     return Gu;
 }
 
-Graph* moralise(Graph* G) {
+nip_graph* nip_moralise(nip_graph* G) {
     int i,j,n,v;
-    Graph* Gm;
+    nip_graph* Gm;
 
     if (G == NULL || G->variables == NULL)
         return NULL;
     
     n = G->size;
-    Gm = copy_graph(G);
+    Gm = nip_copy_graph(G);
 
     /* Moralisation */
     for (v = 0; v < n; v++)       /* Iterate variables */
         for (i = 0; i < n; i++) 
-            if (ADJM(G, i, v))            /* If i parent of v, find those */
+            if (NIP_ADJM(G, i, v))            /* If i parent of v, find those */
                 for (j = i+1; j < n; j++) /* parents of v which are > i */
                 {
-                    ADJM(Gm, i, j) |= ADJM(G, j, v);
-                    ADJM(Gm, j, i) |= ADJM(G, j, v);
+                    NIP_ADJM(Gm, i, j) |= NIP_ADJM(G, j, v);
+                    NIP_ADJM(Gm, j, i) |= NIP_ADJM(G, j, v);
                 }
                 
     return Gm;
 }
 
 /* Additional interface edges. By Janne Toivola */
-Graph* add_interface_edges(Graph* G){
+nip_graph* nip_add_interface_edges(nip_graph* G){
   int i,j,n;
   nip_variable v1, v2;
-  Graph* Gi;
+  nip_graph* Gi;
   
   if (G == NULL || G->variables == NULL)
     return NULL;
   
   n = G->size;
-  Gi = copy_graph(G);
+  Gi = nip_copy_graph(G);
   
   /* compare variable by variable */
   for (i = 0; i < n; i++)       /* Iterate variables */
@@ -251,20 +248,19 @@ Graph* add_interface_edges(Graph* G){
       v1 = G->variables[i];
       v2 = G->variables[j];
       /* join interface variables */
-      if (((v1->interface_status & NIP_INTERFACE_OLD_OUTGOING) && 
-	   (v2->interface_status & NIP_INTERFACE_OLD_OUTGOING)) ||
-	  ((v1->interface_status & NIP_INTERFACE_OUTGOING) && 
-	   (v2->interface_status & NIP_INTERFACE_OUTGOING))) {
-	ADJM(Gi, i, j) = 1;
-	ADJM(Gi, j, i) = 1;
+      if (((NIP_IF(v1) & NIP_INTERFACE_OLD_OUTGOING) && 
+	   (NIP_IF(v2) & NIP_INTERFACE_OLD_OUTGOING)) ||
+	  ((NIP_IF(v1) & NIP_INTERFACE_OUTGOING) && 
+	   (NIP_IF(v2) & NIP_INTERFACE_OUTGOING))) {
+	NIP_ADJM(Gi, i, j) = 1;
+	NIP_ADJM(Gi, j, i) = 1;
       }
     }
   return Gi;
 }
 
-/* Not specified in Graph.h -- internal helper function */
-int triangulate(Graph* Gm, clique** clique_p)
-{
+/* an internal helper function */
+int nip_triangulate_graph(nip_graph* Gm, clique** clique_p) {
     int i, j, j_index, k, k_index, n;
     int clique_count = 0;
     int cluster_size;
@@ -290,16 +286,16 @@ int triangulate(Graph* Gm, clique** clique_p)
            
         for (j = 0; j < cluster_size; j++)
         {
-            j_index = get_graph_index(Gm, min_cluster[j]);
+            j_index = nip_graph_index(Gm, min_cluster[j]);
             variable_set[j_index] = 1;
     
             /* Add new edges to Gm. */
             for (k = j+1; k < cluster_size; k++)
             {
-                    k_index = get_graph_index(Gm, min_cluster[k]);
+                    k_index = nip_graph_index(Gm, min_cluster[k]);
     
-                    ADJM(Gm, j_index, k_index) = 1;
-                    ADJM(Gm, k_index, j_index) = 1;
+                    NIP_ADJM(Gm, j_index, k_index) = 1;
+                    NIP_ADJM(Gm, k_index, j_index) = 1;
             }
         }
         
@@ -326,21 +322,20 @@ int triangulate(Graph* Gm, clique** clique_p)
 }
 
 
-int find_cliques(Graph* G, clique** cliques_p)
-{
-    Graph *Gu, *Gm, *Gi;
+int nip_find_cliques(nip_graph* G, clique** cliques_p) {
+    nip_graph *Gu, *Gm, *Gi;
     int n_cliques = 0;
 
-    Gm = moralise(G);
-    Gi = add_interface_edges(Gm); /* added by JJT 6.3.2006 */
-    Gu = make_undirected(Gi);
+    Gm = nip_moralise(G);
+    Gi = nip_add_interface_edges(Gm); /* added by JJT 6.3.2006 */
+    Gu = nip_make_graph_undirected(Gi);
 
-    n_cliques = triangulate(Gu, cliques_p);
+    n_cliques = nip_triangulate_graph(Gu, cliques_p);
 
     /* Test if triangulate failed */
     if(n_cliques < 0){
-      free_graph(Gu);
-      free_graph(Gm);
+      nip_free_graph(Gu);
+      nip_free_graph(Gm);
       return -1;
     }
 
@@ -349,9 +344,9 @@ int find_cliques(Graph* G, clique** cliques_p)
 
     /* JJT: I added some free_graph stuff here, because I suspected
      * memory leaks... */
-    free_graph(Gu);
-    free_graph(Gi);
-    free_graph(Gm);
+    nip_free_graph(Gu);
+    nip_free_graph(Gi);
+    nip_free_graph(Gm);
 
     return n_cliques;
 }

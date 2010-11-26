@@ -1,11 +1,16 @@
 /* nipstring.h 
- * Author: Janne Toivola, Mikko Korpela
- * Version: $Id: nipstring.h,v 1.2 2010-11-22 17:16:44 jatoivol Exp $
+ * Authors: Janne Toivola, Mikko Korpela
+ * Version: $Id: nipstring.h,v 1.3 2010-11-26 17:06:02 jatoivol Exp $
  */
 
 #ifndef __NIPSTRING_H__
-
 #define __NIPSTRING_H__
+
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "niperrorhandler.h"
 
 /*
  * Counts the number of words in string s. Words are separated by white space.

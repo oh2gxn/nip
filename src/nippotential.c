@@ -1,12 +1,10 @@
-/* potential.c $Id: nippotential.c,v 1.1 2010-11-23 17:25:52 jatoivol Exp $
- * Functions for handling potentials. 
+/* nippotential.c 
+ * Authors: Janne Toivola, Mikko Korpela
+ * Version: $Id: nippotential.c,v 1.2 2010-11-26 17:06:02 jatoivol Exp $
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "nippotential.h"
-#include "niperrorhandler.h"
+
 
 /*#define DEBUG_POTENTIAL*/
 
@@ -105,6 +103,13 @@ nip_potential nip_new_potential(int cardinality[], int num_of_vars,
       p->data[i] = data[i];
   }
   return p;
+}
+
+
+nip_potential nip_copy_potential(nip_potential p){
+  if (p == NULL)
+    return NULL;
+  return nip_new_potential(p->cardinality, p->num_of_vars, p->data);
 }
 
 

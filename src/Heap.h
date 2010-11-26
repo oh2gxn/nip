@@ -1,14 +1,19 @@
 /* Heap.h 
  * Authors: Antti Rasinen, Mikko Korpela, Janne Toivola
- * $Id: Heap.h,v 1.10 2010-11-09 19:06:08 jatoivol Exp $
+ * $Id: Heap.h,v 1.11 2010-11-26 17:06:02 jatoivol Exp $
  */
 
 #ifndef __HEAP_H__
 #define __HEAP_H__
 
-#include "nipvariable.h"
-#include "Graph.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include "clique.h"
+#include "nipgraph.h"
+#include "nipvariable.h"
+#include "niperrorhandler.h"
 
 #define PARENT(i) ((i-1)/2)
 #define LEFT(i) (2*i+1)

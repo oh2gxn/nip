@@ -1,7 +1,7 @@
 /* Unified error handler stuff! */
 /*http://www.opengroup.org/onlinepubs/007904975/functions/xsh_chap02_03.html*/
 /* #include <errno.h> ??? */
-#include <stdio.h>
+
 #include "niperrorhandler.h"
 
 /* A variable for counting errors */

@@ -4,15 +4,18 @@
  * probability tables for distributions of categorical or discrete 
  * random variables
  *
- * Author: Janne Toivola, Mikko Korpela
- * Version: $Id: nippotential.h,v 1.2 2010-11-25 18:36:40 jatoivol Exp $
+ * Authors: Janne Toivola, Mikko Korpela
+ * Version: $Id: nippotential.h,v 1.3 2010-11-26 17:06:02 jatoivol Exp $
  */
 
 #ifndef __NIPPOTENTIAL_H__
 #define __NIPPOTENTIAL_H__
 
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "niperrorhandler.h"
 
 /* Mac OS X had invalid HUGE_VAL ? */
 #ifndef HUGE_DOUBLE
@@ -36,6 +39,9 @@ typedef nip_potential_struct* nip_potential;
  * The potential array data[] can be null, if it is not known. */
 nip_potential nip_new_potential(int cardinality[], int num_of_vars, 
 				double data[]);
+
+/* Creates a new potential as an exact copy of p. */
+nip_potential nip_copy_potential(nip_potential p);
 
 /* Free the memory used by potential p. */
 void nip_free_potential(nip_potential p);

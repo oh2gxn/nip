@@ -1,13 +1,19 @@
 /* clique.h 
  * Author: Janne Toivola, Mikko Korpela
- * Version: $Id: clique.h,v 1.12 2010-11-23 15:57:56 jatoivol Exp $
+ * Version: $Id: clique.h,v 1.13 2010-11-26 17:06:02 jatoivol Exp $
  */
 
 #ifndef __CLIQUE_H__
 #define __CLIQUE_H__
 
-#include "nippotential.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
 #include "nipvariable.h"
+#include "nippotential.h"
+#include "niperrorhandler.h"
+#include "Heap.h" /* FIXME: circular dependency! Solve this! */
 
 struct sepsetlist {
   void* data; /* void is needed because of the order of definitions */

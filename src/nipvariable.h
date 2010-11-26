@@ -3,12 +3,17 @@
  * Representation of categorical random variables 
  * in Dynamic Bayes Network models
  *
- * Author: Janne Toivola
- * $Id: nipvariable.h,v 1.5 2010-11-25 18:42:12 jatoivol Exp $
+ * Authors: Janne Toivola, Mikko Korpela
+ * $Id: nipvariable.h,v 1.6 2010-11-26 17:06:02 jatoivol Exp $
  */
 
 #ifndef __NIPVARIABLE_H__
 #define __NIPVARIABLE_H__
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "niperrorhandler.h"
 
 /* The name, symbol, statename etc. can be at most 40 characters long... */
 #define NIP_VAR_TEXT_LENGTH 40
@@ -30,6 +35,9 @@
 
 /* Values of the binary flags */
 #define NIP_MARK(v)        ( (v)->mark )
+
+/* Values of interface flags */
+#define NIP_IF(v)  ( (v)->interface_status )
 
 /* enum interface_type {none, old_outgoing, outgoing};
  * typedef enum interface_type interface_flag; */

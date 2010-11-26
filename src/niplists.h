@@ -1,12 +1,15 @@
 /* Various linked list data structures used e.g. in parser
  * Author: Janne Toivola
- * Version: $Id: niplists.h,v 1.3 2010-11-22 17:28:46 jatoivol Exp $
+ * Version: $Id: niplists.h,v 1.4 2010-11-26 17:06:02 jatoivol Exp $
  */
 
 #ifndef __NIPLISTS_H__
 #define __NIPLISTS_H__
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "niperrorhandler.h"
 
 /* FIXME: these are dangerous, if the field names don't match for all lists! */
 #define NIP_LIST_LENGTH(l)   ( (l)->length )

@@ -1,18 +1,11 @@
-/* clique.c $Id: clique.c,v 1.36 2010-11-23 15:57:56 jatoivol Exp $
+/* clique.c $Id: clique.c,v 1.37 2010-11-26 17:06:02 jatoivol Exp $
  * Functions for handling cliques and sepsets.
  * Includes evidence handling and propagation of information
  * in the join tree.
  */
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #include "clique.h"
-#include "nipvariable.h"
-#include "nippotential.h"
-#include "niperrorhandler.h"
-#include "Heap.h"
+
 
 /*
 #define NIP_DEBUG_CLIQUE
