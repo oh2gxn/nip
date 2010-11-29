@@ -1,10 +1,9 @@
-/* clique.c $Id: clique.c,v 1.37 2010-11-26 17:06:02 jatoivol Exp $
- * Functions for handling cliques and sepsets.
- * Includes evidence handling and propagation of information
- * in the join tree.
+/* nipjointree.c
+ * Authors: Janne Toivola, Mikko Korpela
+ * Version: $Id: nipjointree.c,v 1.1 2010-11-29 18:26:39 jatoivol Exp $
  */
 
-#include "clique.h"
+#include "nipjointree.h"
 
 
 /*
@@ -15,35 +14,36 @@
 #define NIP_DEBUG_RETRACTION
 */
 
-static int message_pass(clique c1, sepset s, clique c2);
+static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2);
 
-static int var_index(clique c, nip_variable v);
+static int nip_clique_var_index(nip_clique c, nip_variable v);
 
-static int clique_search(clique one, clique two);
+/* Useless? */
+static int nip_cliques_connected(nip_clique one, nip_clique two);
 
-static int clique_marked(clique c);
+static int nip_clique_marked(nip_clique c);
 
-static void jtree_dfs(clique start, 
-		      void (*cFuncPointer)(clique, double*),
-		      void (*sFuncPointer)(sepset, double*),
-		      double* ptr);
-static void  retract_clique(clique c, double* ptr);
-static void  retract_sepset(sepset s, double* ptr);
-static void     clique_mass(clique c, double* ptr);
-static void neg_sepset_mass(sepset s, double* ptr);
+static void nip_join_tree_dfs(nip_clique start, 
+			      void (*cFuncPointer)(nip_clique, double*),
+			      void (*sFuncPointer)(nip_sepset, double*),
+			      double* ptr);
+static void  nip_retract_clique(nip_clique c, double* ptr);
+static void  nip_retract_sepset(nip_sepset s, double* ptr);
+static void     nip_clique_mass(nip_clique c, double* ptr);
+static void nip_neg_sepset_mass(nip_sepset s, double* ptr);
 
-static void remove_sepset(clique c, sepset s);
+static void nip_remove_sepset(nip_clique c, nip_sepset s);
 
 
-clique new_clique(nip_variable vars[], int num_of_vars){
-  clique c;
+nip_clique nip_new_clique(nip_variable vars[], int num_of_vars){
+  nip_clique c;
   int *cardinality;
   int *reorder;
   int *indices;
   int i, j;
   unsigned long temp;
 
-  c = (clique) malloc(sizeof(cliquetype));
+  c = (nip_clique) malloc(sizeof(nip_clique_struct));
   if(!c){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -137,10 +137,10 @@ clique new_clique(nip_variable vars[], int num_of_vars){
 }
 
 
-void free_clique(clique c){
-  sepset_link l1, l2;
-  clique cl1, cl2;
-  sepset s;
+void nip_free_clique(nip_clique c){
+  nip_sepset_link l1, l2;
+  nip_clique cl1, cl2;
+  nip_sepset s;
 
   if(c == NULL)
     return;
@@ -149,16 +149,16 @@ void free_clique(clique c){
   l1 = c->sepsets;
   while(l1 != NULL){
     l2 = l1->fwd;
-    s = (sepset)l1->data;
+    s = (nip_sepset)l1->data;
     cl1 = s->cliques[0];
     cl2 = s->cliques[1];
 
     /* Removes sepsets from the cliques. */
-    remove_sepset(cl1, s);
-    remove_sepset(cl2, s);
+    nip_remove_sepset(cl1, s);
+    nip_remove_sepset(cl2, s);
 
     /* Destroy the sepset. */
-    free_sepset(s);
+    nip_free_sepset(s);
 
     l1=l2;
   }
@@ -171,9 +171,10 @@ void free_clique(clique c){
 }
 
 
-int add_sepset(clique c, sepset s){
+int nip_add_sepset(nip_clique c, nip_sepset s){
 
-  sepset_link new = (sepset_link) malloc(sizeof(element));
+  nip_sepset_link new = (nip_sepset_link) 
+    malloc(sizeof(nip_sepsetlink_struct));
   if(!new){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NIP_ERROR_OUTOFMEMORY;
@@ -190,8 +191,8 @@ int add_sepset(clique c, sepset s){
 }
 
 
-static void remove_sepset(clique c, sepset s){
-  sepset_link l;
+static void nip_remove_sepset(nip_clique c, nip_sepset s){
+  nip_sepset_link l;
 
   if(!(c && s)){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
@@ -199,7 +200,7 @@ static void remove_sepset(clique c, sepset s){
   }
   l = c->sepsets;
   while(l != NULL){
-    if(((sepset)l->data) == s){
+    if(((nip_sepset)l->data) == s){
 
       if(l->bwd == NULL)
 	c->sepsets = l->fwd;
@@ -221,16 +222,17 @@ static void remove_sepset(clique c, sepset s){
 /*
  * ATTENTION! Check what this does when num_of_vars == 0.
  */
-sepset make_sepset(nip_variable vars[], int num_of_vars, clique cliques[]){
+nip_sepset nip_new_sepset(nip_variable vars[], int num_of_vars, 
+			  nip_clique cliques[]){
 
-  sepset s;
+  nip_sepset s;
   int *cardinality = NULL;
   int *reorder = NULL;
   int *indices = NULL;
   int i, j;
   unsigned long temp;
 
-  s = (sepset) malloc(sizeof(sepsettype));
+  s = (nip_sepset) malloc(sizeof(nip_sepset_struct));
 
   if(!s){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
@@ -268,7 +270,7 @@ sepset make_sepset(nip_variable vars[], int num_of_vars, clique cliques[]){
     indices = NULL;
   }
 
-  s->cliques = (clique *) calloc(2, sizeof(clique));
+  s->cliques = (nip_clique *) calloc(2, sizeof(nip_clique));
 
   if(!s->cliques){
     free(s);
@@ -348,7 +350,7 @@ sepset make_sepset(nip_variable vars[], int num_of_vars, clique cliques[]){
 }
 
 
-void free_sepset(sepset s){
+void nip_free_sepset(nip_sepset s){
   if(s){
     if(s->old->num_of_vars)
       free(s->variables);
@@ -362,8 +364,9 @@ void free_sepset(sepset s){
 }
 
 
-nip_potential create_potential(nip_variable variables[], int num_of_vars, 
-			       double data[]){
+nip_potential nip_create_potential(nip_variable variables[], 
+				   int num_of_vars, 
+				   double data[]){
   /*
    * Suppose we get an array of variables with IDs {5, 2, 3, 4, 0, 1}.
    * In this case, temp_array will be              {5, 2, 3, 4, 0, 1},
@@ -504,7 +507,7 @@ nip_potential create_potential(nip_variable variables[], int num_of_vars,
 
 
 /* NOTE: don't use this. This is just a bad idea we had... */
-double *reorder_potential(nip_variable vars[], nip_potential p){
+double* nip_reorder_potential(nip_variable vars[], nip_potential p){
 
   int old_flat_index, new_flat_index;
   int i, j;
@@ -619,7 +622,7 @@ double *reorder_potential(nip_variable vars[], nip_potential p){
 }
 
 
-void unmark_clique(clique c){
+void nip_unmark_clique(nip_clique c){
   if(c != NULL)
     c->mark = NIP_MARK_OFF;
   return;
@@ -629,26 +632,26 @@ void unmark_clique(clique c){
 /*
  * Returns 0 if clique is not marked, 1 if it is. (This could be a macro...)
  */
-static int clique_marked(clique c){
+static int nip_clique_marked(nip_clique c){
   return (c->mark == NIP_MARK_ON);
 }
 
 
-int clique_num_of_vars(clique c){
+int nip_clique_num_of_vars(nip_clique c){
   return c->p->num_of_vars; /* macro? */
 }
 
 
-int sepset_num_of_vars(sepset s){
+int nip_sepset_num_of_vars(nip_sepset s){
   return s->old->num_of_vars; /* macro? */
 }
 
 
-int distribute_evidence(clique c){
+int nip_distribute_evidence(nip_clique c){
 
   int retval;
-  sepset_link l;
-  sepset s;
+  nip_sepset_link l;
+  nip_sepset s;
 
 #ifdef NIP_DEBUG_CLIQUE
   printf("Distributing evidence in ");
@@ -662,15 +665,15 @@ int distribute_evidence(clique c){
   l = c->sepsets;
   while (l != 0){
     s = l->data;
-    if(!clique_marked(s->cliques[0])){
-      retval = message_pass(c, s, s->cliques[0]); /* pass a message */
+    if(!nip_clique_marked(s->cliques[0])){
+      retval = nip_message_pass(c, s, s->cliques[0]); /* pass a message */
       if(retval != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
     }
-    else if(!clique_marked(s->cliques[1])){
-      retval = message_pass(c, s, s->cliques[1]); /* pass a message */
+    else if(!nip_clique_marked(s->cliques[1])){
+      retval = nip_message_pass(c, s, s->cliques[1]); /* pass a message */
       if(retval != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
@@ -683,14 +686,14 @@ int distribute_evidence(clique c){
   l = c->sepsets;
   while (l != 0){
     s = l->data;
-    if(!clique_marked(s->cliques[0])){
-      if(distribute_evidence(s->cliques[0]) != NIP_NO_ERROR){
+    if(!nip_clique_marked(s->cliques[0])){
+      if(nip_distribute_evidence(s->cliques[0]) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
     }
-    else if(!clique_marked(s->cliques[1])){
-      if(distribute_evidence(s->cliques[1]) != NIP_NO_ERROR){
+    else if(!nip_clique_marked(s->cliques[1])){
+      if(nip_distribute_evidence(s->cliques[1]) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
@@ -701,11 +704,11 @@ int distribute_evidence(clique c){
 }
 
 
-int collect_evidence(clique c1, sepset s12, clique c2){
+int nip_collect_evidence(nip_clique c1, nip_sepset s12, nip_clique c2){
 
   int retval;
-  sepset_link l;
-  sepset s;
+  nip_sepset_link l;
+  nip_sepset s;
 
   /* mark */
   c2->mark = NIP_MARK_ON;
@@ -714,14 +717,14 @@ int collect_evidence(clique c1, sepset s12, clique c2){
   l = c2->sepsets;
   while (l != NULL){
     s = l->data;
-    if(!clique_marked(s->cliques[0])){
-      if(collect_evidence(c2, s, s->cliques[0]) != NIP_NO_ERROR){
+    if(!nip_clique_marked(s->cliques[0])){
+      if(nip_collect_evidence(c2, s, s->cliques[0]) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
     }
-    else if(!clique_marked(s->cliques[1]))
-      if(collect_evidence(c2, s, s->cliques[1]) != NIP_NO_ERROR){
+    else if(!nip_clique_marked(s->cliques[1]))
+      if(nip_collect_evidence(c2, s, s->cliques[1]) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
@@ -730,7 +733,7 @@ int collect_evidence(clique c1, sepset s12, clique c2){
 
   /* pass the message to c1 */
   if((c1 != NULL) && (s12 != NULL)){
-    retval = message_pass(c2, s12, c1);
+    retval = nip_message_pass(c2, s12, c1);
     if(retval != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
@@ -755,7 +758,7 @@ int collect_evidence(clique c1, sepset s12, clique c2){
  * The message goes from clique c1 through sepset s to clique c2.
  * Returns an error code.
  */
-static int message_pass(clique c1, sepset s, clique c2){
+static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2){
   int i, j = 0, k = 0;
   int retval;
   int *mapping;
@@ -811,7 +814,8 @@ static int message_pass(clique c1, sepset s, clique c2){
 }
 
 
-int initialise(clique c, nip_variable child, nip_potential p, int transient){
+int nip_init_clique(nip_clique c, nip_variable child, 
+		    nip_potential p, int transient){
   int i, j = 0, k = 0;
   int *mapping = NULL;
   int retval;
@@ -874,8 +878,8 @@ int initialise(clique c, nip_variable child, nip_potential p, int transient){
 }
 
 
-int marginalise(clique c, nip_variable v, double r[]){
-  int index = var_index(c, v);
+int nip_marginalise_clique(nip_clique c, nip_variable v, double r[]){
+  int index = nip_clique_var_index(c, v);
   int retval;
 
   /* variable not in this clique => NIP_ERROR */
@@ -892,26 +896,26 @@ int marginalise(clique c, nip_variable v, double r[]){
 }
 
 
-int global_retraction(nip_variable* vars, int nvars, clique* cliques, 
-		      int ncliques){
+int nip_global_retraction(nip_variable* vars, int nvars, 
+			  nip_clique* cliques, int ncliques){
   int i, index;
   int retval;
   nip_variable v;
-  clique c;
+  nip_clique c;
 
   for(index = 0; index < ncliques; index++)
-    unmark_clique(cliques[index]);
+    nip_unmark_clique(cliques[index]);
 
   /* Reset all the potentials back to the original.
    * NOTE: this excludes the priors. */
-  jtree_dfs(cliques[0], retract_clique, retract_sepset, NULL);
+  nip_join_tree_dfs(cliques[0], nip_retract_clique, nip_retract_sepset, NULL);
 
   /* Enter evidence back to the join tree.
    * Does not enter the priors... */
   for(i = 0; i < nvars; i++){
     v = vars[i];
-    c = find_family(cliques, ncliques, v);
-    index = var_index(c, v);
+    c = nip_find_family(cliques, ncliques, v);
+    index = nip_clique_var_index(c, v);
 
     retval = nip_update_evidence(v->likelihood, NULL, c->p, index);
     if(retval != NIP_NO_ERROR){
@@ -923,17 +927,21 @@ int global_retraction(nip_variable* vars, int nvars, clique* cliques,
 }
 
 
-int enter_observation(nip_variable* vars, int nvars, clique* cliques, 
-		      int ncliques, nip_variable v, char *state){
+int nip_enter_observation(nip_variable* vars, int nvars, 
+			  nip_clique* cliques, int ncliques, 
+			  nip_variable v, char *state){
   int index = nip_variable_state_index(v, state);
   if(index < 0)
     return NIP_NO_ERROR;
-  return enter_i_observation(vars, nvars, cliques, ncliques, v, index);
+  return nip_enter_index_observation(vars, nvars, 
+				     cliques, ncliques, 
+				     v, index);
 }
 
 
-int enter_i_observation(nip_variable* vars, int nvars, clique* cliques, 
-			int ncliques, nip_variable v, int index){
+int nip_enter_index_observation(nip_variable* vars, int nvars, 
+				nip_clique* cliques, int ncliques, 
+				nip_variable v, int index){
   int i, retval;
   double *evidence;
 
@@ -952,31 +960,32 @@ int enter_i_observation(nip_variable* vars, int nvars, clique* cliques,
     else
       evidence[i] = 0;
 
-  retval = enter_evidence(vars, nvars, cliques, ncliques, v, evidence);
+  retval = nip_enter_evidence(vars, nvars, cliques, ncliques, v, evidence);
   free(evidence);
   return retval;
 }
 
 
-int enter_evidence(nip_variable* vars, int nvars, clique* cliques, 
-		   int ncliques, nip_variable v, double evidence[]){
+int nip_enter_evidence(nip_variable* vars, int nvars, 
+		       nip_clique* cliques, int ncliques, 
+		       nip_variable v, double evidence[]){
   int index, i;
   int retraction = 0;
   int retval;
-  clique c;
+  nip_clique c;
 
   if(v == NULL || evidence == NULL){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return NIP_ERROR_NULLPOINTER;
   }
 
-  c = find_family(cliques, ncliques, v);    
+  c = nip_find_family(cliques, ncliques, v);    
   if(!c){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 0);
     return NIP_ERROR_INVALID_ARGUMENT;
   }
 
-  index = var_index(c, v);
+  index = nip_clique_var_index(c, v);
 
   for(i = 0; i < NIP_CARDINALITY(v); i++)
     if((v->likelihood)[i] == 0 && evidence[i] != 0)
@@ -1002,7 +1011,7 @@ int enter_evidence(nip_variable* vars, int nvars, clique* cliques,
   }
 
   if(retraction){
-    retval = global_retraction(vars, nvars, cliques, ncliques);
+    retval = nip_global_retraction(vars, nvars, cliques, ncliques);
     if(retval != NIP_NO_ERROR)
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return(retval);
@@ -1012,11 +1021,12 @@ int enter_evidence(nip_variable* vars, int nvars, clique* cliques,
 }
 
 
-int enter_prior(nip_variable* vars, int nvars, clique* cliques, 
-		int ncliques, nip_variable v, double prior[]){
+int nip_enter_prior(nip_variable* vars, int nvars, 
+		    nip_clique* cliques, int ncliques, 
+		    nip_variable v, double prior[]){
   int index, i;
   int e;
-  clique c;
+  nip_clique c;
 
   if(v == NULL || prior == NULL){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
@@ -1025,7 +1035,7 @@ int enter_prior(nip_variable* vars, int nvars, clique* cliques,
 
   /* printf("Entering prior for variable %s:\n", v->symbol); DEBUG */
 
-  c = find_family(cliques, ncliques, v);    
+  c = nip_find_family(cliques, ncliques, v);    
 
   e = 1;
   for(i = 0; i < NIP_CARDINALITY(v); i++){
@@ -1040,7 +1050,7 @@ int enter_prior(nip_variable* vars, int nvars, clique* cliques,
     return NIP_ERROR_INVALID_ARGUMENT;
   }
 
-  index = var_index(c, v);
+  index = nip_clique_var_index(c, v);
 
   /*
    * Here is the update of clique potential: simply a multiplication, 
@@ -1063,7 +1073,7 @@ int enter_prior(nip_variable* vars, int nvars, clique* cliques,
  * Method for checking if variable v is part of clique c.
  * Returns -1 if not, else the index of v among the variables in c.
  */
-static int var_index(clique c, nip_variable v){
+static int nip_clique_var_index(nip_clique c, nip_variable v){
   int var = 0;
 
   if(!(c && v)){
@@ -1081,14 +1091,15 @@ static int var_index(clique c, nip_variable v){
 }
 
 
-clique find_family(clique *cliques, int num_of_cliques, nip_variable var){
+nip_clique nip_find_family(nip_clique *cliques, int ncliques, 
+			   nip_variable var){
   int i, n;
   nip_variable* family = NULL;
-  clique found;
+  nip_clique found;
 
   /* NOTE: uses memoization for finding families */
   if(var->family_clique != NULL)
-    return (clique)(var->family_clique);
+    return (nip_clique)(var->family_clique);
 
   n = nip_number_of_parents(var);
   family = (nip_variable*) calloc(n + 1, sizeof(nip_variable));
@@ -1102,14 +1113,14 @@ clique find_family(clique *cliques, int num_of_cliques, nip_variable var){
       family[i] = var->parents[i];
   family[n] = var;
 
-  found = find_clique(cliques, num_of_cliques, family, n+1);
+  found = nip_find_clique(cliques, ncliques, family, n+1);
   var->family_clique = found; /* MEMOIZE! */
   free(family);
   return found;
 }
 
 
-int* find_family_mapping(clique family, nip_variable child){
+int* nip_find_family_mapping(nip_clique family, nip_variable child){
   int i, j, n, p;
   int *result = NULL;
 
@@ -1148,14 +1159,14 @@ int* find_family_mapping(clique family, nip_variable child){
 }
 
 
-clique find_clique(clique *cliques, int num_of_cliques, 
-		   nip_variable *variables, int num_of_vars){
+nip_clique nip_find_clique(nip_clique *cliques, int ncliques, 
+			   nip_variable *variables, int nvars){
   int i, j, k;
   int ok;
 
-  for(i = 0; i < num_of_cliques; i++){
+  for(i = 0; i < ncliques; i++){
     ok = 0;
-    for(j = 0; j < num_of_vars; j++){
+    for(j = 0; j < nvars; j++){
       for(k = 0; k < cliques[i]->p->num_of_vars; k++){
 	if(nip_equal_variables(variables[j], cliques[i]->variables[k])){
 	  ok++;
@@ -1164,7 +1175,7 @@ clique find_clique(clique *cliques, int num_of_cliques,
       }
     }
     /* All variables found in the clique */
-    if(ok == num_of_vars)
+    if(ok == nvars)
       return cliques[i];
   }
 
@@ -1172,89 +1183,14 @@ clique find_clique(clique *cliques, int num_of_cliques,
 }
 
 
-int find_sepsets(clique *cliques, int num_of_cliques){
-
-  int inserted = 0;
-  int i;
-  sepset s;
-  clique one, two;
-
-#ifdef NIP_DEBUG_CLIQUE
-  int j, k;
-  int ok = 1;
-#endif
-
-  Heap *H = build_sepset_heap(cliques, num_of_cliques);
-
-  if(!H){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-    return NIP_ERROR_GENERAL;
-  }
-
-  while(inserted < num_of_cliques - 1){
-
-    /* Extract the "best" candidate sepset from the heap. */
-    if(extract_min_sepset(H, &s)){
-
-      /* In case of error */
-      free_heap(H);
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-      return NIP_ERROR_GENERAL;
-    }
-
-    one = s->cliques[0];
-    two = s->cliques[1];
-
-    /* Unmark MUST be done before searching (clique_search). */
-    for(i = 0; i < num_of_cliques; i++)
-      unmark_clique(cliques[i]);
-
-    /* Prevent loops by checking if the cliques
-     * are already in the same tree. */
-    if(!clique_search(one, two)){
-
-      mark_useful_sepset(H, s); /* MVK */
-
-#ifdef NIP_DEBUG_CLIQUE
-      printf("In clique.c: Trying to add ");
-      print_sepset(s);
-
-      printf(" to ");
-      print_clique(one);
-
-      printf(" and ");
-      print_clique(two);
-#endif
-
-      if(add_sepset(one, s) != NIP_NO_ERROR){
-	free_heap(H);
-	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	return NIP_ERROR_GENERAL;
-      }	
-      if(add_sepset(two, s) != NIP_NO_ERROR){
-	free_heap(H);
-	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	return NIP_ERROR_GENERAL;
-      }
-
-      inserted++;
-    }
-  }
-
-  free_heap(H);
-
-  return NIP_NO_ERROR;
-}
-
-
-/*
+/* *** Useless? ***
  * Finds out if two cliques are in the same tree.
  * Returns 1 if they are, 0 if not.
  * cliques must be unmarked before calling this.
  */
-static int clique_search(clique one, clique two){
-  sepset_link l = one->sepsets;
-  sepset s;
+static int nip_cliques_connected(nip_clique one, nip_clique two){
+  nip_sepset_link l = one->sepsets;
+  nip_sepset s;
 
   if(one == NULL || two == NULL) /* normal situation or an error? */
     return 0; /* as in FALSE */
@@ -1268,13 +1204,13 @@ static int clique_search(clique one, clique two){
 
   /* call neighboring cliques */
   while (l != NULL){
-    s = (sepset)(l->data);
-    if(!clique_marked(s->cliques[0])){
-      if(clique_search(s->cliques[0], two))
+    s = (nip_sepset)(l->data);
+    if(!nip_clique_marked(s->cliques[0])){
+      if(nip_cliques_connected(s->cliques[0], two))
 	return 1; /* TRUE */
     }
-    else if(!clique_marked(s->cliques[1])){
-      if(clique_search(s->cliques[1], two))
+    else if(!nip_clique_marked(s->cliques[1])){
+      if(nip_cliques_connected(s->cliques[1], two))
 	return 1; /* TRUE */
     }
     l = l->fwd;
@@ -1284,41 +1220,38 @@ static int clique_search(clique one, clique two){
 }
 
 
-void print_clique(clique c){
+void nip_fprintf_clique(FILE* stream, nip_clique c){
   int i;
-  printf("clique ");
-  /*printf("( ");*/
+  fprintf(stream, "clique ");
+  /*fprintf(stream, "( ");*/
   for(i = 0; i < c->p->num_of_vars; i++)
-    printf("%s ", c->variables[i]->symbol);
-  /*printf(")");*/
-  printf("\n");
+    fprintf(stream, "%s ", c->variables[i]->symbol);
+  /*fprintf(stream, ")");*/
+  fprintf(stream, "\n");
 }
 
 
-void print_sepset(sepset s){
+void nip_fprintf_sepset(FILE* stream, nip_sepset s){
   int i;
-  printf("sepset ");
-  /*printf("[ ");*/
+  fprintf(stream, "sepset ");
+  /*fprintf(stream, "[ ");*/
   for(i = 0; i < s->old->num_of_vars; i++)
-    printf("%s ", s->variables[i]->symbol);
-  /*printf("]");*/
-  printf("\n");
+    fprintf(stream, "%s ", s->variables[i]->symbol);
+  /*fprintf(stream, "]");*/
+  fprintf(stream, "\n");
 }
 
 
-static void retract_clique(clique c, double* ptr){
+static void nip_retract_clique(nip_clique c, double* ptr){
   int i;
   for(i = 0; i < c->p->size_of_data; i++)
-    c->p->data[i] = c->original_p->data[i];
+    c->p->data[i] = c->original_p->data[i]; /* TODO: nip_copy_potential? */
 }
 
 
-static void retract_sepset(sepset s, double* ptr){
-  int i;
-  for(i = 0; i < s->old->size_of_data; i++){
-    s->old->data[i] = 1;
-    s->new->data[i] = 1;
-  }
+static void nip_retract_sepset(nip_sepset s, double* ptr){
+  nip_uniform_potential(s->old, 1);
+  nip_uniform_potential(s->new, 1);
 }
 
 
@@ -1329,15 +1262,16 @@ static void retract_sepset(sepset s, double* ptr){
  * - a clique where the DFS starts
  * - a function pointer to the function to be used for every clique on the way
  * - a function pointer to the function to be used for every sepset on the way
+ * - a double pointer where a return value can be written
  */
-static void jtree_dfs(clique start, 
-		      void (*cFuncPointer)(clique, double*),
-		      void (*sFuncPointer)(sepset, double*),
-		      double* ptr){
+static void nip_join_tree_dfs(nip_clique start, 
+			      void (*cFuncPointer)(nip_clique, double*),
+			      void (*sFuncPointer)(nip_sepset, double*),
+			      double* ptr) {
 
   /* a lot of copy-paste from collect/distribute_evidence and clique_search */
-  sepset_link l = start->sepsets;
-  sepset s;
+  nip_sepset_link l = start->sepsets;
+  nip_sepset s;
   
   if(start == NULL) /* error? */
     return;
@@ -1350,16 +1284,16 @@ static void jtree_dfs(clique start,
 
   /* call neighboring cliques */
   while (l != NULL){
-    s = (sepset)(l->data);
-    if(!clique_marked(s->cliques[0])){
+    s = (nip_sepset)(l->data);
+    if(!nip_clique_marked(s->cliques[0])){
       if(sFuncPointer)
 	sFuncPointer(s, ptr);
-      jtree_dfs(s->cliques[0], cFuncPointer, sFuncPointer, ptr);
+      nip_join_tree_dfs(s->cliques[0], cFuncPointer, sFuncPointer, ptr);
     }
-    else if(!clique_marked(s->cliques[1])){
+    else if(!nip_clique_marked(s->cliques[1])){
       if(sFuncPointer)
 	sFuncPointer(s, ptr);
-      jtree_dfs(s->cliques[1], cFuncPointer, sFuncPointer, ptr);
+      nip_join_tree_dfs(s->cliques[1], cFuncPointer, sFuncPointer, ptr);
     }
     l = l->fwd;
   }
@@ -1367,16 +1301,16 @@ static void jtree_dfs(clique start,
 }
 
 
-static void clique_mass(clique c, double* ptr){
+static void nip_clique_mass(nip_clique c, double* ptr){
   int i;
   double m = 0;
   for(i = 0; i < c->p->size_of_data; i++)
-    m += c->p->data[i];
+    m += c->p->data[i]; /* TODO: nip_potential_mass? */
   *ptr += m;
   return;
 }
 
-static void neg_sepset_mass(sepset s, double* ptr){
+static void nip_neg_sepset_mass(nip_sepset s, double* ptr){
   int i;
   double m = 0;
   for(i = 0; i < s->new->size_of_data; i++)
@@ -1385,19 +1319,19 @@ static void neg_sepset_mass(sepset s, double* ptr){
   return;
 }
 
-double probability_mass(clique* cliques, int ncliques){
+double nip_probability_mass(nip_clique* cliques, int ncliques){
   int i;
   double ret;
 
   /* unmark all cliques */
   for(i = 0; i < ncliques; i++)
-    unmark_clique(cliques[i]);
+    nip_unmark_clique(cliques[i]);
 
   /* init */
   ret = 0;
 
   /* sum of the probability mass in cliques minus the mass in sepsets */
-  jtree_dfs(cliques[0], clique_mass, neg_sepset_mass, &ret);
+  nip_join_tree_dfs(cliques[0], nip_clique_mass, nip_neg_sepset_mass, &ret);
   return ret;
 }
 
@@ -1407,9 +1341,9 @@ double probability_mass(clique* cliques, int ncliques){
  ** remember the found variables and prune the DFS after all necessary 
  ** variables have been encountered.
  **/
-nip_potential gather_joint_probability(clique start, 
-				       nip_variable *vars, int n_vars,
-				       nip_variable *isect, int n_isect){  
+nip_potential nip_gather_joint_probability(nip_clique start, 
+					   nip_variable *vars, int n_vars,
+					   nip_variable *isect, int n_isect){  
   /* a lot of copy-paste from jtree_dfs */
   int i, j, k, m, n;
   int retval;
@@ -1424,9 +1358,9 @@ nip_potential gather_joint_probability(clique start,
   int nrv;
   nip_variable *temp = NULL;
   int nt;
-  sepset_link l;
-  sepset s;
-  clique c;
+  nip_sepset_link l;
+  nip_sepset s;
+  nip_clique c;
   
   /* error? */
   if(start == NULL || n_vars < 0){
@@ -1543,11 +1477,11 @@ nip_potential gather_joint_probability(clique start,
 
   /** Traverse to the neighboring cliques in the tree **/
   while (l != NULL){
-    s = (sepset)(l->data);
+    s = (nip_sepset)(l->data);
     /* try both directions in a neighboring sepset */
     for(i = 0; i < 2; i++){ 
       c = s->cliques[i];
-      if(!clique_marked(c)){
+      if(!nip_clique_marked(c)){
 	
 	/*** 3. Operations on potentials ***/
 
@@ -1611,7 +1545,7 @@ nip_potential gather_joint_probability(clique start,
 	}
 
 	/* 3.4 Continue DFS */
-	rest = gather_joint_probability(c, vars, n_vars, rest_vars, nrv);
+	rest = nip_gather_joint_probability(c, vars, n_vars, rest_vars, nrv);
 	
 	/* 3.5 Mapping between product potential and recursive result */
 	for(j = 0; j < n_vars; j++)
@@ -1691,7 +1625,8 @@ nip_potential gather_joint_probability(clique start,
 }
 
 
-int clique_intersection(clique cl1, clique cl2, nip_variable **vars, int *n){
+int nip_clique_intersection(nip_clique cl1, nip_clique cl2, 
+			    nip_variable **vars, int *n){
 
   int i, j;
   int max_vars = cl2->p->num_of_vars;
@@ -1744,8 +1679,9 @@ int clique_intersection(clique cl1, clique cl2, nip_variable **vars, int *n){
 }
 
 
-potentialList make_potentialList(){
-  potentialList pl = (potentialList) malloc(sizeof(potentialListStruct));
+nip_potential_list nip_new_potential_list(){
+  nip_potential_list pl = (nip_potential_list) 
+    malloc(sizeof(nip_potential_list_struct));
   /* Q: What if NULL was returned? */
   pl->length = 0;
   pl->first  = NULL;
@@ -1754,9 +1690,10 @@ potentialList make_potentialList(){
 }
 
 
-int append_potential(potentialList l, nip_potential p, 
-		     nip_variable child, nip_variable* parents){
-  potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
+int nip_append_potential(nip_potential_list l, nip_potential p, 
+			 nip_variable child, nip_variable* parents){
+  nip_potential_link new = (nip_potential_link) 
+    malloc(sizeof(nip_potential_link_struct));
 
   if(!l || !p){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
@@ -1785,9 +1722,10 @@ int append_potential(potentialList l, nip_potential p,
 }
 
 
-int prepend_potential(potentialList l, nip_potential p, 
-		      nip_variable child, nip_variable* parents){
-  potentialLink new = (potentialLink) malloc(sizeof(potentialLinkStruct));
+int nip_prepend_potential(nip_potential_list l, nip_potential p, 
+			  nip_variable child, nip_variable* parents){
+  nip_potential_link new = (nip_potential_link) 
+    malloc(sizeof(nip_potential_link_struct));
 
   if(!l || !p){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
@@ -1815,8 +1753,8 @@ int prepend_potential(potentialList l, nip_potential p,
 }
 
 
-void free_potentialList(potentialList l){
-  potentialLink ln;
+void nip_free_potential_list(nip_potential_list l){
+  nip_potential_link ln;
 
   if(!l)
     return;
@@ -1845,4 +1783,4 @@ void free_potentialList(potentialList l){
   return;
 }
 
-/* More operations for the potentialLists? */
+/* More operations for nip_potential_list? */

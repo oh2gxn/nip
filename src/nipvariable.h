@@ -4,7 +4,7 @@
  * in Dynamic Bayes Network models
  *
  * Authors: Janne Toivola, Mikko Korpela
- * $Id: nipvariable.h,v 1.6 2010-11-26 17:06:02 jatoivol Exp $
+ * $Id: nipvariable.h,v 1.7 2010-11-29 18:26:39 jatoivol Exp $
  */
 
 #ifndef __NIPVARIABLE_H__
@@ -43,7 +43,7 @@
  * typedef enum interface_type interface_flag; */
 
 /* The struct and typedefs for nip_variable */
-struct nip_var {
+typedef struct nip_var {
   char* symbol;       /* Short symbol for the variable */
   char* name;         /* Label in the Net language */
   char** state_names; /* A string array with <cardinality> strings */
@@ -66,50 +66,46 @@ struct nip_var {
   int pos_y;
   char mark; /* mark for some algorithms (like DFS and data generation) */
   /* TODO: stringpairlist application_specific_properties; */
-};
-typedef struct nip_var nip_varstruct;
-typedef nip_varstruct* nip_variable;
+} nip_variable_struct;
+
+typedef nip_variable_struct* nip_variable;
 
 
 
 /* Linked list for storing nip_variables */
-struct nip_varlink {
+typedef struct nip_varlink {
   nip_variable data;       /* the variable */
   struct nip_varlink* fwd; /* next element */
   struct nip_varlink* bwd; /* previous element */
-};
-typedef struct nip_varlink nip_varlinkstruct;
-typedef nip_varlinkstruct* nip_variable_link;
+} nip_variable_link_struct;
+typedef nip_variable_link_struct* nip_variable_link;
 typedef nip_variable_link nip_variable_iterator;
 
-struct nip_varlist {
+typedef struct nip_varlist {
   int length;              /* number of elements */
   nip_variable_link first; /* beginning of the list */
   nip_variable_link last;  /* end of the list */
-};
-typedef struct nip_varlist nip_varliststruct;
-typedef nip_varliststruct* nip_variable_list;
+} nip_variable_list_struct;
+typedef nip_variable_list_struct* nip_variable_list;
 
 
 
 /* List for storing "NIP_next" relations or other strings, 
  * while other variables are yet to be parsed... */
-struct nip_iflink {
+typedef struct nip_iflink {
   nip_variable var; /* the variable */
   char* next;       /* ID reference to another variable */
   struct nip_iflink* fwd; /* next element */
   struct nip_iflink* bwd; /* previous element */
-};
-typedef struct nip_iflink nip_iflinkstruct;
-typedef nip_iflinkstruct* nip_interface_link;
+} nip_iflink_struct;
+typedef nip_iflink_struct* nip_interface_link;
 
-struct nip_iflist {
+typedef struct nip_iflist {
   int length;
   nip_interface_link first;
   nip_interface_link last;
-};
-typedef struct nip_iflist nip_ifliststruct;
-typedef nip_ifliststruct* nip_interface_list;
+} nip_iflist_struct;
+typedef nip_iflist_struct* nip_interface_list;
 
 
 

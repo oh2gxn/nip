@@ -6,7 +6,7 @@
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.67 2010-11-26 17:06:00 jatoivol Exp $
+# $Id: Makefile,v 1.68 2010-11-29 18:26:39 jatoivol Exp $
 
 
 # The C compiler and flags for compiling the library
@@ -56,7 +56,7 @@ src/nippotential.o: src/nippotential.c src/nippotential.h
 src/nipvariable.o: src/nipvariable.c src/nipvariable.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
-src/clique.o: src/clique.c src/clique.h
+src/nipjointree.o: src/nipjointree.c src/nipjointree.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/Heap.o: src/Heap.c src/Heap.h
@@ -95,7 +95,7 @@ LIB_SRCS = src/nipstring.c \
 src/niperrorhandler.c \
 src/nippotential.c \
 src/nipvariable.c \
-src/clique.c \
+src/nipjointree.c \
 src/Heap.c \
 src/cls2clq.c \
 src/nipgraph.c \

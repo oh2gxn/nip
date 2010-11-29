@@ -1,19 +1,19 @@
-/* Heap.c $Id: Heap.c,v 1.15 2010-11-26 17:06:02 jatoivol Exp $
+/* Heap.c $Id: Heap.c,v 1.16 2010-11-29 18:26:39 jatoivol Exp $
  */
 
 #include "Heap.h"
-
+#include "nipgraph.h"
 
 static void free_useless_sepsets(Heap *H);
 static int lessthan(Heap_item h1, Heap_item h2);
 static void heapify(Heap* H, int i);
 static int get_heap_index(Heap* H, nip_variable v);
-static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G);
-static int edges_added(Graph* G, nip_variable* vs, int n);
+static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, 
+			    nip_graph* G);
+static int edges_added(nip_graph* G, nip_variable* vs, int n);
 static int cluster_weight(nip_variable* vs, int n);
 
-static int edges_added(Graph* G, nip_variable* vs, int n)
-{
+static int edges_added(nip_graph* G, nip_variable* vs, int n) {
     /* vs is the array of variables in the cluster induced by vs[0] */
 
     int i,j, sum = 0;
@@ -31,8 +31,7 @@ static int edges_added(Graph* G, nip_variable* vs, int n)
     return sum; /* Number of links to add */
 }
 
-static int cluster_weight(nip_variable* vs, int n)
-{
+static int cluster_weight(nip_variable* vs, int n) {
     /* vs is the array of variables in the cluster induced by vs[0] */
     int i, prod = 1;
     
@@ -44,8 +43,7 @@ static int cluster_weight(nip_variable* vs, int n)
 
 /* Heap management */
 
-Heap* build_heap(Graph* Gm)
-{
+Heap* build_heap(nip_graph* Gm) {
     int i,j, n;
 
     Heap_item* hi;
@@ -73,8 +71,7 @@ Heap* build_heap(Graph* Gm)
     H->orig_size = n;
     H->useless_sepsets = NULL;
     
-    for (i = 0; i < n; i++)
-    {
+    for (i = 0; i < n; i++) {
         hi = &(H->heap_items[i]);
         hi->n = get_neighbours(Gm, Vs_temp, Gm->variables[i]) +1;
         /* get_neighbours could be modified to use the array Vs directly;
@@ -109,8 +106,7 @@ Heap* build_heap(Graph* Gm)
     return H;
 }
 
-Heap* build_sepset_heap(clique* cliques, int num_of_cliques)
-{
+Heap* build_sepset_heap(clique* cliques, int num_of_cliques) {
     int i,j, k = 0;
     int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
     int hi_index = 0;
@@ -195,15 +191,13 @@ Heap* build_sepset_heap(clique* cliques, int num_of_cliques)
     return H;
 }
 
-static int lessthan(Heap_item h1, Heap_item h2)
-{
+static int lessthan(Heap_item h1, Heap_item h2) {
     return (h1.primary_key < h2.primary_key) || 
 	   (h1.primary_key == h2.primary_key && 
 	    h1.secondary_key < h2.secondary_key);
 }  
 
-static void heapify(Heap* H, int i)
-{
+static void heapify(Heap* H, int i) {
     int l,r;
     int min, flag;
     Heap_item temp;
@@ -219,8 +213,7 @@ static void heapify(Heap* H, int i)
         if (r < H->heap_size && lessthan(H->heap_items[r], H->heap_items[min]))
             min = r;
             
-        if (min != i)
-        {
+        if (min != i) {
             /* Exchange array[min] and array[i] */
             temp = H->heap_items[min];
             H->heap_items[min] = H->heap_items[i];
@@ -231,8 +224,8 @@ static void heapify(Heap* H, int i)
     } while (flag);
 }
 
-int extract_min(Heap* H, Graph* G, nip_variable** cluster_vars)
-{
+
+int extract_min(Heap* H, nip_graph* G, nip_variable** cluster_vars) {
     Heap_item min;	/* Cluster with smallest weight */
     int i, heap_i;
 
@@ -254,23 +247,21 @@ int extract_min(Heap* H, Graph* G, nip_variable** cluster_vars)
     
     /* Iterate over neighbours of minimum element *
      * and update keys. The loop could be heavy.  */
-	for (i = 1; i < min.n; i++)         
-    {
-		heap_i = get_heap_index(H, min.Vs[i]);
-		clean_heap_item(&H->heap_items[heap_i], &min, G);
+    for (i = 1; i < min.n; i++) {
+      heap_i = get_heap_index(H, min.Vs[i]);
+      clean_heap_item(&H->heap_items[heap_i], &min, G);
     }
 
     /* Rebuild the heap. */
     for (i = 1; i < min.n; i++)
-		heapify(H, get_heap_index(H, min.Vs[i]));
+      heapify(H, get_heap_index(H, min.Vs[i]));
     heapify(H, 0);
     
     *cluster_vars = min.Vs;
     return min.n; /* Cluster size*/
 }
 
-int extract_min_sepset(Heap* H, sepset* sepset)
-{
+int extract_min_sepset(Heap* H, sepset* sepset) {
     Heap_item min;	/* Cluster with smallest weight */
 
     /* Empty heap, nothing to extract. */
@@ -345,8 +336,8 @@ static int get_heap_index(Heap* H, nip_variable v){
     return -1;
 }
 
-static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
-{
+static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, 
+			    nip_graph* G) {
     int i, j, n_vars = 0, n_total;
     nip_variable v_i, V_removed = min_cluster->Vs[0];
     nip_variable* cluster_vars;
@@ -402,7 +393,7 @@ static void clean_heap_item(Heap_item* hi, Heap_item* min_cluster, Graph* G)
     return;
 }
 
-void free_heap(Heap* H){
+void free_heap(Heap* H) {
 
   int i;
   Heap_item *hi;

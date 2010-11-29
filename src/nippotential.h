@@ -5,7 +5,7 @@
  * random variables
  *
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nippotential.h,v 1.3 2010-11-26 17:06:02 jatoivol Exp $
+ * Version: $Id: nippotential.h,v 1.4 2010-11-29 18:26:39 jatoivol Exp $
  */
 
 #ifndef __NIPPOTENTIAL_H__
@@ -23,16 +23,14 @@
 #define HUGE_DOUBLE (1.0/0.0)
 #endif /* HUGE_DOUBLE */
 
-typedef struct nip_pot_array_t {
+typedef struct nip_pot_array {
   int size_of_data;
   int *cardinality;
-  int num_of_vars;
+  int num_of_vars; /* TODO: getter for this */
   double *data;
-
   /* TODO: stringpairlist application_specific_properties; ? */
 } nip_potential_struct;
 
-/* typedef struct pot_array_t potential_struct; */
 typedef nip_potential_struct* nip_potential;
 
 /* Make a num_of_vars -dimension potential array. 

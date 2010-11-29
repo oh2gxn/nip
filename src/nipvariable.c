@@ -1,6 +1,6 @@
 /* nipvariable.c 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipvariable.c,v 1.4 2010-11-26 17:06:02 jatoivol Exp $
+ * Version: $Id: nipvariable.c,v 1.5 2010-11-29 18:26:39 jatoivol Exp $
  */
 
 
@@ -44,7 +44,7 @@ nip_variable nip_new_variable(const char* symbol, const char* name,
   double *dpointer;
   nip_variable v;
 
-  v = (nip_variable) malloc(sizeof(nip_varstruct));
+  v = (nip_variable) malloc(sizeof(nip_variable_struct));
   if(!v){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -120,7 +120,7 @@ nip_variable nip_copy_variable(nip_variable v){
   if(v == NULL)
     return NULL;
 
-  copy = (nip_variable) malloc(sizeof(nip_varstruct));
+  copy = (nip_variable) malloc(sizeof(nip_variable_struct));
   if(!copy){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
@@ -560,7 +560,8 @@ int* nip_mapper(nip_variable *set, nip_variable *subset,
 
 
 nip_variable_list nip_new_variable_list(){
-  nip_variable_list vl = (nip_variable_list) malloc(sizeof(nip_varliststruct));
+  nip_variable_list vl = (nip_variable_list) 
+    malloc(sizeof(nip_variable_list_struct));
   /* Q: What if NULL was returned? */
   vl->length = 0;
   vl->first  = NULL;
@@ -570,7 +571,8 @@ nip_variable_list nip_new_variable_list(){
 
 
 nip_interface_list nip_new_interface_list(){
-  nip_interface_list l = (nip_interface_list) malloc(sizeof(nip_ifliststruct));
+  nip_interface_list l = (nip_interface_list) 
+    malloc(sizeof(nip_iflist_struct));
   /* Q: What if NULL was returned? */
   l->length = 0;
   l->first  = NULL;
@@ -581,7 +583,7 @@ nip_interface_list nip_new_interface_list(){
 
 int nip_append_variable(nip_variable_list l, nip_variable v){
   nip_variable_link new = (nip_variable_link) 
-    malloc(sizeof(nip_varlinkstruct));
+    malloc(sizeof(nip_variable_link_struct));
 
   if(!l || !v){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
@@ -609,7 +611,7 @@ int nip_append_variable(nip_variable_list l, nip_variable v){
 
 int nip_append_interface(nip_interface_list l, nip_variable var, char* next){
   nip_interface_link new = (nip_interface_link) 
-    malloc(sizeof(nip_iflinkstruct));
+    malloc(sizeof(nip_iflink_struct));
 
   if(!l || !var){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
@@ -639,7 +641,7 @@ int nip_append_interface(nip_interface_list l, nip_variable var, char* next){
 
 int nip_prepend_variable(nip_variable_list l, nip_variable v){
   nip_variable_link new = (nip_variable_link) 
-    malloc(sizeof(nip_varlinkstruct));
+    malloc(sizeof(nip_variable_link_struct));
 
   if(!l || !v){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
@@ -666,7 +668,7 @@ int nip_prepend_variable(nip_variable_list l, nip_variable v){
 
 int nip_prepend_interface(nip_interface_list l, nip_variable var, char* next){
   nip_interface_link new = (nip_interface_link) 
-    malloc(sizeof(nip_iflinkstruct));
+    malloc(sizeof(nip_iflink_struct));
 
   if(!l || !var){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);

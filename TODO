@@ -20,6 +20,16 @@ TODO:
   + lists
   + fileio -> string
   + variable
+
+* Refactor nip.c and jointree.c
+  - functions that want collections of all variables and sepsets as parameters
+
+* Refactor Heap and Graph:
+  - Heap should not rely on Graph!
+  - Heap should not rely on Clique!
+
+* Solve circular dependency between Heap and clique!
+  + heap.h uses clique.h, which does not depend on heap.h itself!
   
 * Consistent conventions in naming functions, variables, and data structures?
   - make the naming conventions uniform, e.g. 
@@ -60,7 +70,7 @@ TODO:
 
 * Printing potential tables should be contained in potential.c
   - Problem: how to include comments about parent values?
-  - Solution: do the stuff in clique.c...
+  - Solution: do the stuff in clique.c..?
 
 * Hugin Net parser should use a struct instead of global variables!
 
@@ -96,7 +106,6 @@ TODO:
 * BUG: some DBN models work, equivalent static ones don't... WHY?
   - Does this happen only on MRF-like models? 
     Is it because of bad triangulation?
-
   - Should use_priors() be used automatically by reset_model() ?
   - Is the condition for entering priors really correct ?
   - Make sure priors get multiplied into the model only once!
@@ -138,7 +147,9 @@ TODO:
   + Next time: make a general void* list or use C++
 
 * BUG: Evidence about variables without parents cancels the prior
-  + Priors should not be entered as if they were evidence
+  + Solved: Priors should not be entered as if they were evidence
+
+
 
 
 --- Original huomioita.txt ---

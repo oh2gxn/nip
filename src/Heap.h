@@ -1,6 +1,7 @@
 /* Heap.h 
+ * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Antti Rasinen, Mikko Korpela, Janne Toivola
- * $Id: Heap.h,v 1.11 2010-11-26 17:06:02 jatoivol Exp $
+ * $Id: Heap.h,v 1.12 2010-11-29 18:26:39 jatoivol Exp $
  */
 
 #ifndef __HEAP_H__
@@ -10,8 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "clique.h"
 #include "nipgraph.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
 #include "niperrorhandler.h"
 
@@ -23,7 +24,7 @@ typedef struct {
   /* Vs[0] is the variable in the array, rest are neighbours*/
   nip_variable* Vs;
   sepset s;
-  int n; /* size (always at least 1) */
+  int n; /* size of Vs (always at least 1) */
   int primary_key;
   int secondary_key;
 } Heap_item;
@@ -38,11 +39,11 @@ typedef struct {
   sepset *useless_sepsets; /* MVK */
 } Heap;
 
-Heap* build_heap(Graph* Gm);
+Heap* build_heap(nip_graph* Gm);
 
 Heap* build_sepset_heap(clique* cliques, int num_of_cliques);
 
-int extract_min(Heap* H, Graph* G, nip_variable** cluster_vars);
+int extract_min(Heap* H, nip_graph* G, nip_variable** cluster_vars);
 
 int extract_min_sepset(Heap* H, sepset* sepset);
 
