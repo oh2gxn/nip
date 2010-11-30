@@ -1,11 +1,22 @@
 /* Functions for using list structures
  * (a C++ implementation would use STL)
  * Author: Janne Toivola
- * Version: $Id: niplists.c,v 1.4 2010-11-26 17:06:02 jatoivol Exp $
+ * Version: $Id: niplists.c,v 1.5 2010-11-30 18:12:04 jatoivol Exp $
  */
 
 
 #include "niplists.h"
+
+
+nip_int_array_list nip_new_int_array_list() {
+  nip_int_array_list ial = (nip_int_array_list) 
+    malloc(sizeof(nip_int_array_list_struct));
+  /* Q: What if NULL was returned? */
+  ial->length = 0;
+  ial->first = NULL;
+  ial->last = NULL;
+  return ial;
+}
 
 
 nip_double_list nip_new_double_list(){
@@ -41,6 +52,34 @@ nip_string_pair_list nip_new_string_pair_list(){
 }
 
 
+int nip_append_int_array(nip_in_array_list l, int* i, int ni) {
+  nip_int_array_link new = (nip_int_array_link) 
+    malloc(sizeof(nip_int_array_link_struct));
+
+  if(!l){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
+  }
+
+  new->data = i;
+  new->size = ni;
+  new->fwd = NULL;
+  new->bwd = l->last;
+  if(l->first == NULL)
+    l->first = new;
+  else
+    l->last->fwd = new;
+  l->last = new;
+  l->length++;
+  return NIP_NO_ERROR;
+}
+
+
 int nip_append_double(nip_double_list l, double d){
   nip_double_link new = 
     (nip_double_link) malloc(sizeof(nip_double_link_struct));
@@ -62,7 +101,6 @@ int nip_append_double(nip_double_list l, double d){
     l->first = new;
   else
     l->last->fwd = new;
-
   l->last = new;
   l->length++;
   return NIP_NO_ERROR;
@@ -90,7 +128,6 @@ int nip_append_string(nip_string_list l, char* s){
     l->first = new;
   else
     l->last->fwd = new;
-
   l->last = new;
   l->length++;
   return NIP_NO_ERROR;
@@ -119,8 +156,35 @@ int nip_append_string_pair(nip_string_pair_list l, char* key, char* value){
     l->first = new;
   else
     l->last->fwd = new;
-
   l->last = new;
+  l->length++;
+  return NIP_NO_ERROR;
+}
+
+
+int nip_prepend_int_array(nip_in_array_list l, int* i, int ni) {
+  nip_int_array_link new = 
+    (nip_int_array_link) malloc(sizeof(nip_int_array_link_struct));
+
+  if(!l){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
+  }
+
+  new->data = i;
+  new->size = ni;
+  new->bwd = NULL;
+  new->fwd = l->first;
+  if(l->last == NULL)
+    l->last = new;
+  else
+    l->first->bwd = new;
+  l->first = new;
   l->length++;
   return NIP_NO_ERROR;
 }
@@ -267,6 +331,26 @@ char** nip_string_list_to_array(nip_string_list l){
 }
 
 
+void nip_empty_int_array_list(nip_int_array_list l) {
+  nip_int_array_link ln;
+
+  if(!l)
+    return;
+  
+  ln = l->last;
+
+  l->last = NULL;
+  while(ln != NULL){
+    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
+    ln = ln->bwd;
+  }
+  free(l->first);
+  l->first = NULL;
+  l->length = 0;
+  return;
+}
+
+
 void nip_empty_double_list(nip_double_list l){
   nip_double_link ln;
 
@@ -303,6 +387,33 @@ void nip_empty_string_list(nip_string_list l){
   free(l->first);
   l->first = NULL;
   l->length = 0;
+  return;
+}
+
+
+void nip_free_int_array_list(nip_int_array_list l) {
+  nip_int_array_link ln;
+
+  if(!l)
+    return;
+  
+  ln = l->last;
+  l->last = NULL;
+  while(ln != NULL){
+    if(ln->fwd != NULL){
+      free(ln->fwd->data);
+      free(ln->fwd);
+    }
+    ln = ln->bwd;
+  }
+  if(l->first != NULL){
+    free(l->first->data);
+    free(l->first);
+    l->first = NULL;
+  }
+  l->length = 0;
+  free(l);
+  l = NULL;
   return;
 }
 
@@ -364,6 +475,30 @@ void nip_free_string_pair_list(nip_string_pair_list l){
   free(l);
   l = NULL;
   return;
+}
+
+
+int nip_int_array_list_contains_subset(nip_int_array_list l,
+				       int* i, int ni) {
+  nip_in_array_link lnk;
+  int v, flag;
+  
+  /* Iterate the list of known clusters */
+  /* Later additions cannot be supersets of earlier ones */
+  /* One of the variables in an earlier var_set is removed */
+  for (lnk = l->first; lnk != NULL; lnk = lnk->fwd) {
+    flag = 0;
+    for (v = 0; v < ni; v++) {
+      if (i[v] && !lnk->data[v]) {
+	flag = 1; /* i not a subset of l */
+	break;
+      }
+    }
+    if (!flag) /* We have a subset */
+      return 1;
+  }
+  
+  return 0;
 }
 
 

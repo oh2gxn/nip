@@ -6,7 +6,7 @@
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.68 2010-11-29 18:26:39 jatoivol Exp $
+# $Id: Makefile,v 1.69 2010-11-30 18:12:04 jatoivol Exp $
 
 
 # The C compiler and flags for compiling the library
@@ -59,10 +59,7 @@ src/nipvariable.o: src/nipvariable.c src/nipvariable.h
 src/nipjointree.o: src/nipjointree.c src/nipjointree.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
-src/Heap.o: src/Heap.c src/Heap.h
-	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
-
-src/cls2clq.o: src/cls2clq.c src/cls2clq.h
+src/nipheap.o: src/nipheap.c src/nipheap.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/nipgraph.o: src/nipgraph.c src/nipgraph.h
@@ -96,8 +93,7 @@ src/niperrorhandler.c \
 src/nippotential.c \
 src/nipvariable.c \
 src/nipjointree.c \
-src/Heap.c \
-src/cls2clq.c \
+src/nipheap.c \
 src/nipgraph.c \
 $(HUG_SRC) \
 src/niplists.c \

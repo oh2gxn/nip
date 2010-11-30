@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.2 2010-11-29 18:26:39 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.3 2010-11-30 18:12:04 jatoivol Exp $
  */
 
 
@@ -6,6 +6,9 @@
 
 
 static void nip_sort_graph_variables(nip_graph g);
+
+static clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters, 
+						nip_variable* vars, int n,);
 
 /*** GRAPH MANAGEMENT ***/
 
@@ -107,9 +110,8 @@ int nip_graph_index(nip_graph g, nip_variable v) {
 } 
 
 
-int nip_get_neighbours(nip_graph g, 
-		       nip_variable* neighbours, 
-		       nip_variable v) {
+int nip_graph_neighbours(nip_graph g, nip_variable v,
+			 nip_variable* neighbours) {
     int i, j;
     int n = nip_get_graph_size(g);
     int vi = nip_graph_index(g, v);
@@ -259,30 +261,81 @@ nip_graph nip_add_interface_edges(nip_graph g){
 }
 
 
+static clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters, 
+						nip_variable* vars, int n) {
+    int n_vars, i;
+    int clique_counter = n_cliques;
+    nip_int_array_link lnk;
+    nip_clique* cliques;
+    nip_variable* clique_vars;
+
+    cliques = (nip_clique*) calloc(n_cliques, sizeof(nip_clique));
+    if(!cliques)
+      return NULL;
+
+    clique_vars = (nip_variable*) calloc(n, sizeof(nip_variable));
+    if(!clique_vars){
+      free(cliques);
+      return NULL;
+    }
+
+    for (lnk = NIP_LIST_ITERATOR(clusters); 
+	 lnk != NULL; 
+	 lnk = NIP_LIST_NEXT(lnk)) {
+
+      /* Fill the array of clique variables */
+      n_vars = 0;
+      for (i = 0; i < n; i++)
+	if (lnk->data[i])
+	  clique_vars[n_vars++] = vars[i];
+
+      /* Create a new clique */
+      cliques[--clique_counter] = nip_new_clique(clique_vars, n_vars);
+      /* This ^^^^^^^^^^^^^^^^ is sort of dangerous. */
+
+      /* Clean up in case of errors */
+      if(cliques[clique_counter] == NULL){
+	for(i = clique_counter + 1; i < n_cliques; i++)
+	  free_clique(cliques[i]);
+	free(clique_vars);
+	free(cliques);
+	return NULL;
+      }
+    }
+    
+    free(clique_vars);
+    return cliques;
+}
+
+
 int nip_triangulate_graph(nip_graph gm, clique** clique_p) {
     int i, j, j_index, k, k_index, n;
     int clique_count = 0;
     int cluster_size;
     nip_variable* min_cluster;
     Heap* H;
-    Cluster_list* cl_head = NULL;
+    nip_int_array_list clusters = NULL;
     int* variable_set; /* [i] true, if variable[i] is in the cluster */
 
     n = gm->size;
     H = build_heap(gm);
-
-    variable_set = (int*) calloc(n, sizeof(int));
-    if(!variable_set)
-      return -1;
+    clusters = nip_new_int_array_list();
 
     for (i = 0; i < n; i++) {
 
       cluster_size = extract_min(H, gm, &min_cluster);
       
-      /* Clear the variable_set for this cluster */
-      memset(variable_set, 0, n*sizeof(int));
+      /* New variable_set for this cluster */
+      variable_set = (int*) calloc(n, sizeof(int));
+      if(!variable_set) {
+	/* FIXME: better error handling */
+	nip_free_int_array_list(clusters);
+	return -1;
+      }
+      /*memset(variable_set, 0, n*sizeof(int));/*calloc does this*/
       
       for (j = 0; j < cluster_size; j++) {
+	/* Find out which variables belong to the cluster */
 	j_index = nip_graph_index(gm, min_cluster[j]);
 	variable_set[j_index] = 1;
     
@@ -294,24 +347,23 @@ int nip_triangulate_graph(nip_graph gm, clique** clique_p) {
 	  NIP_ADJM(gm, k_index, j_index) = 1;
 	}
       }
-      
-      if (!is_subset(cl_head, variable_set, n)) {
-	cl_head = new_cl_item(n, cl_head, variable_set);
-	clique_count++;
-      }
+
+      /* Add the cluster to a list of cliques if valid */
+      if (!nip_int_array_list_contains_subset(clusters, variable_set, n))
+	nip_prepend_int_array(clusters, variable_set, n);
+      else
+	free(variable_set);
 
       /* MVK: memory leak fix */
       free(min_cluster);
     }
-    free(variable_set);
 
-    *clique_p = cl2cliques(gm->variables, cl_head, clique_count, n);
-    
+    /* Create a set of cliques from the found variable sets */
+    *clique_p = nip_cluster_list_to_clique_array(clusters, gm->variables, n);
+    clique_count = NIP_LIST_LENGTH(clusters);
+
     free_heap(H);
- 
-    /* JJT: Free the list cl_head ??? */
-    while(cl_head)
-      cl_head = remove_cl_item(cl_head);
+    nip_free_int_array_list(clusters); /* JJT: Free the cluster list */
     
     return clique_count;
 }

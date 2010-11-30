@@ -24,9 +24,9 @@ TODO:
 * Refactor nip.c and jointree.c
   - functions that want collections of all variables and sepsets as parameters
 
-* Refactor Heap and Graph:
-  - Heap should not rely on Graph!
-  - Heap should not rely on Clique!
+* Refactor Heap, Graph, and cls2clq:
+  - Heap should not depend on Graph
+  - cls2clq.h -> niplists.h + nipgraph.h
 
 * Solve circular dependency between Heap and clique!
   + heap.h uses clique.h, which does not depend on heap.h itself!

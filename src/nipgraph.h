@@ -2,7 +2,7 @@
  * Functions for representing and manipulating graphs, and methods for 
  * constructing the join tree.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipgraph.h,v 1.2 2010-11-29 18:26:39 jatoivol Exp $
+ * Version: $Id: nipgraph.h,v 1.3 2010-11-30 18:12:04 jatoivol Exp $
  */
 
 #ifndef __NIPGRAPH_H__
@@ -11,10 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nipheap.h"
+#include "niplists.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
-#include "clique.h"
-#include "Heap.h"
-#include "cls2clq.h"
 #include "niperrorhandler.h"
 
 #define NIP_ADJM(g, i, j) ( (g)->adj_matrix[(i)*(g)->size + (j)] )
@@ -61,7 +61,8 @@ int nip_graph_index(nip_graph g, nip_variable v);
  * Parameter v: the variable
  */
 
-int nip_get_neighbours(nip_graph g, nip_variable* neighbours, nip_variable v);
+int nip_graph_neighbours(nip_graph g, nip_variable v, 
+			 nip_variable* neighbours);
 /* Returns the number of neighbours of v.
  * Parameter g: the graph
  * Parameter neighbours: a pointer to a variable array
