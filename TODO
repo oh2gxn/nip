@@ -25,8 +25,9 @@ TODO:
   - functions that want collections of all variables and sepsets as parameters
 
 * Refactor Heap, Graph, and cls2clq:
-  - Heap should not depend on Graph
-  - cls2clq.h -> niplists.h + nipgraph.h
+  - Heap should not depend on Graph: reform Heap
+  - Some graph operations need to be reconsidered: e.g. add_variable
+  + cls2clq.h -> niplists.h + nipgraph.h
 
 * Solve circular dependency between Heap and clique!
   + heap.h uses clique.h, which does not depend on heap.h itself!

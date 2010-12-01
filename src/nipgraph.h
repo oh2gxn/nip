@@ -2,7 +2,7 @@
  * Functions for representing and manipulating graphs, and methods for 
  * constructing the join tree.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipgraph.h,v 1.3 2010-11-30 18:12:04 jatoivol Exp $
+ * Version: $Id: nipgraph.h,v 1.4 2010-12-01 13:34:11 jatoivol Exp $
  */
 
 #ifndef __NIPGRAPH_H__
@@ -30,89 +30,112 @@ typedef struct {
 } nip_graph_struct; 
 typedef nip_graph_struct* nip_graph
 
-nip_graph nip_new_graph(unsigned n);
-/* Creates new graph.
- * Parameter n: number of variables in a graph.
- */
 
-nip_graph nip_copy_graph(nip_graph g);
-/* Copies a graph. Does not create copies of variables,
- * but does copy the array of variables.
+/* Creates a new graph.
+ * Parameter n: (maximum) number of variables in the graph.
+ * Memory requirements are O(n²)
+ */
+nip_graph nip_new_graph(unsigned n);
+
+
+/* Copies a graph. Does not create copies of the variables,
+ * but does copy the references to them.
  * Parameter g: The graph to be copied
  */
+nip_graph nip_copy_graph(nip_graph g);
 
+
+/* Frees the memory used by the graph g. */
 void nip_free_graph(nip_graph g);
-/* Frees the memory used by the graph g.
- */
 
-int nip_graph_size(nip_graph g);
+
 /* Returns the number of variables in the graph g.
+ * Parameter g: the graph 
+ */
+int nip_graph_size(nip_graph g);
+
+
+/* Returns an array of references to the variables used in graph g.
+ * The array is still property of g, do not free or modify it.
  * Parameter g: the graph
  */
-
 nip_variable* nip_graph_variables(nip_graph g);
-/* Returns the variables used in graph g;
- * Parameter g: the graph
- */
 
-int nip_graph_index(nip_graph g, nip_variable v);
-/* Returns the index of v in the variable-array 
+
+/* Returns the index of v in the array of variables. 
+ * Used for interpreting the adjacency matrix.
  * Parameter g: the graph
  * Parameter v: the variable
  */
+int nip_graph_index(nip_graph g, nip_variable v);
 
-int nip_graph_neighbours(nip_graph g, nip_variable v, 
-			 nip_variable* neighbours);
+
 /* Returns the number of neighbours of v.
  * Parameter g: the graph
- * Parameter neighbours: a pointer to a variable array
-                         will contain the neighbouring variables after call
  * Parameter v: the variable 
+ * Parameter neighbours: a pointer to a variable array which
+ * will contain the neighbouring variables after call
+ * NOTE: the neighbours array needs to be allocated before calling this
  */
+int nip_graph_neighbours(nip_graph g, nip_variable v, 
+			 nip_variable* neighbours);
 
-int nip_graph_is_child(nip_graph g, nip_variable parent, nip_variable child);
-/* Returns true, if there is a link from parent to child
+
+/* Returns true (non-zero), if there is a link from parent to child
  * Parameter g: the graph
  * Parameter parent: the suspected parent
  * Parameter child: the suspected child
  */
+int nip_graph_is_child(nip_graph g, nip_variable parent, nip_variable child);
 
-int nip_graph_add_variable(nip_graph g, nip_variable v);
-/* Adds a new variable (ie. a node) to the graph. 
+
+/* Adds a new variable (ie. a node) to the graph. Do this only 
+ * <nip_graph_size(g)> times during the initialization of the graph.
  * Parameter g: the graph
  * Parameter v: the variable to be added
+ * Returns an error code.
  */
+int nip_graph_add_variable(nip_graph g, nip_variable v);
 
-int nip_graph_add_child(nip_graph g, nip_variable parent, nip_variable child);
+
 /* Adds a child to a parent, ie. a dependence.
  * Parameter g: the graph
- * Parameter parent: the parent-variable
- * Parameter child: the child-variable
+ * Parameter parent: the parent variable
+ * Parameter child: the child variable
  */
+int nip_graph_add_child(nip_graph g, nip_variable parent, nip_variable child);
 
-nip_graph nip_moralise(nip_graph g);
+
+/* Returns an undirected copy of the graph g. */
+nip_graph nip_make_graph_undirected(nip_graph g);
+
+
 /* Moralises a DAG. (Brit. spelling)
  * Parameter g: An unmoral graph.
- * Returns moralised graph.
+ * Returns a new moralised copy of the graph.
  * Does not modify g.
  */
+nip_graph nip_moralise(nip_graph g);
 
-nip_graph nip_add_interface_edges(nip_graph g);
+
 /* Adds undirected links between interface variables in a DAG.
  * Parameter g: A graph with determined interface variables.
- * Returns edited graph.
+ * Returns edited copy of the graph.
  * Does not modify g. (Author: Janne Toivola)
  */
+nip_graph nip_add_interface_edges(nip_graph g);
 
-int nip_find_cliques(nip_graph g, clique** cliques_p);
+
 /* Triangulates g and finds the cliques.
  * Parameter g: moralised undirected graph
  * Parameter cliques_p: pointer to a clique array
  * Returns the number of cliques.
- * Modifies g.
+ * Does not modify g.
  */
+int nip_find_cliques(nip_graph g, nip_clique** cliques_p);
 
-int nip_find_sepsets(clique *cliques, int num_of_cliques);
+
+int nip_find_sepsets(nip_clique *cliques, int num_of_cliques);
 /* Constructs sepsets and inserts them between the cliques to form a
  * join tree.
  * Returns an error code.
@@ -122,7 +145,6 @@ int nip_find_sepsets(clique *cliques, int num_of_cliques);
  */
 
 /* Internal helper */
-nip_graph nip_make_graph_undirected(nip_graph g);
 int nip_triangulate_graph(nip_graph gm, clique** clique_p);
 
 #endif /* __GRAPH_H__ */
