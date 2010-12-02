@@ -1,6 +1,6 @@
 /* Various linked list data structures used e.g. in parser
  * Author: Janne Toivola
- * Version: $Id: niplists.h,v 1.5 2010-11-30 18:12:04 jatoivol Exp $
+ * Version: $Id: niplists.h,v 1.6 2010-12-02 18:15:21 jatoivol Exp $
  */
 
 #ifndef __NIPLISTS_H__
@@ -24,6 +24,7 @@ typedef struct nip_int_array_link_type {
   int* data;
   int size;
   struct nip_int_array_link_type* fwd;
+  struct nip_int_array_link_type* bwd;
 } nip_int_array_link_struct;
 typedef nip_int_array_link_struct* nip_int_array_link;
 

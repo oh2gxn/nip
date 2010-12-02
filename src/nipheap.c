@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.2 2010-12-02 16:38:28 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.3 2010-12-02 18:15:21 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -9,7 +9,6 @@
 /* Internal helper functions */
 static void nip_free_useless_sepsets(nip_heap h);
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2);
-static void nip_heapify(nip_heap h, int i);
 static int nip_heap_index(nip_heap h, nip_variable v);
 static void nip_clean_heap_item(nip_heap_item hi, nip_heap_item min_cluster);
 
@@ -112,7 +111,7 @@ static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2) {
 	    h1->secondary_key < h2->secondary_key);
 }
 
-static void nip_heapify(nip_heap h, int i) {
+void nip_heapify(nip_heap h, int i) {
     int l,r;
     int min, flag;
     nip_heap_item temp;

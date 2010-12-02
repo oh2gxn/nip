@@ -1,21 +1,8 @@
-/* nip.c $Id: nip.c,v 1.215 2010-11-23 15:57:56 jatoivol Exp $
+/* nip.c $Id: nip.c,v 1.216 2010-12-02 18:15:21 jatoivol Exp $
  */
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include <float.h>
-#include <math.h>
-#include <time.h>
-#include <unistd.h>
-
 #include "nip.h"
-#include "clique.h"
-#include "niplists.h"
-#include "nipvariable.h"
-#include "nippotential.h"
-#include "niperrorhandler.h"
-#include "huginnet.tab.h"
+
 
 /* write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
@@ -30,7 +17,7 @@ extern FILE *open_net_file(const char *filename);
 extern void close_net_file();
 extern int yyparse();
 extern nip_variable_list get_parsed_variables();
-extern int get_cliques(clique** clique_array_pointer);
+extern int get_cliques(nip_clique** clique_array_pointer);
 extern void get_parsed_node_size(int* x, int* y);
 
 static int start_timeslice_message_pass(nip model, direction dir, 
@@ -53,8 +40,8 @@ void reset_model(nip model){
     nip_reset_likelihood(v);
     v->prior_entered = 0;
   }
-  retval = global_retraction(model->variables, model->num_of_vars, 
-			     model->cliques, model->num_of_cliques);
+  retval = nip_global_retraction(model->variables, model->num_of_vars, 
+				 model->cliques, model->num_of_cliques);
   if(retval != NIP_NO_ERROR)
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 }
@@ -62,7 +49,7 @@ void reset_model(nip model){
 
 void total_reset(nip model){
   int i;
-  clique c;
+  nip_clique c;
   for(i = 0; i < model->num_of_cliques; i++){
     c = model->cliques[i];
     nip_uniform_potential(c->original_p, 1.0);
@@ -93,9 +80,9 @@ void use_priors(nip model, int has_history){
 	 *           time slice models where interface variables will 
 	 *           not actually have priors in subsequent time steps. */
 	
-	retval = enter_prior(model->variables, model->num_of_vars, 
-			     model->cliques, model->num_of_cliques, 
-			     v, v->prior);
+	retval = nip_enter_prior(model->variables, model->num_of_vars, 
+				 model->cliques, model->num_of_cliques, 
+				 v, v->prior);
 	if(retval != NIP_NO_ERROR)
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
@@ -232,15 +219,15 @@ nip parse_model(char* file){
       new->independent[k++] = new->variables[i];
 
   if(new->outgoing_interface_size > 0){
-    new->in_clique = find_clique(new->cliques, 
-				 new->num_of_cliques, 
-				 new->previous_outgoing_interface, 
-				 new->outgoing_interface_size);
+    new->in_clique = nip_find_clique(new->cliques, 
+				     new->num_of_cliques, 
+				     new->previous_outgoing_interface, 
+				     new->outgoing_interface_size);
     assert(new->in_clique != NULL);
-    new->out_clique = find_clique(new->cliques, 
-				  new->num_of_cliques, 
-				  new->outgoing_interface, 
-				  new->outgoing_interface_size);
+    new->out_clique = nip_find_clique(new->cliques, 
+				      new->num_of_cliques, 
+				      new->outgoing_interface, 
+				      new->outgoing_interface_size);
     assert(new->out_clique != NULL);
   }
   else{
@@ -259,7 +246,7 @@ nip parse_model(char* file){
 #ifdef DEBUG_NIP
   if(new->out_clique){
     printf("Out clique:\n");
-    print_clique(new->out_clique);
+    nip_fprintf_clique(stdout, new->out_clique);
   }
   printf("Incoming interface:\n");
   for(i = 0; i < new->incoming_interface_size; i++)
@@ -288,7 +275,7 @@ int write_model(nip model, char* filename){
   nip_variable v = NULL;
   int *temp = NULL;
   int *map = NULL;
-  clique c = NULL;
+  nip_clique c = NULL;
   nip_potential p = NULL;
   char *indent;
 
@@ -412,8 +399,8 @@ int write_model(nip model, char* filename){
     p = nip_new_potential(temp, nparents+1, NULL);
 
     /* compute the distribution */
-    c = find_family(model->cliques, model->num_of_cliques, v);
-    map = find_family_mapping(c, v);
+    c = nip_find_family(model->cliques, model->num_of_cliques, v);
+    map = nip_find_family_mapping(c, v);
     nip_general_marginalise(c->original_p, p, map);
 
     /* normalisation (NOTE: should be part of potential.c) */
@@ -472,7 +459,7 @@ void free_model(nip model){
 
   /* 1. Free cliques and adjacent sepsets */
   for(i = 0; i < model->num_of_cliques; i++)
-    free_clique(model->cliques[i]);
+    nip_free_clique(model->cliques[i]);
   free(model->cliques);
 
   /* 2. Free the variables */
@@ -927,9 +914,9 @@ int insert_hard_evidence(nip model, char* varname, char* observation){
   nip_variable v = model_variable(model, varname);
   if(v == NULL)
     return NIP_ERROR_INVALID_ARGUMENT;
-  ret = enter_observation(model->variables, model->num_of_vars, 
-			  model->cliques, model->num_of_cliques, 
-			  v, observation);
+  ret = nip_enter_observation(model->variables, model->num_of_vars, 
+			      model->cliques, model->num_of_cliques, 
+			      v, observation);
   if(ret != NIP_NO_ERROR)
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
@@ -943,9 +930,9 @@ int insert_soft_evidence(nip model, char* varname, double* distribution){
   nip_variable v = model_variable(model, varname);
   if(v == NULL)
     return NIP_ERROR_INVALID_ARGUMENT;
-  ret =  enter_evidence(model->variables, model->num_of_vars, 
-			model->cliques, model->num_of_cliques, 
-			v, distribution);
+  ret =  nip_enter_evidence(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques, 
+			    v, distribution);
   make_consistent(model);
   return ret;
 }
@@ -966,9 +953,9 @@ int insert_ts_step(time_series ts, int t, nip model, char mark_mask){
     v = ts->observed[i];
     if(NIP_MARK(v) & mark_mask){ /* Only the suitably marked variables */
       if(ts->data[t][i] >= 0)
-	enter_i_observation(model->variables, model->num_of_vars, 
-			    model->cliques, model->num_of_cliques, 
-			    v, ts->data[t][i]);
+	nip_enter_index_observation(model->variables, model->num_of_vars, 
+				    model->cliques, model->num_of_cliques, 
+				    v, ts->data[t][i]);
     }
   }
   return NIP_NO_ERROR;
@@ -988,9 +975,9 @@ int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask){
   for(i = 0; i < ucs->num_of_vars; i++){
     v = ucs->variables[i];
     if(NIP_MARK(v) & mark_mask){
-      e = enter_evidence(model->variables, model->num_of_vars, 
-			 model->cliques, model->num_of_cliques, 
-			 v, ucs->data[t][i]);
+      e = nip_enter_evidence(model->variables, model->num_of_vars, 
+			     model->cliques, model->num_of_cliques, 
+			     v, ucs->data[t][i]);
       if(e != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, e, 1);  
 	return e;
@@ -1005,7 +992,7 @@ int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask){
 static int start_timeslice_message_pass(nip model, direction dir,
 					nip_potential alpha_or_gamma){
   int *mapping;
-  clique c;
+  nip_clique c;
   int nvars = model->outgoing_interface_size;
   nip_variable *vars;
 
@@ -1043,7 +1030,7 @@ static int finish_timeslice_message_pass(nip model, direction dir,
 					 nip_potential num, 
 					 nip_potential den){
   int *mapping;
-  clique c;
+  nip_clique c;
   int nvars = model->outgoing_interface_size;
   nip_variable *vars;
 
@@ -1079,7 +1066,7 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
   double m1, m2;
   nip_variable temp;
   nip_potential alpha = NULL;
-  clique clique_of_interest;
+  nip_clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
 
@@ -1248,12 +1235,13 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
       
       /* 2. Find the clique that contains the family of 
        *    the interesting variable */
-      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       temp);
+      clique_of_interest = nip_find_family(model->cliques, 
+					   model->num_of_cliques, 
+					   temp);
       assert(clique_of_interest != NULL);
       
       /* 3. Marginalisation (the memory must have been allocated) */
-      marginalise(clique_of_interest, temp, results->data[t][i]);
+      nip_marginalise_clique(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
       nip_normalise_array(results->data[t][i], NIP_CARDINALITY(temp));
@@ -1296,7 +1284,7 @@ uncertain_series forward_backward_inference(time_series ts,
   double m1, m2;
   nip_variable temp;
   nip_potential *alpha_gamma = NULL;
-  clique clique_of_interest;
+  nip_clique clique_of_interest;
   uncertain_series results = NULL;
   nip model = ts->model;
 
@@ -1510,13 +1498,13 @@ uncertain_series forward_backward_inference(time_series ts,
       
       /* 2. Find the clique that contains the family of 
        *    the interesting variable */
-      clique_of_interest = find_family(model->cliques, 
-				       model->num_of_cliques, 
-				       temp);
+      clique_of_interest = nip_find_family(model->cliques, 
+					   model->num_of_cliques, 
+					   temp);
       assert(clique_of_interest != NULL);
       
       /* 3. Marginalisation (the memory must have been allocated) */
-      marginalise(clique_of_interest, temp, results->data[t][i]);
+      nip_marginalise_clique(clique_of_interest, temp, results->data[t][i]);
       
       /* 4. Normalisation */
       nip_normalise_array(results->data[t][i], NIP_CARDINALITY(temp));
@@ -1571,17 +1559,17 @@ nip_variable model_variable(nip model, char* symbol){
 void make_consistent(nip model){
   int i;
   for (i = 0; i < model->num_of_cliques; i++)
-    unmark_clique(model->cliques[i]);
+    nip_unmark_clique(model->cliques[i]);
 
-  if(collect_evidence(NULL, NULL, model->cliques[0]) != NIP_NO_ERROR){
+  if(nip_collect_evidence(NULL, NULL, model->cliques[0]) != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return;
   }
 
   for (i = 0; i < model->num_of_cliques; i++)
-    unmark_clique(model->cliques[i]);
+    nip_unmark_clique(model->cliques[i]);
 
-  if(distribute_evidence(model->cliques[0]) != NIP_NO_ERROR)
+  if(nip_distribute_evidence(model->cliques[0]) != NIP_NO_ERROR)
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
   return;
@@ -1689,7 +1677,7 @@ static int e_step(time_series ts, nip_potential* parameters,
   nip_potential *alpha_gamma = NULL;
   nip_potential *results = NULL;
   nip_potential p;
-  clique c = NULL;
+  nip_clique c = NULL;
   nip model = ts->model;
   double m1, m2;
 
@@ -1810,7 +1798,7 @@ static int e_step(time_series ts, nip_potential* parameters,
       printf("m2 = %g\n", m2);
       printf("ll = %g\n", *loglikelihood);
       for(i = 0; i < model->num_of_cliques; i++){
-	print_clique(model->cliques[i]);
+	nip_fprintf_clique(stdout, model->cliques[i]);
 	nip_fprintf_potential(stdout, model->cliques[i]->original_p);
       }
 #endif
@@ -1900,11 +1888,11 @@ static int e_step(time_series ts, nip_potential* parameters,
       
       /* 2. Find the clique that contains the family of 
        *    the interesting variable */
-      c = find_family(model->cliques, model->num_of_cliques, v);
+      c = nip_find_family(model->cliques, model->num_of_cliques, v);
       assert(c != NULL);
       
       /* 3. General Marginalisation from the timeslice */
-      mapping = find_family_mapping(c, v);
+      mapping = nip_find_family_mapping(c, v);
       nip_general_marginalise(c->p, p, mapping);
 
 
@@ -1914,7 +1902,7 @@ static int e_step(time_series ts, nip_potential* parameters,
       for(j = 0; j < p->num_of_vars - 1; j++)
 	printf("%s ", v->parents[j]->symbol);
       printf("from \n");
-      print_clique(c);
+      nip_fprintf_clique(stdout, c);
       printf("with mapping [");
       for(j = 0; j < p->num_of_vars; j++)
 	printf("%d,", mapping[j]);
@@ -1976,7 +1964,7 @@ static int e_step(time_series ts, nip_potential* parameters,
 static int m_step(nip_potential* parameters, nip model){
   int i, j, k;
   int* fam_map;
-  clique fam_clique = NULL;
+  nip_clique fam_clique = NULL;
   nip_variable child = NULL;
 
 #ifdef PARAMETER_EPSILON
@@ -2010,8 +1998,10 @@ static int m_step(nip_potential* parameters, nip model){
     child = model->variables[i];
 
     if(child->num_of_parents > 0){
-      fam_clique = find_family(model->cliques, model->num_of_cliques, child);
-      fam_map = find_family_mapping(fam_clique, child);
+      fam_clique = nip_find_family(model->cliques,
+				   model->num_of_cliques, 
+				   child);
+      fam_map = nip_find_family_mapping(fam_clique, child);
 
       /* Update the conditional probability distributions (dependencies) */
       j = nip_init_potential(parameters[i], fam_clique->p, fam_map);
@@ -2216,13 +2206,13 @@ int em_learn(time_series* ts, int n_ts, double threshold,
 /* a little wrapper */
 double model_prob_mass(nip model){
   double m;
-  m = probability_mass(model->cliques, model->num_of_cliques);
+  m = nip_probability_mass(model->cliques, model->num_of_cliques);
   return m;
 }
 
 
 double *get_probability(nip model, nip_variable v){
-  clique clique_of_interest;
+  nip_clique clique_of_interest;
   double *result;
   int cardinality;
 
@@ -2242,7 +2232,8 @@ double *get_probability(nip model, nip_variable v){
   }
 
   /* 1. Find the clique that contains the interesting variable */
-  clique_of_interest = find_family(model->cliques, model->num_of_cliques, v);
+  clique_of_interest = nip_find_family(model->cliques, 
+				       model->num_of_cliques, v);
   if(!clique_of_interest){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     free(result);
@@ -2250,7 +2241,7 @@ double *get_probability(nip model, nip_variable v){
   }
 
   /* 2. Marginalisation (the memory must have been allocated) */
-  marginalise(clique_of_interest, v, result);
+  nip_marginalise_clique(clique_of_interest, v, result);
 
   /* 3. Normalisation */
   nip_normalise_array(result, cardinality);
@@ -2267,10 +2258,11 @@ nip_potential get_joint_probability(nip model, nip_variable *vars,
 
   /* Unmark all cliques */
   for (i = 0; i < model->num_of_cliques; i++)
-    unmark_clique(model->cliques[i]);
+    nip_unmark_clique(model->cliques[i]);
 
   /* Make a DFS in the tree... */
-  p = gather_joint_probability(model->cliques[0], vars, num_of_vars, NULL, 0);
+  p = nip_gather_joint_probability(model->cliques[0], 
+				   vars, num_of_vars, NULL, 0);
   if(p == NULL){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
@@ -2417,8 +2409,8 @@ time_series generate_data(nip model, int length){
       free(distribution);
       /*** insert into the time series and the model as evidence */
       ts->data[t][i] = k;
-      enter_i_observation(model->variables, model->num_of_vars, 
-			  model->cliques, model->num_of_cliques, v, k);
+      nip_enter_index_observation(model->variables, model->num_of_vars, 
+				  model->cliques, model->num_of_cliques, v, k);
     }
     make_consistent(model);
 
@@ -2484,10 +2476,10 @@ int lottery(double* distribution, int size){
 void print_cliques(nip model){
   int i;
   int num_of_cliques;
-  sepset s;
-  clique c;
-  sepset_link sepsetlist;
-  clique *cliques;
+  nip_sepset s;
+  nip_clique c;
+  nip_sepset_link sepsetlist;
+  nip_clique *cliques;
 
   if(!model){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
@@ -2500,12 +2492,12 @@ void print_cliques(nip model){
   printf("Cliques of the model:\n");
   for(i = 0; i < num_of_cliques; i++){
     c = cliques[i];
-    print_clique(c);
+    nip_fprintf_clique(stdout, c);
     nip_fprintf_potential(stdout, c->p);
     sepsetlist = c->sepsets;
     while(sepsetlist){
-      s = (sepset)sepsetlist->data;
-      print_sepset(s);
+      s = (nip_sepset)sepsetlist->data;
+      nip_fprintf_sepset(stdout, s);
       nip_fprintf_potential(stdout, s->new);      
       sepsetlist = sepsetlist->fwd;
     }

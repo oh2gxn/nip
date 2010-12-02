@@ -1,7 +1,7 @@
 /* nipheap.h 
  * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Janne Toivola, Antti Rasinen, Mikko Korpela
- * $Id: nipheap.h,v 1.2 2010-12-02 16:38:29 jatoivol Exp $
+ * $Id: nipheap.h,v 1.3 2010-12-02 18:15:21 jatoivol Exp $
  */
 
 #ifndef __NIPHEAP_H__
@@ -48,11 +48,15 @@ int nip_graph_edges_added(nip_variable* vs, int n);
  * This computes the secondary keys */
 int nip_cluster_weight(nip_variable* vs, int n);
 
+/* TODO: hide this after refactoring */
+void nip_heapify(nip_heap h, int i);
+
 /* Returns the least expensive cluster of variables from the heap. */
 int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars);
 
 /* Returns the least expensive sepset from the heap. */
 int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset);
+
 
 /* Frees the memory allocated to the heap.
  * Does not free the contents, so don't free a heap unless it's empty

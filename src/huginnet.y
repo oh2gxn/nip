@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.90 2010-11-23 15:57:56 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.91 2010-12-02 18:15:21 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -10,12 +10,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "niplists.h"
+#include "nipgraph.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
 #include "nippotential.h"
 #include "niperrorhandler.h"
 #include "parser.h"
-#include "clique.h"
-#include "Graph.h"
 
 /* The current input file 
  * TODO: get rid of these global variables and make them a struct... */
@@ -53,27 +53,27 @@ static char* nip_persistence; /* NIP_next contents   */
 static nip_variable_list nip_parsed_vars   = NULL;
 static nip_variable_list nip_parent_vars   = NULL;
 
-static Graph* nip_graph = NULL;
+static nip_graph nip_Graph = NULL;
 
-static potentialList nip_parsed_potentials = NULL;
+static nip_potential_list nip_parsed_potentials = NULL;
 
 static nip_interface_list nip_interface_relations = NULL;
 
-static clique* nip_cliques = NULL;
+static nip_clique* nip_cliques = NULL;
 static int   nip_n_cliques = 0;
 
 static int yylex (void);
 
 static void yyerror (const char *s);  /* Called by yyparse on error */
 
-static int parsed_vars_to_graph(nip_variable_list vl, Graph* g);
+static int parsed_vars_to_graph(nip_variable_list vl, nip_graph g);
 
-static int parsed_potentials_to_jtree(potentialList potentials, 
-				      clique* cliques, int ncliques);
+static int parsed_potentials_to_jtree(nip_potential_list potentials, 
+				      nip_clique* cliques, int ncliques);
 
 static int interface_to_vars(nip_interface_list il, nip_variable_list vl);
 
-static void print_parsed_stuff(potentialList pl);
+static void print_parsed_stuff(nip_potential_list pl);
 
 
 /* Opens an input file. Returns 0 if file was opened or if some file was
@@ -86,11 +86,12 @@ FILE *open_net_file(const char *filename);
  */
 void close_net_file();
 
+/* TODO: make only one getter by putting the stuff inside single struct */
 /* Gives you the list of variables after yylex() */
 nip_variable_list get_parsed_variables (void);
 
 /* Gives you the array of cliques after yylex() */
-int get_cliques (clique** clique_array_pointer);
+int get_cliques (nip_clique** clique_array_pointer);
 
 /* Gives you the global parameters of the whole network 
  * (node size is the only mandatory field...) */
@@ -143,7 +144,7 @@ void get_parsed_node_size(int* x, int* y);
 
 %%
 input:  nodes potentials {
-  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NIP_NO_ERROR){
+  if(parsed_vars_to_graph(nip_parsed_vars, nip_Graph) != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
@@ -155,9 +156,9 @@ input:  nodes potentials {
   }
   nip_free_interface_list(nip_interface_relations);
 
-  nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
-  free_graph(nip_graph); /* Get rid of the graph (?) */
-  nip_graph = NULL;
+  nip_n_cliques = nip_find_cliques(nip_Graph, &nip_cliques);
+  nip_free_graph(nip_Graph); /* Get rid of the graph (?) */
+  nip_Graph = NULL;
   if(nip_n_cliques < 0){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
@@ -171,12 +172,12 @@ input:  nodes potentials {
 #ifdef DEBUG_BISON
   print_parsed_stuff(nip_parsed_potentials);
 #endif
-  free_potentialList(nip_parsed_potentials); /* frees potentials also */
+  nip_free_potential_list(nip_parsed_potentials); /* frees potentials also */
 }
 
 /* optional net block */
 |  netDeclaration nodes potentials {
-  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NIP_NO_ERROR){
+  if(parsed_vars_to_graph(nip_parsed_vars, nip_Graph) != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
@@ -188,9 +189,9 @@ input:  nodes potentials {
   }
   nip_free_interface_list(nip_interface_relations);
 
-  nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
-  free_graph(nip_graph); /* Get rid of the graph (?) */
-  nip_graph = NULL;
+  nip_n_cliques = nip_find_cliques(nip_Graph, &nip_cliques);
+  nip_free_graph(nip_Graph); /* Get rid of the graph (?) */
+  nip_Graph = NULL;
   if(nip_n_cliques < 0){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
@@ -204,13 +205,13 @@ input:  nodes potentials {
 #ifdef DEBUG_BISON
   print_parsed_stuff(nip_parsed_potentials);
 #endif
-  free_potentialList(nip_parsed_potentials); /* frees potentials also */
+  nip_free_potential_list(nip_parsed_potentials); /* frees potentials also */
 }
 
 /* possible old class statement */
 | token_class UNQUOTED_STRING '{' parameters nodes potentials '}' {
   free($2); /* the classname is useless */
-  if(parsed_vars_to_graph(nip_parsed_vars, nip_graph) != NIP_NO_ERROR){
+  if(parsed_vars_to_graph(nip_parsed_vars, nip_Graph) != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
   }
@@ -222,9 +223,9 @@ input:  nodes potentials {
   }
   nip_free_interface_list(nip_interface_relations);
 
-  nip_n_cliques = find_cliques(nip_graph, &nip_cliques);
-  free_graph(nip_graph); /* Get rid of the graph (?) */
-  nip_graph = NULL;
+  nip_n_cliques = nip_find_cliques(nip_Graph, &nip_cliques);
+  nip_free_graph(nip_Graph); /* Get rid of the graph (?) */
+  nip_Graph = NULL;
   if(nip_n_cliques < 0){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
@@ -238,11 +239,11 @@ input:  nodes potentials {
 #ifdef DEBUG_BISON
   print_parsed_stuff(nip_parsed_potentials);
 #endif
-  free_potentialList(nip_parsed_potentials); /* frees potentials also */
+  nip_free_potential_list(nip_parsed_potentials); /* frees potentials also */
 };
 
 
-nodes:    /* empty */ { nip_graph = new_graph(nip_parsed_vars->length); }
+nodes:    /* empty */ { nip_Graph = nip_new_graph(nip_parsed_vars->length); }
 |         nodeDeclaration nodes {/* a variable added */}
 ;
 
@@ -564,11 +565,11 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   }
 
   if(nip_parsed_potentials == NULL)
-    nip_parsed_potentials = make_potentialList();
+    nip_parsed_potentials = nip_new_potential_list();
 
-  p = create_potential(family, nparents + 1, doubles);
+  p = nip_create_potential(family, nparents + 1, doubles);
   nip_normalise_cpd(p); /* useless? */
-  retval = append_potential(nip_parsed_potentials, p, family[0], parents);
+  retval = nip_append_potential(nip_parsed_potentials, p, family[0], parents);
 
   free(doubles); /* the data was copied at create_potential */
   nip_empty_variable_list(nip_parent_vars);
@@ -595,10 +596,10 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   }
   family = &$3;
   if(nip_parsed_potentials == NULL)
-    nip_parsed_potentials = make_potentialList();
-  p = create_potential(family, 1, doubles);
+    nip_parsed_potentials = nip_new_potential_list();
+  p = nip_create_potential(family, 1, doubles);
   nip_normalise_potential(p); /* <=> normalise_cpd(p) in this case */
-  retval = append_potential(nip_parsed_potentials, p, family[0], NULL); 
+  retval = nip_append_potential(nip_parsed_potentials, p, family[0], NULL); 
   free(doubles); /* the data was copied at create_potential */
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, retval, 1);
@@ -611,10 +612,10 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   family = &$3;
 
   if(nip_parsed_potentials == NULL)
-    nip_parsed_potentials = make_potentialList();
-  retval = append_potential(nip_parsed_potentials, 
-			    create_potential(family, 1, NULL), 
-			    family[0], NULL); 
+    nip_parsed_potentials = nip_new_potential_list();
+  retval = nip_append_potential(nip_parsed_potentials, 
+				nip_create_potential(family, 1, NULL), 
+				family[0], NULL); 
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     YYABORT;
@@ -656,11 +657,11 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   }
 
   if(nip_parsed_potentials == NULL)
-    nip_parsed_potentials = make_potentialList();
+    nip_parsed_potentials = nip_new_potential_list();
 
-  p = create_potential(family, nparents + 1, NULL);
+  p = nip_create_potential(family, nparents + 1, NULL);
   nip_normalise_cpd(p); /* useless? */
-  retval = append_potential(nip_parsed_potentials, p, family[0], parents);
+  retval = nip_append_potential(nip_parsed_potentials, p, family[0], parents);
 
   nip_empty_variable_list(nip_parent_vars);
   free(family);
@@ -989,19 +990,18 @@ yyerror (const char *s)  /* Called by yyparse on error */
 
 
 /* Puts the variables into the graph */
-static int parsed_vars_to_graph(nip_variable_list vl, Graph* g){
+static int parsed_vars_to_graph(nip_variable_list vl, nip_graph g){
   int i, retval;
   nip_variable v;
   nip_variable_iterator it;
-  potentialLink initlist = nip_parsed_potentials->first;
+  nip_potential_link initlist = nip_parsed_potentials->first;
 
-  /*assert(vl != NULL);*/
-  it = vl->first;
-  v = nip_next_variable(&it);
-  
   /* Add parsed variables to the graph. */
+  /*assert(vl != NULL);*/
+  it = NIP_LIST_ITERATOR(vl);
+  v = nip_next_variable(&it);
   while(v != NULL){
-    retval = add_variable(g, v);
+    retval = nip_graph_add_variable(g, v);
     if(retval != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
@@ -1012,7 +1012,7 @@ static int parsed_vars_to_graph(nip_variable_list vl, Graph* g){
   /* Add child - parent relations to the graph. */
   while(initlist != NULL){  
     for(i = 0; i < initlist->data->num_of_vars - 1; i++){
-      retval = add_child(g, initlist->parents[i], initlist->child);
+      retval = nip_graph_add_child(g, initlist->parents[i], initlist->child);
       if(retval != NIP_NO_ERROR){
 
 	if(g == NULL)
@@ -1042,21 +1042,25 @@ static int parsed_vars_to_graph(nip_variable_list vl, Graph* g){
  * NOTE: the priors of independent variables are not entered into the 
  * join tree (as evidence), but are stored into the variable though.
  * Returns an error code. (0 is O.K.) */
-static int parsed_potentials_to_jtree(potentialList potentials, 
-				      clique* cliques, int ncliques){
+static int parsed_potentials_to_jtree(nip_potential_list potentials, 
+				      nip_clique* cliques, int ncliques){
   int retval;
-  potentialLink initlist = potentials->first;
-  clique fam_clique = NULL;
+  nip_potential_link initlist; 
+  nip_clique fam_clique = NULL;
 
+  if(potentials == NULL)
+    return NIP_NO_ERROR; /* ? */
+
+  initlist = NIP_LIST_ITERATOR(potentials);
   while(initlist != NULL){
-    fam_clique = find_family(cliques, ncliques, initlist->child);
+    fam_clique = nip_find_family(cliques, ncliques, initlist->child);
 
     if(fam_clique != NULL){
       if(initlist->data->num_of_vars > 1){
 	/* Conditional probability distributions are initialised into
 	 * the jointree potentials */
-	retval = initialise(fam_clique, initlist->child, 
-			    initlist->data, 0); /* THE job */
+	retval = nip_init_clique(fam_clique, initlist->child, 
+				 initlist->data, 0); /* THE job */
 	if(retval != NIP_NO_ERROR){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	  return NIP_ERROR_GENERAL;
@@ -1077,7 +1081,7 @@ static int parsed_potentials_to_jtree(potentialList potentials,
     }
     else
       fprintf(stderr, "In %s (%d): find_family failed!\n", __FILE__, __LINE__);
-    initlist = initlist->fwd;
+    initlist = NIP_LIST_NEXT(initlist);
   }
   return NIP_NO_ERROR;
 }
@@ -1186,10 +1190,10 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
 }
 
 
-static void print_parsed_stuff(potentialList pl){
+static void print_parsed_stuff(nip_potential_list pl){
   int i, j;
   unsigned long temp;
-  potentialLink list = pl->first;
+  nip_potential_link list = pl->first;
 
   /* Traverse through the list of parsed potentials. */
   while(list != NULL){
@@ -1296,7 +1300,7 @@ nip_variable_list get_parsed_variables (void){
 
 
 /* Gives you the array of cliques after yyparse() */
-int get_cliques (clique** clique_array_pointer){
+int get_cliques (nip_clique** clique_array_pointer){
   *clique_array_pointer = nip_cliques;
   return nip_n_cliques;
 }

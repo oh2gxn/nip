@@ -1,18 +1,26 @@
 /* nip.h 
  * Author: Janne Toivola
- * Version: $Id: nip.h,v 1.65 2010-11-23 15:57:56 jatoivol Exp $
+ * Version: $Id: nip.h,v 1.66 2010-12-02 18:15:21 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
 #define __NIP_H__
 
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#include <float.h>
+#include <unistd.h>
+#include <math.h>
+#include <time.h>
+
 #include "parser.h"
-#include "clique.h"
 #include "niplists.h"
 #include "nipvariable.h"
 #include "nippotential.h"
+#include "nipjointree.h"
 #include "niperrorhandler.h"
-#include <stdlib.h>
+#include "huginnet.tab.h"
 
 #define TIME_SERIES_LENGTH(ts) ( (ts)->length )
 #define UNCERTAIN_SERIES_LENGTH(ucs) ( (ucs)->length )
@@ -30,7 +38,7 @@ typedef enum direction_type direction;
 
 typedef struct{
   int num_of_cliques;
-  clique *cliques;
+  nip_clique *cliques;
   int num_of_vars;
   nip_variable *variables;
   nip_variable *next;     /* An array of the variables that will substitute 
@@ -50,11 +58,11 @@ typedef struct{
   int incoming_interface_size;
   nip_variable* incoming_interface;          /* I_{t}<-   */
 
-  clique in_clique;  /* Reference to the clique which receives
-		      * the message from the past timeslices */
+  nip_clique in_clique;  /* Reference to the clique which receives
+			  * the message from the past timeslices */
 
-  clique out_clique; /* The clique which handles the connection to the 
-		      * timeslices in the future */
+  nip_clique out_clique; /* The clique which handles the connection to the 
+			  * timeslices in the future */
 
   nip_variable *children;    /* All the variables that have parents */
   nip_variable *independent; /* ...and those who dont. (Redundant?)  */

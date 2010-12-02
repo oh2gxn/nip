@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.5 2010-12-02 16:38:28 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.6 2010-12-02 18:15:21 jatoivol Exp $
  */
 
 
@@ -7,7 +7,7 @@
 /* Internal helper functions */
 static void nip_sort_graph_variables(nip_graph g);
 
-static nip_clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters, nip_variable* vars, int n,);
+static nip_clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters, nip_variable* vars, int n);
 
 static nip_heap nip_build_cluster_heap(nip_graph gm);
 
@@ -47,7 +47,7 @@ nip_graph nip_copy_graph(nip_graph g) {
     nip_graph g_copy;
 
     n = g->size;
-    g_copy = new_graph(n);
+    g_copy = nip_new_graph(n);
 
     memcpy(g_copy->adj_matrix, g->adj_matrix, n*n*sizeof(int));
     memcpy(g_copy->variables, g->variables, n*sizeof(nip_variable));
@@ -58,7 +58,7 @@ nip_graph nip_copy_graph(nip_graph g) {
       
       g_copy->var_ind = (unsigned long*) malloc(var_ind_size);
       if(!(g_copy->var_ind)){
-	free_graph(g_copy);
+	nip_free_graph(g_copy);
 	return NULL;
       }
 
@@ -283,12 +283,14 @@ nip_graph nip_add_interface_edges(nip_graph g){
 
 static nip_clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters, nip_variable* vars, int n) {
     int n_vars, i;
-    int clique_counter = n_cliques;
+    int ncliques, clique_counter;
     nip_int_array_link lnk;
     nip_clique* cliques;
     nip_variable* clique_vars;
 
-    cliques = (nip_clique*) calloc(n_cliques, sizeof(nip_clique));
+    ncliques = NIP_LIST_LENGTH(clusters);
+
+    cliques = (nip_clique*) calloc(ncliques, sizeof(nip_clique));
     if(!cliques)
       return NULL;
 
@@ -298,6 +300,7 @@ static nip_clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters,
       return NULL;
     }
 
+    clique_counter = ncliques;
     for (lnk = NIP_LIST_ITERATOR(clusters); 
 	 lnk != NULL; 
 	 lnk = NIP_LIST_NEXT(lnk)) {
@@ -314,8 +317,8 @@ static nip_clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters,
 
       /* Clean up in case of errors */
       if(cliques[clique_counter] == NULL){
-	for(i = clique_counter + 1; i < n_cliques; i++)
-	  free_clique(cliques[i]);
+	for(i = clique_counter + 1; i < ncliques; i++)
+	  nip_free_clique(cliques[i]);
 	free(clique_vars);
 	free(cliques);
 	return NULL;
@@ -342,7 +345,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
 
     for (i = 0; i < n; i++) {
 
-      cluster_size = nip_extract_min_cluster(h, gm, &min_cluster);
+      cluster_size = nip_extract_min_cluster(h, &min_cluster);
       
       /* New variable_set for this cluster */
       variable_set = (int*) calloc(n, sizeof(int));
@@ -351,7 +354,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
 	nip_free_int_array_list(clusters);
 	return -1;
       }
-      /*memset(variable_set, 0, n*sizeof(int));/*calloc did this*/
+      /*memset(variable_set, 0, n*sizeof(int)); // calloc did this*/
       
       for (j = 0; j < cluster_size; j++) {
 	/* Find out which variables belong to the cluster */
@@ -431,20 +434,18 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
   int ok = 1;
 #endif
 
-  Heap *H = nip_build_sepset_heap(cliques, num_of_cliques);
-
-  if(!H){
+  nip_heap h = nip_build_sepset_heap(cliques, num_of_cliques);
+  /* TODO: get a list of all sepsets */
+  if(!h){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NIP_ERROR_GENERAL;
   }
 
   while(inserted < num_of_cliques - 1){
-
     /* Extract the "best" candidate sepset from the heap. */
-    if(extract_min_sepset(H, &s)){
-
+    if(nip_extract_min_sepset(h, &s) != NIP_NO_ERROR){
       /* In case of error */
-      free_heap(H);
+      nip_free_heap(h);
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
     }
@@ -452,15 +453,16 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
     one = s->cliques[0];
     two = s->cliques[1];
 
-    /* Unmark MUST be done before searching (clique_search). */
+    /* Unmark MUST be done before searching (cliques_connected). */
     for(i = 0; i < num_of_cliques; i++)
-      unmark_clique(cliques[i]);
+      nip_unmark_clique(cliques[i]);
 
     /* Prevent loops by checking if the cliques
      * are already in the same tree. */
-    if(!clique_search(one, two)){
+    if(!nip_cliques_connected(one, two)){
 
-      mark_useful_sepset(H, s); /* MVK */
+      /* TODO: remove from the list of sepsets */
+      nip_mark_useful_sepset(h, s); /* MVK */
 
 #ifdef NIP_DEBUG_CLIQUE
       printf("In nipgraph.c: Trying to add ");
@@ -473,13 +475,13 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
       print_clique(two);
 #endif
 
-      if(add_sepset(one, s) != NIP_NO_ERROR){
-	free_heap(H);
+      if(nip_add_sepset(one, s) != NIP_NO_ERROR){
+	nip_free_heap(h);
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }	
-      if(add_sepset(two, s) != NIP_NO_ERROR){
-	free_heap(H);
+      if(nip_add_sepset(two, s) != NIP_NO_ERROR){
+	nip_free_heap(h);
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
@@ -488,7 +490,8 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
     }
   }
 
-  free_heap(H);
+  /* TODO: free the list of remaining sepsets */
+  nip_free_heap(h);
 
   return NIP_NO_ERROR;
 }
@@ -634,7 +637,7 @@ nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
 	hi->s = nip_new_sepset(isect, isect_size, neighbours);
 	free(isect);
 
-	/* In case of failure, free all sepsets and the Heap. */
+	/* In case of failure, free all sepsets and the heap. */
 	if(!(hi->s)){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	  for(k = 0; k < hi_index - 1; k++){
@@ -643,13 +646,13 @@ nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
 	    hi->s = NULL;
 	  }
 	  for(k = 0; k < n; k++)
-	    h->useless_sepsets[k] = NULL; /* possible memory leak? */
+	    h->useless_sepsets[k] = NULL; /* all of them freed? */
 	  nip_free_heap(h);
 	  return NULL;
 	}
 
 	/* Initially, all sepsets are marked as useless (to be freed later) */
-	H->useless_sepsets[k++] = hi->s;
+	h->useless_sepsets[k++] = hi->s;
 
 	/* We must use a negative value, because we have a min-heap. */
         hi->primary_key = -isect_size;
