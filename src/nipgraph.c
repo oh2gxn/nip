@@ -1,13 +1,18 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.4 2010-12-01 13:34:11 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.5 2010-12-02 16:38:28 jatoivol Exp $
  */
 
 
 #include "nipgraph.h"
 
-
+/* Internal helper functions */
 static void nip_sort_graph_variables(nip_graph g);
 
 static nip_clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters, nip_variable* vars, int n,);
+
+static nip_heap nip_build_cluster_heap(nip_graph gm);
+
+static nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques);
+
 
 /*** GRAPH MANAGEMENT ***/
 
@@ -133,10 +138,10 @@ int nip_graph_neighbours(nip_graph g, nip_variable v,
 
 int nip_graph_is_child(nip_graph g, nip_variable parent, nip_variable child) {
     int i,j;
-    i = nip_graph_index(g, parent); /* XX see refactorisation above */
+    i = nip_graph_index(g, parent);
     j = nip_graph_index(g, child);
     if(i<0 || j<0)
-      return 0; /* invalid input */
+      return 0;
     return NIP_ADJM(g, i, j);
 }
 
@@ -489,4 +494,177 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
 }
 
 
-/*** old cls2clq.c ***/
+/*** Refactored from Heap.c ***/
+static nip_heap nip_build_cluster_heap(nip_graph gm) {
+    int i,j, n;
+
+    nip_heap_item hi;
+    nip_variable* Vs_temp;
+
+    nip_heap h = (nip_heap) malloc(sizeof(nip_heap_struct));
+    if(!h)
+      return NULL;
+
+    n = nip_graph_size(gm);
+
+    Vs_temp = (nip_variable*) calloc(n, sizeof(nip_variable));
+    if(!Vs_temp){
+      free(h);
+      return NULL;
+    }
+
+    h->heap_items = (nip_heap_item*) calloc(n, sizeof(nip_heap_item));
+    if(!(h->heap_items)){
+      free(Vs_temp);
+      free(h);
+    }
+    for (i=0; i < n; i++) {
+      h->heap_items[i] = (nip_heap_item) malloc(sizeof(nip_heap_item_struct));
+      if(!h->heap_items[i]){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+	while (i >= 0)
+	  free(h->heap_items[i--]);
+	free(Vs_temp);
+	free(h);
+	return NULL;
+      }
+    }
+
+    h->heap_size = n;
+    h->orig_size = n;
+    h->useless_sepsets = NULL;
+    
+    for (i = 0; i < n; i++) {
+      hi = h->heap_items[i];
+      hi->nvariables = nip_graph_neighbours(gm, gm->variables[i], Vs_temp)+1;
+      /* graph_neighbours could be modified to use the array Vs directly;
+	 the cost associated with it would be having all Vs take
+	 get_size(G) units of memory. */
+
+      hi->variables = (nip_variable *) calloc(hi->nvariables, 
+					      sizeof(nip_variable));
+      if(!(hi->variables)){
+	/* Something went wrong, clean up */
+	free(Vs_temp);
+	for(j = 0; j < i; j++) {
+	  free(h->heap_items[j]->variables);
+	  free(h->heap_items[j]);
+	}
+	free(h->heap_items);
+	free(h);
+      }
+
+      hi->variables[0] = gm->variables[i];
+      
+      for (j = 1; j < hi->nvariables; j++) /* Copy variable pointers */
+	hi->variables[j] = Vs_temp[j-1]; /* Note the index-shifting */
+      
+      hi->primary_key = nip_graph_edges_added(hi->variables, 
+					      hi->nvariables);
+      hi->secondary_key = nip_cluster_weight(hi->variables, hi->nvariables);
+      hi->s = NULL; /* not a sepset heap */
+    }
+
+    free(Vs_temp);
+
+    for (i = n/2 -1; i >= 0; i--)
+      nip_heapify(h, i);
+
+    return h;
+}
+
+nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
+    int i,j, k = 0;
+    int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
+    int hi_index = 0;
+    int isect_size;
+    int retval;
+    nip_clique neighbours[2];
+    nip_variable *isect;
+
+    nip_heap_item hi;
+
+    nip_heap h = (nip_heap) malloc(sizeof(nip_heap_struct));
+    if(!h)
+      return NULL;
+
+    h->heap_items = (nip_heap_item*) calloc(n, sizeof(nip_heap_item));
+    if(!h->heap_items){
+      free(h);
+      return NULL;
+    }
+    for(i=0; i<n; i++){
+      h->heap_items[i] = (nip_heap_item) malloc(sizeof(nip_heap_item_struct));
+      if(!h->heap_items[i]){
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+	while (i >= 0)
+	  free(h->heap_items[i--]);
+	free(h);
+	return NULL;
+      }
+    }
+
+    h->heap_size = n;
+    h->orig_size = n;
+    h->useless_sepsets = (nip_sepset *) calloc(n, sizeof(nip_sepset));
+    if(!h->useless_sepsets){
+      for(i=0; i<n; i++)
+	free(h->heap_items[i]);
+      free(h->heap_items);
+      free(h);
+      return NULL;
+    }
+    
+    /* Go through each pair of cliques. Create candidate sepsets. */
+    for(i = 0; i < num_of_cliques - 1; i++) {
+      for(j = i + 1; j < num_of_cliques; j++) {
+
+        hi = h->heap_items[hi_index++];
+	neighbours[0] = cliques[i];
+	neighbours[1] = cliques[j];
+
+	/* Take the intersection of two cliques. */
+	retval = nip_clique_intersection(cliques[i], cliques[j],
+					 &isect, &isect_size);
+	if(retval != NIP_NO_ERROR){
+	  nip_report_error(__FILE__,__LINE__,retval,1);
+	  nip_free_heap(h);
+	  return NULL;
+	}
+	hi->s = nip_new_sepset(isect, isect_size, neighbours);
+	free(isect);
+
+	/* In case of failure, free all sepsets and the Heap. */
+	if(!(hi->s)){
+	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	  for(k = 0; k < hi_index - 1; k++){
+	    hi = h->heap_items[k];
+	    nip_free_sepset(hi->s);
+	    hi->s = NULL;
+	  }
+	  for(k = 0; k < n; k++)
+	    h->useless_sepsets[k] = NULL; /* possible memory leak? */
+	  nip_free_heap(h);
+	  return NULL;
+	}
+
+	/* Initially, all sepsets are marked as useless (to be freed later) */
+	H->useless_sepsets[k++] = hi->s;
+
+	/* We must use a negative value, because we have a min-heap. */
+        hi->primary_key = -isect_size;
+
+        hi->secondary_key =
+	  nip_cluster_weight(cliques[i]->variables, 
+			     cliques[i]->p->num_of_vars) +
+	  nip_cluster_weight(cliques[j]->variables, 
+			     cliques[j]->p->num_of_vars);
+	hi->variables = NULL; /* this is a sepset heap, no need for variables */
+      }
+    }
+    /* Check Cormen, Leiserson, Rivest */
+    for (i = n/2 -1; i >= 0; i--)
+      nip_heapify(h, i);
+
+    return h;
+}

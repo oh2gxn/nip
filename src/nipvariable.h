@@ -4,7 +4,7 @@
  * in Dynamic Bayes Network models
  *
  * Authors: Janne Toivola, Mikko Korpela
- * $Id: nipvariable.h,v 1.7 2010-11-29 18:26:39 jatoivol Exp $
+ * $Id: nipvariable.h,v 1.8 2010-12-02 16:38:29 jatoivol Exp $
  */
 
 #ifndef __NIPVARIABLE_H__
@@ -216,6 +216,10 @@ int nip_set_parents(nip_variable v, nip_variable* parents, int nparents);
 
 /* Tells which variables are the parents of the variable v. */
 nip_variable* nip_get_parents(nip_variable v);
+
+
+/* Returns 1 if parent is the parent variable of child in the Bayes net. */
+int nip_variable_is_parent(nip_variable parent, nip_variable child);
 
 
 /* Sets the prior for an (independent) variable v. You SHOULD not 

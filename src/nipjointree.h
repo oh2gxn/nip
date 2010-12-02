@@ -3,7 +3,7 @@
  * Includes evidence handling and propagation of information
  * in the join tree. 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.h,v 1.1 2010-11-29 18:26:39 jatoivol Exp $
+ * Version: $Id: nipjointree.h,v 1.2 2010-12-02 16:38:29 jatoivol Exp $
  */
 
 #ifndef __NIPJOINTREE_H__
@@ -121,6 +121,12 @@ int nip_sepset_num_of_vars(nip_sepset s);
  * Remember to UNMARK cliques before calling this.
  */
 int nip_distribute_evidence(nip_clique c);
+
+
+/* Tells if the cliques are connected (in the same join tree).
+ * Remember to UNMARK cliques before calling this. 
+ */
+int nip_cliques_connected(nip_clique one, nip_clique two);
 
 
 /*

@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.1 2010-11-29 18:26:39 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.2 2010-12-02 16:38:29 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -18,8 +18,7 @@ static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2);
 
 static int nip_clique_var_index(nip_clique c, nip_variable v);
 
-/* Useless? */
-static int nip_cliques_connected(nip_clique one, nip_clique two);
+
 
 static int nip_clique_marked(nip_clique c);
 
@@ -1183,17 +1182,18 @@ nip_clique nip_find_clique(nip_clique *cliques, int ncliques,
 }
 
 
-/* *** Useless? ***
- * Finds out if two cliques are in the same tree.
+/* Finds out if two cliques are in the same tree.
  * Returns 1 if they are, 0 if not.
  * cliques must be unmarked before calling this.
  */
-static int nip_cliques_connected(nip_clique one, nip_clique two){
-  nip_sepset_link l = one->sepsets;
+int nip_cliques_connected(nip_clique one, nip_clique two){
+  nip_sepset_link l;
   nip_sepset s;
 
   if(one == NULL || two == NULL) /* normal situation or an error? */
     return 0; /* as in FALSE */
+
+  l = one->sepsets;
 
   /* mark */
   one->mark = NIP_MARK_ON;

@@ -2,7 +2,7 @@
  * Functions for representing and manipulating graphs, and methods for 
  * constructing the join tree.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipgraph.h,v 1.4 2010-12-01 13:34:11 jatoivol Exp $
+ * Version: $Id: nipgraph.h,v 1.5 2010-12-02 16:38:28 jatoivol Exp $
  */
 
 #ifndef __NIPGRAPH_H__
@@ -28,7 +28,7 @@ typedef struct {
     unsigned size;
     int top;
 } nip_graph_struct; 
-typedef nip_graph_struct* nip_graph
+typedef nip_graph_struct* nip_graph;
 
 
 /* Creates a new graph.
@@ -145,6 +145,6 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques);
  */
 
 /* Internal helper */
-int nip_triangulate_graph(nip_graph gm, clique** clique_p);
+int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p);
 
 #endif /* __GRAPH_H__ */

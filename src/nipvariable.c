@@ -1,6 +1,6 @@
 /* nipvariable.c 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipvariable.c,v 1.5 2010-11-29 18:26:39 jatoivol Exp $
+ * Version: $Id: nipvariable.c,v 1.6 2010-12-02 16:38:29 jatoivol Exp $
  */
 
 
@@ -353,6 +353,19 @@ nip_variable* nip_get_parents(nip_variable v){
     return NULL;
   }
   return v->parents;
+}
+
+
+int nip_variable_is_parent(nip_variable parent, nip_variable child) {
+  int p;
+  if (!parent || !child)
+    return 0;
+
+  for (p = 0; p < child->num_of_parents; p++)
+    if (nip_equal_variables(parent, child->parents[p]))
+      return 1;
+
+  return 0;
 }
 
 
