@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.6 2010-12-02 18:15:21 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.7 2010-12-03 17:21:28 jatoivol Exp $
  */
 
 
@@ -136,7 +136,7 @@ int nip_graph_neighbours(nip_graph g, nip_variable v,
 }
 
 
-int nip_graph_is_child(nip_graph g, nip_variable parent, nip_variable child) {
+int nip_graph_linked(nip_graph g, nip_variable parent, nip_variable child) {
     int i,j;
     i = nip_graph_index(g, parent);
     j = nip_graph_index(g, child);
@@ -210,7 +210,7 @@ static void nip_sort_graph_variables(nip_graph g) {
 }
 
 
-nip_graph make_graph_undirected(nip_graph g) {
+nip_graph nip_make_graph_undirected(nip_graph g) {
     nip_graph gu;   
     int i,j,n;
     
@@ -229,7 +229,7 @@ nip_graph make_graph_undirected(nip_graph g) {
 }
 
 
-nip_graph nip_moralise(nip_graph g) {
+nip_graph nip_moralise_graph(nip_graph g) {
     int i,j,n,v;
     nip_graph gm;
 
@@ -395,7 +395,7 @@ int nip_find_cliques(nip_graph g, nip_clique** cliques_p) {
     nip_graph gu, gm, gi;
     int n_cliques = 0;
 
-    gm = nip_moralise(g);
+    gm = nip_moralise_graph(g);
     gi = nip_add_interface_edges(gm); /* added by JJT 6.3.2006 */
     nip_free_graph(gm);
     gu = nip_make_graph_undirected(gi);

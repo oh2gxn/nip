@@ -1,4 +1,4 @@
-/* likelihood.c
+/* niplikelihood.c
  *
  * Reads the structure for the model from a Hugin NET file, 
  * reads the given data file and prints the conditional likelihood
@@ -8,7 +8,7 @@
  * {abcdef} data in a file by specifying {ABC} as the variables of interest.
  *
  * SYNOPSIS: 
- * LIKELIHOOD <MODEL.NET> <DATA.TXT> <A B C...>
+ * NIPLIKELIHOOD <MODEL.NET> <DATA.TXT> <A B C...>
  *
  * - Structure of the model will be read from <MODEL.NET>
  * - data will be read from <DATA.TXT>
@@ -16,9 +16,12 @@
  * - all the other observed variables will be the reference
  * - resulting likelihood values will be written to stdout
  *
- * EXAMPLE: ./likelihood model.net -d data.txt -v A B C
+ * EXAMPLE: ./niplikelihood model.net data.txt A B C
  * If data.txt contained data about ABCDEF, then the result will be
  * p(a b c | d e f) for each record {abcdef} in the file.
+ *
+ * Author: Janne Toivola
+ * Version: $Id: niplikelihood.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
  */
 
 #include <assert.h>

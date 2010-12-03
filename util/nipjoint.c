@@ -1,17 +1,26 @@
-/*
- * joint_test.c $Id: joint_test.c,v 1.18 2010-11-23 15:57:57 jatoivol Exp $
- * Testing the calculation of joint probabilities.
- * Command line parameters: 
- * 1) a .net file, 
- * 2) data file with one step,
- * 3) names of wanted variables
+/* nipjoint.c 
+ *
+ * Computes joint probabilities...
+ *
+ * SYNOPSIS:
+ * NIPJOINT <MODEL.NET> <DATA.TXT> <VAR1 VAR2...>
+ *
+ * - The model will be read from file <MODEL.NET>, 
+ * - one time step worth of data will be read from <DATA.TXT>,
+ * - optional parameters <VAR1...> are the symbols of the variables 
+ *   whose probability distribution (given the data) will be computed
+ *
+ * EXAMPLE: ./nipjoint model.net data.txt height weight
+ *
+ * Author: Janne Toivola
+ * Version: $Id: nipjoint.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
 #include "parser.h"
-#include "clique.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
 #include "nippotential.h"
 #include "niperrorhandler.h"
@@ -57,7 +66,7 @@ int main(int argc, char *argv[]){
   make_consistent(model); /* no side effects ? */
 
   /* compute probability mass before entering evidence */
-  m1 = probability_mass(model->cliques, model->num_of_cliques);
+  m1 = nip_probability_mass(model->cliques, model->num_of_cliques);
 
   /* enter the evidence... */
   i = insert_ts_step(ts, 0, model, NIP_MARK_BOTH);
@@ -65,7 +74,7 @@ int main(int argc, char *argv[]){
   make_consistent(model);
 
   /* compute probability mass after making the model consistent */
-  m2 = probability_mass(model->cliques, model->num_of_cliques);
+  m2 = nip_probability_mass(model->cliques, model->num_of_cliques);
   
   /* It's possible to select the variables as
    * the third...N'th command line parameters.
@@ -110,8 +119,8 @@ int main(int argc, char *argv[]){
   printf("%s) equals: \n", nip_variable_symbol(vars[num_of_vars-1]));
   nip_fprintf_potential(stdout, result);
 
-  printf("Mass before evidence: m1 = %g\n", m1);
-  printf("Mass after evidence : m2 = %g\n", m2);
+  printf("Marginal probability before evidence: m1 = %g\n", m1);
+  printf("Marginal probability after evidence : m2 = %g\n", m2);
   printf("Log. likelihood: ln(m2/m1) = %g\n", log(m2/m1));
   
   free(vars);

@@ -1,4 +1,13 @@
-/* iotest.c $Id: iotest.c,v 1.7 2010-11-22 15:35:56 jatoivol Exp $
+/* iotest.c 
+ *
+ * A test for io functions. Reads from stdin.
+ * Currently prints the number of characters, words and lines.
+ * Also prints the word boundaries of each line, and prints a few
+ * of the first words, showing the wonderful ability to split strings
+ * at word boundaries.
+ *
+ * Author: Janne Toivola, Mikko Korpela
+ * $Id: iotest.c,v 1.8 2010-12-03 17:21:28 jatoivol Exp $
  */
 
 #include <stdio.h>
@@ -13,12 +22,6 @@
 #define TOKENS
 */
 
-/* A test for io functions. Reads from stdio.
- * Currently prints the number of characters, words and lines.
- * Also prints the word boundaries of each line, and prints a few
- * of the first words, showing the wonderful ability to split strings
- * at word boundaries.
- */
 int main(int argc, char **argv){
 
   char s[BUF_SIZE];

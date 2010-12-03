@@ -1,3 +1,24 @@
+/* nipconvert.c
+ *
+ * SYNOPSIS: 
+ * CONVERT <MODEL.NET> <IN FORMAT> <IN.TXT> <OUT FORMAT> <OUT.TXT>
+ *
+ * Converts data between various formats: 
+ * currently only univariate data into unary format!
+ *
+ * EXAMPLE: ./nipconvert m.net univariate data.txt unary udata.txt
+ *
+ * Author: Janne Toivola
+ * Version: $Id: nipconvert.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
+ */
+
+/* Some experimental copy-paste from nip.c 
+ * This one has a lot of unnecessary features and computation 
+ * TODO: 
+ * - move to nip.c
+ * - refactor? 
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,18 +40,6 @@
 /* BTW: use only ASCII in these strings! */
 
 
-/* Converts data between various formats: 
- * currently only univariate data into unary format!
- *
- * SYNOPSIS: CONVERT <MODEL.NET> <IN FORMAT> <IN.TXT> <OUT FORMAT> <OUT.TXT>
- */
-
-/* Some experimental copy-paste from nip.c 
- * This one has a lot of unnecessary features and computation 
- * TODO: 
- * - move to nip.c
- * - refactor? 
- */
 int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
   int i, n, t;
   int d;

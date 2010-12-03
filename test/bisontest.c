@@ -1,6 +1,11 @@
+/* Test program for the Hugin Net parser
+ * Author: Janne Toivola
+ * Version: $Id: bisontest.c,v 1.52 2010-12-03 17:21:28 jatoivol Exp $ 
+ */
+
 #include <stdlib.h>
 #include "parser.h"
-#include "clique.h"
+#include "nipjointree.h"
 #include "niplists.h"
 #include "nipvariable.h"
 #include "nippotential.h"
@@ -35,11 +40,12 @@
 #define PRINT_JOINTREE
 */
 
-extern FILE *open_net_file(const char *filename);
-extern void close_net_file();
-extern int yyparse();
-extern nip_variable_list get_parsed_variables();
-extern int get_cliques(clique** clique_array_pointer);
+FILE *open_net_file(const char *filename);
+void close_net_file();
+int yyparse();
+nip_variable_list get_parsed_variables();
+int get_cliques(nip_clique** clique_array_pointer);
+/* Reminder: extern keyword is for declaring external _variables_ */
 
 /*
  * Calculate the probability distribution of variable "var".
@@ -48,12 +54,13 @@ extern int get_cliques(clique** clique_array_pointer);
  * This function allocates memory for the array "result". The size of
  * the array is returned in "size_of_result".
  */
-static void test_probability(double **result, int *size_of_result,
-			     nip_variable var, clique cliques[],
+static void test_probability(double** result, int* size_of_result,
+			     nip_variable var, nip_clique cliques[],
 			     int num_of_cliques){
 
   /* Find the clique that contains the family of the interesting variable. */
-  clique clique_of_interest = find_family(cliques, num_of_cliques, var);
+  nip_clique clique_of_interest = 
+    nip_find_family(cliques, num_of_cliques, var);
   if(!clique_of_interest){
     printf("In bisontest.c : No clique found! Sorry.\n");
     *size_of_result = 0;
@@ -71,7 +78,7 @@ static void test_probability(double **result, int *size_of_result,
   }
 
   /* marginalisation */
-  marginalise(clique_of_interest, var, *result);
+  nip_marginalise_clique(clique_of_interest, var, *result);
 
   /* normalisation */
   nip_normalise_array(*result, *size_of_result);
@@ -82,7 +89,7 @@ static void test_probability(double **result, int *size_of_result,
 /*
  * Enter some evidence of variable "observed".
  */
-static void test_evidence(nip_variable* vars, int nvars, clique* cliques, 
+static void test_evidence(nip_variable* vars, int nvars, nip_clique* cliques, 
 			  int num_of_cliques, variable observed, 
 			  double data[]){
 
@@ -92,14 +99,14 @@ static void test_evidence(nip_variable* vars, int nvars, clique* cliques,
 
 #ifndef DEBUG_BISONTEST
   /* FIXME (copy some code from parser.c) */
-  enter_evidence(vars, nvars, cliques, num_of_cliques, 
-		 observed, data);
+  nip_enter_evidence(vars, nvars, cliques, num_of_cliques, 
+		     observed, data);
 #endif
 
 #ifdef DEBUG_BISONTEST
   /* FIXME (copy some code from parser.c) */
-  evidence_retval = enter_evidence(vars, nvars, cliques, num_of_cliques, 
-				   observed, data);
+  evidence_retval = nip_enter_evidence(vars, nvars, cliques, num_of_cliques, 
+				       observed, data);
   printf("\n\nEntered evidence into ");
   print_clique(clique_of_interest);
   printf("enter_evidence returned %d.\n", evidence_retval);
@@ -112,16 +119,16 @@ int main(int argc, char *argv[]){
 
   char *var_name;
   int i, retval;
-  int nip_num_of_cliques;
-  int nvars;
   int size_of_result;
   
   double* result;
 
-  clique *nip_cliques;
+  nip_clique* cliques;
+  int num_of_cliques;
 
   nip_variable interesting;
   nip_variable* vars;
+  int nvars;
   nip_variable_list var_list;
   nip_variable_iterator it;
 
@@ -143,17 +150,16 @@ int main(int argc, char *argv[]){
 #ifdef EVIDENCE2
   double probB[] = {0.75, 0.21, 0.03, 0.01};
   double probD[] = {0.6, 0.1, 0.3};
-#endif /* EVIDENCE1 */
+#endif /* EVIDENCE2 */
 
 #ifdef EVIDENCE_SOTKU
   double probC1[] = { 0.395, 0.605 };
   double probC4[] = { 0.018, 0.982 };
   double probC19[] = { 0.492, 0.508 };
 
-  double probC1_huuhaa[] = { 0, 1 };
-  double probC4_huuhaa[] = { 1, 0 };
-  double probC19_huuhaa[] = { 0.2, 0.8 };
-
+  double probC1_h[] = { 0, 1 };
+  double probC4_h[] = { 1, 0 };
+  double probC19_h[] = { 0.2, 0.8 };
 #endif /* EVIDENCE_SOTKU */
 
   nip_variable observed[3];
@@ -163,9 +169,9 @@ int main(int argc, char *argv[]){
 #ifdef EVIDENCE
 
 #ifdef TEST_RETRACTION
-  probs[0] = probC1_huuhaa;
-  probs[1] = probC4_huuhaa;
-  probs[2] = probC19_huuhaa;
+  probs[0] = probC1_h;
+  probs[1] = probC4_h;
+  probs[2] = probC19_h;
 #endif
 
 #ifndef EVIDENCE_SOTKU
@@ -191,9 +197,9 @@ int main(int argc, char *argv[]){
     return retval;
   /* The input file has been parsed. -- */
 
-  nip_num_of_cliques = get_cliques(&nip_cliques);
+  num_of_cliques = get_cliques(&cliques);
   var_list = get_parsed_variables();
-  it = var_list->first;
+  it = NIP_LIST_ITERATOR(var_list);
   nvars = NIP_LIST_LENGTH(var_list);
   vars = (nip_variable*) calloc(nvars, sizeof(nip_variable));
   
@@ -201,19 +207,21 @@ int main(int argc, char *argv[]){
     vars[i] = nip_next_variable(&it);
 
 #ifdef PRINT_JOINTREE
-  jtree_dfs(nip_cliques[0], print_clique, print_Sepset);
+  nip_join_tree_dfs(cliques[0], nip_print_clique, nip_print_sepset);
 #endif
 
 
   /* *********************************************************** */
 #ifdef PRINT_POTENTIALS
-  for(i = 0; i < nip_num_of_cliques; i++){
+  for(i = 0; i < num_of_cliques; i++){
     printf("In bisontest.c : clique of ");
-    for(j = 0; j < clique_num_of_vars(nip_cliques[i]) - 1; j++)
-      printf("%s ", get_symbol(clique_get_variable(nip_cliques[i], j)));
-    printf("and %s.\n", get_symbol(clique_get_variable(nip_cliques[i], j)));
+    for(j = 0; j < nip_clique_size(cliques[i]) - 1; j++)
+      printf("%s ", nip_variable_symbol(
+                      nip_clique_variable(cliques[i], j)));
+    printf("and %s.\n", nip_variable_symbol(
+			  nip_clique_variable(cliques[i], j)));
     
-    nip_fprintf_potential(stdout, nip_cliques[i]->p);
+    nip_fprintf_potential(stdout, cliques[i]->p);
   }
 #endif /* PRINT_POTENTIALS */
   /* *********************************************************** */
@@ -237,27 +245,27 @@ int main(int argc, char *argv[]){
 
 
 
-  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+  test_evidence(vars, nvars, cliques, num_of_cliques, 
 		observed[0], probs[0]);
 
-  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+  test_evidence(vars, nvars, cliques, num_of_cliques, 
 		observed[1], probs[1]);
   
 #ifdef EVIDENCE_SOTKU
 
 #ifdef TEST_RETRACTION
   /* some VERY FINE evidence */
-  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+  test_evidence(vars, nvars, cliques, num_of_cliques, 
 		observed[2], probs[2]);
 
   /* a propagation */
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_clique(nip_cliques[i]);
-  collect_evidence(NULL, NULL, nip_cliques[0]);
+  for(i = 0; i < num_of_cliques; i++)
+    nip_unmark_clique(cliques[i]);
+  nip_collect_evidence(NULL, NULL, cliques[0]);
 
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_clique(nip_cliques[i]);
-  distribute_evidence(nip_cliques[0]);
+  for(i = 0; i < num_of_cliques; i++)
+    nip_unmark_clique(cliques[i]);
+  nip_distribute_evidence(cliques[0]);
 
 
 
@@ -274,8 +282,8 @@ int main(int argc, char *argv[]){
     return 1;
   }
 
-  test_probability(&result, &size_of_result, interesting, nip_cliques,
-		   nip_num_of_cliques);
+  test_probability(&result, &size_of_result, interesting, cliques,
+		   num_of_cliques);
 
   printf("Normalised probability of %s:\n", nip_variable_symbol(interesting));
   for(i = 0; i < size_of_result; i++)
@@ -291,13 +299,13 @@ int main(int argc, char *argv[]){
   probs[1] = probC4;
   probs[2] = probC19;
 
-  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+  test_evidence(vars, nvars, cliques, num_of_cliques, 
 		observed[0], probs[0]);
 
-  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+  test_evidence(vars, nvars, cliques, num_of_cliques, 
 		observed[1], probs[1]);
 
-  test_evidence(vars, nvars, nip_cliques, nip_num_of_cliques, 
+  test_evidence(vars, nvars, cliques, num_of_cliques, 
 		observed[2], probs[2]);
 
 #endif /* EVIDENCE_SOTKU */
@@ -308,13 +316,13 @@ int main(int argc, char *argv[]){
 
 
   /* a propagation */
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_clique(nip_cliques[i]);
-  collect_evidence(NULL, NULL, nip_cliques[0]);
+  for(i = 0; i < num_of_cliques; i++)
+    nip_unmark_clique(cliques[i]);
+  nip_collect_evidence(NULL, NULL, cliques[0]);
 
-  for(i = 0; i < nip_num_of_cliques; i++)
-    unmark_clique(nip_cliques[i]);
-  distribute_evidence(nip_cliques[0]);
+  for(i = 0; i < num_of_cliques; i++)
+    nip_unmark_clique(cliques[i]);
+  nip_distribute_evidence(cliques[0]);
 
   if(argc > 2)
     var_name = argv[2];
@@ -328,8 +336,8 @@ int main(int argc, char *argv[]){
     return 1;
   }
 
-  test_probability(&result, &size_of_result, interesting, nip_cliques,
-		   nip_num_of_cliques);
+  test_probability(&result, &size_of_result, interesting, 
+		   cliques, num_of_cliques);
 
   printf("Normalised probability of %s:\n", nip_variable_symbol(interesting));
   for(i = 0; i < size_of_result; i++)

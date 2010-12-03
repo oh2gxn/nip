@@ -6,7 +6,7 @@
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.69 2010-11-30 18:12:04 jatoivol Exp $
+# $Id: Makefile,v 1.70 2010-12-03 17:21:28 jatoivol Exp $
 
 
 # The C compiler and flags for compiling the library
@@ -139,8 +139,8 @@ $(CLI_TARGET): $(CLI_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 
-GRPH_SRC = test/graph_test.c
-GRPH_TARGET = test/graph_test
+GRPH_SRC = test/graphtest.c
+GRPH_TARGET = test/graphtest
 $(GRPH_TARGET): $(GRPH_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
@@ -186,50 +186,50 @@ $(MLT_TARGET)
 
 # The utility programs for using certain features of NIP
 
-JNT_SRC = util/joint_test.c
-JNT_TARGET = util/joint_test
+JNT_SRC = util/nipjoint.c
+JNT_TARGET = util/nipjoint
 $(JNT_TARGET): $(JNT_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 
-EM_SRC = util/em_test.c
-EM_TARGET = util/em_test
+EM_SRC = util/niptrain.c
+EM_TARGET = util/niptrain
 $(EM_TARGET): $(EM_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 
-GEN_SRC = util/gen_test.c
-GEN_TARGET = util/gen_test
+GEN_SRC = util/nipsample.c
+GEN_TARGET = util/nipsample
 $(GEN_TARGET): $(GEN_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 
-MAP_SRC = util/map.c
-MAP_TARGET = util/map
+MAP_SRC = util/nipmap.c
+MAP_TARGET = util/nipmap
 $(MAP_TARGET): $(MAP_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 
-INF_SRC = util/inftest.c
-INF_TARGET = util/inftest
+INF_SRC = util/nipinference.c
+INF_TARGET = util/nipinference
 $(INF_TARGET): $(INF_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 
-CONV_SRC = util/convert.c
-CONV_TARGET = util/convert
+CONV_SRC = util/nipconvert.c
+CONV_TARGET = util/nipconvert
 $(CONV_TARGET): $(CONV_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 
-LIKE_SRC = util/likelihood.c
-LIKE_TARGET = util/likelihood
+LIKE_SRC = util/niplikelihood.c
+LIKE_TARGET = util/niplikelihood
 $(LIKE_TARGET): $(LIKE_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 
-LOO_SRC = util/loo_prediction_test.c
-LOO_TARGET = util/loo_prediction_test
+LOO_SRC = util/nipbenchmark.c
+LOO_TARGET = util/nipbenchmark
 $(LOO_TARGET): $(LOO_SRC) $(HUG_OBJS)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 

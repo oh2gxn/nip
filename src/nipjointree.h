@@ -3,7 +3,7 @@
  * Includes evidence handling and propagation of information
  * in the join tree. 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.h,v 1.2 2010-12-02 16:38:29 jatoivol Exp $
+ * Version: $Id: nipjointree.h,v 1.3 2010-12-03 17:21:28 jatoivol Exp $
  */
 
 #ifndef __NIPJOINTREE_H__
@@ -109,11 +109,11 @@ void nip_unmark_clique(nip_clique c);
 
 
 /* Tells how many variables the clique contains. */
-int nip_clique_num_of_vars(nip_clique c);
+int nip_clique_size(nip_clique c);
 
 
 /* Tells how many variables the sepset contains. */
-int nip_sepset_num_of_vars(nip_sepset s);
+int nip_sepset_size(nip_sepset s);
 
 
 /*

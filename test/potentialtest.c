@@ -1,7 +1,7 @@
-/* This is a small test for potentials... 
+/* This is a small test program for potentials... 
  * 
- * Author: Janne Toivola
- * Version: $Id: potentialtest.c,v 1.6 2010-11-23 15:57:56 jatoivol Exp $ */
+ * Author: Janne Toivola, Mikko Korpela
+ * Version: $Id: potentialtest.c,v 1.7 2010-12-03 17:21:29 jatoivol Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,9 +1,14 @@
+/* Program for testing parser utility functions
+ * Author: Janne Toivola
+ * Version: $Id: parsertest.c,v 1.9 2010-12-03 17:21:28 jatoivol Exp $
+ */
+
+#include <stdio.h>
 #include "parser.h"
 #include "huginnet.tab.h"
-#include <stdio.h>
 
-extern FILE *open_net_file(const char *filename);
-extern void close_net_file();
+FILE *open_net_file(const char *filename);
+void close_net_file();
 
 /* Tries out the Huginnet parser stuff. */
 int main(int argc, char *argv[]){
@@ -26,7 +31,7 @@ int main(int argc, char *argv[]){
     if(token_length == 0)
       ok = 0; /* no more tokens */
 
-    /* Printataan "token" ruudulle. */
+    /* Print each "token" on a new line */
     if(ok)
       printf("%s\n", token);
     

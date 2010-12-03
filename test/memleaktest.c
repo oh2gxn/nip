@@ -1,25 +1,30 @@
+/* Tests if the library functions leak memory. 
+ * Author: Janne Toivola
+ * Version: $Id: memleaktest.c,v 1.27 2010-12-03 17:21:28 jatoivol Exp $
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "clique.h"
-#include "Graph.h"
+#include "nip.h"
+#include "parser.h"
+#include "nipgraph.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
 #include "nippotential.h"
 #include "niplists.h"
-#include "parser.h"
-#include "nip.h"
 
-#define TESTATUT
+#define ALREADY_TESTED
 #define THRESHOLD 0.001
 
-/* Tests if the library functions leak memory. */
 
 int main(int argc, char *argv[]){
   
   int i, j, m, n;
 
-#ifdef TESTATUT
+#ifdef ALREADY_TESTED
+#endif /* ALREADY_TESTED part */
   int cardinality[] = {3, 2, 3};
   int num_of_vars = 3;
   int num_of_cliques;
@@ -34,12 +39,10 @@ int main(int argc, char *argv[]){
   char **names;
   char ***states;
   nip_potential p;
-  clique cl[2];
-  clique *cl2 = NULL;
-  sepset s;
-  Graph *g;
-#endif
-
+  nip_clique cl[2];
+  nip_clique *cl2 = NULL;
+  nip_sepset s;
+  nip_graph g;
   nip model = NULL;
   time_series *ts_set = NULL;
 
@@ -55,8 +58,10 @@ int main(int argc, char *argv[]){
     return 0;
   }
 
-#ifdef TESTATUT
-  /* This works well, no memory leaks. */
+#ifdef ALREADY_TESTED
+  /* These work well, no memory leaks. */
+#endif /* ALREADY_TESTED */
+
   printf("Allocating and freeing potentials:\n");
   for(i = 0; i < n; i++){
     /* Create a potential */
@@ -130,32 +135,32 @@ int main(int argc, char *argv[]){
   printf("\nAllocating and freeing cliques:\n");
   for(i = 0; i < n; i++){
     /* Create two cliques and a sepset */
-    cl[0] = new_clique(vars, 2);
-    cl[1] = new_clique(vars+1, 2);
-    s = make_sepset(vars+1, 1, cl);
-    add_sepset(cl[0], s);
-    add_sepset(cl[1], s);
+    cl[0] = nip_new_clique(vars, 2);
+    cl[1] = nip_new_clique(vars+1, 2);
+    s = nip_new_sepset(vars+1, 1, cl);
+    nip_add_sepset(cl[0], s);
+    nip_add_sepset(cl[1], s);
     printf("\rIteration %d of %d                               ", i + 1, n);
     /* Free the cliques (and the sepset, automatically) */
-    free_clique(cl[0]);
-    free_clique(cl[1]);
+    nip_free_clique(cl[0]);
+    nip_free_clique(cl[1]);
   }
   printf("\rDone.                                             \n");
 
   printf("\nAllocating and freeing Graphs:\n");
   for(i = 0; i < n; i++){
-    g = new_graph(3);
-    add_variable(g, vars[0]);
-    add_variable(g, vars[1]);
-    add_variable(g, vars[2]);
-    add_child(g, vars[1], vars[0]);
-    add_child(g, vars[1], vars[2]);
+    g = nip_new_graph(3);
+    nip_graph_add_variable(g, vars[0]);
+    nip_graph_add_variable(g, vars[1]);
+    nip_graph_add_variable(g, vars[2]);
+    nip_graph_add_child(g, vars[1], vars[0]);
+    nip_graph_add_child(g, vars[1], vars[2]);
     num_of_cliques = 0;
-    num_of_cliques = find_cliques(g, &cl2);
+    num_of_cliques = nip_find_cliques(g, &cl2);
     printf("\rIteration %d of %d                               ", i + 1, n);
-    free_graph(g);
+    nip_free_graph(g);
     for(j = 0; j < num_of_cliques; j++)
-      free_clique(cl2[j]);
+      nip_free_clique(cl2[j]);
     free(cl2);
   }
   printf("\rDone.                                             \n");
@@ -177,7 +182,6 @@ int main(int argc, char *argv[]){
   free(states);
   free(symbols);
   free(names);
-#endif /* TESTATUT */
 
 
   if(argc > 2){
@@ -191,6 +195,7 @@ int main(int argc, char *argv[]){
     printf("\rDone.                                             \n");
     model = parse_model(argv[1]);
   }
+
 
   if(argc > 3){
     printf("\nReading and freeing data:\n");
@@ -206,6 +211,7 @@ int main(int argc, char *argv[]){
     printf("\rDone.                                             \n");
     m = read_timeseries(model, argv[2], &ts_set);
 
+
     printf("\nRunning EM-algorithm %d times:\n",n);
     for(i = 0; i < n; i++){
       total_reset(model);
@@ -214,12 +220,14 @@ int main(int argc, char *argv[]){
     }
     printf("\rDone.                                             \n");
 
+
     printf("\nWriting models into memwaste.net:\n");
     for(i = 0; i < n; i++){
       write_model(model, "memwaste");
       printf("\rIteration %d of %d                               ", i + 1, n);
     }
     printf("\rDone.                                             \n");
+
     for(i = 0; i < m; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);

@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.2 2010-12-02 16:38:29 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.3 2010-12-03 17:21:28 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -632,17 +632,23 @@ void nip_unmark_clique(nip_clique c){
  * Returns 0 if clique is not marked, 1 if it is. (This could be a macro...)
  */
 static int nip_clique_marked(nip_clique c){
-  return (c->mark == NIP_MARK_ON);
+  if (c)
+    return (c->mark == NIP_MARK_ON);
+  return 0;
 }
 
 
-int nip_clique_num_of_vars(nip_clique c){
-  return c->p->num_of_vars; /* macro? */
+int nip_clique_size(nip_clique c){
+  if (c)
+    return c->p->num_of_vars; /* macro? */
+  return 0;
 }
 
 
-int nip_sepset_num_of_vars(nip_sepset s){
-  return s->old->num_of_vars; /* macro? */
+int nip_sepset_size(nip_sepset s){
+  if (s)
+    return s->old->num_of_vars; /* macro? */
+  return 0;
 }
 
 

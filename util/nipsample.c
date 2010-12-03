@@ -1,3 +1,21 @@
+/* nipsample.c
+ * 
+ * Samples data according to a given model.
+ *
+ * SYNOPSIS: 
+ * NIPSAMPLE <MODEL.NET> <SERIES> <SAMPLES> <RESULT.TXT>
+ *
+ * - Structure of the model is read from the file <MODEL.NET>
+ * - integer <SERIES> specifies the number of time series
+ * - integer <SAMPLES> specifies how many samples for each time series
+ * - resulting data will be written to the file <RESULT.TXT>
+ *
+ * EXAMPLE: ./nipsample weather.net 52 7 year.txt  
+ *
+ * Author: Janne Toivola
+ * Version: $Id: nipsample.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,10 +26,6 @@
 #include "nip.h"
 #include "nipvariable.h"
 
-/* Generates data according to a given model
- * SYNOPSIS: GEN_TEST <MODEL.NET> <N SERIES> <SAMPLES/SERIES> <RESULT.TXT>
- * (resulting data will be written to the file <result.txt>) 
- */
 
 int main(int argc, char *argv[]) {
 

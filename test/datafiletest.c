@@ -1,6 +1,11 @@
-#include "parser.h"
+/* Test program for seeing if the data file abstraction works...
+ * Author: Janne Toivola
+ * Version: $Id: datafiletest.c,v 1.9 2010-12-03 17:21:28 jatoivol Exp $
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include "parser.h"
 
 /*
 #define PRINT_ALL

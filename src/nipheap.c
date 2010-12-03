@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.3 2010-12-02 18:15:21 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.4 2010-12-03 17:21:28 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -19,7 +19,7 @@ int nip_graph_edges_added(nip_variable* vs, int n) {
     for (i = 0; i < n; i++)
         for (j = i+1; j < n; j++)
 	    sum += !nip_variable_is_parent(vs[i], vs[j]);
-	  /*sum += !nip_graph_is_child(g, vs[i], vs[j]);*/
+	  /*sum += !nip_graph_linked(g, vs[i], vs[j]);*/
     /* JJT: Not sure if this is supposed to be true "childrenship" in the
        original Bayes network, or just neigbourhood in the subsequent
        moralised and undirected graph. */

@@ -1,5 +1,9 @@
-/* loo_prediction_test.c
+/* nipbenchmark.c
  * 
+ * SYNOPSIS: 
+ * NIPBENCHMARK <MODEL.NET> <INPUT_DATA.TXT> \ 
+ *                     <THRESHOLD> <MINL> <VAR> <OUTPUT_DATA.TXT>
+ *
  * Executes leave-one-out testing on the prediction accuracy. 
  * For each time series, a model is estimated from the rest 
  * of the data sequences and predictive inference is done for 
@@ -7,20 +11,19 @@
  * stopping threshold and minimum likelihood parameters. 
  * Inference results are written to a file. 
  *
- * SYNOPSIS: 
- * LOO_PREDICTION_TEST <MODEL.NET> <INPUT_DATA.TXT> \ 
- *                     <THRESHOLD> <MINL> <VAR> <OUTPUT_DATA.TXT>
- *
  * EXAMPLE: 
- * ./loo_prediction_test model.net data.txt 0.00001 -1.2 A inferred_data.txt
+ * ./nipbenchmark model.net data.txt 0.00001 -1.2 A inferred_data.txt
+ *
+ * Author: Janne Toivola
+ * Version: $Id: loo_prediction_test.c,v 1.13 2010-12-03 17:21:29 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include "parser.h"
-#include "clique.h"
 #include "niplists.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
 #include "niperrorhandler.h"
 #include "nip.h"

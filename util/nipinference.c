@@ -1,19 +1,23 @@
-/* inftest.c
+/* nipinference.c
  * 
+ * SYNOPSIS: 
+ * NIPINFERENCE <MODEL.NET> <INPUT_DATA.TXT> <VARIABLE> <OUTPUT_DATA.TXT>
+ *
  * Executes inference procedure with given model and time series. 
  * Inferred probabilities for the selected variable are written to 
  * the specified data file. 
  *
- * SYNOPSIS: INFTEST <MODEL.NET> <INPUT_DATA.TXT> <VARIABLE> <OUTPUT_DATA.TXT>
+ * EXAMPLE: ./nipinference filter.net data.txt A inferred_data.txt
  *
- * EXAMPLE: ./inftest filter.net data.txt A inferred_data.txt
+ * Author: Janne Toivola
+ * Version: $Id: nipinference.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include "parser.h"
-#include "clique.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
 #include "niperrorhandler.h"
 #include "nip.h"

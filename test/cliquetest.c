@@ -1,6 +1,11 @@
-#include "clique.h"
+/* A program for testing the cliques and sepsets 
+ * Author: Janne Toivola
+ * Version: $Id: cliquetest.c,v 1.37 2010-12-03 17:21:28 jatoivol Exp $
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
+#include "nipjointree.h"
 
 
 int main(){
@@ -53,8 +58,8 @@ int main(){
 
   /* create some cliques and sepsets (with too many shortcuts...) 
    * This is normally the job of the graph implementation. */
-  clique clique_pile[3];
-  sepset sepset_pile[2];
+  nip_clique clique_pile[3];
+  nip_sepset sepset_pile[2];
 
   /* initialization: This information is usually parsed from a file. */
   nip_potential model[4]; /* the fourth potential is extra */
@@ -85,19 +90,19 @@ int main(){
   variables[4] = nip_new_variable("E", nameE, statesE, 2);
 
   /* Create cliques */
-  clique_pile[0] = new_clique(variables, 3);
-  clique_pile[1] = new_clique(&(variables[1]), 3);
-  clique_pile[2] = new_clique(&(variables[3]), 2);
+  clique_pile[0] = nip_new_clique(variables, 3);
+  clique_pile[1] = nip_new_clique(&(variables[1]), 3);
+  clique_pile[2] = nip_new_clique(&(variables[3]), 2);
 
   /* Create separator sets */
-  sepset_pile[0] = make_sepset(&(variables[1]), 2, &(clique_pile[0]));
-  sepset_pile[1] = make_sepset(&(variables[3]), 1, &(clique_pile[1]));
+  sepset_pile[0] = nip_new_sepset(&(variables[1]), 2, &(clique_pile[0]));
+  sepset_pile[1] = nip_new_sepset(&(variables[3]), 1, &(clique_pile[1]));
 
   /* Create the join tree */
-  add_sepset(clique_pile[0], sepset_pile[0]);
-  add_sepset(clique_pile[1], sepset_pile[0]);
-  add_sepset(clique_pile[1], sepset_pile[1]);
-  add_sepset(clique_pile[2], sepset_pile[1]);
+  nip_add_sepset(clique_pile[0], sepset_pile[0]);
+  nip_add_sepset(clique_pile[1], sepset_pile[0]);
+  nip_add_sepset(clique_pile[1], sepset_pile[1]);
+  nip_add_sepset(clique_pile[2], sepset_pile[1]);
 
   cardinality[0] = 3;
   cardinality[1] = 4;
@@ -118,7 +123,7 @@ int main(){
   set_of_variables[0] = variables[2];
   set_of_variables[1] = variables[1];
   set_of_variables[2] = variables[3];
-  model[3] = create_potential(set_of_variables, 3, potentialC2);
+  model[3] = nip_create_potential(set_of_variables, 3, potentialC2);
 
   /* A test about reordering a potential */
   for(i = 0; i < 24; i++)
@@ -132,9 +137,9 @@ int main(){
   nip_set_parents(variables[2], parentsC, 2);
   nip_set_parents(variables[4], parentsE, 1);
 
-  initialise(clique_pile[0], variables[0], model[0], 0);
-  initialise(clique_pile[1], variables[2], model[1], 0);
-  initialise(clique_pile[2], variables[4], model[2], 0);
+  nip_init_clique(clique_pile[0], variables[0], model[0], 0);
+  nip_init_clique(clique_pile[1], variables[2], model[1], 0);
+  nip_init_clique(clique_pile[2], variables[4], model[2], 0);
 
   /* DEBUG */
   /* printf("BCD before evidence:\n"); */
@@ -143,8 +148,8 @@ int main(){
 
   /* observation entry: This information is from the given data. */
   /* data please? anyone? */
-  enter_evidence(variables, 5, clique_pile, 3, variables[1], probB);
-  enter_evidence(variables, 5, clique_pile, 3, variables[3], probD);
+  nip_enter_evidence(variables, 5, clique_pile, 3, variables[1], probB);
+  nip_enter_evidence(variables, 5, clique_pile, 3, variables[3], probD);
 
   /* DEBUG */
   /* printf("BCD after evidence:\n"); */
@@ -153,17 +158,17 @@ int main(){
 
   /* propagation: here's some action */
   for(i = 0; i < 3; i++)
-    unmark_clique(clique_pile[i]); /* Unmark all cliques */
+    nip_unmark_clique(clique_pile[i]); /* Unmark all cliques */
 
   /* collect evidence to arbitrary clique */
-  collect_evidence(NULL, NULL, clique_pile[1]); 
+  nip_collect_evidence(NULL, NULL, clique_pile[1]); 
 
 
   for(i = 0; i < 3; i++)
-    unmark_clique(clique_pile[i]); /* Unmark all cliques */
+    nip_unmark_clique(clique_pile[i]); /* Unmark all cliques */
 
   /* distribute evidence from the same clique */
-  distribute_evidence(clique_pile[1]);
+  nip_distribute_evidence(clique_pile[1]);
 
   /* DEBUG */
   /* printf("BCD after propagation:\n"); */
@@ -172,7 +177,7 @@ int main(){
 
   /* marginalisation */
   printf("Marginalisation returned %d. (0 is OK)\n", 
-	 marginalise(clique_pile[0], variables[0], result));
+	 nip_marginalise_clique(clique_pile[0], variables[0], result));
 
   /* DEBUG */
   /* printf("Not normalised:\n"); */

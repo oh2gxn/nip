@@ -3,12 +3,15 @@
  * Experimental time slice stuff for Hidden Markov Models (HMM).
  * Prints a MAP estimate for the hidden variable during the first
  * time series in the given data file. 
-x */
+ *
+ * Author: Janne Toivola
+ * Version: $Id: hmmtest.c,v 1.51 2010-12-03 17:21:28 jatoivol Exp $
+ */
 
 #include <stdlib.h>
 #include <assert.h>
 #include "parser.h"
-#include "clique.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
 #include "nippotential.h"
 #include "niperrorhandler.h"
@@ -22,7 +25,7 @@ int main(int argc, char *argv[]){
   double*** result = NULL; /* probs of the hidden variables */
 
   nip model = NULL;
-  clique clique_of_interest = NULL;
+  nip_clique clique_of_interest = NULL;
 
   nip_variable temp = NULL;
   nip_variable interesting = NULL;
@@ -133,8 +136,9 @@ int main(int argc, char *argv[]){
       
       /* 2. Find the clique that contains the family of 
        *    the interesting variable */
-      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       interesting);
+      clique_of_interest = nip_find_family(model->cliques, 
+					   model->num_of_cliques, 
+					   interesting);
       if(!clique_of_interest){
 	free_model(model);
 	free_timeseries(ts);
@@ -143,7 +147,7 @@ int main(int argc, char *argv[]){
       }  
 
       /* 3. Marginalisation (memory for the result must have been allocated) */
-      marginalise(clique_of_interest, interesting, result[t][i]);
+      nip_marginalise_clique(clique_of_interest, interesting, result[t][i]);
 
       /* 4. Normalisation */
       nip_normalise_array(result[t][i], NIP_CARDINALITY(interesting));
@@ -167,16 +171,16 @@ int main(int argc, char *argv[]){
 	  nip_update_likelihood(temp->next, result[t][i]);
       }
 
-      global_retraction(model->variables, model->num_of_vars, 
-			model->cliques, model->num_of_cliques);
+      nip_global_retraction(model->variables, model->num_of_vars, 
+			    model->cliques, model->num_of_cliques);
 
       /* 0. Put some data in */
       for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
 	if(ts->data[t][i] >= 0)
-	  enter_i_observation(model->variables, model->num_of_vars,
-			      model->cliques, model->num_of_cliques,
-			      ts->observed[i],
-			      ts->data[t][i]);
+	  nip_enter_index_observation(model->variables, model->num_of_vars,
+				      model->cliques, model->num_of_cliques,
+				      ts->observed[i],
+				      ts->data[t][i]);
     }
   }
 
@@ -200,18 +204,18 @@ int main(int argc, char *argv[]){
 	temp = ts->observed[i];
 	assert(temp);
 	if(ts->data[t - 1][i] >= 0)
-	  enter_i_observation(model->variables, model->num_of_vars, 
-			      model->cliques, model->num_of_cliques, 
-			      temp, 
-			      ts->data[t - 1][i]);
+	  nip_enter_index_observation(model->variables, model->num_of_vars, 
+				      model->cliques, model->num_of_cliques, 
+				      temp, 
+				      ts->data[t - 1][i]);
       }
 
       for(i = 0; i < ts->num_of_hidden; i++){
 	temp = ts->hidden[i];
 	if(temp->next != NULL)
-	  enter_evidence(model->variables, model->num_of_vars, 
-			 model->cliques, model->num_of_cliques, 
-			 temp->next, result[t-1][i]);
+	  nip_enter_evidence(model->variables, model->num_of_vars, 
+			     model->cliques, model->num_of_cliques, 
+			     temp->next, result[t-1][i]);
       }
     }
 
@@ -232,9 +236,9 @@ int main(int argc, char *argv[]){
 	  for(j = 0; j < NIP_CARDINALITY(temp); j++)
 	    quotient[i][j] = result[t + 1][i][j] / result[t][k][j]; 
 	  
-	  enter_evidence(model->variables, model->num_of_vars, 
-			 model->cliques, model->num_of_cliques, 
-			 temp->previous, quotient[i]);
+	  nip_enter_evidence(model->variables, model->num_of_vars, 
+			     model->cliques, model->num_of_cliques, 
+			     temp->previous, quotient[i]);
 	}
       }
     }
@@ -255,8 +259,9 @@ int main(int argc, char *argv[]){
       
       /* 2. Find the clique that contains the family of 
        *    the interesting variable */
-      clique_of_interest = find_family(model->cliques, model->num_of_cliques, 
-				       interesting);
+      clique_of_interest = nip_find_family(model->cliques, 
+					   model->num_of_cliques, 
+					   interesting);
       if(!clique_of_interest){
 	free_model(model);
 	free_timeseries(ts);
@@ -265,7 +270,7 @@ int main(int argc, char *argv[]){
       }  
       
       /* 3. Marginalisation (the memory must have been allocated) */
-      marginalise(clique_of_interest, interesting, result[t][i]);
+      nip_marginalise_clique(clique_of_interest, interesting, result[t][i]);
       
       /* 4. Normalisation */
       nip_normalise_array(result[t][i], NIP_CARDINALITY(interesting));

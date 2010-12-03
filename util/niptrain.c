@@ -1,4 +1,4 @@
-/* em_test.c
+/* niptrain.c
  *
  * Reads the structure for the model from a Hugin NET file, 
  * uses EM-algorithm for learning the parameters from the 
@@ -6,16 +6,19 @@
  * specified output file.
  *
  * SYNOPSIS: 
- * EM_TEST <ORIGINAL.NET> <DATA.TXT> <THRESHOLD> <MINL> <RESULT.NET>
+ * NIPTRAIN <ORIGINAL.NET> <DATA.TXT> <THRESHOLD> <MINL> <RESULT.NET>
  *
- * - Structure of the model will be read from <ORIGINAL.NET>
+ * - Structure of the model will be read from the file <ORIGINAL.NET>
  * - data for learning will be read from <DATA.TXT>
  * - <THRESHOLD> will provide the minimum change in average log. likelihood
  * - <MINL> sets the minimum average log. likelihood 
  *   (be careful not to demand too much)
  * - resulting model will be written to the file <RESULT.NET>
  *
- * EXAMPLE: ./em_test model1.net data.txt 0.00001 -1.2 model2.net
+ * EXAMPLE: ./niptrain model1.net data.txt 0.00001 -1.2 model2.net
+ *
+ * Author: Janne Toivola
+ * Version: $Id: niptrain.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
  */
 
 #include <assert.h>

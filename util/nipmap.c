@@ -1,20 +1,24 @@
-/* maptest.c
+/* nipmap.c
  * 
+ * SYNOPSIS: 
+ * NIPMAP <MODEL.NET> <INPUT_DATA.TXT> <OUTPUT_DATA.TXT>
+ *
  * Computes the Maximum A Posteriori (MAP) estimate for the values 
  * of hidden variables in a time series. You have to specify net file 
  * describing the model and data file containing the data for the 
  * observed variables. 
  *
- * SYNOPSIS: MAPTEST <MODEL.NET> <INPUT_DATA.TXT> <OUTPUT_DATA.TXT>
+ * EXAMPLE: ./nipmap filter.net data.txt filtered_data.txt
  *
- * EXAMPLE: ./maptest filter.net data.txt filtered_data.txt
+ * Author: Janne Toivola
+ * Version: $Id: nipmap.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include "parser.h"
-#include "clique.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
 #include "niperrorhandler.h"
 #include "nip.h"

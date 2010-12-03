@@ -2,7 +2,7 @@
  * Functions for representing and manipulating graphs, and methods for 
  * constructing the join tree.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipgraph.h,v 1.5 2010-12-02 16:38:28 jatoivol Exp $
+ * Version: $Id: nipgraph.h,v 1.6 2010-12-03 17:21:28 jatoivol Exp $
  */
 
 #ifndef __NIPGRAPH_H__
@@ -86,7 +86,7 @@ int nip_graph_neighbours(nip_graph g, nip_variable v,
  * Parameter parent: the suspected parent
  * Parameter child: the suspected child
  */
-int nip_graph_is_child(nip_graph g, nip_variable parent, nip_variable child);
+int nip_graph_linked(nip_graph g, nip_variable parent, nip_variable child);
 
 
 /* Adds a new variable (ie. a node) to the graph. Do this only 
@@ -115,7 +115,7 @@ nip_graph nip_make_graph_undirected(nip_graph g);
  * Returns a new moralised copy of the graph.
  * Does not modify g.
  */
-nip_graph nip_moralise(nip_graph g);
+nip_graph nip_moralise_graph(nip_graph g);
 
 
 /* Adds undirected links between interface variables in a DAG.

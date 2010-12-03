@@ -5,19 +5,22 @@
  * during the first time series in the given data file. 
  *
  * SYNOPSIS: HTMTEST <MODEL.NET> <DATA.TXT>
+ * 
+ * Author: Janne Toivola
+ * Version: $Id: htmtest.c,v 1.63 2010-12-03 17:21:28 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include "parser.h"
-#include "clique.h"
+#include "nipjointree.h"
 #include "nipvariable.h"
 #include "nippotential.h"
 #include "niperrorhandler.h"
 #include "nip.h"
 
-#define VAR_OF_INTEREST(m,x) ((m->variables[x]->interface_status & NIP_INTERFACE_OLD_OUTGOING) == 0)
+#define VAR_OF_INTEREST(m,x) (((m)->variables[(x)]->interface_status & NIP_INTERFACE_OLD_OUTGOING) == 0)
 
 int main(int argc, char *argv[]){
 
