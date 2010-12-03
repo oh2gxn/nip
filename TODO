@@ -47,7 +47,16 @@ TODO:
   + clique.h -> nipjointree.h
   + Heap.h -> nipheap.h
   + Graph.h -> nipgraph.h
-  - ...
+  - parser.h -> ?
+  - nip.h ok?
+  + convert -> nipconvert
+  + em_test -> niptrain
+  + gen_test -> nipsample
+  + inftest -> nipinference
+  + joint_test -> nipjoint
+  + likelihood -> niplikelihood
+  + map -> nipmap
+  + loo_prediction_test -> nipbenchmark
 
 * Make it a library
   + makefile rules for static
