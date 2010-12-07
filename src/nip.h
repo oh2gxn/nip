@@ -1,6 +1,6 @@
 /* nip.h 
  * Author: Janne Toivola
- * Version: $Id: nip.h,v 1.66 2010-12-02 18:15:21 jatoivol Exp $
+ * Version: $Id: nip.h,v 1.67 2010-12-07 17:23:18 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -14,27 +14,25 @@
 #include <math.h>
 #include <time.h>
 
-#include "parser.h"
 #include "niplists.h"
 #include "nipvariable.h"
 #include "nippotential.h"
 #include "nipjointree.h"
 #include "niperrorhandler.h"
+#include "nipparsers.h"
 #include "huginnet.tab.h"
 
 #define TIME_SERIES_LENGTH(ts) ( (ts)->length )
 #define UNCERTAIN_SERIES_LENGTH(ucs) ( (ucs)->length )
 
-#define FIELD_SEPARATOR ' '
-#define FORWARD  1
-#define BACKWARD 0
-#define HAD_A_PREVIOUS_TIMESLICE 1
+#define NIP_FIELD_SEPARATOR ' '
+#define NIP_HAD_A_PREVIOUS_TIMESLICE 1
 
 /* "How probable is the impossible" (0 < epsilon << 1) */
 /*#define PARAMETER_EPSILON 0.00001*/
 
-enum direction_type {backward, forward};
-typedef enum direction_type direction;
+enum nip_direction_type {backward, forward};
+typedef enum nip_direction_type nip_direction;
 
 typedef struct{
   int num_of_cliques;
@@ -70,9 +68,9 @@ typedef struct{
 
   int node_size_x;
   int node_size_y;
-}nip_type;
+}nip_struct;
 
-typedef nip_type *nip;
+typedef nip_struct *nip;
 
 
 typedef struct{
@@ -85,9 +83,9 @@ typedef struct{
   int length;         /* Number of time steps */
   int **data;         /* The time series */
   /* JJ NOTE: Should there be a cache for extremely large time series? */
-}time_series_type;
+}time_series_struct;
 
-typedef time_series_type *time_series;
+typedef time_series_struct* time_series;
 
 
 typedef struct{
@@ -95,9 +93,9 @@ typedef struct{
   int num_of_vars;
   int length;     /* length of the time series */
   double ***data; /* probability distribution of every variable at every t */
-}uncertain_series_type;
+}uncertain_series_struct;
 
-typedef uncertain_series_type *uncertain_series;
+typedef uncertain_series_struct* uncertain_series;
 
 
 /* Makes the model forget all the given evidence.

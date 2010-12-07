@@ -1,15 +1,15 @@
 /* Test program for the Hugin Net parser
  * Author: Janne Toivola
- * Version: $Id: bisontest.c,v 1.52 2010-12-03 17:21:28 jatoivol Exp $ 
+ * Version: $Id: bisontest.c,v 1.53 2010-12-07 17:23:19 jatoivol Exp $ 
  */
 
 #include <stdlib.h>
-#include "parser.h"
-#include "nipjointree.h"
 #include "niplists.h"
+#include "niperrorhandler.h"
 #include "nipvariable.h"
 #include "nippotential.h"
-#include "niperrorhandler.h"
+#include "nipjointree.h"
+#include "nipparsers.h"
 #include "huginnet.tab.h"
 
 /*

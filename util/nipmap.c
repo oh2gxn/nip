@@ -11,14 +11,12 @@
  * EXAMPLE: ./nipmap filter.net data.txt filtered_data.txt
  *
  * Author: Janne Toivola
- * Version: $Id: nipmap.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
+ * Version: $Id: nipmap.c,v 1.2 2010-12-07 17:23:19 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "parser.h"
-#include "nipjointree.h"
 #include "nipvariable.h"
 #include "niperrorhandler.h"
 #include "nip.h"

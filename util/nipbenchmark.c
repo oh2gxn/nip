@@ -10,22 +10,20 @@
  * a given variable... The EM learning algorithm requires the 
  * stopping threshold and minimum likelihood parameters. 
  * Inference results are written to a file. 
+ * Note: a completely separate test data set is recommended 
+ * for further assessment, at least when the results of this 
+ * program are used for model selection.
  *
  * EXAMPLE: 
  * ./nipbenchmark model.net data.txt 0.00001 -1.2 A inferred_data.txt
  *
  * Author: Janne Toivola
- * Version: $Id: nipbenchmark.c,v 1.1 2010-12-03 17:23:40 jatoivol Exp $
+ * Version: $Id: nipbenchmark.c,v 1.2 2010-12-07 17:23:19 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "parser.h"
-#include "niplists.h"
-#include "nipjointree.h"
-#include "nipvariable.h"
-#include "niperrorhandler.h"
 #include "nip.h"
 
 /* a lot of similarities with the inference tool (inftest)... */

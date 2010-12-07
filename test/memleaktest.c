@@ -1,6 +1,6 @@
 /* Tests if the library functions leak memory. 
  * Author: Janne Toivola
- * Version: $Id: memleaktest.c,v 1.27 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: memleaktest.c,v 1.28 2010-12-07 17:23:19 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "nip.h"
-#include "parser.h"
+#include "nipparsers.h"
 #include "nipgraph.h"
 #include "nipjointree.h"
 #include "nipvariable.h"

@@ -5,12 +5,12 @@
  * time series in the given data file. 
  *
  * Author: Janne Toivola
- * Version: $Id: hmmtest.c,v 1.51 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: hmmtest.c,v 1.52 2010-12-07 17:23:19 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
-#include "parser.h"
+#include "nipparsers.h"
 #include "nipjointree.h"
 #include "nipvariable.h"
 #include "nippotential.h"
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]){
   printf("## Forward phase ##\n");  
 
   reset_model(model); /* Reset the clique tree */
-  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+  use_priors(model, !NIP_HAD_A_PREVIOUS_TIMESLICE);
 
   for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* FOR EVERY TIMESLICE */
     
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]){
     if(t < TIME_SERIES_LENGTH(ts)){
       /* forget old evidence */
       reset_model(model);
-      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+      use_priors(model, NIP_HAD_A_PREVIOUS_TIMESLICE);
 
       for(i = 0; i < ts->num_of_hidden; i++){
 	/* old posteriors become new priors */
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]){
 
   /* forget old evidence */
   reset_model(model);
-  use_priors(model, HAD_A_PREVIOUS_TIMESLICE); /* JJT: Not sure... */
+  use_priors(model, NIP_HAD_A_PREVIOUS_TIMESLICE); /* JJT: Not sure... */
 
   for(t = TIME_SERIES_LENGTH(ts)-1; t >= 0; t--){ /* FOR EVERY TIMESLICE */
 
@@ -284,7 +284,7 @@ int main(int argc, char *argv[]){
     
     /* forget old evidence */
     reset_model(model);
-    use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+    use_priors(model, NIP_HAD_A_PREVIOUS_TIMESLICE);
   }
   
   for(t = 0; t < TIME_SERIES_LENGTH(ts) + 1; t++){

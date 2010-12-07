@@ -21,7 +21,7 @@
  * p(a b c | d e f) for each record {abcdef} in the file.
  *
  * Author: Janne Toivola
- * Version: $Id: niplikelihood.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
+ * Version: $Id: niplikelihood.c,v 1.2 2010-12-07 17:23:19 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
   for(i = 0; i < n; i++){ /* For each time series */
     ts = ts_set[i];
     reset_model(model); /* Reset the clique tree */
-    use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+    use_priors(model, !NIP_HAD_A_PREVIOUS_TIMESLICE);
     
     for(t = 0; t < TIME_SERIES_LENGTH(ts); t++){ /* For each time step */      
 
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
       printf("%g %g %g\n", m1, m2, log_likelihood); /* One of the results */
 
       reset_model(model); /* Reset the clique tree */
-      use_priors(model, HAD_A_PREVIOUS_TIMESLICE);
+      use_priors(model, NIP_HAD_A_PREVIOUS_TIMESLICE);
     }
     printf("\n"); /* time series separator */
   }

@@ -1,17 +1,11 @@
-/* Some helper functions for the Bison parser.
- * Also contains other functions for handling different files.
+/* nipparsers.c
  * Author: Janne Toivola
- * Version: $Id: parser.c,v 1.121 2010-11-22 15:35:56 jatoivol Exp $
+ * Version: $Id: nipparsers.c,v 1.1 2010-12-07 17:23:18 jatoivol Exp $
  */
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "parser.h"
-#include "niplists.h"
-#include "nipstring.h"
-#include "niperrorhandler.h"
+
+#include "nipparsers.h"
+
 
 /* #define DEBUG_PARSER */
 
@@ -19,27 +13,27 @@
 
 /* #define DEBUG_DATAFILE */
 
-static int nullobservation(char *token);
+static int nip_null_observation(char* token);
 
-static void free_datafile(datafile *f);
+static void nip_free_data_file(nip_data_file f);
 
-datafile *open_datafile(char *filename, char separator,
-			int write, int nodenames){
+nip_data_file nip_open_data_file(char* filename, char separator,
+				 int write, int nodenames){
 
   char last_line[MAX_LINELENGTH];
-  char *token;
+  char* token;
   int length_of_name = 0;
   int num_of_tokens = 0;
-  int *token_bounds;
+  int* token_bounds;
   int linecounter = 0;
   int tscounter = 0;
   int dividend;
   int i, j, state;
   int empty_lines_read = 0;
-  nip_string_list *statenames = NULL;
-  datafile *f = NULL;
+  nip_string_list* statenames = NULL;
+  nip_data_file f = NULL;
 
-  f = (datafile *) malloc(sizeof(datafile));
+  f = (nip_data_file) malloc(sizeof(nip_data_file_struct));
 
   if(f == NULL){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
@@ -50,8 +44,8 @@ datafile *open_datafile(char *filename, char separator,
   f->separator = separator;
   f->file = NULL;
   f->is_open = 0;
-  f->firstline_labels = 0;
-  f->line_now = 0;
+  f->first_line_labels = 0;
+  f->current_line = 0;
   f->label_line = -1;
   f->ndatarows = 0;
   f->datarows = NULL;
@@ -85,12 +79,10 @@ datafile *open_datafile(char *filename, char separator,
 
   strcpy(f->name, filename);
 
-  /*
-   * If the file is opened in read mode, check the contents.
+  /* If the file is opened in read mode, check the contents.
    * This includes names of nodes and their states.
    */
   if(!write){
-
     linecounter = 0;
     empty_lines_read = 0;
     /* tries to ignore the empty lines in the beginning of file
@@ -103,7 +95,7 @@ datafile *open_datafile(char *filename, char separator,
       /* treat the white space as separators */
       num_of_tokens = nip_count_tokens(last_line, NULL, 0, 
 				       &separator, 1, 0, 1);
-      (f->line_now)++;
+      (f->current_line)++;
 
       /* JJT  1.9.2004: A sort of bug fix. Ignore empty lines */
       /* JJT 22.6.2005: Another fix. Ignore only the empty lines 
@@ -120,19 +112,19 @@ datafile *open_datafile(char *filename, char separator,
 	empty_lines_read = 0;
 	if(state > 0){
 	  if(state > 1){
-	    f->label_line = f->line_now;
+	    f->label_line = f->current_line;
 	    linecounter = 0; /* reset for data lines */
 	  }
 	  state--; /* stop ignoring single empty lines and the node names */
 	}
 	if(state == 0 && linecounter == 1)
-	  (f->ndatarows)++;;
+	  (f->ndatarows)++;
       }
     }
 
     /* rewind */
     rewind(f->file);
-    f->line_now = 0;
+    f->current_line = 0;
     linecounter = 0;
     state = 1;
     if(nodenames)
@@ -143,7 +135,7 @@ datafile *open_datafile(char *filename, char separator,
     /* NOTE: calloc resets the contents to zero! */
     if(!f->datarows){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-      close_datafile(f);
+      nip_close_data_file(f);
       return NULL;
     }
 
@@ -157,11 +149,11 @@ datafile *open_datafile(char *filename, char separator,
 	  nip_tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 1);
 	if(!token_bounds){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	  close_datafile(f);
+	  nip_close_data_file(f);
 	  return NULL;
 	}
       }
-      (f->line_now)++;
+      (f->current_line)++;
       
       /* JJT  1.9.2004: A sort of bug fix. Ignore empty lines */
       /* JJT 22.6.2005: Another fix. Ignore only the empty lines 
@@ -192,7 +184,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!f->node_symbols){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-	  close_datafile(f);
+	  nip_close_data_file(f);
 	  free(token_bounds);
 	  return NULL;
 	}
@@ -202,7 +194,7 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!statenames){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-	  close_datafile(f);
+	  nip_close_data_file(f);
 	  free(token_bounds);
 	  return NULL;
 	}
@@ -214,7 +206,8 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!f->num_of_states){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-	  close_datafile(f);
+	  nip_close_data_file(f);
+	  /* free statenames[i]? */
 	  free(statenames);
 	  free(token_bounds);
 	  return NULL;
@@ -224,14 +217,15 @@ datafile *open_datafile(char *filename, char separator,
 
 	if(!f->node_states){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-	  close_datafile(f);
+	  nip_close_data_file(f);
+	  /* free statenames[i]? */
 	  free(statenames);
 	  free(token_bounds);
 	  return NULL;
 	}
 
 	if(nodenames){
-	  f->firstline_labels = 1;
+	  f->first_line_labels = 1;
 
 	  for(i = 0; i < num_of_tokens; i++){
 
@@ -240,7 +234,8 @@ datafile *open_datafile(char *filename, char separator,
 			      sizeof(char));
 	    if(!f->node_symbols[i]){
 	      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-	      close_datafile(f);
+	      nip_close_data_file(f);
+	      /* free statenames[i]? */
 	      free(statenames);
 	      free(token_bounds);
 	      return NULL;
@@ -253,20 +248,21 @@ datafile *open_datafile(char *filename, char separator,
 
 	}
 	else{
-	  f->firstline_labels = 0;
+	  f->first_line_labels = 0;
 
 	  for(i = 0; i < num_of_tokens; i++){
 
+	    /* determine length of the name */
 	    dividend = i + 1;
 	    length_of_name = 5;
-
 	    while((dividend /= 10) > 1)
 	      length_of_name++;
 
 	    f->node_symbols[i] = (char *) calloc(length_of_name, sizeof(char));
 	    if(!f->node_symbols[i]){
 	      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-	      close_datafile(f);
+	      nip_close_data_file(f);
+	      /* free statenames[i]? */
 	      free(statenames);
 	      free(token_bounds);
 	      return NULL; /* error horror */
@@ -293,7 +289,8 @@ datafile *open_datafile(char *filename, char separator,
 				  sizeof(char));
 	  if(!token){
 	    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-	    close_datafile(f);
+	    nip_close_data_file(f);
+	    /* free statenames[i]? */
 	    free(statenames);
 	    free(token_bounds);
 	    return NULL;
@@ -306,11 +303,11 @@ datafile *open_datafile(char *filename, char separator,
 
 	  /* If the string has not yet been observed, add it to a list 
 	   * (ownership is passed on, string is not freed here) */
-	  if(!(nip_string_list_contains(statenames[i], token) ||
-	       nullobservation(token))){
+	  if(!nip_null_observation(token) && 
+	     !nip_string_list_contains(statenames[i], token)){
 	    if(nip_prepend_string(statenames[i], token) != NIP_NO_ERROR){
 	      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	      close_datafile(f);
+	      nip_close_data_file(f);
 	      for(i = 0; i < f->num_of_nodes; i++)
 		nip_free_string_list(statenames[i]);
 	      free(statenames);
@@ -342,7 +339,7 @@ datafile *open_datafile(char *filename, char separator,
   free(statenames);
 
   rewind(f->file);
-  f->line_now = 0;
+  f->current_line = 0;
 
   return f;
 }
@@ -352,10 +349,10 @@ datafile *open_datafile(char *filename, char separator,
  * Tells if the given token indicates a missing value, a "null observation".
  * The token must be null terminated.
  */
-static int nullobservation(char *token){
+static int nip_null_observation(char *token){
 
 #ifdef DEBUG_DATAFILE
-  printf("nullobservation called\n");
+  printf("nip_null_observation called\n");
 #endif
 
   if(token == NULL){
@@ -363,6 +360,7 @@ static int nullobservation(char *token){
     return 0;
   }
 
+  /* compare to all known labels for missing data! */
   else if((strcmp("N/A", token) == 0) ||
 	  (strcmp("null", token) == 0) ||
 	  (strcmp("<null>", token) == 0)){
@@ -375,7 +373,7 @@ static int nullobservation(char *token){
 }
 
 
-void close_datafile(datafile *file){
+void nip_close_data_file(nip_data_file file){
   if(!file){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return;
@@ -385,12 +383,12 @@ void close_datafile(datafile *file){
     file->is_open = 0;
   }
   /* Release the memory of file struct. */
-  free_datafile(file);
+  nip_free_data_file(file);
 }
 
 
 /* Frees the memory used by (possibly partially allocated) datafile f. */
-static void free_datafile(datafile *f){
+static void nip_free_data_file(nip_data_file f){
   int i,j;
 
   if(!f)
@@ -415,7 +413,7 @@ static void free_datafile(datafile *f){
 }
 
 
-int nextline_tokens(datafile *f, char separator, char ***tokens){
+int nip_next_line_tokens(nip_data_file f, char separator, char ***tokens){
 
   char line[MAX_LINELENGTH];
   char *token;
@@ -439,13 +437,13 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
     if(fgets(line, MAX_LINELENGTH, f->file) == NULL)
       break;
     else
-      f->line_now++;
+      f->current_line++;
     
     /* treat the white space as separators */
     num_of_tokens = nip_count_tokens(line, NULL, 0, &separator, 1, 0, 1);
     
     /* Skip the first line if it contains node labels. */
-    if((f->line_now == f->label_line)  &&  f->firstline_labels)
+    if((f->current_line == f->label_line)  &&  f->first_line_labels)
       num_of_tokens = 0;
 
   }while(num_of_tokens < 1);
@@ -481,7 +479,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
 
     if(!token){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-      free_datafile(f);
+      nip_free_data_file(f);
       for(j = 0; j < i; j++)
 	free(*tokens[j]);
       free(token_bounds);
@@ -504,7 +502,7 @@ int nextline_tokens(datafile *f, char separator, char ***tokens){
 }
 
 
-char *next_token(int *token_length, FILE *f){
+char* nip_next_hugin_token(int* token_length, FILE* f){
 
   /* The last line read from the file */
   static char last_line[MAX_LINELENGTH];
@@ -513,18 +511,18 @@ char *next_token(int *token_length, FILE *f){
   static int tokens_left;
 
   /* Pointer to the index array of token boundaries */
-  static int *indexarray = NULL;
+  static int* indexarray = NULL;
 
   /* Pointer to the index array of token boundaries
    * (not incremented, we need this for free() ) */
-  static int *indexarray_original = NULL;
+  static int* indexarray_original = NULL;
 
   /* Should a new line be read in when the next token is requested? */
   static int nip_read_line = 1; 
   /* FIXME: this should be a part of the given file struct? */
 
   /* The token we return */
-  char *token;
+  char* token;
 
   /* Return if some evil mastermind gives us a NULL pointer */
   if(!token_length){
@@ -562,7 +560,7 @@ char *next_token(int *token_length, FILE *f){
       *token_length = 0;
       return NULL;
     }
-    /* How many tokens in the line? */
+    /* how many tokens in the line? */
     tokens_left = nip_count_tokens(last_line, NULL, 1, "(){}=,;", 7, 1, 1);
 
     /* Check whether the line has any tokens. If not, read a new line
@@ -589,7 +587,7 @@ char *next_token(int *token_length, FILE *f){
       }
 
       /* Ignore lines that have COMMENT_CHAR as first non-whitespace char */
-      if(last_line[indexarray[0]] == COMMENT_CHAR)
+      if(last_line[indexarray[0]] == NIP_COMMENT_CHAR)
 	nip_read_line = 1;
       else
 	nip_read_line = 0;
@@ -622,7 +620,7 @@ char *next_token(int *token_length, FILE *f){
     nip_read_line = 1;
 
   /* Still some tokens left. Check for COMMENT_CHAR. */
-  else if(last_line[indexarray[0]] == COMMENT_CHAR)
+  else if(last_line[indexarray[0]] == NIP_COMMENT_CHAR)
     nip_read_line = 1;
 
 #ifdef PRINT_TOKENS

@@ -13,13 +13,13 @@
  * EXAMPLE: ./nipjoint model.net data.txt height weight
  *
  * Author: Janne Toivola
- * Version: $Id: nipjoint.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
+ * Version: $Id: nipjoint.c,v 1.2 2010-12-07 17:23:19 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
-#include "parser.h"
+#include "nipparsers.h"
 #include "nipjointree.h"
 #include "nipvariable.h"
 #include "nippotential.h"
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
   model = parse_model(argv[1]);
   if(!model)
     return -1;
-  use_priors(model, !HAD_A_PREVIOUS_TIMESLICE);
+  use_priors(model, !NIP_HAD_A_PREVIOUS_TIMESLICE);
 
   /* read the data */
   n = read_timeseries(model, argv[2], &ts_set);

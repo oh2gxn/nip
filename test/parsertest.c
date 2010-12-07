@@ -1,10 +1,10 @@
 /* Program for testing parser utility functions
  * Author: Janne Toivola
- * Version: $Id: parsertest.c,v 1.9 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: parsertest.c,v 1.10 2010-12-07 17:23:19 jatoivol Exp $
  */
 
 #include <stdio.h>
-#include "parser.h"
+#include "nipparsers.h"
 #include "huginnet.tab.h"
 
 FILE *open_net_file(const char *filename);
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
     return -1;
 
   while(ok){
-    token = next_token(&token_length, f);
+    token = nip_next_hugin_token(&token_length, f);
 
     if(token_length == 0)
       ok = 0; /* no more tokens */

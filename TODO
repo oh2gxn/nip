@@ -47,7 +47,7 @@ TODO:
   + clique.h -> nipjointree.h
   + Heap.h -> nipheap.h
   + Graph.h -> nipgraph.h
-  - parser.h -> ?
+  + parser.h -> nipparsers.h ?
   - nip.h ok?
   + convert -> nipconvert
   + em_test -> niptrain

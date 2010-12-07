@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.91 2010-12-02 18:15:21 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.92 2010-12-07 17:23:18 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -11,15 +11,15 @@
 #include <string.h>
 #include "niplists.h"
 #include "nipgraph.h"
+#include "nipparsers.h"
 #include "nipjointree.h"
 #include "nipvariable.h"
 #include "nippotential.h"
 #include "niperrorhandler.h"
-#include "parser.h"
 
 /* The current input file 
  * TODO: get rid of these global variables and make them a struct... */
-static FILE *nip_net_file = NULL;
+static FILE* nip_net_file = NULL;
 
 /* Is there a hugin net file open? 0 if no, 1 if yes. 
  * NOTE: could "nip_net_file == NULL" be used for representing the same info? 
@@ -782,7 +782,7 @@ yylex (void)
 {
   int tokenlength;
   int retval = 0;
-  char *token = next_token(&tokenlength, nip_net_file);
+  char *token = nip_next_hugin_token(&tokenlength, nip_net_file);
   char *nullterminated;
   char *endptr;
   double numval;
@@ -985,7 +985,7 @@ yylex (void)
 static void
 yyerror (const char *s)  /* Called by yyparse on error */
 {
-  printf ("%s\n", s);
+  fprintf (stderr, "%s\n", s);
 }
 
 

@@ -6,7 +6,7 @@
 # + make test programs separately
 # + make utility programs separately
 #
-# $Id: Makefile,v 1.70 2010-12-03 17:21:28 jatoivol Exp $
+# $Id: Makefile,v 1.71 2010-12-07 17:23:18 jatoivol Exp $
 
 
 # The C compiler and flags for compiling the library
@@ -80,7 +80,7 @@ $(HUG_OBJ): $(HUG_SRC) $(HUG_HDR)
 src/niplists.o: src/niplists.c src/niplists.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
-src/parser.o: src/parser.c src/parser.h
+src/nipparsers.o: src/nipparsers.c src/nipparsers.h
 	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 src/nip.o: src/nip.c src/nip.h
@@ -97,7 +97,7 @@ src/nipheap.c \
 src/nipgraph.c \
 $(HUG_SRC) \
 src/niplists.c \
-src/parser.c \
+src/nipparsers.c \
 src/nip.c
 LIB_HDRS = $(LIB_SRCS:.c=.h)
 LIB_OBJS = $(LIB_SRCS:.c=.o)

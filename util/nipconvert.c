@@ -9,7 +9,7 @@
  * EXAMPLE: ./nipconvert m.net univariate data.txt unary udata.txt
  *
  * Author: Janne Toivola
- * Version: $Id: nipconvert.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
+ * Version: $Id: nipconvert.c,v 1.2 2010-12-07 17:23:19 jatoivol Exp $
  */
 
 /* Some experimental copy-paste from nip.c 
@@ -115,7 +115,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
   /* Write names of the variable states */
   for(i = 0; i < NIP_CARDINALITY(v); i++){
     if(i > 0)
-      fprintf(f, "%c", FIELD_SEPARATOR);
+      fprintf(f, "%c", NIP_FIELD_SEPARATOR);
     fprintf(f, "%s", nip_variable_state_name(v, i));
   }
   fputs("\n", f);
@@ -138,7 +138,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
       /* Print the data */
       for(i = 0; i < NIP_CARDINALITY(v); i++){
 	if(i > 0)
-	  fprintf(f, "%c", FIELD_SEPARATOR);
+	  fprintf(f, "%c", NIP_FIELD_SEPARATOR);
 	if(record[i])
 	  fputs("1", f);
 	else

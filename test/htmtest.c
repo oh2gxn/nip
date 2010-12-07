@@ -7,13 +7,13 @@
  * SYNOPSIS: HTMTEST <MODEL.NET> <DATA.TXT>
  * 
  * Author: Janne Toivola
- * Version: $Id: htmtest.c,v 1.63 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: htmtest.c,v 1.64 2010-12-07 17:23:19 jatoivol Exp $
  */
 
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "parser.h"
+#include "nipparsers.h"
 #include "nipjointree.h"
 #include "nipvariable.h"
 #include "nippotential.h"
