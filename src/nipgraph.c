@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.7 2010-12-03 17:21:28 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.8 2010-12-08 13:33:33 jatoivol Exp $
  */
 
 
@@ -345,7 +345,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
 
     for (i = 0; i < n; i++) {
 
-      cluster_size = nip_extract_min_cluster(h, &min_cluster);
+      cluster_size = nip_extract_min_cluster(h, &min_cluster); /* FIXME! */
       
       /* New variable_set for this cluster */
       variable_set = (int*) calloc(n, sizeof(int));

@@ -1,6 +1,6 @@
 /* Program for testing the graph implementation.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: graphtest.c,v 1.1 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: graphtest.c,v 1.2 2010-12-08 13:33:40 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -35,6 +35,7 @@ nip_graph test1() {
   /* char *symbol, *name; */
   char symbol[NIP_VAR_TEXT_LENGTH]; 
   char name[NIP_VAR_TEXT_LENGTH];
+  char* states[] = {"0", "1"};
   /* MVK: Must reserve some memory (?)*/
   /* AR: True. IRIX has a black magic sprintf.*/
   
@@ -48,7 +49,7 @@ nip_graph test1() {
   for (i = 0; i < 5; i++) {
     sprintf(symbol, "var%d", i);
     sprintf(name, "variable %d", i);
-    v[i] = nip_new_variable(symbol, name, NULL, 2);
+    v[i] = nip_new_variable(symbol, name, states, 2);
     assert(nip_graph_add_variable(g, v[i])==0);
   }
 
@@ -163,20 +164,21 @@ void test5(nip_graph g) {
 nip_graph test6() {
 	nip_graph g, gu, gm;
 	int i,n = 8;
+	char* states[] = {"0", "1"};
 	nip_clique* cliques;
 	nip_variable v[8];
 	
 	printf("\tTest 6... triangulation\n");
 	g = nip_new_graph(n);
 	
-	v[0] =  nip_new_variable("A", "", NULL, 2);
-	v[1] =  nip_new_variable("B", "", NULL, 2);
-	v[2] =  nip_new_variable("C", "", NULL, 2);
-	v[3] =  nip_new_variable("D", "", NULL, 2);
-	v[4] =  nip_new_variable("E", "", NULL, 2);
-	v[5] =  nip_new_variable("F", "", NULL, 2);
-	v[6] =  nip_new_variable("G", "", NULL, 2);
-	v[7] =  nip_new_variable("H", "", NULL, 2);
+	v[0] =  nip_new_variable("A", "", states, 2);
+	v[1] =  nip_new_variable("B", "", states, 2);
+	v[2] =  nip_new_variable("C", "", states, 2);
+	v[3] =  nip_new_variable("D", "", states, 2);
+	v[4] =  nip_new_variable("E", "", states, 2);
+	v[5] =  nip_new_variable("F", "", states, 2);
+	v[6] =  nip_new_variable("G", "", states, 2);
+	v[7] =  nip_new_variable("H", "", states, 2);
 	/* TODO: where are these variables freed? */
 
 	for (i=0; i<n; i++)
@@ -194,7 +196,7 @@ nip_graph test6() {
 
 	gm = nip_moralise_graph(g);
 	gu = nip_make_graph_undirected(gm);
-	nip_triangulate_graph(gu, &cliques);
+	nip_triangulate_graph(gu, &cliques); /* FIXME: debug with valgrind */
 	/* TODO: where are the cliques freed? */
 	print_adjm(gu);
 	

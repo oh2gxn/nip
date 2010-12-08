@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.4 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.5 2010-12-08 13:33:35 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -48,7 +48,8 @@ int nip_cluster_weight(nip_variable* vs, int n) {
 static void nip_clean_heap_item(nip_heap_item hi, 
 				nip_heap_item min_cluster) {
     int i, j, n_vars = 0, n_total;
-    nip_variable v_i, V_removed = min_cluster->variables[0];
+    nip_variable v_i;
+    nip_variable V_removed = min_cluster->variables[0];
     nip_variable* cluster_vars;
 
     /* FIXME: is this a duplicate of nip_variable_union() ??? */
@@ -182,23 +183,26 @@ int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
   nip_heap_item min; /* Cluster with smallest weight */
   
   /* Empty heap, nothing to extract. */
-  if (h->heap_size < 1)
-    return NIP_ERROR_GENERAL;
+  if (h->heap_size < 1) {
+    *sepset = NULL;
+    return NIP_NO_ERROR;
+  }
   
   min = h->heap_items[0];
 
   /* Not a sepset heap */
   if(min->s == NULL)
     return NIP_ERROR_GENERAL;
+
+  /* Return the min */
+  *sepset = min->s;
   
-  /* What exactly happens here? */
-  h->heap_items[0] = h->heap_items[h->heap_size -1];
+  /* Replace the root with the last item */
+  h->heap_items[0] = h->heap_items[h->heap_size - 1];
   h->heap_size--;
     
   /* Rebuild the heap. Is this enough? */
   nip_heapify(h, 0);
-    
-  *sepset = min->s;
   
   return NIP_NO_ERROR;
 }
@@ -245,7 +249,7 @@ static int nip_heap_index(nip_heap h, nip_variable v){
 
     int i;
     for (i = 0; i < h->heap_size; i++)
-      if (nip_equal_variables(h->heap_items[i]->variables[0], v))
+      if (nip_equal_variables(h->heap_items[i]->variables[0], v)) /* FIXME! */
 	return i;
     return -1;
 }
