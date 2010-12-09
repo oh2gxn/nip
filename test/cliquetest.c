@@ -1,6 +1,6 @@
 /* A program for testing the cliques and sepsets 
  * Author: Janne Toivola
- * Version: $Id: cliquetest.c,v 1.37 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: cliquetest.c,v 1.38 2010-12-09 16:52:50 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -194,8 +194,18 @@ int main(){
   
   printf("Normalised probability of A:\n");
   for(i = 0; i < 3; i++) /* note1 */
-    printf("result[%d] = %f\n", i, result[i]);
+    printf("result[%d] = %g\n", i, result[i]);
   /* To be continued... */
+
+  /* free the join tree */
+  for(i = 0; i < 3; i++)
+    nip_free_clique(clique_pile[i]);
+
+  for(i = 0; i < 4; i++)
+    nip_free_potential(model[i]);
+
+  for(i = 0; i < 5; i++)
+    nip_free_variable(variables[i]);
 
   return 0;
 }

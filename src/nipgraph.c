@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.8 2010-12-08 13:33:33 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.9 2010-12-09 16:52:50 jatoivol Exp $
  */
 
 
@@ -536,13 +536,14 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
     h->heap_size = n;
     h->orig_size = n;
     h->useless_sepsets = NULL;
-    
+
+    /* Populate the heap */
     for (i = 0; i < n; i++) {
       hi = h->heap_items[i];
       hi->nvariables = nip_graph_neighbours(gm, gm->variables[i], Vs_temp)+1;
       /* graph_neighbours could be modified to use the array Vs directly;
 	 the cost associated with it would be having all Vs take
-	 get_size(G) units of memory. */
+	 nip_heap_size(gm) units of memory. */
 
       hi->variables = (nip_variable *) calloc(hi->nvariables, 
 					      sizeof(nip_variable));
@@ -558,7 +559,6 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
       }
 
       hi->variables[0] = gm->variables[i];
-      
       for (j = 1; j < hi->nvariables; j++) /* Copy variable pointers */
 	hi->variables[j] = Vs_temp[j-1]; /* Note the index-shifting */
       
@@ -570,7 +570,7 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
 
     free(Vs_temp);
 
-    for (i = n/2 -1; i >= 0; i--)
+    for (i = n/2 - 1; i >= 0; i--)
       nip_heapify(h, i);
 
     return h;

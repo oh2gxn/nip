@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.5 2010-12-08 13:33:35 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.6 2010-12-09 16:52:50 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -246,11 +246,20 @@ static int nip_heap_index(nip_heap h, nip_variable v){
     /* Finds the heap element that contains the variable v */
     /* Linear search, but at the moment the only option */
     /* Hopefully this will not be too slow */
-
     int i;
-    for (i = 0; i < h->heap_size; i++)
-      if (nip_equal_variables(h->heap_items[i]->variables[0], v)) /* FIXME! */
+    nip_variable child;
+    nip_heap_item hi;
+    /* DEBUG */
+    /*printf("Heap looking for variable %s\n", v->symbol);*/
+
+    for (i = 0; i < h->heap_size; i++) {
+      hi = h->heap_items[i];
+      /*printf("  heap item %d should have %d variables", i, hi->nvariables);*/
+      child = hi->variables[0]; /* FIXME! */
+      /*printf("  comparing to child %s\n", child->symbol);*/
+      if (nip_equal_variables(child, v)) 
 	return i;
+    }
     return -1;
 }
 

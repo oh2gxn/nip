@@ -1,6 +1,6 @@
 /* Program for testing the graph implementation.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: graphtest.c,v 1.2 2010-12-08 13:33:40 jatoivol Exp $
+ * Version: $Id: graphtest.c,v 1.3 2010-12-09 16:52:50 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -183,7 +183,7 @@ nip_graph test6() {
 
 	for (i=0; i<n; i++)
 	    nip_graph_add_variable(g, v[i]);
-		
+	
 	nip_graph_add_child(g, v[0],v[1]);
 	nip_graph_add_child(g, v[0],v[2]);
 	nip_graph_add_child(g, v[1],v[3]);	

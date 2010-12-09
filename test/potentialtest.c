@@ -1,7 +1,7 @@
 /* This is a small test program for potentials... 
  * 
  * Author: Janne Toivola, Mikko Korpela
- * Version: $Id: potentialtest.c,v 1.7 2010-12-03 17:21:29 jatoivol Exp $ */
+ * Version: $Id: potentialtest.c,v 1.8 2010-12-09 16:52:50 jatoivol Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,6 +89,9 @@ int main(){
       }
     }
   }
+
+  nip_free_potential(p);
+  nip_free_potential(q);
 
   return 0;
 }
