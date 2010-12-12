@@ -1,7 +1,7 @@
 /* nipheap.h 
  * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Janne Toivola, Antti Rasinen, Mikko Korpela
- * $Id: nipheap.h,v 1.3 2010-12-02 18:15:21 jatoivol Exp $
+ * $Id: nipheap.h,v 1.4 2010-12-12 20:08:49 jatoivol Exp $
  */
 
 #ifndef __NIPHEAP_H__
@@ -20,10 +20,11 @@
 #define NIP_HEAP_RIGHT(i) (2*(i+1))
 
 typedef struct {
-  /* variables[0] is the key variable in the array, rest are neighbours */
-  nip_variable* variables;
-  nip_sepset s;
-  int nvariables; /* size of variables (always at least 1) */
+  /* content[0] is the key variable in the array, rest are neighbours,
+   * when a cluster of variables are concerned 
+   * (TODO: move this comment to nipgraph.c) */
+  void* content;
+  int content_size; /* in case content is an array (always at least 1) */
   int primary_key;
   int secondary_key;
 } nip_heap_item_struct;
@@ -31,14 +32,17 @@ typedef nip_heap_item_struct* nip_heap_item;
 
 typedef struct {
   nip_heap_item* heap_items;
-  int heap_size;
-  /* MVK: What is orig_size ? */
-  /* AR: Size of the table used by heap. May not be necessary,
-   *     unless while freeing the heap. */
-  int orig_size;
-  nip_sepset* useless_sepsets; /* MVK */
+  int heap_size;      /* Number of elements inserted to the heap */
+  int allocated_size; /* Size of the currently allocated table */
+  int (*primary_key)(void* item, int size);
+  int (*secondary_key)(void* item, int size);  
 } nip_heap_struct;
 typedef nip_heap_struct* nip_heap;
+
+/* Creates a new heap */
+nip_heap nip_new_heap(int initial_size,
+		      int (*primary)(void* item, int size),
+		      int (*secondary)(void* item, int size));
 
 /* TODO: Refactor this as a function pointer supplied by nipgraph. 
  * This computes the primary keys */

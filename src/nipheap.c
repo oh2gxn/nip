@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.6 2010-12-09 16:52:50 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.7 2010-12-12 20:08:48 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -11,6 +11,30 @@ static void nip_free_useless_sepsets(nip_heap h);
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2);
 static int nip_heap_index(nip_heap h, nip_variable v);
 static void nip_clean_heap_item(nip_heap_item hi, nip_heap_item min_cluster);
+
+
+nip_heap nip_new_heap(int initial_size, 
+		      int (*primary)(void* item, int size),
+		      int (*secondary)(void* item, int size)) {
+  nip_heap h;
+  h = (nip_heap) malloc(sizeof(nip_heap_struct));
+  if(!h)
+    return NULL;
+  
+  h->heap_items = (nip_heap_item*) calloc(initial_size, sizeof(nip_heap_item));
+  if(!h->heap_items){
+    free(h);
+    return NULL;
+  }
+
+  h->heap_size = 0;
+  h->allocated_size = initial_size;
+  h->primary_key = primary;
+  h->secondary_key = secondary;
+
+  return h;
+}
+
 
 int nip_graph_edges_added(nip_variable* vs, int n) {
     /* vs is the array of variables in the cluster induced by vs[0] */
@@ -272,15 +296,14 @@ void nip_free_heap(nip_heap h) {
     return;
 
   /* Go through every heap item*/
-  for(i = 0; i < h->orig_size; i++){
+  for(i = 0; i < h->allocated_size; i++){
     hi = h->heap_items[i];
-    free(hi->variables); /* Free variable array in the heap item */
-    free(hi);
+    if(hi){
+      free(hi->variables); /* Free variable array in the heap item */
+      free(hi);
+    }
   }
-
-  nip_free_useless_sepsets(h);
   free(h->heap_items);
-  free(h->useless_sepsets);
   free(h);
   return;
 }
