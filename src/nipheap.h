@@ -1,7 +1,7 @@
 /* nipheap.h 
  * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Janne Toivola, Antti Rasinen, Mikko Korpela
- * $Id: nipheap.h,v 1.4 2010-12-12 20:08:49 jatoivol Exp $
+ * $Id: nipheap.h,v 1.5 2010-12-14 18:16:35 jatoivol Exp $
  */
 
 #ifndef __NIPHEAP_H__
@@ -44,13 +44,9 @@ nip_heap nip_new_heap(int initial_size,
 		      int (*primary)(void* item, int size),
 		      int (*secondary)(void* item, int size));
 
-/* TODO: Refactor this as a function pointer supplied by nipgraph. 
- * This computes the primary keys */
-int nip_graph_edges_added(nip_variable* vs, int n);
-
-/* TODO: Refactor this as a function pointer supplied by nipgraph. 
- * This computes the secondary keys */
-int nip_cluster_weight(nip_variable* vs, int n);
+/* Inserts a new element into the heap h. 
+ * The heap property is not valid after this, so remember to heapify... */
+int nip_heap_insert(nip_heap h, void* content, int size);
 
 /* TODO: hide this after refactoring */
 void nip_heapify(nip_heap h, int i);

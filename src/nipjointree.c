@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.3 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.4 2010-12-14 18:16:36 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -1630,7 +1630,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
   return sum;
 }
 
-
+/* TODO: replace with nip_variable_isect() ! */
 int nip_clique_intersection(nip_clique cl1, nip_clique cl2, 
 			    nip_variable **vars, int *n){
 

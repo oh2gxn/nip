@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.7 2010-12-12 20:08:48 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.8 2010-12-14 18:16:35 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -17,12 +17,21 @@ nip_heap nip_new_heap(int initial_size,
 		      int (*primary)(void* item, int size),
 		      int (*secondary)(void* item, int size)) {
   nip_heap h;
-  h = (nip_heap) malloc(sizeof(nip_heap_struct));
-  if(!h)
+
+  if (initial_size <= 0){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NULL;
+  }
+
+  h = (nip_heap) malloc(sizeof(nip_heap_struct));
+  if(!h){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
   
   h->heap_items = (nip_heap_item*) calloc(initial_size, sizeof(nip_heap_item));
   if(!h->heap_items){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(h);
     return NULL;
   }
@@ -36,51 +45,56 @@ nip_heap nip_new_heap(int initial_size,
 }
 
 
-int nip_graph_edges_added(nip_variable* vs, int n) {
-    /* vs is the array of variables in the cluster induced by vs[0] */
-    int i,j, sum = 0;
+int nip_heap_insert(nip_heap h, void* content, int size) {
+  int i;
+  nip_heap_item hi;
+  nip_heap_item* bigger;
 
-    for (i = 0; i < n; i++)
-        for (j = i+1; j < n; j++)
-	    sum += !nip_variable_is_parent(vs[i], vs[j]);
-	  /*sum += !nip_graph_linked(g, vs[i], vs[j]);*/
-    /* JJT: Not sure if this is supposed to be true "childrenship" in the
-       original Bayes network, or just neigbourhood in the subsequent
-       moralised and undirected graph. */
+  /* Create a new heap element */
+  hi = (nip_heap_item) malloc(sizeof(nip_heap_item_struct));
+  if(!hi){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
+  }
+  hi->content = content;
+  hi->content_size = size;
 
-    /* AR: Joo, po. logical not. The purpose is to count how many
-       edges must be added to the graph, i.e. all the cases, 
-       when A is not child of B. Here the table is traversed only 
-       to one direction, which differs from the original idea by 
-       factor of 2.*/
-   
-    return sum; /* Number of links to add */
-}
-
-int nip_cluster_weight(nip_variable* vs, int n) {
-    /* vs is the array of variables in the cluster induced by vs[0] */
-    int i, prod = 1;
-    
-    for (i = 0; i < n; i++)
-	prod *= NIP_CARDINALITY(vs[i]);
-
-    return prod;
+  /* Assign it to the heap */
+  if(h->heap_size == h->allocated_size){
+    /* time to expand */
+    i = 2 * h->allocated_size;
+    bigger = (nip_heap_item*) realloc(h->heap_items, i); /* realloc */
+    if(bigger != NULL){
+      h->heap_items = bigger;
+      h->allocated_size = i;
+      for(i = h->allocated_size-1; i >= h->heap_size; i--)
+	h->heap_items[i] = NULL; /* Empty the newly allocated area */
+    }
+    else {
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      return NIP_ERROR_OUTOFMEMORY;
+    }
+  }
+  h->heap_items[h->heap_size] = hi;
+  h->heap_size++;
+  /* TODO: heapify? */
 }
 
 
 /* WTF does this function do? */
-static void nip_clean_heap_item(nip_heap_item hi, 
+static void nip_clean_heap_item(nip_heap h,
+				nip_heap_item hi, 
 				nip_heap_item min_cluster) {
     int i, j, n_vars = 0, n_total;
     nip_variable v_i;
-    nip_variable V_removed = min_cluster->variables[0];
+    nip_variable V_removed = (nip_variable)min_cluster->content[0];
     nip_variable* cluster_vars;
 
     /* FIXME: is this a duplicate of nip_variable_union() ??? */
 
     /* Copy all variables in hi and min_cluster together.
        Copy hi first, because Vs[0] must be the generating node */
-    n_total = hi->nvariables + min_cluster->nvariables;
+    n_total = hi->content_size + min_cluster->content_size;
     cluster_vars = (nip_variable*) calloc(n_total, sizeof(nip_variable));
     if(!cluster_vars)
       return; /* FIXME: report error? */
@@ -90,11 +104,11 @@ static void nip_clean_heap_item(nip_heap_item hi,
       for (i = 0; i < min_cluster->nvariables; i++)
       cluster_vars[hi->n +i] = min_cluster->variables[i];*/
 
-    memcpy(cluster_vars, hi->variables, 
-	   hi->nvariables*sizeof(nip_variable));
-    memcpy(cluster_vars+hi->nvariables, min_cluster->variables, 
-	   min_cluster->nvariables*sizeof(nip_variable));
-		
+    memcpy(cluster_vars, hi->content, 
+	   hi->content_size*sizeof(nip_variable));
+    memcpy(cluster_vars+hi->content_size, min_cluster->content, 
+	   min_cluster->content_size*sizeof(nip_variable));
+    
     /* Remove duplicates and min_vs[0] */
     for (i = 0; i < n_total; i++) {
       v_i = cluster_vars[i];
@@ -108,21 +122,21 @@ static void nip_clean_heap_item(nip_heap_item hi,
       cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
     }
     
-    hi->nvariables = n_vars;
+    hi->content_size = n_vars;
 
-    free(hi->variables);
+    free(hi->content);
 
-    hi->variables = (nip_variable*) calloc(n_vars, sizeof(nip_variable));
-    if(!(hi->variables)){
+    hi->content = calloc(n_vars, sizeof(nip_variable));
+    if(!(hi->content)){
       free(cluster_vars);
       return;
     }
 
-    memcpy(hi->variables, cluster_vars, n_vars*sizeof(nip_variable));
+    memcpy(hi->content, cluster_vars, n_vars*sizeof(nip_variable));
     free(cluster_vars);
 
-    hi->primary_key = nip_graph_edges_added(hi->variables, hi->nvariables);
-    hi->secondary_key = nip_cluster_weight(hi->variables, hi->nvariables);
+    hi->primary_key = (*h->primary_key)(hi->content, hi->content_size);
+    hi->secondary_key = (*h->secondary_key)(hi->content, hi->content_size);
 
     return;
 }
@@ -191,7 +205,7 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
      * and update keys. The loop could be heavy.  */
     for (i = 1; i < min->nvariables; i++) {
       heap_i = nip_heap_index(h, min->variables[i]);
-      nip_clean_heap_item(h->heap_items[heap_i], min);
+      nip_clean_heap_item(h, h->heap_items[heap_i], min);
     }
 
     /* Rebuild the heap. */
