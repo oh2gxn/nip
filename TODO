@@ -15,6 +15,10 @@
 
 
 TODO:
+* Define enumeration types instead of a set of defines
+  - typedef enum nip_error_code_enum { NO_ERROR = 0; ...} nip_error_code;
+  - etc...
+
 * Check if the library is UTF-8 compatible...
   - hard limit on some strings (variable->symbol etc.) cuts UTF-8 chars?
 
