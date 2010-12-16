@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.9 2010-12-16 16:55:45 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.10 2010-12-16 16:59:46 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -328,3 +328,8 @@ void nip_empty_heap(nip_heap h) {
   return;
 }
 
+int nip_heap_size(nip_heap h) {
+  if(h)
+    return h->heap_size;
+  return 0;
+}
