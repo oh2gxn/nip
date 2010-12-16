@@ -1,16 +1,20 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.8 2010-12-14 18:16:35 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.9 2010-12-16 16:55:45 jatoivol Exp $
  */
 
 #include "nipheap.h"
 
 
 /* Internal helper functions */
-static void nip_free_useless_sepsets(nip_heap h);
+/*static void nip_free_useless_sepsets(nip_heap h);*/
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2);
+
+/* FIXME: this assumes we have stored nip_variable[] as content! */
 static int nip_heap_index(nip_heap h, nip_variable v);
-static void nip_clean_heap_item(nip_heap_item hi, nip_heap_item min_cluster);
+
+static void nip_clean_heap_item(nip_heap h, nip_heap_item hi, 
+				nip_heap_item min_cluster);
 
 
 nip_heap nip_new_heap(int initial_size, 
@@ -78,6 +82,7 @@ int nip_heap_insert(nip_heap h, void* content, int size) {
   h->heap_items[h->heap_size] = hi;
   h->heap_size++;
   /* TODO: heapify? */
+  return NIP_NO_ERROR;
 }
 
 
@@ -87,7 +92,7 @@ static void nip_clean_heap_item(nip_heap h,
 				nip_heap_item min_cluster) {
     int i, j, n_vars = 0, n_total;
     nip_variable v_i;
-    nip_variable V_removed = (nip_variable)min_cluster->content[0];
+    nip_variable V_removed = ((nip_variable*)min_cluster->content)[0];
     nip_variable* cluster_vars;
 
     /* FIXME: is this a duplicate of nip_variable_union() ??? */
@@ -197,46 +202,47 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
     h->heap_items[0] = h->heap_items[h->heap_size-1]; 
 
     /* Mark this as NULL, so that free() won't be called twice */
-    h->heap_items[h->heap_size-1]->variables = NULL;
+    h->heap_items[h->heap_size-1] = NULL;
 
     h->heap_size--;
     
-    /* Iterate over neighbours of minimum element *
-     * and update keys. The loop could be heavy.  */
-    for (i = 1; i < min->nvariables; i++) {
-      heap_i = nip_heap_index(h, min->variables[i]);
+    /* Iterate over neighbours of minimum element
+     * and update keys. The loop could be heavy.  
+     *** JJT: What the hell this does? ***/
+    for (i = 1; i < min->content_size; i++) {
+      heap_i = nip_heap_index(h, ((nip_variable*)min->content)[i]);
       nip_clean_heap_item(h, h->heap_items[heap_i], min);
     }
 
     /* Rebuild the heap. */
-    for (i = 1; i < min->nvariables; i++)
-      nip_heapify(h, nip_heap_index(h, min->variables[i]));
+    for (i = 1; i < min->content_size; i++)
+      nip_heapify(h, nip_heap_index(h, ((nip_variable*)min->content)[i]));
     nip_heapify(h, 0);
     
-    *cluster_vars = min->variables;
-    return min->nvariables; /* Cluster size*/
+    *cluster_vars = min->content;
+    i = min->content_size;
+    free(min);
+    return i; /* Cluster size*/
 }
 
 int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
-  nip_heap_item min; /* Cluster with smallest weight */
+  nip_heap_item min; /* Sepset with smallest weight */
   
   /* Empty heap, nothing to extract. */
   if (h->heap_size < 1) {
     *sepset = NULL;
-    return NIP_NO_ERROR;
+    return 0;
   }
   
   min = h->heap_items[0];
 
-  /* Not a sepset heap */
-  if(min->s == NULL)
-    return NIP_ERROR_GENERAL;
-
   /* Return the min */
-  *sepset = min->s;
+  *sepset = (nip_sepset)(min->content);
+  free(min);
   
   /* Replace the root with the last item */
   h->heap_items[0] = h->heap_items[h->heap_size - 1];
+  h->heap_items[h->heap_size - 1] = NULL;
   h->heap_size--;
     
   /* Rebuild the heap. Is this enough? */
@@ -246,6 +252,7 @@ int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
 }
 
 /* Called by find_sepsets when a sepset is accepted to the join tree. */
+/*
 void nip_mark_useful_sepset(nip_heap h, nip_sepset s){
 
   int i, n;
@@ -257,7 +264,6 @@ void nip_mark_useful_sepset(nip_heap h, nip_sepset s){
 
   for(i = 0; i < n; i++)
     if(h->useless_sepsets[i] == s){
-      /* prevents the useful sepset from being freed later */
       h->useless_sepsets[i] = NULL; 
       break;
     }
@@ -279,6 +285,7 @@ static void nip_free_useless_sepsets(nip_heap h){
       nip_free_sepset(s);
   }
 }
+*/
 
 static int nip_heap_index(nip_heap h, nip_variable v){
     /* Finds the heap element that contains the variable v */
@@ -293,16 +300,16 @@ static int nip_heap_index(nip_heap h, nip_variable v){
     for (i = 0; i < h->heap_size; i++) {
       hi = h->heap_items[i];
       /*printf("  heap item %d should have %d variables", i, hi->nvariables);*/
-      child = hi->variables[0]; /* FIXME! */
+      child = ((nip_variable*)hi->content)[0]; /* FIXME! */
       /*printf("  comparing to child %s\n", child->symbol);*/
-      if (nip_equal_variables(child, v)) 
+      if (nip_equal_variables(child, v))
 	return i;
     }
     return -1;
 }
 
 
-void nip_free_heap(nip_heap h) {
+void nip_empty_heap(nip_heap h) {
   int i;
   nip_heap_item hi;
 
@@ -310,10 +317,9 @@ void nip_free_heap(nip_heap h) {
     return;
 
   /* Go through every heap item*/
-  for(i = 0; i < h->allocated_size; i++){
+  for(i = 0; i < h->heap_size; i++){
     hi = h->heap_items[i];
     if(hi){
-      free(hi->variables); /* Free variable array in the heap item */
       free(hi);
     }
   }
