@@ -1,6 +1,6 @@
 /* Program for testing the graph implementation.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: graphtest.c,v 1.3 2010-12-09 16:52:50 jatoivol Exp $
+ * Version: $Id: graphtest.c,v 1.4 2010-12-17 18:15:56 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -155,7 +155,7 @@ void test5(nip_graph g) {
 	        assert(nip_graph_linked(gm, v[i], v[j]));
 	    }    
     assert(nip_graph_linked(gm, v[2], v[3]) && 
-	   nip_graph_linked(gm, v[3],v[2]));
+	   nip_graph_linked(gm, v[3], v[2]));
 
     nip_free_graph(gm);
     printf("\tTest 5 done.\n");
@@ -179,7 +179,7 @@ nip_graph test6() {
 	v[5] =  nip_new_variable("F", "", states, 2);
 	v[6] =  nip_new_variable("G", "", states, 2);
 	v[7] =  nip_new_variable("H", "", states, 2);
-	/* TODO: where are these variables freed? */
+	/* these variables get freed before g is freed, I hope */
 
 	for (i=0; i<n; i++)
 	    nip_graph_add_variable(g, v[i]);
@@ -196,9 +196,14 @@ nip_graph test6() {
 
 	gm = nip_moralise_graph(g);
 	gu = nip_make_graph_undirected(gm);
-	nip_triangulate_graph(gu, &cliques); /* FIXME: debug with valgrind */
-	/* TODO: where are the cliques freed? */
 	print_adjm(gu);
+
+	/* construct cliques */
+	n = nip_triangulate_graph(gu, &cliques);
+	/* free cliques */
+	for(i = 0; i<n; i++)
+	  nip_free_clique(cliques[i]);
+	free(cliques);
 	
 	printf("\tTest 6 done.\n");
 	nip_free_graph(gm);
@@ -212,8 +217,9 @@ void test7(nip_graph g) {
 	int i, j, n_cliques, n_vars;
 	
 	printf("\tTest 7... find_cliques\n");
+
+	/* construct cliques */
 	n_cliques = nip_find_cliques(g, &cliques);
-	/* TODO: where are the cliques freed? */
 	for (i = 0; i < n_cliques; i++) {
 		printf("\t\tclique %i: ", i);
 		ci = cliques[i];
@@ -222,25 +228,42 @@ void test7(nip_graph g) {
 			printf("%s ", ci->variables[j]->symbol);
 		printf("\n");	
 	}
+	
+	/* free the cliques */
+	for (i = 0; i < n_cliques; i++)
+	  nip_free_clique(cliques[i]);
+	free(cliques);
 
 	printf("\tTest 7 done.\n");	
 }
 
 int main(void) {
-    nip_graph g, g2;
-    printf("-------------------------------\n");
-    printf("Testing graphs:\n");
-    
-    g = test1();
-    test2(g);
-    test3(g);
-    test4(g);
-    test5(g);
-    nip_free_graph(g);
-    g2=test6();
-    test7(g2);
-    nip_free_graph(g2);
+  int i,n;
+  nip_variable* v;
+  nip_graph g, g2;
+  printf("-------------------------------\n");
+  printf("Testing graphs:\n");
+  
+  g = test1();
+  test2(g);
+  test3(g);
+  test4(g);
+  test5(g);
+  /* test1 created variables, but the only pointers to them are in g */
+  n = nip_graph_size(g);
+  v = nip_graph_variables(g);
+  for (i=0; i<n; i++)
+    nip_free_variable(v[i]);
+  nip_free_graph(g);
 
-    return 0;
+  g2=test6();
+  test7(g2);
+  n = nip_graph_size(g2);
+  v = nip_graph_variables(g2);
+  for (i=0; i<n; i++)
+    nip_free_variable(v[i]);
+  nip_free_graph(g2);
+  
+  return 0;
 }
 

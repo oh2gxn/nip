@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.10 2010-12-14 18:16:35 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.11 2010-12-17 18:15:56 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -9,10 +9,10 @@ static void nip_sort_graph_variables(nip_graph g);
 static nip_clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters, nip_variable* vars, int n);
 
 /* Function for computing primary keys for cluster heap */
-static int nip_graph_edges_added(nip_variable* vs, int n);
+static int nip_cluster_primary_cost(void* variables, int n);
 
 /* Function for computing secondary keys for cluster heap */
-static int nip_cluster_weight(nip_variable* vs, int n);
+static int nip_cluster_secondary_cost(void* variables, int n);
 
 /* Function for computing primary keys for sepset heap */
 static int nip_sepset_primary_cost(void* sepset, int n);
@@ -354,7 +354,6 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     clusters = nip_new_int_array_list();
 
     for (i = 0; i < n; i++) {
-
       cluster_size = nip_extract_min_cluster(h, &min_cluster); /* FIXME! */
       
       /* New variable_set for this cluster */
@@ -362,6 +361,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
       if(!variable_set) {
 	/* FIXME: better error handling */
 	nip_free_int_array_list(clusters);
+	/* FIXME: free heap and its contents */
 	return -1;
       }
       /*memset(variable_set, 0, n*sizeof(int)); // calloc did this*/
@@ -373,8 +373,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     
 	/* Add new edges to Gm. */
 	for (k = j+1; k < cluster_size; k++) {
-	  k_index = nip_graph_index(gm, min_cluster[k]);
-	  
+	  k_index = nip_graph_index(gm, min_cluster[k]);	  
 	  NIP_ADJM(gm, j_index, k_index) = 1;
 	  NIP_ADJM(gm, k_index, j_index) = 1;
 	}
@@ -394,6 +393,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     *clique_p = nip_cluster_list_to_clique_array(clusters, gm->variables, n);
     clique_count = NIP_LIST_LENGTH(clusters);
 
+    /* FIXME: free the rest of nip_variable[] stored in the heap! */
     nip_free_heap(h);
     nip_free_int_array_list(clusters); /* JJT: Free the cluster list */
     
@@ -453,15 +453,15 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
 
   while(inserted < num_of_cliques - 1){
     /* Extract the "best" candidate sepset from the heap. */
-    if(nip_extract_min_sepset(h, &s) != NIP_NO_ERROR){
+    if(nip_extract_min_sepset(h, &s) == 0){
       /* In case of error */
       nip_free_heap(h);
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
     }
 
-    one = s->cliques[0];
-    two = s->cliques[1];
+    one = s->first_neighbour;
+    two = s->second_neighbour;
 
     /* Unmark MUST be done before searching (cliques_connected). */
     for(i = 0; i < num_of_cliques; i++)
@@ -470,9 +470,6 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
     /* Prevent loops by checking if the cliques
      * are already in the same tree. */
     if(!nip_cliques_connected(one, two)){
-
-      /* TODO: remove from the list of sepsets */
-      nip_mark_useful_sepset(h, s); /* MVK */
 
 #ifdef NIP_DEBUG_CLIQUE
       printf("In nipgraph.c: Trying to add ");
@@ -500,7 +497,9 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
     }
   }
 
-  /* TODO: free the list of remaining sepsets */
+  /* free the useless sepsets */
+  while(nip_extract_min_sepset(h, &s))
+    nip_free_sepset(s);
   nip_free_heap(h);
 
   return NIP_NO_ERROR;
@@ -514,8 +513,8 @@ static int nip_cluster_primary_cost(void* variables, int n) {
 
     for (i = 0; i < n; i++)
       for (j = i+1; j < n; j++)
-	sum += !nip_variable_is_parent((nip_variable)variables[i], 
-				       (nip_variable)variables[j]);
+	sum += !nip_variable_is_parent(((nip_variable*)variables)[i], 
+				       ((nip_variable*)variables)[j]);
 	  /*sum += !nip_graph_linked(g, vs[i], vs[j]);*/
     /* JJT: Not sure if this is supposed to be true "childrenship" in the
        original Bayes network, or just neigbourhood in the subsequent
@@ -534,7 +533,7 @@ static int nip_cluster_secondary_cost(void* variables, int n) {
     /* vs is the array of variables in the cluster induced by vs[0] */
     int i, prod = 1;    
     for (i = 0; i < n; i++)
-      prod *= NIP_CARDINALITY((nip_variable)variables[i]);
+      prod *= NIP_CARDINALITY(((nip_variable*)variables)[i]);
     return prod;
 }
 
@@ -548,12 +547,17 @@ static int nip_sepset_primary_cost(void* sepset, int n) {
 static int nip_sepset_secondary_cost(void* sepset, int n) {
   int c = 0;
   nip_sepset s = (nip_sepset) sepset;
-  if(s->neighbour[0])
-    c += nip_cluster_secondary_cost((void*)(neighbour[0]->variables),
-				    neighbour[0]->p->num_or_vars);
-  if(s->neighbour[1])
-    c += nip_cluster_secondary_cost((void*)(neighbour[1]->variables),
-				    neighbour[1]->p->num_or_vars);
+  nip_clique nc;
+  if(!s){
+    nc = s->first_neighbour;
+    if(nc)
+      c += nip_cluster_secondary_cost((void*)(nc->variables), 
+				      nip_clique_size(nc));
+    nc = s->second_neighbour;
+    if(nc)
+      c += nip_cluster_secondary_cost((void*)(nc->variables),
+				      nip_clique_size(nc));
+  }
   return c;
 }
 
@@ -561,16 +565,14 @@ static int nip_sepset_secondary_cost(void* sepset, int n) {
 static nip_heap nip_build_cluster_heap(nip_graph gm) {
   int i,j,n;
   int csize;
-  void* cluster;
+  nip_variable* cluster;
   nip_heap h;
-  nip_heap_item hi;
   nip_variable* Vs_temp;
   
   n = nip_graph_size(gm);
   
   /* Create an empty heap */
-  nip_heap h = nip_new_heap(n, nip_cluster_primary_cost, 
-			    nip_cluster_secondary_cost);
+  h = nip_new_heap(n, nip_cluster_primary_cost, nip_cluster_secondary_cost);
   if(!h)
     return NULL;
   
@@ -582,23 +584,23 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
   
   /* Populate the heap */
   for (i = 0; i < n; i++) {
-    csize = nip_graph_neighbours(gm, gm->variables[i], Vs_temp)+1;
+    csize = nip_graph_neighbours(gm, gm->variables[i], Vs_temp) + 1;
     /* graph_neighbours could be modified to use the array Vs directly;
        the cost associated with it would be having all Vs take
        nip_heap_size(gm) units of memory. */
     
-    cluster = calloc(csize, sizeof(nip_variable));
+    cluster = (nip_variable*) calloc(csize, sizeof(nip_variable));
     if(!cluster){
       /* Something went wrong, clean up */
       free(Vs_temp);
       nip_free_heap(h);
     }
     
-    cluster[0] = gm->variables[i]; /* FIXME: cast to void* ? */
-    for (j = 1; j < hi->nvariables; j++) /* Copy variable pointers */
+    cluster[0] = gm->variables[i]; /* child variable */
+    for (j = 1; j < csize; j++) /* Copy variable pointers */
       cluster[j] = Vs_temp[j-1]; /* Note the index-shifting */
     
-    nip_heap_insert(h, cluster, csize);
+    nip_heap_insert(h, (void*)cluster, csize);
   }
   
   free(Vs_temp);
@@ -612,12 +614,12 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
 }
 
 nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
-    int i,j, k = 0;
+    int i,j;
     int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
     int hi_index = 0;
     int isect_size;
     int retval;
-    nip_clique neighbours[2];
+    nip_clique nca, ncb;
     nip_variable *isect;
     nip_sepset s;
     nip_heap_item hi;
@@ -631,24 +633,24 @@ nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
     for(i = 0; i < num_of_cliques - 1; i++) {
       for(j = i + 1; j < num_of_cliques; j++) {
         hi = h->heap_items[hi_index++];
-	neighbours[0] = cliques[i];
-	neighbours[1] = cliques[j];
+	nca = cliques[i];
+	ncb = cliques[j];
 
 	/* Take the intersection of two cliques. */
-	retval = nip_clique_intersection(cliques[i], cliques[j],
-					 &isect, &isect_size);
+	retval = nip_clique_intersection(nca, ncb, &isect, &isect_size);
 	if(retval != NIP_NO_ERROR){
 	  nip_report_error(__FILE__,__LINE__,retval,1);
 	  nip_free_heap(h);
 	  return NULL;
 	}
 
-	s = nip_new_sepset(isect, isect_size, neighbours);
+	s = nip_new_sepset(isect, isect_size, nca, ncb);
 	free(isect);
-	if(!(hi->s)){
+	if(!s){
 	  /* In case of failure, free all sepsets and the heap. */
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	  /* FIXME: free all sepsets */
+	  while(nip_extract_min_sepset(h, &s))
+	    nip_free_sepset(s);
 	  nip_free_heap(h);
 	  return NULL;
 	}

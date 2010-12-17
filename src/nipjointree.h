@@ -3,7 +3,7 @@
  * Includes evidence handling and propagation of information
  * in the join tree. 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.h,v 1.3 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: nipjointree.h,v 1.4 2010-12-17 18:15:56 jatoivol Exp $
  */
 
 #ifndef __NIPJOINTREE_H__
@@ -39,7 +39,8 @@ typedef struct {
   nip_potential old;   /* previous potential */
   nip_potential new;   /* current potential */
   nip_variable* variables; /* size == old->num_of_vars */
-  nip_clique *cliques; /* always an array of two (neighbor) cliques */
+  nip_clique first_neighbour; /* first of the two (neighbour) cliques */
+  nip_clique second_neighbour; /* second of the two (neighbour) cliques */
 } nip_sepset_struct;
 
 typedef nip_sepset_struct* nip_sepset;
@@ -80,10 +81,12 @@ int nip_add_sepset(nip_clique c, nip_sepset s);
 
 
 /* Method for creating sepsets: 
-   - cliques[] is an array which contains references to BOTH 
-     neighbouring cliques */
+   - variables array contains the intersection of neighbour clique variables
+   - num_of_vars specifies the size of the array
+   - neighbour_a is the first neighbour clique
+   - neighbour_b is the second neighbour clique */
 nip_sepset nip_new_sepset(nip_variable variables[], int num_of_vars, 
-			  nip_clique cliques[]);
+			  nip_clique neighbour_a, nip_clique neighbour_b);
 
 
 /* Method for removing sepsets and freeing memory. */

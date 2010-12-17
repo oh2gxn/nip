@@ -1,7 +1,7 @@
 /* nipheap.h 
  * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Janne Toivola, Antti Rasinen, Mikko Korpela
- * $Id: nipheap.h,v 1.7 2010-12-16 16:59:46 jatoivol Exp $
+ * $Id: nipheap.h,v 1.8 2010-12-17 18:15:56 jatoivol Exp $
  */
 
 #ifndef __NIPHEAP_H__
@@ -61,7 +61,7 @@ int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset);
 /* Frees the memory allocated to the heap.
  * Does not free the contents, so don't free a heap unless it's empty
  * or you have pointers to the (dynamically allocated) content somewhere. */
-void nip_empty_heap(nip_heap h);
+void nip_free_heap(nip_heap h);
 
 /* Tells how many elements the heap contains */
 int nip_heap_size(nip_heap h);

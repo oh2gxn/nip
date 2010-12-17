@@ -2,7 +2,7 @@
  * Functions for representing and manipulating graphs, and methods for 
  * constructing the join tree.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipgraph.h,v 1.6 2010-12-03 17:21:28 jatoivol Exp $
+ * Version: $Id: nipgraph.h,v 1.7 2010-12-17 18:15:56 jatoivol Exp $
  */
 
 #ifndef __NIPGRAPH_H__
@@ -135,14 +135,13 @@ nip_graph nip_add_interface_edges(nip_graph g);
 int nip_find_cliques(nip_graph g, nip_clique** cliques_p);
 
 
-int nip_find_sepsets(nip_clique *cliques, int num_of_cliques);
 /* Constructs sepsets and inserts them between the cliques to form a
- * join tree.
- * Returns an error code.
+ * join tree. Returns an error code.
  * Parameters:
  *  - cliques : an array of cliques
  *  - num_of_cliques : the number of cliques in the given array
  */
+int nip_find_sepsets(nip_clique *cliques, int num_of_cliques);
 
 /* Internal helper */
 int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p);

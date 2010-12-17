@@ -1,6 +1,6 @@
 /* Tests if the library functions leak memory. 
  * Author: Janne Toivola
- * Version: $Id: memleaktest.c,v 1.28 2010-12-07 17:23:19 jatoivol Exp $
+ * Version: $Id: memleaktest.c,v 1.29 2010-12-17 18:15:56 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -137,7 +137,7 @@ int main(int argc, char *argv[]){
     /* Create two cliques and a sepset */
     cl[0] = nip_new_clique(vars, 2);
     cl[1] = nip_new_clique(vars+1, 2);
-    s = nip_new_sepset(vars+1, 1, cl);
+    s = nip_new_sepset(vars+1, 1, cl[0], cl[1]);
     nip_add_sepset(cl[0], s);
     nip_add_sepset(cl[1], s);
     printf("\rIteration %d of %d                               ", i + 1, n);

@@ -1,18 +1,19 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.10 2010-12-16 16:59:46 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.11 2010-12-17 18:15:56 jatoivol Exp $
  */
 
 #include "nipheap.h"
 
 
-/* Internal helper functions */
-/*static void nip_free_useless_sepsets(nip_heap h);*/
+/* Defines the heap order between two heap items */
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2);
 
-/* FIXME: this assumes we have stored nip_variable[] as content! */
+/* FIXME: this assumes we have stored nip_variable[] as content! 
+ * Just make it "void* v" ??? */
 static int nip_heap_index(nip_heap h, nip_variable v);
 
+/* An undocumented function by Antti Rasinen */
 static void nip_clean_heap_item(nip_heap h, nip_heap_item hi, 
 				nip_heap_item min_cluster);
 
@@ -62,6 +63,8 @@ int nip_heap_insert(nip_heap h, void* content, int size) {
   }
   hi->content = content;
   hi->content_size = size;
+  hi->primary_key = (*h->primary_key)(hi->content, hi->content_size);
+  hi->secondary_key = (*h->secondary_key)(hi->content, hi->content_size);
 
   /* Assign it to the heap */
   if(h->heap_size == h->allocated_size){
@@ -81,6 +84,7 @@ int nip_heap_insert(nip_heap h, void* content, int size) {
   }
   h->heap_items[h->heap_size] = hi;
   h->heap_size++;
+  
   /* TODO: heapify? */
   return NIP_NO_ERROR;
 }
@@ -150,9 +154,10 @@ static void nip_clean_heap_item(nip_heap h,
 /* Heap management */
 
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2) {
-    return (h1->primary_key < h2->primary_key) || 
-	   (h1->primary_key == h2->primary_key && 
-	    h1->secondary_key < h2->secondary_key);
+  if(h1!=NULL && h2!=NULL)
+    return ((h1->primary_key < h2->primary_key) || 
+	    (h1->primary_key == h2->primary_key && 
+	     h1->secondary_key < h2->secondary_key));
 }
 
 void nip_heapify(nip_heap h, int i) {
@@ -231,7 +236,7 @@ int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
   /* Empty heap, nothing to extract. */
   if (h->heap_size < 1) {
     *sepset = NULL;
-    return 0;
+    return 0; /* no sepsets found */
   }
   
   min = h->heap_items[0];
@@ -248,7 +253,7 @@ int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
   /* Rebuild the heap. Is this enough? */
   nip_heapify(h, 0);
   
-  return NIP_NO_ERROR;
+  return 1; /* one sepset found */
 }
 
 /* Called by find_sepsets when a sepset is accepted to the join tree. */
@@ -309,7 +314,7 @@ static int nip_heap_index(nip_heap h, nip_variable v){
 }
 
 
-void nip_empty_heap(nip_heap h) {
+void nip_free_heap(nip_heap h) {
   int i;
   nip_heap_item hi;
 

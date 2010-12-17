@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.4 2010-12-14 18:16:36 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.5 2010-12-17 18:15:56 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -138,7 +138,7 @@ nip_clique nip_new_clique(nip_variable vars[], int num_of_vars){
 
 void nip_free_clique(nip_clique c){
   nip_sepset_link l1, l2;
-  nip_clique cl1, cl2;
+  nip_clique cln;
   nip_sepset s;
 
   if(c == NULL)
@@ -149,14 +149,14 @@ void nip_free_clique(nip_clique c){
   while(l1 != NULL){
     l2 = l1->fwd;
     s = (nip_sepset)l1->data;
-    cl1 = s->cliques[0];
-    cl2 = s->cliques[1];
 
-    /* Removes sepsets from the cliques. */
-    nip_remove_sepset(cl1, s);
-    nip_remove_sepset(cl2, s);
+    /* Remove sepsets from the cliques. */
+    cln = s->first_neighbour;
+    nip_remove_sepset(cln, s);
+    cln = s->second_neighbour;
+    nip_remove_sepset(cln, s);
 
-    /* Destroy the sepset. */
+    /* Free the sepset. */
     nip_free_sepset(s);
 
     l1=l2;
@@ -222,7 +222,7 @@ static void nip_remove_sepset(nip_clique c, nip_sepset s){
  * ATTENTION! Check what this does when num_of_vars == 0.
  */
 nip_sepset nip_new_sepset(nip_variable vars[], int num_of_vars, 
-			  nip_clique cliques[]){
+			  nip_clique neighbour_a, nip_clique neighbour_b){
 
   nip_sepset s;
   int *cardinality = NULL;
@@ -269,24 +269,12 @@ nip_sepset nip_new_sepset(nip_variable vars[], int num_of_vars,
     indices = NULL;
   }
 
-  s->cliques = (nip_clique *) calloc(2, sizeof(nip_clique));
-
-  if(!s->cliques){
-    free(s);
-    free(cardinality);
-    free(reorder);
-    free(indices);
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-
   if(num_of_vars){
     s->variables = (nip_variable *) calloc(num_of_vars, sizeof(nip_variable));
     if(!s->variables){
       free(cardinality);
       free(reorder);
       free(indices);
-      free(s->cliques);
       free(s);
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NULL;
@@ -330,7 +318,6 @@ nip_sepset nip_new_sepset(nip_variable vars[], int num_of_vars,
     free(cardinality);
     free(indices);
     free(reorder);
-    free(s->cliques);
     free(s->variables);
     nip_free_potential(s->old);
     nip_free_potential(s->new);
@@ -342,8 +329,8 @@ nip_sepset nip_new_sepset(nip_variable vars[], int num_of_vars,
   free(cardinality); /* the array was copied ? */
   free(reorder);
   free(indices);
-  s->cliques[0] = cliques[0];
-  s->cliques[1] = cliques[1];
+  s->first_neighbour = neighbour_a;
+  s->second_neighbour = neighbour_b;
 
   return s;
 }
@@ -356,7 +343,6 @@ void nip_free_sepset(nip_sepset s){
     
     nip_free_potential(s->old);
     nip_free_potential(s->new);
-    free(s->cliques);
     free(s);
   }
   return;
@@ -670,15 +656,15 @@ int nip_distribute_evidence(nip_clique c){
   l = c->sepsets;
   while (l != 0){
     s = l->data;
-    if(!nip_clique_marked(s->cliques[0])){
-      retval = nip_message_pass(c, s, s->cliques[0]); /* pass a message */
+    if(!nip_clique_marked(s->first_neighbour)){
+      retval = nip_message_pass(c, s, s->first_neighbour); /* pass a message */
       if(retval != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
     }
-    else if(!nip_clique_marked(s->cliques[1])){
-      retval = nip_message_pass(c, s, s->cliques[1]); /* pass a message */
+    else if(!nip_clique_marked(s->second_neighbour)){
+      retval = nip_message_pass(c, s, s->second_neighbour); /* pass a message */
       if(retval != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
@@ -691,14 +677,14 @@ int nip_distribute_evidence(nip_clique c){
   l = c->sepsets;
   while (l != 0){
     s = l->data;
-    if(!nip_clique_marked(s->cliques[0])){
-      if(nip_distribute_evidence(s->cliques[0]) != NIP_NO_ERROR){
+    if(!nip_clique_marked(s->first_neighbour)){
+      if(nip_distribute_evidence(s->first_neighbour) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
     }
-    else if(!nip_clique_marked(s->cliques[1])){
-      if(nip_distribute_evidence(s->cliques[1]) != NIP_NO_ERROR){
+    else if(!nip_clique_marked(s->second_neighbour)){
+      if(nip_distribute_evidence(s->second_neighbour) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
@@ -722,14 +708,14 @@ int nip_collect_evidence(nip_clique c1, nip_sepset s12, nip_clique c2){
   l = c2->sepsets;
   while (l != NULL){
     s = l->data;
-    if(!nip_clique_marked(s->cliques[0])){
-      if(nip_collect_evidence(c2, s, s->cliques[0]) != NIP_NO_ERROR){
+    if(!nip_clique_marked(s->first_neighbour)){
+      if(nip_collect_evidence(c2, s, s->first_neighbour) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
     }
-    else if(!nip_clique_marked(s->cliques[1]))
-      if(nip_collect_evidence(c2, s, s->cliques[1]) != NIP_NO_ERROR){
+    else if(!nip_clique_marked(s->second_neighbour))
+      if(nip_collect_evidence(c2, s, s->second_neighbour) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }
@@ -1208,15 +1194,15 @@ int nip_cliques_connected(nip_clique one, nip_clique two){
   if(one == two)
     return 1; /* TRUE (end of recursion) */
 
-  /* call neighboring cliques */
+  /* call neighbouring cliques */
   while (l != NULL){
     s = (nip_sepset)(l->data);
-    if(!nip_clique_marked(s->cliques[0])){
-      if(nip_cliques_connected(s->cliques[0], two))
+    if(!nip_clique_marked(s->first_neighbour)){
+      if(nip_cliques_connected(s->first_neighbour, two))
 	return 1; /* TRUE */
     }
-    else if(!nip_clique_marked(s->cliques[1])){
-      if(nip_cliques_connected(s->cliques[1], two))
+    else if(!nip_clique_marked(s->second_neighbour)){
+      if(nip_cliques_connected(s->second_neighbour, two))
 	return 1; /* TRUE */
     }
     l = l->fwd;
@@ -1291,15 +1277,15 @@ static void nip_join_tree_dfs(nip_clique start,
   /* call neighboring cliques */
   while (l != NULL){
     s = (nip_sepset)(l->data);
-    if(!nip_clique_marked(s->cliques[0])){
+    if(!nip_clique_marked(s->first_neighbour)){
       if(sFuncPointer)
 	sFuncPointer(s, ptr);
-      nip_join_tree_dfs(s->cliques[0], cFuncPointer, sFuncPointer, ptr);
+      nip_join_tree_dfs(s->first_neighbour, cFuncPointer, sFuncPointer, ptr);
     }
-    else if(!nip_clique_marked(s->cliques[1])){
+    else if(!nip_clique_marked(s->second_neighbour)){
       if(sFuncPointer)
 	sFuncPointer(s, ptr);
-      nip_join_tree_dfs(s->cliques[1], cFuncPointer, sFuncPointer, ptr);
+      nip_join_tree_dfs(s->second_neighbour, cFuncPointer, sFuncPointer, ptr);
     }
     l = l->fwd;
   }
@@ -1486,7 +1472,11 @@ nip_potential nip_gather_joint_probability(nip_clique start,
     s = (nip_sepset)(l->data);
     /* try both directions in a neighboring sepset */
     for(i = 0; i < 2; i++){ 
-      c = s->cliques[i];
+      if (i==0)
+	c = s->first_neighbour;
+      else
+	c = s->second_neighbour;
+
       if(!nip_clique_marked(c)){
 	
 	/*** 3. Operations on potentials ***/
