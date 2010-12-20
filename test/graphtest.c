@@ -1,6 +1,6 @@
 /* Program for testing the graph implementation.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: graphtest.c,v 1.4 2010-12-17 18:15:56 jatoivol Exp $
+ * Version: $Id: graphtest.c,v 1.5 2010-12-20 16:47:10 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -194,8 +194,11 @@ nip_graph test6() {
 	nip_graph_add_child(g, v[4],v[7]);
 	nip_graph_add_child(g, v[6],v[7]);	
 
+	printf("\t\tOriginal graph:\n");
+	print_adjm(g);
 	gm = nip_moralise_graph(g);
 	gu = nip_make_graph_undirected(gm);
+	printf("\t\tMoral and undirected graph:\n");
 	print_adjm(gu);
 
 	/* construct cliques */
@@ -223,7 +226,7 @@ void test7(nip_graph g) {
 	for (i = 0; i < n_cliques; i++) {
 		printf("\t\tclique %i: ", i);
 		ci = cliques[i];
-		n_vars = ci->p->num_of_vars;
+		n_vars = nip_clique_size(ci);
 		for (j = 0; j < n_vars; j++)
 			printf("%s ", ci->variables[j]->symbol);
 		printf("\n");	

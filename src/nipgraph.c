@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.11 2010-12-17 18:15:56 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.12 2010-12-20 16:47:10 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -354,7 +354,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     clusters = nip_new_int_array_list();
 
     for (i = 0; i < n; i++) {
-      cluster_size = nip_extract_min_cluster(h, &min_cluster); /* FIXME! */
+      cluster_size = nip_extract_min_cluster(h, &min_cluster);
       
       /* New variable_set for this cluster */
       variable_set = (int*) calloc(n, sizeof(int));
@@ -570,6 +570,9 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
   nip_variable* Vs_temp;
   
   n = nip_graph_size(gm);
+
+  /* content[0] is the key variable in the array, rest are neighbours,
+   * when a cluster of variables are concerned */
   
   /* Create an empty heap */
   h = nip_new_heap(n, nip_cluster_primary_cost, nip_cluster_secondary_cost);

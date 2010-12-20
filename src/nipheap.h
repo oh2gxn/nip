@@ -1,7 +1,7 @@
 /* nipheap.h 
  * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Janne Toivola, Antti Rasinen, Mikko Korpela
- * $Id: nipheap.h,v 1.8 2010-12-17 18:15:56 jatoivol Exp $
+ * $Id: nipheap.h,v 1.9 2010-12-20 16:47:10 jatoivol Exp $
  */
 
 #ifndef __NIPHEAP_H__
@@ -48,11 +48,15 @@ nip_heap nip_new_heap(int initial_size,
  * The heap property is not valid after this, so remember to heapify... */
 int nip_heap_insert(nip_heap h, void* content, int size);
 
-/* TODO: hide this after refactoring */
+/* TODO: hide this after refactoring. nip_heapify_down would wrap this? */
 void nip_heapify(nip_heap h, int i);
 
 /* Returns the least expensive cluster of variables from the heap. */
 int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars);
+
+/* TODO: replace nip_clean_heap_item with 
+ * nip_search_heap_item (~nip_heap_index for outside world) and 
+ * nip_update_heap_item (~nip_clean_item for general use) */
 
 /* Returns the least expensive sepset from the heap. */
 int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset);

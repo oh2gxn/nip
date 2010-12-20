@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.11 2010-12-17 18:15:56 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.12 2010-12-20 16:47:10 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -13,9 +13,12 @@ static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2);
  * Just make it "void* v" ??? */
 static int nip_heap_index(nip_heap h, nip_variable v);
 
-/* An undocumented function by Antti Rasinen */
+/* An undocumented function by Antti Rasinen:
+ * seems to update heap item hi after removing heap item min from h.
+ * After this, hi contains the union of hi->content and min->content,
+ * except min->content[0]. */
 static void nip_clean_heap_item(nip_heap h, nip_heap_item hi, 
-				nip_heap_item min_cluster);
+				nip_heap_item min);
 
 
 nip_heap nip_new_heap(int initial_size, 
@@ -90,40 +93,43 @@ int nip_heap_insert(nip_heap h, void* content, int size) {
 }
 
 
-/* WTF does this function do? */
 static void nip_clean_heap_item(nip_heap h,
 				nip_heap_item hi, 
-				nip_heap_item min_cluster) {
-    int i, j, n_vars = 0, n_total;
+				nip_heap_item min) {
+    int i, j, n_vars, n_total;
     nip_variable v_i;
-    nip_variable V_removed = ((nip_variable*)min_cluster->content)[0];
+    nip_variable V_removed = ((nip_variable*)min->content)[0];
     nip_variable* cluster_vars;
 
     /* FIXME: is this a duplicate of nip_variable_union() ??? */
 
-    /* Copy all variables in hi and min_cluster together.
-       Copy hi first, because Vs[0] must be the generating node */
-    n_total = hi->content_size + min_cluster->content_size;
+    /* Copy all variables in hi and min together.
+     * Copy hi first, because hi->content[0] must be the generating node 
+     * also in the future */
+    n_total = hi->content_size + min->content_size;
     cluster_vars = (nip_variable*) calloc(n_total, sizeof(nip_variable));
     if(!cluster_vars)
       return; /* FIXME: report error? */
 
-    /*for (i = 0; i < hi->nvariables; i++)
-      cluster_vars[i] = hi->variables[i];
-      for (i = 0; i < min_cluster->nvariables; i++)
-      cluster_vars[hi->n +i] = min_cluster->variables[i];*/
+    /*for (i = 0; i < hi->content_size; i++)
+      cluster_vars[i] = hi->content[i];
+      for (i = 0; i < min->content_size; i++)
+      cluster_vars[hi->n +i] = min->content[i];*/
 
     memcpy(cluster_vars, hi->content, 
 	   hi->content_size*sizeof(nip_variable));
-    memcpy(cluster_vars+hi->content_size, min_cluster->content, 
-	   min_cluster->content_size*sizeof(nip_variable));
+    memcpy(cluster_vars+hi->content_size, min->content, 
+	   min->content_size*sizeof(nip_variable));
     
     /* Remove duplicates and min_vs[0] */
+    n_vars = 0;
     for (i = 0; i < n_total; i++) {
       v_i = cluster_vars[i];
-      if (v_i == NULL) continue;
+      if (v_i == NULL) 
+	continue;
       for (j = i+1; j < n_total; j++) {
-	if (cluster_vars[j] == NULL) continue;
+	if (cluster_vars[j] == NULL) 
+	  continue;
 	if (nip_equal_variables(v_i, cluster_vars[j]) ||
 	    nip_equal_variables(V_removed, cluster_vars[j]))
 	  cluster_vars[j] = NULL;
@@ -154,10 +160,15 @@ static void nip_clean_heap_item(nip_heap h,
 /* Heap management */
 
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2) {
-  if(h1!=NULL && h2!=NULL)
-    return ((h1->primary_key < h2->primary_key) || 
-	    (h1->primary_key == h2->primary_key && 
-	     h1->secondary_key < h2->secondary_key));
+  if(h1!=NULL){
+    if(h2!=NULL)
+      return ((h1->primary_key < h2->primary_key) || 
+	      (h1->primary_key == h2->primary_key && 
+	       h1->secondary_key < h2->secondary_key));
+    else
+      return 1; /* h2 == NULL => belongs to the bottom of the heap */
+  }
+  return 0; /* h1 == NULL => belongs to the bottom */
 }
 
 void nip_heapify(nip_heap h, int i) {
@@ -210,19 +221,23 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
     h->heap_items[h->heap_size-1] = NULL;
 
     h->heap_size--;
-    
-    /* Iterate over neighbours of minimum element
-     * and update keys. The loop could be heavy.  
-     *** JJT: What the hell this does? ***/
+
+    /*--- begin weird stuff ---*/
+    /* Iterate over potential join tree neighbours where the child node of the 
+     * just removed (minimum cost) cluster has its parent as the child
+     * ("grandparent clusters") and update keys. The loop could be heavy. */
     for (i = 1; i < min->content_size; i++) {
       heap_i = nip_heap_index(h, ((nip_variable*)min->content)[i]);
       nip_clean_heap_item(h, h->heap_items[heap_i], min);
     }
 
     /* Rebuild the heap. */
-    for (i = 1; i < min->content_size; i++)
-      nip_heapify(h, nip_heap_index(h, ((nip_variable*)min->content)[i]));
+    for (i = 1; i < min->content_size; i++) {
+      heap_i = nip_heap_index(h, ((nip_variable*)min->content)[i]);
+      nip_heapify(h, heap_i);
+    }
     nip_heapify(h, 0);
+    /*--- end weird stuff --- */
     
     *cluster_vars = min->content;
     i = min->content_size;
@@ -256,41 +271,6 @@ int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
   return 1; /* one sepset found */
 }
 
-/* Called by find_sepsets when a sepset is accepted to the join tree. */
-/*
-void nip_mark_useful_sepset(nip_heap h, nip_sepset s){
-
-  int i, n;
-
-  if(!h || !s)
-    return;
-
-  n = h->orig_size;
-
-  for(i = 0; i < n; i++)
-    if(h->useless_sepsets[i] == s){
-      h->useless_sepsets[i] = NULL; 
-      break;
-    }
-
-  return;
-}
-
-static void nip_free_useless_sepsets(nip_heap h){
-  int i, n;
-  nip_sepset s;
-
-  if(!h || !(h->useless_sepsets))
-    return;
-
-  n = h->orig_size;
-  for(i = 0; i < n; i++){
-    s = h->useless_sepsets[i];
-    if(s != NULL)
-      nip_free_sepset(s);
-  }
-}
-*/
 
 static int nip_heap_index(nip_heap h, nip_variable v){
     /* Finds the heap element that contains the variable v */

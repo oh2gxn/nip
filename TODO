@@ -33,6 +33,7 @@ TODO:
 
 * Refactor Heap, Graph, and cls2clq:
   - Heap should not depend on Graph: reform Heap
+    - replace nip_clean_heap_item with general user-defined functionality
   - Some graph operations need to be reconsidered: e.g. add_variable
   + cls2clq.h -> niplists.h + nipgraph.h
 
