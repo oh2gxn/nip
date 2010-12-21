@@ -1,10 +1,11 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.12 2010-12-20 16:47:10 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.13 2010-12-21 16:34:06 jatoivol Exp $
  */
 
 #include "nipheap.h"
 
+#define NIP_DEBUG_HEAP
 
 /* Defines the heap order between two heap items */
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2);
@@ -48,7 +49,8 @@ nip_heap nip_new_heap(int initial_size,
   h->allocated_size = initial_size;
   h->primary_key = primary;
   h->secondary_key = secondary;
-
+  h->heapified = 0;
+  
   return h;
 }
 
@@ -87,8 +89,8 @@ int nip_heap_insert(nip_heap h, void* content, int size) {
   }
   h->heap_items[h->heap_size] = hi;
   h->heap_size++;
-  
-  /* TODO: heapify? */
+  h->heapified = 0;
+
   return NIP_NO_ERROR;
 }
 
@@ -100,8 +102,6 @@ static void nip_clean_heap_item(nip_heap h,
     nip_variable v_i;
     nip_variable V_removed = ((nip_variable*)min->content)[0];
     nip_variable* cluster_vars;
-
-    /* FIXME: is this a duplicate of nip_variable_union() ??? */
 
     /* Copy all variables in hi and min together.
      * Copy hi first, because hi->content[0] must be the generating node 
@@ -136,17 +136,28 @@ static void nip_clean_heap_item(nip_heap h,
       }
       cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
     }
-    
+
+
+#ifdef NIP_DEBUG_HEAP
+    if(n_vars > hi->content_size){
+      printf("Heap: expanding cluster from ");
+      for (i=0; i<hi->content_size; i++)
+	printf("%s ", ((nip_variable*)(hi->content))[i]->symbol);
+      printf("to ");
+      for (i=0; i<n_vars; i++)
+	printf("%s ", cluster_vars[i]->symbol);
+      printf("\n");
+    }
+#endif
+
+    /* Replace the old content with updated one */
     hi->content_size = n_vars;
-
     free(hi->content);
-
     hi->content = calloc(n_vars, sizeof(nip_variable));
     if(!(hi->content)){
       free(cluster_vars);
       return;
     }
-
     memcpy(hi->content, cluster_vars, n_vars*sizeof(nip_variable));
     free(cluster_vars);
 
@@ -171,7 +182,18 @@ static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2) {
   return 0; /* h1 == NULL => belongs to the bottom */
 }
 
-void nip_heapify(nip_heap h, int i) {
+
+void nip_build_min_heap(nip_heap h) {
+  int i;
+  if(!h)
+    return;
+  for (i = NIP_HEAP_PARENT(h->heap_size-1); i >= 0; i--)
+    nip_min_heapify(h, i);
+  h->heapified = 1;
+}
+
+
+void nip_min_heapify(nip_heap h, int i) {
     int l,r;
     int min, flag;
     nip_heap_item temp;
@@ -211,7 +233,8 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
 
 #ifdef NIP_DEBUG_HEAP
     printf("Eliminated node: %s (%i)\n", 
-	   nip_variable_symbol(min->variables[0]), min->nvariables);
+	   nip_variable_symbol(((nip_variable*)min->content)[0]), 
+	   min->content_size);
 #endif
     
     /* Move the last one to the top */
@@ -234,9 +257,9 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
     /* Rebuild the heap. */
     for (i = 1; i < min->content_size; i++) {
       heap_i = nip_heap_index(h, ((nip_variable*)min->content)[i]);
-      nip_heapify(h, heap_i);
+      nip_min_heapify(h, heap_i);
     }
-    nip_heapify(h, 0);
+    nip_min_heapify(h, 0);
     /*--- end weird stuff --- */
     
     *cluster_vars = min->content;
@@ -244,6 +267,7 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
     free(min);
     return i; /* Cluster size*/
 }
+
 
 int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
   nip_heap_item min; /* Sepset with smallest weight */
@@ -266,7 +290,7 @@ int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
   h->heap_size--;
     
   /* Rebuild the heap. Is this enough? */
-  nip_heapify(h, 0);
+  nip_min_heapify(h, 0);
   
   return 1; /* one sepset found */
 }

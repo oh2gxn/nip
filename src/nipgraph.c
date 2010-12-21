@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.12 2010-12-20 16:47:10 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.13 2010-12-21 16:34:06 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -424,8 +424,7 @@ int nip_find_cliques(nip_graph g, nip_clique** cliques_p) {
     if(nip_find_sepsets(*cliques_p, n_cliques) != NIP_NO_ERROR)
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
-    /* JJT: I added some free_graph stuff here, because I suspected
-     * memory leaks... */
+    /* free the modified graph */
     nip_free_graph(gu);
 
     return n_cliques;
@@ -444,22 +443,23 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
   int ok = 1;
 #endif
 
+  /* Create a heap of candidate sepsets */
   nip_heap h = nip_build_sepset_heap(cliques, num_of_cliques);
-  /* TODO: get a list of all sepsets */
   if(!h){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NIP_ERROR_GENERAL;
   }
 
+  /* Take the n-1 most promising and useful sepsets */
   while(inserted < num_of_cliques - 1){
-    /* Extract the "best" candidate sepset from the heap. */
+    /* Extract the "best" candidate sepset */
     if(nip_extract_min_sepset(h, &s) == 0){
-      /* In case of error */
       nip_free_heap(h);
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
     }
 
+    /* Check who the neighbour cliques would be */
     one = s->first_neighbour;
     two = s->second_neighbour;
 
@@ -482,6 +482,7 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
       print_clique(two);
 #endif
 
+      /* Connect one and two with s */
       if(nip_add_sepset(one, s) != NIP_NO_ERROR){
 	nip_free_heap(h);
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
@@ -497,7 +498,7 @@ int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
     }
   }
 
-  /* free the useless sepsets */
+  /* Free the useless sepsets */
   while(nip_extract_min_sepset(h, &s))
     nip_free_sepset(s);
   nip_free_heap(h);
@@ -571,8 +572,8 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
   
   n = nip_graph_size(gm);
 
-  /* content[0] is the key variable in the array, rest are neighbours,
-   * when a cluster of variables are concerned */
+  /* content[0] is the cluster-inducing child variable in the array, 
+   * rest are neighbours, when clusters of variables are concerned */
   
   /* Create an empty heap */
   h = nip_new_heap(n, nip_cluster_primary_cost, nip_cluster_secondary_cost);
@@ -605,65 +606,64 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
     
     nip_heap_insert(h, (void*)cluster, csize);
   }
+
+  /* Make it obey the heap property */
+  nip_build_min_heap(h);
   
   free(Vs_temp);
-  
-  /* TODO: could this be done in the heap automagically 
-   * or with a single call? */
-  for (i = n/2 - 1; i >= 0; i--)
-    nip_heapify(h, i); /* FIXME: this is internal matter of the heap */
-  
   return h;
 }
 
 nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
-    int i,j;
-    int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
-    int hi_index = 0;
-    int isect_size;
-    int retval;
-    nip_clique nca, ncb;
-    nip_variable *isect;
-    nip_sepset s;
-    nip_heap_item hi;
-
-    nip_heap h = nip_new_heap(n, nip_sepset_primary_cost, 
-			      nip_sepset_secondary_cost);
-    if(!h)
-      return NULL;
-    
-    /* Go through each pair of cliques. Create candidate sepsets. */
-    for(i = 0; i < num_of_cliques - 1; i++) {
-      for(j = i + 1; j < num_of_cliques; j++) {
-        hi = h->heap_items[hi_index++];
-	nca = cliques[i];
-	ncb = cliques[j];
-
-	/* Take the intersection of two cliques. */
-	retval = nip_clique_intersection(nca, ncb, &isect, &isect_size);
-	if(retval != NIP_NO_ERROR){
-	  nip_report_error(__FILE__,__LINE__,retval,1);
-	  nip_free_heap(h);
-	  return NULL;
-	}
-
-	s = nip_new_sepset(isect, isect_size, nca, ncb);
-	free(isect);
-	if(!s){
-	  /* In case of failure, free all sepsets and the heap. */
-	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	  while(nip_extract_min_sepset(h, &s))
-	    nip_free_sepset(s);
-	  nip_free_heap(h);
-	  return NULL;
-	}
-
-	nip_heap_insert(h, s, 1);
+  int i,j;
+  int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
+  int hi_index = 0;
+  int isect_size;
+  int retval;
+  nip_clique nca, ncb;
+  nip_variable *isect;
+  nip_sepset s;
+  nip_heap_item hi;
+  
+  nip_heap h = nip_new_heap(n, nip_sepset_primary_cost, 
+			    nip_sepset_secondary_cost);
+  if(!h)
+    return NULL;
+  
+  /* Go through each pair of cliques. Create candidate sepsets. */
+  for(i = 0; i < num_of_cliques - 1; i++) {
+    for(j = i + 1; j < num_of_cliques; j++) {
+      hi = h->heap_items[hi_index++];
+      nca = cliques[i];
+      ncb = cliques[j];
+      
+      /* Take the intersection of two cliques. */
+      retval = nip_clique_intersection(nca, ncb, &isect, &isect_size);
+      if(retval != NIP_NO_ERROR){
+	nip_report_error(__FILE__,__LINE__,retval,1);
+	nip_free_heap(h);
+	return NULL;
       }
-    }
-    /* Check Cormen, Leiserson, Rivest */
-    for (i = n/2 -1; i >= 0; i--)
-      nip_heapify(h, i);
 
-    return h;
+      /* Make a sepset */
+      s = nip_new_sepset(isect, isect_size, nca, ncb);
+      free(isect);
+      if(!s){
+	/* In case of failure, free all sepsets and the heap. */
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	while(nip_extract_min_sepset(h, &s))
+	  nip_free_sepset(s);
+	nip_free_heap(h);
+	return NULL;
+      }
+
+      /* Put it in the heap */
+      nip_heap_insert(h, s, 1);
+    }
+  }
+  
+  /* Sort the heap */
+  nip_build_min_heap(h);
+  
+  return h;
 }

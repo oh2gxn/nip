@@ -1,7 +1,7 @@
 /* nipheap.h 
  * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Janne Toivola, Antti Rasinen, Mikko Korpela
- * $Id: nipheap.h,v 1.9 2010-12-20 16:47:10 jatoivol Exp $
+ * $Id: nipheap.h,v 1.10 2010-12-21 16:34:06 jatoivol Exp $
  */
 
 #ifndef __NIPHEAP_H__
@@ -20,22 +20,20 @@
 #define NIP_HEAP_RIGHT(i) (2*(i+1))
 
 typedef struct {
-  /* content[0] is the key variable in the array, rest are neighbours,
-   * when a cluster of variables are concerned 
-   * (TODO: move this comment to nipgraph.c) */
-  void* content;
-  int content_size; /* in case content is an array (always at least 1) */
-  int primary_key;
-  int secondary_key;
+  void* content;     /* the pointer to the content (possibly array) */
+  int content_size;  /* in case content is an array (always at least 1) */
+  int primary_key;   /* key determining the order in the heap */
+  int secondary_key; /* secondary key determining the order in case of ties */
 } nip_heap_item_struct;
 typedef nip_heap_item_struct* nip_heap_item;
 
 typedef struct {
-  nip_heap_item* heap_items;
+  nip_heap_item* heap_items; /* The array of elements */
   int heap_size;      /* Number of elements inserted to the heap */
   int allocated_size; /* Size of the currently allocated table */
-  int (*primary_key)(void* item, int size);
-  int (*secondary_key)(void* item, int size);  
+  int (*primary_key)(void* item, int size); /* for computing key values */
+  int (*secondary_key)(void* item, int size);
+  int heapified; /* Flag if someone has seen the trouble of heapifying */
 } nip_heap_struct;
 typedef nip_heap_struct* nip_heap;
 
@@ -48,8 +46,11 @@ nip_heap nip_new_heap(int initial_size,
  * The heap property is not valid after this, so remember to heapify... */
 int nip_heap_insert(nip_heap h, void* content, int size);
 
-/* TODO: hide this after refactoring. nip_heapify_down would wrap this? */
-void nip_heapify(nip_heap h, int i);
+/* Makes the heap obey the heap property after modifications to the root */
+void nip_build_min_heap(nip_heap h);
+
+/* TODO: hide this after refactoring. nip_build_min_heap would wrap this? */
+void nip_min_heapify(nip_heap h, int i);
 
 /* Returns the least expensive cluster of variables from the heap. */
 int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars);
