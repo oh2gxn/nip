@@ -1,6 +1,6 @@
 /* Program for testing the graph implementation.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: graphtest.c,v 1.5 2010-12-20 16:47:10 jatoivol Exp $
+ * Version: $Id: graphtest.c,v 1.6 2010-12-22 13:08:41 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -19,7 +19,7 @@ void print_adjm(nip_graph g) {
 	v = nip_graph_variables(g);
 	n = nip_graph_size(g);
 
-	printf("\t\tAdjacency matrix:\n");
+	/*printf("\t\tAdjacency matrix:\n");*/
 	for (i = 0; i < n; i++) {
 	  printf("\t\t");
 	  for (j=0; j < n; j++)
@@ -198,18 +198,20 @@ nip_graph test6() {
 	print_adjm(g);
 	gm = nip_moralise_graph(g);
 	gu = nip_make_graph_undirected(gm);
+	nip_free_graph(gm);
 	printf("\t\tMoral and undirected graph:\n");
 	print_adjm(gu);
 
 	/* construct cliques */
 	n = nip_triangulate_graph(gu, &cliques);
+	printf("\t\tTriangulated graph:\n");
+	print_adjm(gu);
 	/* free cliques */
 	for(i = 0; i<n; i++)
 	  nip_free_clique(cliques[i]);
 	free(cliques);
 	
 	printf("\tTest 6 done.\n");
-	nip_free_graph(gm);
 	nip_free_graph(gu);
 	return g;
 }

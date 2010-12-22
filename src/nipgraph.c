@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.13 2010-12-21 16:34:06 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.14 2010-12-22 13:08:40 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -350,9 +350,12 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     int* variable_set; /* [i] true, if variable[i] is in the cluster */
 
     n = gm->size;
-    h = nip_build_cluster_heap(gm); /* TODO: refactor this stuff */
-    clusters = nip_new_int_array_list();
 
+    /* Create a heap of variable clusters */
+    h = nip_build_cluster_heap(gm);
+
+    /* Extract a list of potentially good clusters */
+    clusters = nip_new_int_array_list();
     for (i = 0; i < n; i++) {
       cluster_size = nip_extract_min_cluster(h, &min_cluster);
       
@@ -393,7 +396,9 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     *clique_p = nip_cluster_list_to_clique_array(clusters, gm->variables, n);
     clique_count = NIP_LIST_LENGTH(clusters);
 
-    /* FIXME: free the rest of nip_variable[] stored in the heap! */
+    /* free the rest of nip_variable arrays stored in the heap */
+    while(nip_extract_min_cluster(h, &min_cluster))
+      free(min_cluster);
     nip_free_heap(h);
     nip_free_int_array_list(clusters); /* JJT: Free the cluster list */
     

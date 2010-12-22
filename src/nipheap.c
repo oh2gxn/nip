@@ -1,11 +1,11 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.13 2010-12-21 16:34:06 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.14 2010-12-22 13:08:40 jatoivol Exp $
  */
 
 #include "nipheap.h"
 
-#define NIP_DEBUG_HEAP
+/*#define NIP_DEBUG_HEAP*/
 
 /* Defines the heap order between two heap items */
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2);
