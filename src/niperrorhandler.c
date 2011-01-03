@@ -10,12 +10,12 @@ static int NIP_ERROR_COUNTER = 0;
 /* Errorcode of the last error */
 static int NIP_ERRORCODE = NIP_NO_ERROR; 
 
-void nip_report_error(char *srcFile, int line, int errorcode, int verbose){
-  NIP_ERRORCODE = errorcode;
+void nip_report_error(char *srcFile, int line, nip_error_code e, int verbose){
+  NIP_ERRORCODE = e;
   NIP_ERROR_COUNTER++;
   if(verbose){
     fprintf(stderr, "In %s (%d): ", srcFile, line);
-    switch (errorcode) {
+    switch (e) {
     case NIP_NO_ERROR : 
       fprintf(stderr, "O.K.\n"); break;
     case NIP_ERROR_NULLPOINTER : 

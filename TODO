@@ -16,13 +16,16 @@
 
 TODO:
 * Define enumeration types instead of a set of defines
-  - typedef enum nip_error_code_enum { NO_ERROR = 0; ...} nip_error_code;
-  - etc...
+  + typedef enum nip_error_code_enum { NO_ERROR = 0, ...} nip_error_code;
+  - other cases?
 
 * Check if the library is UTF-8 compatible...
-  - hard limit on some strings (variable->symbol etc.) cuts UTF-8 chars?
+  - hard byte length limit of some strings cuts UTF-8 chars?
 
 * Document the code structure with UML "class" diagram
+  - graph
+  - heap
+  - join tree
   - potential
   + lists
   + fileio -> string
@@ -87,7 +90,7 @@ TODO:
   - mapper(): search for various clique reordering code...
 
 * Printing potential tables should be contained in potential.c
-  - Problem: how to include comments about parent values?
+  - Problem: how to include comments about parent variable values?
   - Solution: do the stuff in clique.c..?
 
 * Hugin Net parser should use a struct instead of global variables!

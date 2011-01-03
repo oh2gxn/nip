@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.14 2010-12-22 13:08:40 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.15 2011-01-03 18:04:55 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -20,7 +20,11 @@ static int nip_sepset_primary_cost(void* sepset, int n);
 /* Function for computing secondary keys for sepset heap */
 static int nip_sepset_secondary_cost(void* sepset, int n);
 
+/* Creates a heap of nip_variable arrays (possible cliques) from 
+ * an undirected and moralized graph gm */
 static nip_heap nip_build_cluster_heap(nip_graph gm);
+
+/* Creates a heap of possible sepsets from a set of cliques */
 static nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques);
 
 
@@ -31,7 +35,8 @@ nip_graph nip_new_graph(unsigned n) {
     if(!newgraph)
       return NULL;
 
-    newgraph->size = n; newgraph->top = 0;
+    newgraph->size = n; 
+    newgraph->top = 0;
 
     newgraph->adj_matrix = (int*) calloc(n*n, sizeof(int));
     if(!(newgraph->adj_matrix)){
@@ -85,7 +90,7 @@ void nip_free_graph(nip_graph g) {
     return;
   free(g->adj_matrix);
   free(g->variables);
-  free(g->var_ind); /* JJT: I added this here, but is it correct..? */
+  free(g->var_ind);
   free(g);
 }
 
@@ -128,21 +133,36 @@ int nip_graph_index(nip_graph g, nip_variable v) {
 } 
 
 
-int nip_graph_neighbours(nip_graph g, nip_variable v,
-			 nip_variable* neighbours) {
+int nip_graph_cluster(nip_graph g, nip_variable v,
+		      nip_variable** neighbours) {
     int i, j;
+    nip_variable* cluster;
     int n = nip_graph_size(g);
     int vi = nip_graph_index(g, v);
 
     if (n < 0 || vi < 0)
       return -1; /* invalid input */
 
+    /* Count number of neighbours */
     j = 0;
     for (i = 0; i < n; i++)
-      if (NIP_ADJM(g, vi, i))
-	neighbours[j++] = g->variables[i]; /* neighbours array big enough? */
+      if (NIP_ADJM(g, vi, i)) /* NOTE: assumes ADJM(g, i, i) == 0 !!! */
+	j++;
 
-    return j; /* # of neighbours */
+    /* Allocate array */
+    cluster = (nip_variable*) calloc(j+1, sizeof(nip_variable));
+    if(cluster == NULL)
+      return -1;
+
+    /* Populate the array */
+    cluster[0] = v;
+    j = 1;
+    for (i = 0; i < n; i++)
+      if (NIP_ADJM(g, vi, i))
+	cluster[j++] = g->variables[i];
+
+    *neighbours = cluster;
+    return j; /* # of neighbours + 1 */
 }
 
 
@@ -212,7 +232,8 @@ static void nip_sort_graph_variables(nip_graph g) {
 					 sizeof(long));
     if(!(g->var_ind))
       return;
-	
+
+    /* compute the indices */
     for (i = 0; i < g->size; i++)
       g->var_ind[nip_variable_id(g->variables[i]) - g->min_id] = i;
 
@@ -362,9 +383,11 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
       /* New variable_set for this cluster */
       variable_set = (int*) calloc(n, sizeof(int));
       if(!variable_set) {
-	/* FIXME: better error handling */
+	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	nip_free_int_array_list(clusters);
-	/* FIXME: free heap and its contents */
+	while(nip_extract_min_cluster(h, &min_cluster))
+	  free(min_cluster);
+	nip_free_heap(h);
 	return -1;
       }
       /*memset(variable_set, 0, n*sizeof(int)); // calloc did this*/
@@ -388,8 +411,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
       else
 	free(variable_set);
 
-      /* MVK: memory leak fix */
-      free(min_cluster);
+      free(min_cluster); /* MVK: memory leak fix */
     }
 
     /* Create a set of cliques from the found variable sets */
@@ -406,7 +428,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
 }
 
 
-int nip_find_cliques(nip_graph g, nip_clique** cliques_p) {
+int nip_graph_to_cliques(nip_graph g, nip_clique** cliques_p) {
     nip_graph gu, gm, gi;
     int n_cliques = 0;
 
@@ -418,15 +440,13 @@ int nip_find_cliques(nip_graph g, nip_clique** cliques_p) {
 
     /* triangulate and create a set of cliques */
     n_cliques = nip_triangulate_graph(gu, cliques_p);
-
-    /* test if triangulate failed */
     if(n_cliques < 0){
       nip_free_graph(gu);
       return -1;
     }
 
     /* find a set of suitable sepsets to connect the cliques */
-    if(nip_find_sepsets(*cliques_p, n_cliques) != NIP_NO_ERROR)
+    if(nip_create_sepsets(*cliques_p, n_cliques) != NIP_NO_ERROR)
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 
     /* free the modified graph */
@@ -436,14 +456,14 @@ int nip_find_cliques(nip_graph g, nip_clique** cliques_p) {
 }
 
 /*** Used to be in clique.c for some odd reason ***/
-int nip_find_sepsets(nip_clique *cliques, int num_of_cliques){
+int nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
 
   int inserted = 0;
   int i;
   nip_sepset s;
   nip_clique one, two;
 
-#ifdef NIP_DEBUG_CLIQUE
+#ifdef NIP_DEBUG_GRAPH
   int j, k;
   int ok = 1;
 #endif
@@ -569,11 +589,10 @@ static int nip_sepset_secondary_cost(void* sepset, int n) {
 
 
 static nip_heap nip_build_cluster_heap(nip_graph gm) {
-  int i,j,n;
+  int i,n;
   int csize;
   nip_variable* cluster;
   nip_heap h;
-  nip_variable* Vs_temp;
   
   n = nip_graph_size(gm);
 
@@ -585,29 +604,15 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
   if(!h)
     return NULL;
   
-  Vs_temp = (nip_variable*) calloc(n, sizeof(nip_variable));
-  if(!Vs_temp){
-    nip_free_heap(h);
-    return NULL;
-  }
-  
   /* Populate the heap */
   for (i = 0; i < n; i++) {
-    csize = nip_graph_neighbours(gm, gm->variables[i], Vs_temp) + 1;
-    /* graph_neighbours could be modified to use the array Vs directly;
-       the cost associated with it would be having all Vs take
-       nip_heap_size(gm) units of memory. */
-    
-    cluster = (nip_variable*) calloc(csize, sizeof(nip_variable));
-    if(!cluster){
+    csize = nip_graph_cluster(gm, gm->variables[i], &cluster);
+    if(csize < 0){
       /* Something went wrong, clean up */
-      free(Vs_temp);
+      while(nip_extract_min_cluster(h, &cluster))
+	free(cluster);
       nip_free_heap(h);
     }
-    
-    cluster[0] = gm->variables[i]; /* child variable */
-    for (j = 1; j < csize; j++) /* Copy variable pointers */
-      cluster[j] = Vs_temp[j-1]; /* Note the index-shifting */
     
     nip_heap_insert(h, (void*)cluster, csize);
   }
@@ -615,7 +620,6 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
   /* Make it obey the heap property */
   nip_build_min_heap(h);
   
-  free(Vs_temp);
   return h;
 }
 

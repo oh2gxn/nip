@@ -1,6 +1,6 @@
 /* Program for testing the graph implementation.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: graphtest.c,v 1.6 2010-12-22 13:08:41 jatoivol Exp $
+ * Version: $Id: graphtest.c,v 1.7 2011-01-03 18:04:55 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -221,10 +221,10 @@ void test7(nip_graph g) {
 	nip_clique ci;
 	int i, j, n_cliques, n_vars;
 	
-	printf("\tTest 7... find_cliques\n");
+	printf("\tTest 7... graph_to_cliques\n");
 
 	/* construct cliques */
-	n_cliques = nip_find_cliques(g, &cliques);
+	n_cliques = nip_graph_to_cliques(g, &cliques);
 	for (i = 0; i < n_cliques; i++) {
 		printf("\t\tclique %i: ", i);
 		ci = cliques[i];

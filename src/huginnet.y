@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.92 2010-12-07 17:23:18 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.93 2011-01-03 18:04:55 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -156,7 +156,7 @@ input:  nodes potentials {
   }
   nip_free_interface_list(nip_interface_relations);
 
-  nip_n_cliques = nip_find_cliques(nip_Graph, &nip_cliques);
+  nip_n_cliques = nip_graph_to_cliques(nip_Graph, &nip_cliques);
   nip_free_graph(nip_Graph); /* Get rid of the graph (?) */
   nip_Graph = NULL;
   if(nip_n_cliques < 0){
@@ -189,7 +189,7 @@ input:  nodes potentials {
   }
   nip_free_interface_list(nip_interface_relations);
 
-  nip_n_cliques = nip_find_cliques(nip_Graph, &nip_cliques);
+  nip_n_cliques = nip_graph_to_cliques(nip_Graph, &nip_cliques);
   nip_free_graph(nip_Graph); /* Get rid of the graph (?) */
   nip_Graph = NULL;
   if(nip_n_cliques < 0){
@@ -223,7 +223,7 @@ input:  nodes potentials {
   }
   nip_free_interface_list(nip_interface_relations);
 
-  nip_n_cliques = nip_find_cliques(nip_Graph, &nip_cliques);
+  nip_n_cliques = nip_graph_to_cliques(nip_Graph, &nip_cliques);
   nip_free_graph(nip_Graph); /* Get rid of the graph (?) */
   nip_Graph = NULL;
   if(nip_n_cliques < 0){

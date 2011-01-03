@@ -1,6 +1,6 @@
 /* Tests if the library functions leak memory. 
  * Author: Janne Toivola
- * Version: $Id: memleaktest.c,v 1.29 2010-12-17 18:15:56 jatoivol Exp $
+ * Version: $Id: memleaktest.c,v 1.30 2011-01-03 18:04:55 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -156,7 +156,7 @@ int main(int argc, char *argv[]){
     nip_graph_add_child(g, vars[1], vars[0]);
     nip_graph_add_child(g, vars[1], vars[2]);
     num_of_cliques = 0;
-    num_of_cliques = nip_find_cliques(g, &cl2);
+    num_of_cliques = nip_graph_to_cliques(g, &cl2);
     printf("\rIteration %d of %d                               ", i + 1, n);
     nip_free_graph(g);
     for(j = 0; j < num_of_cliques; j++)

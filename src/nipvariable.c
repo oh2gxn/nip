@@ -1,6 +1,6 @@
 /* nipvariable.c 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipvariable.c,v 1.6 2010-12-02 16:38:29 jatoivol Exp $
+ * Version: $Id: nipvariable.c,v 1.7 2011-01-03 18:04:55 jatoivol Exp $
  */
 
 
@@ -20,7 +20,7 @@ static int nip_set_variable_text(char** record, const char *name){
 
   len = strlen(name);
   if(len > NIP_VAR_TEXT_LENGTH)
-    len = NIP_VAR_TEXT_LENGTH;
+    len = NIP_VAR_TEXT_LENGTH; /* FIXME: UTF-8 incompatible limit! */
 
   if(*record)
     free(*record); /* Although free(NULL) would be fine? */

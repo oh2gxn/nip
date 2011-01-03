@@ -2,7 +2,7 @@
  * Functions for representing and manipulating graphs, and methods for 
  * constructing the join tree.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipgraph.h,v 1.7 2010-12-17 18:15:56 jatoivol Exp $
+ * Version: $Id: nipgraph.h,v 1.8 2011-01-03 18:04:55 jatoivol Exp $
  */
 
 #ifndef __NIPGRAPH_H__
@@ -20,13 +20,13 @@
 #define NIP_ADJM(g, i, j) ( (g)->adj_matrix[(i)*(g)->size + (j)] )
 
 typedef struct {
-    int* adj_matrix; /* Two dimensional */
-    unsigned long* var_ind;
-    unsigned long min_id;
-    unsigned long max_id;
-    nip_variable* variables;
-    unsigned size;
-    int top;
+  int* adj_matrix;        /* Two dimensional adjacency matrix */
+  unsigned long* var_ind; /* Possible array for [variable id] -> adjm index */
+  unsigned long min_id;   /* Minimum ID of variables */
+  unsigned long max_id;   /* Maximum ID of variables */
+  nip_variable* variables;/* All the variables (nodes) in an array */
+  unsigned size;          /* Number of nodes in the graph (allocated size) */
+  int top;                /* Number of added variables (actual size) */
 } nip_graph_struct; 
 typedef nip_graph_struct* nip_graph;
 
@@ -70,15 +70,15 @@ nip_variable* nip_graph_variables(nip_graph g);
 int nip_graph_index(nip_graph g, nip_variable v);
 
 
-/* Returns the number of neighbours of v.
+/* Returns the number of neighbours of v + 1.
  * Parameter g: the graph
  * Parameter v: the variable 
  * Parameter neighbours: a pointer to a variable array which
- * will contain the neighbouring variables after call
- * NOTE: the neighbours array needs to be allocated before calling this
+ * will be allocated and contain the variable and its neighbouring 
+ * variables after the call (free the array when done)
  */
-int nip_graph_neighbours(nip_graph g, nip_variable v, 
-			 nip_variable* neighbours);
+int nip_graph_cluster(nip_graph g, nip_variable v, 
+		      nip_variable** neighbours);
 
 
 /* Returns true (non-zero), if there is a link from parent to child
@@ -127,12 +127,12 @@ nip_graph nip_add_interface_edges(nip_graph g);
 
 
 /* Triangulates g and finds the cliques.
- * Parameter g: moralised undirected graph
+ * Parameter g: a graph (no need to be moralised or undirected)
  * Parameter cliques_p: pointer to a clique array
  * Returns the number of cliques.
  * Does not modify g.
  */
-int nip_find_cliques(nip_graph g, nip_clique** cliques_p);
+int nip_graph_to_cliques(nip_graph g, nip_clique** cliques_p);
 
 
 /* Constructs sepsets and inserts them between the cliques to form a
@@ -141,7 +141,7 @@ int nip_find_cliques(nip_graph g, nip_clique** cliques_p);
  *  - cliques : an array of cliques
  *  - num_of_cliques : the number of cliques in the given array
  */
-int nip_find_sepsets(nip_clique *cliques, int num_of_cliques);
+int nip_create_sepsets(nip_clique *cliques, int num_of_cliques);
 
 /* Internal helper */
 int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p);

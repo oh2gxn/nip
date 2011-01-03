@@ -4,7 +4,7 @@
  * in Dynamic Bayes Network models
  *
  * Authors: Janne Toivola, Mikko Korpela
- * $Id: nipvariable.h,v 1.8 2010-12-02 16:38:29 jatoivol Exp $
+ * $Id: nipvariable.h,v 1.9 2011-01-03 18:04:55 jatoivol Exp $
  */
 
 #ifndef __NIPVARIABLE_H__
@@ -15,7 +15,8 @@
 #include <stdlib.h>
 #include "niperrorhandler.h"
 
-/* The name, symbol, statename etc. can be at most 40 characters long... */
+/* The name, symbol, statename etc. can be at most 40 characters long...
+ * FIXME: problematic from UTF-8 point of view! */
 #define NIP_VAR_TEXT_LENGTH 40
 #define NIP_VAR_MIN_ID 1
 
