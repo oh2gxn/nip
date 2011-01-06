@@ -1,6 +1,6 @@
 /* Tests if the library functions leak memory. 
  * Author: Janne Toivola
- * Version: $Id: memleaktest.c,v 1.30 2011-01-03 18:04:55 jatoivol Exp $
+ * Version: $Id: memleaktest.c,v 1.31 2011-01-06 01:14:27 jatoivol Exp $
  */
 
 #include <assert.h>
@@ -150,9 +150,9 @@ int main(int argc, char *argv[]){
   printf("\nAllocating and freeing Graphs:\n");
   for(i = 0; i < n; i++){
     g = nip_new_graph(3);
-    nip_graph_add_variable(g, vars[0]);
-    nip_graph_add_variable(g, vars[1]);
-    nip_graph_add_variable(g, vars[2]);
+    nip_graph_add_node(g, vars[0]);
+    nip_graph_add_node(g, vars[1]);
+    nip_graph_add_node(g, vars[2]);
     nip_graph_add_child(g, vars[1], vars[0]);
     nip_graph_add_child(g, vars[1], vars[2]);
     num_of_cliques = 0;

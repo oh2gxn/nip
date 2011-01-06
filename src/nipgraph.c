@@ -1,10 +1,10 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.15 2011-01-03 18:04:55 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.16 2011-01-06 01:14:27 jatoivol Exp $
  */
 
 #include "nipgraph.h"
 
 /* Internal helper functions */
-static void nip_sort_graph_variables(nip_graph g);
+static void nip_sort_graph_nodes(nip_graph g);
 
 static nip_clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters, nip_variable* vars, int n);
 
@@ -43,7 +43,6 @@ nip_graph nip_new_graph(unsigned n) {
       free(newgraph);
       return NULL;
     }
-
     memset(newgraph->adj_matrix, 0, n*n*sizeof(int)); /* calloc does this? */
 
     newgraph->variables = (nip_variable*) calloc(n, sizeof(nip_variable));
@@ -69,18 +68,16 @@ nip_graph nip_copy_graph(nip_graph g) {
     if (g->var_ind == NULL)
       g_copy->var_ind = NULL;
     else {
-      var_ind_size = (g->max_id - g->min_id +1)*sizeof(long);
-      
+      var_ind_size = (g->max_id - g->min_id +1)*sizeof(long);      
       g_copy->var_ind = (unsigned long*) malloc(var_ind_size);
       if(!(g_copy->var_ind)){
 	nip_free_graph(g_copy);
 	return NULL;
       }
-
       memcpy(g_copy->var_ind, g->var_ind, var_ind_size);
-      g_copy->max_id = g->max_id;
-      g_copy->min_id = g->min_id;
     }
+    g_copy->max_id = g->max_id;
+    g_copy->min_id = g->min_id;
 
     return g_copy;
 }
@@ -98,11 +95,11 @@ void nip_free_graph(nip_graph g) {
 
 int nip_graph_size(nip_graph g) {
   if(g)
-    return g->size;
+    return g->top;
   return -1;
 }
 
-nip_variable* nip_graph_variables(nip_graph g) {
+nip_variable* nip_graph_nodes(nip_graph g) {
   if(g)
     return g->variables; /* g still responsible for freeing it */
   return NULL;
@@ -125,7 +122,7 @@ int nip_graph_index(nip_graph g, nip_variable v) {
       return nip_equal_variables(g->variables[i], v)? i: -1;
     }
     else /* Backup linear search */
-      for (i = 0; i < g->size; i++)
+      for (i = 0; i < g->top; i++)
 	if (nip_equal_variables(g->variables[i], v))
 	  return i;
 
@@ -135,34 +132,37 @@ int nip_graph_index(nip_graph g, nip_variable v) {
 
 int nip_graph_cluster(nip_graph g, nip_variable v,
 		      nip_variable** neighbours) {
-    int i, j;
-    nip_variable* cluster;
-    int n = nip_graph_size(g);
-    int vi = nip_graph_index(g, v);
+  int i, j, n, vi;
+  nip_variable* cluster;
+  
+  if (g == NULL)
+    return -1;
+  
+  n = nip_graph_size(g);
+  vi = nip_graph_index(g, v);
+  if (n < 0 || vi < 0)
+    return -1; /* invalid input */
+  
+  /* Count number of neighbours */
+  j = 0;
+  for (i = 0; i < n; i++)
+    if (NIP_ADJM(g, vi, i)) /* NOTE: assumes ADJM(g, i, i) == 0 !!! */
+      j++;
 
-    if (n < 0 || vi < 0)
-      return -1; /* invalid input */
-
-    /* Count number of neighbours */
-    j = 0;
-    for (i = 0; i < n; i++)
-      if (NIP_ADJM(g, vi, i)) /* NOTE: assumes ADJM(g, i, i) == 0 !!! */
-	j++;
-
-    /* Allocate array */
-    cluster = (nip_variable*) calloc(j+1, sizeof(nip_variable));
-    if(cluster == NULL)
-      return -1;
-
-    /* Populate the array */
-    cluster[0] = v;
-    j = 1;
-    for (i = 0; i < n; i++)
-      if (NIP_ADJM(g, vi, i))
-	cluster[j++] = g->variables[i];
-
-    *neighbours = cluster;
-    return j; /* # of neighbours + 1 */
+  /* Allocate array */
+  cluster = (nip_variable*) calloc(j+1, sizeof(nip_variable));
+  if(cluster == NULL)
+    return -1;
+  
+  /* Populate the array */
+  cluster[0] = v;
+  j = 1;
+  for (i = 0; i < n; i++)
+    if (NIP_ADJM(g, vi, i))
+      cluster[j++] = g->variables[i];
+  
+  *neighbours = cluster;
+  return j; /* # of neighbours + 1 */
 }
 
 
@@ -177,7 +177,7 @@ int nip_graph_linked(nip_graph g, nip_variable parent, nip_variable child) {
 
 /*** SETTERS ***/
 
-int nip_graph_add_variable(nip_graph g, nip_variable v){
+int nip_graph_add_node(nip_graph g, nip_variable v){
     if (g->top == g->size)
       return NIP_ERROR_GENERAL; /* Cannot add more items. */
 
@@ -185,7 +185,7 @@ int nip_graph_add_variable(nip_graph g, nip_variable v){
     g->top++;
 
     if (g->top == g->size)
-      nip_sort_graph_variables(g);
+      nip_sort_graph_nodes(g); /* TODO: why? */
 
     return NIP_NO_ERROR;
 }
@@ -210,7 +210,9 @@ int nip_graph_add_child(nip_graph g, nip_variable parent, nip_variable child){
     return nip_variable_id(v1) - nip_variable_id(v2);
 }*/
 
-static void nip_sort_graph_variables(nip_graph g) {
+/* TODO: more like nip_build_node_index() !!! */
+/* FIXME: update min_id and max_id when adding nodes! */
+static void nip_sort_graph_nodes(nip_graph g) {
     int i, id;
 
     if(!g)
@@ -273,7 +275,7 @@ nip_graph nip_moralise_graph(nip_graph g) {
     /* Moralisation */
     for (v = 0; v < n; v++)       /* Iterate variables */
       for (i = 0; i < n; i++) 
-	if (NIP_ADJM(g, i, v))            /* If i parent of v, find those */
+	if (NIP_ADJM(g, i, v))       /* If i parent of v, find those */
 	  for (j = i+1; j < n; j++){ /* parents of v which are > i */
 	    NIP_ADJM(gm, i, j) |= NIP_ADJM(g, j, v);
 	    NIP_ADJM(gm, j, i) |= NIP_ADJM(g, j, v);
@@ -371,6 +373,9 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     int* variable_set; /* [i] true, if variable[i] is in the cluster */
 
     n = gm->size;
+
+    /* JJT: does the clique listing have anything to do with 
+     * the Bron-Kerbosch algorithm or Tsukiyama et al. 1977? */
 
     /* Create a heap of variable clusters */
     h = nip_build_cluster_heap(gm);

@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.93 2011-01-03 18:04:55 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.94 2011-01-06 01:14:26 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -1001,7 +1001,7 @@ static int parsed_vars_to_graph(nip_variable_list vl, nip_graph g){
   it = NIP_LIST_ITERATOR(vl);
   v = nip_next_variable(&it);
   while(v != NULL){
-    retval = nip_graph_add_variable(g, v);
+    retval = nip_graph_add_node(g, v);
     if(retval != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;

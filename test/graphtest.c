@@ -1,6 +1,6 @@
 /* Program for testing the graph implementation.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: graphtest.c,v 1.7 2011-01-03 18:04:55 jatoivol Exp $
+ * Version: $Id: graphtest.c,v 1.8 2011-01-06 01:14:27 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -16,7 +16,7 @@ void print_adjm(nip_graph g) {
 	nip_variable* v;
 	int i,j,n;
 
-	v = nip_graph_variables(g);
+	v = nip_graph_nodes(g);
 	n = nip_graph_size(g);
 
 	/*printf("\t\tAdjacency matrix:\n");*/
@@ -41,7 +41,7 @@ nip_graph test1() {
   
   int i;
   
-  printf("\tTest 1... new_graph and add_variable\n");
+  printf("\tTest 1... new_graph and add_node\n");
   
   g = nip_new_graph(5);
   printf("\t\tNew graph created.\n");
@@ -50,14 +50,14 @@ nip_graph test1() {
     sprintf(symbol, "var%d", i);
     sprintf(name, "variable %d", i);
     v[i] = nip_new_variable(symbol, name, states, 2);
-    assert(nip_graph_add_variable(g, v[i])==0);
+    assert(nip_graph_add_node(g, v[i])==0);
   }
 
-  w = nip_graph_variables(g);
-  printf("\t\tget_variables OK.\n");
+  w = nip_graph_nodes(g);
+  printf("\t\tgraph_nodes OK.\n");
   
   assert(nip_graph_size(g) == 5);
-  printf("\t\tget_size OK.\n");
+  printf("\t\tgraph_size OK.\n");
 
   for (i = 0; i<5; i++) {
     assert(nip_equal_variables(v[i], w[i]));
@@ -68,7 +68,7 @@ nip_graph test1() {
 }
 
 void test2(nip_graph g) {
-    nip_variable* v = nip_graph_variables(g);
+    nip_variable* v = nip_graph_nodes(g);
     
     printf("\tTest 2... add_child(), linked()\n");
 
@@ -99,8 +99,8 @@ void test3(nip_graph g) {
     
     printf("\tTest 3... copy_graph\n");
     gc = nip_copy_graph(g);
-    v = nip_graph_variables(g);
-    w = nip_graph_variables(gc);
+    v = nip_graph_nodes(g);
+    w = nip_graph_nodes(gc);
     n = nip_graph_size(g);
     assert(n == nip_graph_size(gc));
     for (i = 0; i < n; i++) {
@@ -120,11 +120,11 @@ void test4(nip_graph g) {
     nip_variable* v;
     int i,j,n;
     
-    printf("\tTest 4... make_undirected\n");
+    printf("\tTest 4... make_graph_undirected\n");
     gu = nip_make_graph_undirected(g);
     
     n = nip_graph_size(g);
-    v = nip_graph_variables(g);
+    v = nip_graph_nodes(g);
     for (i = 0; i < n; i++) {
         for (j=0;j < n;j++) {
             if (nip_graph_linked(g, v[i], v[j])) {
@@ -147,7 +147,7 @@ void test5(nip_graph g) {
     int i,j,n;
     printf("\tTest 5... moralise\n");
     gm = nip_moralise_graph(g);
-    v = nip_graph_variables(g);
+    v = nip_graph_nodes(g);
     n = nip_graph_size(g);
     for (i=0; i<n; i++)
         for (j=0; j<n; j++)
@@ -182,7 +182,7 @@ nip_graph test6() {
 	/* these variables get freed before g is freed, I hope */
 
 	for (i=0; i<n; i++)
-	    nip_graph_add_variable(g, v[i]);
+	    nip_graph_add_node(g, v[i]);
 	
 	nip_graph_add_child(g, v[0],v[1]);
 	nip_graph_add_child(g, v[0],v[2]);
@@ -256,7 +256,7 @@ int main(void) {
   test5(g);
   /* test1 created variables, but the only pointers to them are in g */
   n = nip_graph_size(g);
-  v = nip_graph_variables(g);
+  v = nip_graph_nodes(g);
   for (i=0; i<n; i++)
     nip_free_variable(v[i]);
   nip_free_graph(g);
@@ -264,7 +264,7 @@ int main(void) {
   g2=test6();
   test7(g2);
   n = nip_graph_size(g2);
-  v = nip_graph_variables(g2);
+  v = nip_graph_nodes(g2);
   for (i=0; i<n; i++)
     nip_free_variable(v[i]);
   nip_free_graph(g2);

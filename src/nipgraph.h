@@ -2,7 +2,7 @@
  * Functions for representing and manipulating graphs, and methods for 
  * constructing the join tree.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipgraph.h,v 1.8 2011-01-03 18:04:55 jatoivol Exp $
+ * Version: $Id: nipgraph.h,v 1.9 2011-01-06 01:14:27 jatoivol Exp $
  */
 
 #ifndef __NIPGRAPH_H__
@@ -26,7 +26,7 @@ typedef struct {
   unsigned long max_id;   /* Maximum ID of variables */
   nip_variable* variables;/* All the variables (nodes) in an array */
   unsigned size;          /* Number of nodes in the graph (allocated size) */
-  int top;                /* Number of added variables (actual size) */
+  int top;                /* Number of variables added so far */
 } nip_graph_struct; 
 typedef nip_graph_struct* nip_graph;
 
@@ -49,17 +49,15 @@ nip_graph nip_copy_graph(nip_graph g);
 void nip_free_graph(nip_graph g);
 
 
-/* Returns the number of variables in the graph g.
- * Parameter g: the graph 
- */
+/* Returns the number of variables in the graph g. */
 int nip_graph_size(nip_graph g);
 
 
-/* Returns an array of references to the variables used in graph g.
+/* Returns an array of references to the nodes/variables used in graph g.
  * The array is still property of g, do not free or modify it.
  * Parameter g: the graph
  */
-nip_variable* nip_graph_variables(nip_graph g);
+nip_variable* nip_graph_nodes(nip_graph g);
 
 
 /* Returns the index of v in the array of variables. 
@@ -70,12 +68,13 @@ nip_variable* nip_graph_variables(nip_graph g);
 int nip_graph_index(nip_graph g, nip_variable v);
 
 
-/* Returns the number of neighbours of v + 1.
+/* Returns the number of neighbours of v + 1 (i.e. size of the cluster 
+ * induced by v including v itself).
  * Parameter g: the graph
- * Parameter v: the variable 
+ * Parameter v: the variable (node) 
  * Parameter neighbours: a pointer to a variable array which
- * will be allocated and contain the variable and its neighbouring 
- * variables after the call (free the array when done)
+ * will be allocated and contain the variable v (as the first element) 
+ * and its neighbouring variables. Free the array when done using it.
  */
 int nip_graph_cluster(nip_graph g, nip_variable v, 
 		      nip_variable** neighbours);
@@ -90,12 +89,12 @@ int nip_graph_linked(nip_graph g, nip_variable parent, nip_variable child);
 
 
 /* Adds a new variable (ie. a node) to the graph. Do this only 
- * <nip_graph_size(g)> times during the initialization of the graph.
+ * nip_graph_size(g) times during the initialization of the graph.
  * Parameter g: the graph
- * Parameter v: the variable to be added
+ * Parameter v: the variable (node) to be added
  * Returns an error code.
  */
-int nip_graph_add_variable(nip_graph g, nip_variable v);
+int nip_graph_add_node(nip_graph g, nip_variable v);
 
 
 /* Adds a child to a parent, ie. a dependence.
@@ -142,6 +141,7 @@ int nip_graph_to_cliques(nip_graph g, nip_clique** cliques_p);
  *  - num_of_cliques : the number of cliques in the given array
  */
 int nip_create_sepsets(nip_clique *cliques, int num_of_cliques);
+
 
 /* Internal helper */
 int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p);
