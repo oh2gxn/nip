@@ -1,10 +1,10 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.16 2011-01-06 01:14:27 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.17 2011-01-07 01:52:05 jatoivol Exp $
  */
 
 #include "nipgraph.h"
 
 /* Internal helper functions */
-static void nip_sort_graph_nodes(nip_graph g);
+static nip_error_code nip_build_graph_index(nip_graph g);
 
 static nip_clique* nip_cluster_list_to_clique_array(nip_int_array_list clusters, nip_variable* vars, int n);
 
@@ -52,6 +52,8 @@ nip_graph nip_new_graph(unsigned n) {
       return NULL;
     }
 
+    newgraph->min_id = NIP_VAR_INVALID_ID;
+    newgraph->max_id = NIP_VAR_INVALID_ID;
     newgraph->var_ind = NULL;
     return newgraph;
 }
@@ -95,7 +97,7 @@ void nip_free_graph(nip_graph g) {
 
 int nip_graph_size(nip_graph g) {
   if(g)
-    return g->top;
+    return g->top; /* JJT: changed from g->size */
   return -1;
 }
 
@@ -114,19 +116,23 @@ int nip_graph_index(nip_graph g, nip_variable v) {
 
     /* AR: Bugger. adjmatrix does not change. What if children were 
        added only after all variables have been included? */
+
     if(g == NULL || v == NULL)
       return -1;
 
-    if (g->var_ind != NULL) {
-      i = g->var_ind[nip_variable_id(v) - g->min_id];
-      return nip_equal_variables(g->variables[i], v)? i: -1;
+    if (g->var_ind == NULL) {
+      /* no index, try to build one */
+      if (nip_build_graph_index(g) != NIP_NO_ERROR) {
+	/* backup linear search */
+	for (i = 0; i < g->top; i++)
+	  if (nip_equal_variables(g->variables[i], v))
+	    return i;
+	return -1;
+      }
     }
-    else /* Backup linear search */
-      for (i = 0; i < g->top; i++)
-	if (nip_equal_variables(g->variables[i], v))
-	  return i;
-
-    return -1;
+    /* we have an index, let's use it */
+    i = g->var_ind[nip_variable_id(v) - g->min_id];
+    return nip_equal_variables(g->variables[i], v)? i: -1;   
 } 
 
 
@@ -177,20 +183,33 @@ int nip_graph_linked(nip_graph g, nip_variable parent, nip_variable child) {
 
 /*** SETTERS ***/
 
-int nip_graph_add_node(nip_graph g, nip_variable v){
-    if (g->top == g->size)
-      return NIP_ERROR_GENERAL; /* Cannot add more items. */
-
-    g->variables[g->top] = v;
-    g->top++;
-
-    if (g->top == g->size)
-      nip_sort_graph_nodes(g); /* TODO: why? */
-
-    return NIP_NO_ERROR;
+nip_error_code nip_graph_add_node(nip_graph g, nip_variable v){
+  int id;
+  if (g->top == g->size)
+    return NIP_ERROR_GENERAL; /* Cannot add more items. */
+  
+  g->variables[g->top] = v;
+  g->top++;
+  
+  id = nip_variable_id(v);
+  if (id < g->min_id || g->min_id == NIP_VAR_INVALID_ID){
+    g->min_id = id;
+    /* TODO: update g->var_ind ? */
+  }
+  if (id > g->max_id || g->min_id == NIP_VAR_INVALID_ID){
+    g->max_id = id;
+    /* TODO: update g->var_ind ? */
+  }
+    
+  if (g->top == g->size)
+    nip_build_graph_index(g); /* TODO: continuous update? */
+  
+  return NIP_NO_ERROR;
 }
 
-int nip_graph_add_child(nip_graph g, nip_variable parent, nip_variable child){
+nip_error_code nip_graph_add_child(nip_graph g, 
+				   nip_variable parent, 
+				   nip_variable child){
     int parent_i, child_i;
 
     parent_i = nip_graph_index(g, parent);
@@ -210,22 +229,11 @@ int nip_graph_add_child(nip_graph g, nip_variable parent, nip_variable child){
     return nip_variable_id(v1) - nip_variable_id(v2);
 }*/
 
-/* TODO: more like nip_build_node_index() !!! */
-/* FIXME: update min_id and max_id when adding nodes! */
-static void nip_sort_graph_nodes(nip_graph g) {
-    int i, id;
+static nip_error_code nip_build_graph_index(nip_graph g) {
+    int i;
 
     if(!g)
-      return;
-
-    /* find min and max ids */
-    g->min_id = nip_variable_id(g->variables[0]); 
-    g->max_id = nip_variable_id(g->variables[0]);
-    for (i = 1; i < g->size; i++) {
-        id = nip_variable_id(g->variables[i]);
-        g->min_id = (id < g->min_id)?id:g->min_id;
-        g->max_id = (id > g->max_id)?id:g->max_id;
-    }
+      return NIP_ERROR_NULLPOINTER;
 
     /* allocate new index array */
     if (g->var_ind)
@@ -233,13 +241,13 @@ static void nip_sort_graph_nodes(nip_graph g) {
     g->var_ind = (unsigned long*) calloc(g->max_id - g->min_id + 1, 
 					 sizeof(long));
     if(!(g->var_ind))
-      return;
+      return NIP_ERROR_OUTOFMEMORY;
 
     /* compute the indices */
-    for (i = 0; i < g->size; i++)
+    for (i = 0; i < g->top; i++)
       g->var_ind[nip_variable_id(g->variables[i]) - g->min_id] = i;
 
-    return;
+    return NIP_NO_ERROR;
 }
 
 
@@ -461,7 +469,7 @@ int nip_graph_to_cliques(nip_graph g, nip_clique** cliques_p) {
 }
 
 /*** Used to be in clique.c for some odd reason ***/
-int nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
+nip_error_code nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
 
   int inserted = 0;
   int i;

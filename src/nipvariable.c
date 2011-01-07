@@ -1,6 +1,6 @@
 /* nipvariable.c 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipvariable.c,v 1.7 2011-01-03 18:04:55 jatoivol Exp $
+ * Version: $Id: nipvariable.c,v 1.8 2011-01-07 01:52:05 jatoivol Exp $
  */
 
 
@@ -255,7 +255,7 @@ nip_variable nip_search_variable_array(nip_variable* vars, int nvars,
 }
 
 
-int nip_update_likelihood(nip_variable v, double likelihood[]){
+nip_error_code nip_update_likelihood(nip_variable v, double likelihood[]){
 
   int i;
   if(v == NULL || likelihood == NULL){
@@ -322,7 +322,9 @@ void nip_get_variable_position(nip_variable v, int* x, int* y){
 }
 
 
-int nip_set_parents(nip_variable v, nip_variable *parents, int nparents){
+nip_error_code nip_set_parents(nip_variable v, 
+			       nip_variable* parents, 
+			       int nparents){
   int i;
   if(v == NULL || (nparents > 0 && parents == NULL)){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
@@ -369,7 +371,7 @@ int nip_variable_is_parent(nip_variable parent, nip_variable child) {
 }
 
 
-int nip_set_prior(nip_variable v, double* prior){
+nip_error_code nip_set_prior(nip_variable v, double* prior){
   int i;
   if(v == NULL){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
@@ -492,7 +494,7 @@ nip_variable* nip_variable_union(nip_variable* a, nip_variable* b,
 }
 
 
-nip_variable *nip_variable_isect(nip_variable *a, nip_variable *b, 
+nip_variable* nip_variable_isect(nip_variable *a, nip_variable *b, 
 				 int na, int nb, int* nc){
   int i, j, n;
   nip_variable *c = NULL;
@@ -544,7 +546,7 @@ nip_variable *nip_variable_isect(nip_variable *a, nip_variable *b,
 int* nip_mapper(nip_variable *set, nip_variable *subset, 
 		int nset, int nsubset){
   int i, j;
-  int *mapping = NULL;
+  int* mapping = NULL;
   
   /* Check stuff */
   if(!(set && subset && nset > 0 && nsubset > 0 && nset >= nsubset)){
@@ -594,7 +596,7 @@ nip_interface_list nip_new_interface_list(){
 }
 
 
-int nip_append_variable(nip_variable_list l, nip_variable v){
+nip_error_code nip_append_variable(nip_variable_list l, nip_variable v){
   nip_variable_link new = (nip_variable_link) 
     malloc(sizeof(nip_variable_link_struct));
 
@@ -622,7 +624,9 @@ int nip_append_variable(nip_variable_list l, nip_variable v){
 }
 
 
-int nip_append_interface(nip_interface_list l, nip_variable var, char* next){
+nip_error_code nip_append_interface(nip_interface_list l, 
+				    nip_variable var, 
+				    char* next){
   nip_interface_link new = (nip_interface_link) 
     malloc(sizeof(nip_iflink_struct));
 
@@ -652,7 +656,7 @@ int nip_append_interface(nip_interface_list l, nip_variable var, char* next){
 }
 
 
-int nip_prepend_variable(nip_variable_list l, nip_variable v){
+nip_error_code nip_prepend_variable(nip_variable_list l, nip_variable v){
   nip_variable_link new = (nip_variable_link) 
     malloc(sizeof(nip_variable_link_struct));
 
@@ -679,7 +683,9 @@ int nip_prepend_variable(nip_variable_list l, nip_variable v){
   return NIP_NO_ERROR;
 }
 
-int nip_prepend_interface(nip_interface_list l, nip_variable var, char* next){
+nip_error_code nip_prepend_interface(nip_interface_list l, 
+				     nip_variable var, 
+				     char* next){
   nip_interface_link new = (nip_interface_link) 
     malloc(sizeof(nip_iflink_struct));
 

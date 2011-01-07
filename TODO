@@ -17,6 +17,7 @@
 TODO:
 * Define enumeration types instead of a set of defines
   + typedef enum nip_error_code_enum { NO_ERROR = 0, ...} nip_error_code;
+  - use nip_error_code instead of int, done so far: graph, variable,...
   - other cases?
 
 * Check if the library is UTF-8 compatible...

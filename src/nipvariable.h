@@ -4,7 +4,7 @@
  * in Dynamic Bayes Network models
  *
  * Authors: Janne Toivola, Mikko Korpela
- * $Id: nipvariable.h,v 1.9 2011-01-03 18:04:55 jatoivol Exp $
+ * $Id: nipvariable.h,v 1.10 2011-01-07 01:52:05 jatoivol Exp $
  */
 
 #ifndef __NIPVARIABLE_H__
@@ -19,6 +19,7 @@
  * FIXME: problematic from UTF-8 point of view! */
 #define NIP_VAR_TEXT_LENGTH 40
 #define NIP_VAR_MIN_ID 1
+#define NIP_VAR_INVALID_ID 0
 
 /* Binary flags used for identifying different roles of variables in DBNs*/
 #define NIP_INTERFACE_NONE          0
@@ -188,7 +189,7 @@ nip_variable nip_search_variable_array(nip_variable* vars, int nvars,
  * likelihood parameter array should be freed after use. 
  * Returns an error code if a null pointer is given.
  */
-int nip_update_likelihood(nip_variable v, double likelihood[]);
+nip_error_code nip_update_likelihood(nip_variable v, double likelihood[]);
 
 
 /* Sets a uniform likelihood for v. */
@@ -212,7 +213,9 @@ void nip_get_variable_position(nip_variable v, int* x, int* y);
  * - v: the variable
  * - parents: array of variables (copied)
  * - nparents: number of parents */
-int nip_set_parents(nip_variable v, nip_variable* parents, int nparents);
+nip_error_code nip_set_parents(nip_variable v, 
+			       nip_variable* parents, 
+			       int nparents);
 
 
 /* Tells which variables are the parents of the variable v. */
@@ -225,7 +228,7 @@ int nip_variable_is_parent(nip_variable parent, nip_variable child);
 
 /* Sets the prior for an (independent) variable v. You SHOULD not 
  * set a prior for a variable which has parents. */
-int nip_set_prior(nip_variable v, double* prior);
+nip_error_code nip_set_prior(nip_variable v, double* prior);
 
 
 /* Tells the prior distribution of a variable. 
@@ -274,14 +277,18 @@ nip_interface_list nip_new_interface_list();
 
 /* Methods for adding stuff to the end of the lists 
  */
-int nip_append_variable(nip_variable_list l, nip_variable v);
-int nip_append_interface(nip_interface_list l, nip_variable var, char* next);
+nip_error_code nip_append_variable(nip_variable_list l, nip_variable v);
+nip_error_code nip_append_interface(nip_interface_list l, 
+				    nip_variable var, 
+				    char* next);
 
 
 /* Methods for adding stuff to the beginning of the lists 
  */
-int nip_prepend_variable(nip_variable_list l, nip_variable v);
-int nip_prepend_interface(nip_interface_list l, nip_variable var, char* next);
+nip_error_code nip_prepend_variable(nip_variable_list l, nip_variable v);
+nip_error_code nip_prepend_interface(nip_interface_list l, 
+				     nip_variable var, 
+				     char* next);
 
 
 /* Turns the list into an array. (Allocates memory, free it when necessary)
