@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.6 2011-01-07 16:03:26 jatoivol Exp $
+% $Id: doc.tex,v 1.7 2011-01-14 16:41:21 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -542,16 +542,16 @@ UTF-8 characters that consist of more than one byte (at the length limit).
 \section{Potentials}
 \subsection{General}
 As probability distributions of single variables are implemented as tables,
-probability distributions relating to multiple discrete variables can be
+probability distributions related to multiple discrete variables can be
 represented as multidimensional tables. For example, if the variable~$X$
 depends on a set of variables $\mathbf{Y}=$ $\{Y_1,\dots,Y_{N-1}\}$, the
 dependency can be described quantitatively by the probability distribution
 $P(X|\mathbf{Y})$.  Another example could be a joint distribution
 $P(\mathbf{Z})$ of the variables $\mathbf{Z}=\{Z_1,\dots,Z_N\}$. These kind
-of distributions can be considered as functions from the N-dimensional space
-(formed by the variables $\{X\} \cup \mathbf{Y}$ or~$\mathbf{Z}$) to a real
-number $p \in [0,1]$. Since the variables have a discrete and finite set of
-states, the function can be viewed as an N-dimensional table
+of distributions can be considered as functions from the N-dimensional
+space (formed by the variables $\{X\} \cup \mathbf{Y}$ or~$\mathbf{Z}$) to
+a real number $p \in [0,1]$. Since the variables have a discrete and finite
+set of states, the function can be viewed as an N-dimensional table
 $\phi_\mathbf{Z}$ containing the real numbers corresponding to the
 probabilities. As an example, the value $P(A=a_0, B=b_3, C=c_5)$ is found
 in a multidimensional table $\phi_\mathbf{Z}$ as
@@ -622,7 +622,8 @@ order of the cardinality array is significant because the variables are
 assumed to have a certain order.
 
 \item[num\_of\_vars] is an \cdatatype{integer} which tells the number of
-variables associated with the potential.
+variables associated with the potential, and thus, the supposed 
+dimensionality of \cstructfield{data} array.
 
 \item[data] is the \cdatatype{double array} describing a probability
 distribution of the associated variables. The size of this array is in the
@@ -662,13 +663,13 @@ placed in \cfilename{nippotential.c} and are as follows:
   uniform by assigning \cparameter{value} to all elements of the table.
 
 \item[nip\_random\_potential(p)] makes the potential \cparameter{p} random
-  by assigning a pseudorandom value ($rand \in [0,1]$) to each element of
-  the table.
+  by assigning a uniformly distributed pseudorandom value ($rand \in
+  [0,1]$) to each element of the table.
 
 \item[nip\_get\_potential\_value(p, indices)] retrieves the (possibly
   non-normalised) probability of the configuration of variables, described
   by the \cdatatype{integer array} \cparameter{indices}, from the
-  \cdatatype{potential}~\cparameter{p}. The \cparameter{indices} array
+  potential~\cparameter{p}. The \cparameter{indices} array
   tells which value each of the associated variables are assigned: $n-1$ in
   the array corresponds to the $n$:th value of the variable (base-0
   indexing). The \cparameter{indices} must be in the same order as the
@@ -676,21 +677,21 @@ placed in \cfilename{nippotential.c} and are as follows:
   potential~\cparameter{p}.
   
 \item[nip\_set\_potential\_value(p, indices, value)] sets a
-  \cdatatype{double} \cparameter{value} in the
-  \cdatatype{potential}~\cparameter{p} the same way as
-  \cfunction{nip\_get\_potential\_value(p, indices)} retrieves it.  (See
-  the description above.)
+  \cdatatype{double} \cparameter{value} in the potential~\cparameter{p} the
+  same way as \cfunction{nip\_get\_potential\_value(p, indices)} retrieves
+  it.  (See the description above.)
   
 \item[nip\_inverse\_mapping(p, flat\_index, indices)] transforms a
   so-called flat index into the \cdatatype{integer array}
-  \cparameter{indices} according to the
-  \cdatatype{potential}~\cdatatype{p}.  A flat index is an index used for
-  addressing data in the potential and is therefore an integer between
-  \examplecode{0} and \examplecode{p->size\_of\_data - 1}
-  inclusive. Shortly, this function is made for finding out which
-  configuration of states of the variables corresponds to each element in
-  the potential. Note that the \cparameter{indices} array is not allocated
-  by the function.
+  \cparameter{indices} according to the potential~\cdatatype{p}.  A flat
+  index is an index used for addressing data in the potential and is
+  therefore an integer between \examplecode{0} and
+  \examplecode{p->size\_of\_data - 1} inclusive. Shortly, this function is
+  made for finding out which configuration of states of the variables
+  corresponds to each element in the potential. Note that the
+  \cparameter{indices} array (of size at least \cstructfield{num_of_vars})
+  is not allocated by the function: it must be allocated by the caller
+  prior to calling this function.
   
 \item[nip\_general\_marginalise(source, destination, mapping)] is one of
   the most useful functions since it computes the marginalisation, i.e., a
@@ -713,7 +714,7 @@ placed in \cfilename{nippotential.c} and are as follows:
   for finding out the probability distribution of a single variable
   according to the \cparameter{source} potential. The function is similar
   to the \cfunction{general\_marginalise} but the user must indicate which
-  one of the variables is left unmarginalised. The parameter
+  one of the variables is not marginalised away. The parameter
   \cparameter{variable} is an \cdatatype{integer} ranging from
   \examplecode{0} to \examplecode{source->num\_of\_vars - 1}
   inclusive. Zero indicates the first variable in the potential.
@@ -737,8 +738,8 @@ placed in \cfilename{nippotential.c} and are as follows:
 
 \item[nip\_normalise\_cpd(p)] normalises the potential \cparameter{p} so
   that it is a valid conditional probability distribution (CPD). This 
-  assumes that the first variable (dimension) is the child variable. The
-  assumption makes it simpler and faster than 
+  assumes that the first variable (dimension) is the child variable. This
+  assumption makes the implementation simpler and faster than 
   \examplecode{nip\_normalise\_dimension(p, 0)}. 
 
 \item[nip\_normalise\_dimension(p, dimension)] normalises the potential
@@ -768,7 +769,7 @@ placed in \cfilename{nippotential.c} and are as follows:
   multiplier potentials. This is achieved with the fourth parameter
   \cparameter{mapping} which is an \cdatatype{integer array}. The variables
   of numerator and denominator potentials are assumed to be in the same
-  order. For example, the array \examplecode{\{0, 3, 1\}} tells that the
+  order. For example, mapping array \examplecode{\{0, 3, 1\}} tells that the
   first variable of \cparameter{numerator} is also first (0) in the
   \cparameter{target}, but the second variable of \cparameter{numerator} is
   the fourth (3) variable of the \cparameter{target} potential.
@@ -808,17 +809,32 @@ placed in \cfilename{nippotential.c} and are as follows:
 \subsection{Other possibilities}
 There are several ways of implementing the calculations of the
 potentials. The first of our implementations relied on keeping the
-associated variables in a certain order. Unfortunately this caused problems
-with time slice models where the variables of a time slice correspond to a
-different set of variables in the previous time slice. If the order of
-variables in a potential is fixed, then a subset of variables in a time
-slice should be in the same order as the other set of corresponding
-variables in the previous time slice.  By using an integer array to remap
-the order of the variables, we avoid this and possibly other problems. In
-the previous implementation, the user had to specify (in a certain order)
-which variables were NOT shared by the operands of a potential operation
-and use was therefore less intuitive. Note that our join tree
+associated variables in a certain order. 
+
+Unfortunately this caused problems with time slice models where the
+variables of a time slice correspond to a different set of variables in the
+previous time slice. If the order of variables in a potential is fixed,
+then a subset of variables in a time slice should be in the same order as
+the other set of corresponding variables in the previous time slice.  By
+using an integer array to remap the order of the variables, we avoid this
+and possibly other problems.
+
+In the previous implementation, the user had to specify (in a certain
+order) which variables were NOT shared by the operands of a potential
+operation and use was therefore less intuitive. Note that our join tree
 implementation still requires a static and total ordering among variables.
+
+One problem with the current implementation is the fact that the
+\cdatatype{nip\_potential} struct contains an array of cardinalities, which
+are actually a private property of a \cdatatype{nip\_variable}. On one
+hand, this causes severe coupling between variables and potentials (making
+changes to one data structure affects the use of the other), in case either
+of them are dynamically changed. On the other hand, this separates the
+implementation of potentials from the implementation of variables, in case
+we need representations of potentials irrespective of the variable
+identity, and in case other kind of variables or potentials are introduced
+in the future development\footnote{although C has poor support for
+  polymorphism}.
 
 
 \newpage
