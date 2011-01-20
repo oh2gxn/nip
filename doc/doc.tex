@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.7 2011-01-14 16:41:21 jatoivol Exp $
+% $Id: doc.tex,v 1.8 2011-01-20 17:18:03 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -159,6 +159,7 @@ library are the ones describing variables and NIP top-level abstractions.
 % The nasty details
 
 \section{Variables}
+\label{sec:variable}
 \subsection{General}
 All the random variables $V$ are assumed to be discrete and have a certain
 number of states: $c_V$ which is also known as the {\it cardinality} of the
@@ -540,6 +541,7 @@ UTF-8 characters that consist of more than one byte (at the length limit).
 
 \newpage
 \section{Potentials}
+\label{sec:potential}
 \subsection{General}
 As probability distributions of single variables are implemented as tables,
 probability distributions related to multiple discrete variables can be
@@ -821,7 +823,7 @@ and possibly other problems.
 
 In the previous implementation, the user had to specify (in a certain
 order) which variables were NOT shared by the operands of a potential
-operation and use was therefore less intuitive. Note that our join tree
+operation and the use was therefore less intuitive. Note that our join tree
 implementation still requires a static and total ordering among variables.
 
 One problem with the current implementation is the fact that the
@@ -834,183 +836,34 @@ implementation of potentials from the implementation of variables, in case
 we need representations of potentials irrespective of the variable
 identity, and in case other kind of variables or potentials are introduced
 in the future development\footnote{although C has poor support for
-  polymorphism}.
+  polymorphism}. The \cdatatype{nip_clique} and \cdatatype{nip_sepset}
+structures, described below, are responsible for representing a complete
+``belief universe''~\cite{Jensen1990} by handling a potential and the
+set of variables related to it.
 
-
-\newpage
-\section{Graphs}
-\subsection{General}
-
-In graphical models the graph topology describes independence and
-conditional independence between variables. This is exploited to
-obtain a computationally efficient factorisation of the joint
-probability distribution. 
-
-The purpose of the graphical analysis is to find an optimal set of
-clusters in the graphical model that has the join tree property. These
-clusters are later merged into a join tree. This tree is then used for
-the actual inference.
-
-The main steps in the graphical analysis process are moralisation and
-triangulation. Put simply, moralisation means that any nodes that have
-a common child are connected. Furthermore, all directed links are
-replaced with undirected links. The resulting graph is called a {\it
-(undirected) moral graph}. 
-
-This graph is then triangulated. The triangulation process also
-extracts the cliques used to build the join tree.  There exist several
-triangulations for a given graph; we are interested in a triangulation
-that is optimal in the sense of adding the least edges\footnote{If
-there is more than one optimal solution, further constrains may be
-introduced. For example, for memory efficiency we prefer the solution
-that generates the smallest potential tables.} to the moral
-graph. Finding such a triangulation is an NP-hard problem, but there
-exist heuristics that give nearly optimal results.  The triangulation
-algorithm is the one presented in \cite{huang1994}.
-
-The \cdatatype{Graph} is implemented via an adjacency graph. The
-interface is designed to hide the implementation details. The
-\cdatatype{Heap} datatype used in the triangulation stage contains a
-\cdatatype{Graph}-like datatype and could possibly be refactored.
-
-
-\subsection{Functionality description}
-%The interface + how the stuff works...
-\subsubsection{The data structures}
-The data type \cdatatype{Graph} defined in \cfilename{Graph.h} is a
-struct which has the following fields:
-\begin{description}
-\item[adj\_matrix] is an $n\times n$ adjacency matrix for the
-graph. The size $n$ is specified when the graph is first constructed
-and it is stored in the variable \cparameter{size}. The matrix is
-implemented as a simple array. For this reason it is manipulated via
-the macro \cparameter{ADJM}.
-\item[variables] is an array of variables associated with this graph.
-\item[size] is the number of variables in the \cdatatype{Graph}.
-\item[var\_ind] is an internal array of variables. Used for
-performance reasons.
-\item[min\_id] The smallest \examplecode{id} of a variable associated
-with the graph. Used internally for better performance.
-\item[max\_id] The largest \examplecode{id} of a variable associated
-with the graph. Used internally for better performance.
-\item[top] is an internal counter used when adding variables. 
-\end{description}
-
-
-\subsubsection{The functions}
-
-The functions provided in \cfilename{Graph.c} are:
-
-\begin{description}
-\item[new\_graph(n)] creates a new graph with memory reserved for
-  \cparameter{n} variables. Returns a pointer.
-\item[copy\_graph(G)] creates a copy of the graph \cparameter{G}.
-\item[free\_graph(G)] frees the memory reserved for the graph
-  \cparameter{G}.
-\item[get\_size(G)] returns the number of variables in the graph
-  \cparameter{G}.
-\item[get\_variables(G)] returns the variables in the graph
-  \cparameter{G} as an array.
-\item[get\_graph\_index(G, v)] returns the index of the variable
-  \cparameter{v} in the internal array of the graph \cparameter{G}.
-\item[get\_neighbours(G, v\_array, v)] returns the number of
-  neighbours of variable \cparameter{v} in graph \cparameter{G}. The
-  neighbours will be stored in the array \cparameter{v\_array}, which
-  {\it must be large enough}. No variable can have more neighbours than
-  $n-1$, where $n$ is the number of variables in \cparameter{G}.
-\item[is\_child(G, v1, v2)] will return \examplecode{True} when
-  variable \cparameter{v2} is a child of variable \cparameter{v1} in
-  the graph \cparameter{G}.
-\item[add\_variable(G, v)] adds a new variable \cparameter{v} to the
-  graph \cparameter{G}. You must add as many variables as you specified
-  when creating \cparameter{G}.
-\item[add\_child(G, v1, v2)] adds an edge to graph \cparameter{G}
-  from variable \cparameter{v1} to variable \cparameter{v2}, ie. makes
-  \cparameter{v2} a child of \cparameter{v1}.
-\item[find\_cliques(G, cp)] finds cliques in \cparameter{G} and
-  stores them in the clique-array \cparameter{*cp}
-  \footnote{Type of
-    \examplecode{cp} is \cdatatype{clique**}, ie. it is a pointer to such
-    an array. It need not be initialized.}. Returns the number of elements
-  in the array.
-\item[make\_undirected(G)] returns an undirected copy of Graph
-  \cparameter{G}.
-\item[moralise(G)] returns a moralised copy of graph \cparameter{G}.
-
-\end{description}
-
-\subsection{Notes on Implementation}
-
-The above discussion describes only the interface of the
-\cdatatype{Graph} module. Some data structures used internally by the
-\cdatatype{Graph} module are summarily described here. The explanation
-is mostly aimed at those planning to modify the module.
-
-\subsubsection{Heap}
-
-The \cdatatype{Heap} is used to keep the potential cliques in a sorted
-data structure. Any search structure would suffice here; the heap is
-probably the most efficient.
-
-This step requires a dynamically updatable \cdatatype{Heap}. The
-weights in neighbouring nodes change when the minimum weight node is
-removed. This also means that the heap implementation must be tied in
-with the \cdatatype{Graph}. This has led to number of tradeoffs and
-possible pitfalls.
- 
-% XX
-
-
-\subsubsection{cls2clq}
-
-The \cdatatype{cls2clq} module is used to convert a list of clusters
-to an array of cliques. In addition to a simple list implementation,
-it also includes a method to check whether a given set of variables
-(ie. a cluster) is a subset of a cluster already in the
-list\footnote{There is no need to check for supersets; the items in
-the list contain nodes that are then removed from the graph and thus
-cannot occur in later clusters.} and a method for the list-to-array
-conversion.
-
-The list used in this implementation could be replaced with a generic
-list data type.
-
-\subsection{Other possibilities}
-
-From efficiency standpoint, the approach presented in \cite{huang1994}
-and suitable for production use.
-
-If efficiency is not the main concern, eg. in prototyping situations,
-some simplifications can be made. For example, the heap data structure
-in the triangulation phase can be replaced with a list or array and a
-linear search.
-
-The interface is not as smooth and polished as it could be. It is also
-not very flexible. For example you have to know the number of
-variables when constructing the graph; the system should be able to
-dynamically add new variables 'on the go'. However, such functionality
-can be introduced with a wrapper, if desired.
 
 
 \newpage
 \section{Join trees} % cliques and sepsets
+\label{sec:jointree}
 \subsection{General}
 The inference engine of the system uses join trees for practically all of
-its calculations. A good introduction on inference in belief networks can
-be found in~\cite{huang1994} or~\cite{Cowell1999ch}. Shortly, the graph
-implementation, described previously in this document, transforms a graph
-into a set of {\it cliques}. The cliques are connected to each other by 
-{\it sepsets} to form a structure called {\it join tree}, 
-{\it junction tree}, {\it clique tree}, or {\it cluster tree}. The inference 
-calculations are considerably simpler to make according to such a secondary 
-structure instead of the plain belief network.
+its calculations. An introduction on inference in belief networks can be
+found in~\cite{Huang1994} or~\cite{Cowell1999ch}. Shortly, the graph
+implementation, described later in this document, transforms a graph of
+variables into a set of {\it cliques}. The cliques are connected to each
+other by {\it sepsets} to form a structure called {\it join tree}, also
+known as {\it junction tree}, {\it clique tree}, or {\it cluster tree}. The
+inference calculations are considerably simpler to make according to such a
+secondary structure instead of the plain belief network.
 
-Traditionally the word clique means a complete subgraph of some graph or
-just the set of nodes in such a subgraph. In this document the word clique
+Traditionally, the word clique means a complete subgraph of some graph or
+just the set of nodes in such a subgraph. In this document, the word clique
 refers to a structure which contains the variables of a maximal subgraph of
-a slightly modified version the belief network at hand. A clique has also a 
-{\it potential} $\phi_\mathbf{X}$ for describing the dependencies of its 
-variables $\mathbf{X}$ as a probability distribution.
+a slightly modified\footnote{see Section \ref{sec:graph}} version of the
+belief network at hand. A clique has also a {\it potential}
+$\phi_\mathbf{X}$ for describing the dependencies of its variables
+$\mathbf{X}$ as a probability distribution.
 
 There are also the separator sets, or just shortly sepsets, connecting the
 cliques together. A sepset contains the intersection of the two neigbouring
@@ -1043,7 +896,7 @@ P(\mathbf{U}) = \frac{\prod_i \phi_{\mathbf{X}_i}}
 meaning that the secondary structure expresses the quantitative information 
 about the belief network.
 
-As stated in~\cite{huang1994} (and~\cite{jensen1990} before that), these 
+As stated in~\cite{Huang1994} (and~\cite{Jensen1990} before that), these 
 consistency requirements guarantee following properties:
 \begin{equation}
 \phi_\mathbf{X} = P(\mathbf{X})
@@ -1058,11 +911,15 @@ variable or joint probability distribution of its family by marginalising a
 suitable clique potential. The inference is only a matter of inserting
 evidence into the join tree and making the potentials consistent. 
 
-One of the most important features of a the secondary structure is the join
-tree property: \textbf{if two cliques have a common variable, every clique 
-and sepset on the path between the two cliques have the variable also}. 
+One of the most important features of the secondary structure is the join
+tree property: \textbf{if two cliques have a common variable, every clique
+  and sepset on the path between the two cliques have the variable
+  also}. Thus, evidence entered into one clique can propagate it's effect
+on all other clique potentials thru the message passing scheme described
+below.
+
 Another important property is that a family of a variable can be found in a
-single clique. (This is due to the moralisation of the original network.) 
+single clique. (This is due to the moralisation of the original network.)
 The importance becomes clear in the message passing scheme presented below.
 
 \subsubsection{Inference with a join tree}
@@ -1116,7 +973,7 @@ of evidence are first propagated away from an arbitrary root clique and
 then towards the same clique in depth first order. The key property of this 
 {\it message-passing} procedure is that each clique passes a message to a 
 neigbouring clique after if has received messages from all of its other 
-neighbours (see~\cite{huang1994} for examples). 
+neighbours (see~\cite{Huang1994} for examples). 
 
 A single message from clique $C_1$ to its neigbor $C_2$ is passed as
 follows:
@@ -1214,36 +1071,25 @@ intersection property makes the algorithm straightforward.
 
 
 \subsection{Functionality description}
-The files \cfilename{clique.h} and \cfilename{clique.c} provide data 
-types and functions for operating with sepsets and cliques. Together 
-these form the concept known as join tree. In the NIP system, a join 
-tree is merely an array of cliques which in turn have references to
-all the necessary sepsets.
+The files \cfilename{nipjointree.h} and \cfilename{nipjointree.c} provide
+data types and functions for operating with sepsets and cliques. Together
+these form the concept known as join tree. In the NIP system, a join tree
+is merely an array of cliques which in turn have references to all the
+necessary sepsets.
 
 \subsubsection{The data structures}
-\cfilename{clique.h} provides data types \cdatatype{sepset}, 
-\cdatatype{sepset\_link}, and \cdatatype{clique}. \cdatatype{sepset}
-is a pointer to a struct which has the following fields:
-\begin{description}
-\item[old] is older of the two last \cdatatype{potentials} passed via
-the sepset.
-
-\item[new] is the last \cdatatype{potential} passed via the sepset.
-
-\item[variables] is an \cdatatype{array of variables}. These are the 
-variables associated with the sepset. They are in the same order as
-their cardinalities in the \cdatatype{potentials} \cstructfield{old} and 
-\cstructfield{new}. Number of the variables can be found in either 
-of the \cdatatype{potentials} \cstructfield{old} and \cstructfield{new}.
-
-\item[cliques] is an \cdatatype{array of cliques}. The references to the
-adjacent cliques are there. Size of the array is always two because of the
-nature of sepsets.
-\end{description}
+\cfilename{nipjointree.h} provides data types 
+\begin{itemize}
+\item \cdatatype{nip\_sepset\_link},
+\item \cdatatype{nip\_clique},
+\item \cdatatype{nip\_sepset},
+\item \cdatatype{nip\_potential\_link}, and
+\item \cdatatype{nip\_potential\_list}.
+\end{itemize}
 
 
-The data type \cdatatype{sepset\_link} provides an implementation for lists
-of \cdatatype{sepsets}. It is a pointer to a struct containing
+The data type \cdatatype{nip\_sepset\_link} provides an implementation for
+lists of \cdatatype{sepsets}. It is a pointer to a struct containing
 \begin{description}
 \item[data] which is a so-called \cdatatype{void pointer} because of the
   order of definitions. (You can't really define a list of sepsets before
@@ -1251,59 +1097,100 @@ of \cdatatype{sepsets}. It is a pointer to a struct containing
   cliques can't be defined before lists of sepsets.) When a list of
   sepsets is used, the \cstructfield{data} field has to be cast to the
   \cdatatype{sepset} type.
-
-\item[fwd] which is the next \cdatatype{sepset\_link} in the list or 
+\item[fwd] which is the next \cdatatype{nip\_sepset\_link} in the list or 
   \cdatatype{NULL} at the end of the list.
-
-\item[bwd] which is the previous \cdatatype{sepset\_link} in the list or 
-  \cdatatype{NULL} at the beginning of the list.
+\item[bwd] which is the previous \cdatatype{nip\_sepset\_link} in the list
+  or \cdatatype{NULL} at the beginning of the list.
 \end{description}
 
-The data type \cdatatype{clique} is a pointer to a struct containing all the
-necessary information for working with cliques. The fields are
+The data type \cdatatype{nip\_clique} is a pointer to a struct containing
+all the necessary information for working with cliques. The fields are
 \begin{description}
-\item[p] is the clique \cdatatype{potential}
-
-\item[original\_p] is the original clique \cdatatype{potential} initialised
+\item[p] is the clique potential
+\item[original\_p] is the original clique potential initialised
   according to the parameters of the model. This one is never affected 
   by the evidence entered into the model.
-
 \item[variables] is an \cdatatype{array of variables}. These are the
-  references to the variables associated with the clique. They are in
-  the same order as their cardinalities in the 
-  \cdatatype{potential}~\cstructfield{p}. The number of variables can be 
-  found in the potential~\cstructfield{p}.
-
+  references to the variables associated with the clique. They are in the
+  same order as their cardinalities in the
+  \cdatatype{nip\_potential}~\cstructfield{p}. The number of variables can
+  be found in the potential~\cstructfield{p}.
 \item[sepsets] is a \cdatatype{sepset\_link} i.e. either
   \cdatatype{NULL} or a list of sepsets. The list contains the
   references to the adjacent sepsets.
-
 \item[num\_of\_sepsets] is the number of adjacent sepsets.
-
-\item[mark] is an \cdatatype{integer} used as a flag by various
+\item[mark] is a \cdatatype{char} used as a flag by various
   algorithms. For example a depth-first search and the propagation of 
   evidence uses the \cstructfield{mark} field to identify the cliques 
   which have already been handled.
 \end{description}
 
+\cdatatype{nip\_sepset} is a pointer to a struct which has the following
+fields:
+\begin{description}
+\item[old] is older of the two last \cdatatype{nip\_potentials} passed via
+  the sepset.
+\item[new] is the last potential passed via the sepset.
+\item[variables] is an \cdatatype{array of variables}. These are the
+  variables associated with the sepset. They are in the same order as their
+  cardinalities in the potentials \cstructfield{old} and
+  \cstructfield{new}. Number of the variables can be found in either of the
+  potentials \cstructfield{old} and \cstructfield{new}.
+\item[first\_neighbour] is one of the two neighbouring
+  \cdatatype{nip\_cliques}.
+\item[second\_neighbour] is the other of the two neighbouring
+  \cdatatype{nip\_cliques}.
+\end{description}
+
+\cdatatype{nip\_potential\_link} is a pointer to a struct containing the
+following fields:
+\begin{description}
+\item[data] is a \cdatatype{nip\_potential} (typically representing a
+  conditional probability distribution, i.e. model parameters, just parsed
+  from an input file before constructing a join tree)
+\item[child] is the \cdatatype{nip\_variable} representing the variable
+  conditioned on the other variables
+\item[parents] is an array of \cdatatype{nip\_variables} representing the
+  parent variables \cstructfield{child} depends on. Number of parents is
+  the number of dimensions in \cstructfield{data} potential minus one (the
+  child).
+\item[fwd] is a pointer to the next \cdatatype{nip\_potential\_link} or
+  \cdatatype{NULL} at the end of a list.
+\item[bwd] is a pointer to the previous \cdatatype{nip\_potential\_link} or
+  \cdatatype{NULL} at the beginning of a list.
+\end{description}
+
+The implementation of potential list is wrapped by the datatype
+\cdatatype{nip\_potential\_list} which is a pointer to a struct containing:
+\begin{description}
+\item[length] an integer describing the length of the list
+\item[first] the first \cdatatype{nip\_potential\_link} element in the list
+\item[last] the last \cdatatype{nip\_potential\_link} element in the list
+\end{description}
+%
+The list of potentials and their corresponding variables is useful when
+parsing model parameters from an input file, while the belief graph nor the
+join tree are not created yet.
+
 
 \subsubsection{The functions}
-The file \cfilename{clique.c} provides the following functions
+The file \cfilename{nipjointree.c} provides the following functions for
+join tree operations:
 \begin{description}
-\item[make\_clique(vars, num\_of\_vars)] creates a \cdatatype{clique}. The
-  associated variables are given as the \cdatatype{variable array}
-  \cparameter{vars} and the number of the variables as the
-  \cdatatype{integer} \cparameter{num\_of\_vars}. A shallow copy of the
-  array is made, so remember to free it (but not the variables
-  themselves). The clique will not have any adjacent sepsets
+\item[nip\_new\_clique(vars, num\_of\_vars)] creates a
+  \cdatatype{nip\_clique}. The associated variables are given as the
+  \cdatatype{nip\_variable array} \cparameter{vars} and the number of the
+  variables as the \cdatatype{integer} \cparameter{num\_of\_vars}. A
+  shallow copy of the array is made, so remember to free it (but not the
+  variables themselves). The clique will not have any adjacent sepsets
   initially: sepsets must be added separately.
 
-\item[free\_clique(c)] frees the memory allocated by the 
-  \cdatatype{clique}~\cparameter{c}. It will not free the memory allocated for 
-  the corresponding \cdatatype{variables}, but all the adjacent 
-  \cdatatype{sepsets} are freed and removed automatically so that rest
-  of the join tree remains valid. Note that freeing an entire join tree
-  can be done by calling this function for every clique.
+\item[nip\_free\_clique(c)] frees the memory allocated by the
+  \cdatatype{nip\_clique}~\cparameter{c}. It will not free the memory
+  allocated for the corresponding \cdatatype{nip\_variables}, but all the
+  adjacent \cdatatype{nip\_sepsets} are freed and removed automatically so
+  that rest of the join tree remains valid. Note that freeing an entire
+  join tree can be done by calling this function for every clique.
 
 \item[add\_sepset(c, s)] adds the \cdatatype{sepset} \cparameter{s} to the 
   \cdatatype{clique}~\cparameter{c}. Remember to add the sepset to both
@@ -1357,7 +1244,7 @@ The file \cfilename{clique.c} provides the following functions
 
 \item[distribute\_evidence(c)] implements the algorithm which spreads 
   the evidence entered in to the cliques away from the given 
-  \cdatatype{clique}~\cparameter{c}. See \cite{huang1994} page 21 for
+  \cdatatype{clique}~\cparameter{c}. See \cite{Huang1994} page 21 for
   details. Remember to unmark all the cliques before calling this.
 
 \item[collect\_evidence(c1, s12, c2)] implements the algorithm which
@@ -1519,6 +1406,166 @@ of variable cardinalities would have been avoided and potentials would be
 more ``independent'' entities. On the other hand, some parts of the system 
 (like the time slice message passing) need to make potential operations as 
 if they had different variables.
+
+
+
+\newpage
+\section{Graphs}
+\label{sec:graph}
+\subsection{General}
+
+In graphical models, the graph topology describes independence and
+conditional independence between variables. This is exploited to
+obtain a computationally efficient factorisation of the joint
+probability distribution. 
+
+The purpose of the graphical analysis is to find an optimal set of
+clusters in the graphical model that has the join tree property. These
+clusters are later merged into a join tree. This tree is then used for
+the actual inference.
+
+The main steps in the graphical analysis process are moralisation and
+triangulation. Put simply, moralisation means that any nodes that have
+a common child are connected. Furthermore, all directed links are
+replaced with undirected links. The resulting graph is called a {\it
+(undirected) moral graph}. 
+
+This graph is then triangulated. The triangulation process also
+extracts the cliques used to build the join tree.  There exist several
+triangulations for a given graph; we are interested in a triangulation
+that is optimal in the sense of adding the least edges\footnote{If
+there is more than one optimal solution, further constrains may be
+introduced. For example, for memory efficiency we prefer the solution
+that generates the smallest potential tables.} to the moral
+graph. Finding such a triangulation is an NP-hard problem, but there
+exist heuristics that give nearly optimal results.  The triangulation
+algorithm is the one presented in \cite{Huang1994}.
+
+The \cdatatype{Graph} is implemented via an adjacency graph. The
+interface is designed to hide the implementation details. The
+\cdatatype{Heap} datatype used in the triangulation stage contains a
+\cdatatype{Graph}-like datatype and could possibly be refactored.
+
+
+\subsection{Functionality description}
+%The interface + how the stuff works...
+\subsubsection{The data structures}
+The data type \cdatatype{Graph} defined in \cfilename{Graph.h} is a
+struct which has the following fields:
+\begin{description}
+\item[adj\_matrix] is an $n\times n$ adjacency matrix for the
+graph. The size $n$ is specified when the graph is first constructed
+and it is stored in the variable \cparameter{size}. The matrix is
+implemented as a simple array. For this reason it is manipulated via
+the macro \cparameter{ADJM}.
+\item[variables] is an array of variables associated with this graph.
+\item[size] is the number of variables in the \cdatatype{Graph}.
+\item[var\_ind] is an internal array of variables. Used for
+performance reasons.
+\item[min\_id] The smallest \examplecode{id} of a variable associated
+with the graph. Used internally for better performance.
+\item[max\_id] The largest \examplecode{id} of a variable associated
+with the graph. Used internally for better performance.
+\item[top] is an internal counter used when adding variables. 
+\end{description}
+
+
+\subsubsection{The functions}
+
+The functions provided in \cfilename{Graph.c} are:
+
+\begin{description}
+\item[new\_graph(n)] creates a new graph with memory reserved for
+  \cparameter{n} variables. Returns a pointer.
+\item[copy\_graph(G)] creates a copy of the graph \cparameter{G}.
+\item[free\_graph(G)] frees the memory reserved for the graph
+  \cparameter{G}.
+\item[get\_size(G)] returns the number of variables in the graph
+  \cparameter{G}.
+\item[get\_variables(G)] returns the variables in the graph
+  \cparameter{G} as an array.
+\item[get\_graph\_index(G, v)] returns the index of the variable
+  \cparameter{v} in the internal array of the graph \cparameter{G}.
+\item[get\_neighbours(G, v\_array, v)] returns the number of
+  neighbours of variable \cparameter{v} in graph \cparameter{G}. The
+  neighbours will be stored in the array \cparameter{v\_array}, which
+  {\it must be large enough}. No variable can have more neighbours than
+  $n-1$, where $n$ is the number of variables in \cparameter{G}.
+\item[is\_child(G, v1, v2)] will return \examplecode{True} when
+  variable \cparameter{v2} is a child of variable \cparameter{v1} in
+  the graph \cparameter{G}.
+\item[add\_variable(G, v)] adds a new variable \cparameter{v} to the
+  graph \cparameter{G}. You must add as many variables as you specified
+  when creating \cparameter{G}.
+\item[add\_child(G, v1, v2)] adds an edge to graph \cparameter{G}
+  from variable \cparameter{v1} to variable \cparameter{v2}, ie. makes
+  \cparameter{v2} a child of \cparameter{v1}.
+\item[find\_cliques(G, cp)] finds cliques in \cparameter{G} and
+  stores them in the clique-array \cparameter{*cp}
+  \footnote{Type of
+    \examplecode{cp} is \cdatatype{clique**}, ie. it is a pointer to such
+    an array. It need not be initialized.}. Returns the number of elements
+  in the array.
+\item[make\_undirected(G)] returns an undirected copy of Graph
+  \cparameter{G}.
+\item[moralise(G)] returns a moralised copy of graph \cparameter{G}.
+
+\end{description}
+
+\subsection{Notes on Implementation}
+
+The above discussion describes only the interface of the
+\cdatatype{Graph} module. Some data structures used internally by the
+\cdatatype{Graph} module are summarily described here. The explanation
+is mostly aimed at those planning to modify the module.
+
+\subsubsection{Heap}
+
+The \cdatatype{Heap} is used to keep the potential cliques in a sorted
+data structure. Any search structure would suffice here; the heap is
+probably the most efficient.
+
+This step requires a dynamically updatable \cdatatype{Heap}. The
+weights in neighbouring nodes change when the minimum weight node is
+removed. This also means that the heap implementation must be tied in
+with the \cdatatype{Graph}. This has led to number of tradeoffs and
+possible pitfalls.
+ 
+% XX
+
+
+\subsubsection{cls2clq}
+
+The \cdatatype{cls2clq} module is used to convert a list of clusters
+to an array of cliques. In addition to a simple list implementation,
+it also includes a method to check whether a given set of variables
+(ie. a cluster) is a subset of a cluster already in the
+list\footnote{There is no need to check for supersets; the items in
+the list contain nodes that are then removed from the graph and thus
+cannot occur in later clusters.} and a method for the list-to-array
+conversion.
+
+The list used in this implementation could be replaced with a generic
+list data type.
+
+\subsection{Other possibilities}
+
+From efficiency standpoint, the approach presented in~\cite{Huang1994}
+and suitable for production use.
+
+If efficiency is not the main concern, eg. in prototyping situations,
+some simplifications can be made. For example, the heap data structure
+in the triangulation phase can be replaced with a list or array and a
+linear search.
+
+The interface is not as smooth and polished as it could be. It is also
+not very flexible. For example you have to know the number of
+variables when constructing the graph; the system should be able to
+dynamically add new variables 'on the go'. However, such functionality
+can be introduced with a wrapper, if desired.
+
+
+
 
 \newpage
 \section{The Hugin net language parser}
