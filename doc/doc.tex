@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.8 2011-01-20 17:18:03 jatoivol Exp $
+% $Id: doc.tex,v 1.9 2011-01-22 13:10:34 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -1097,8 +1097,10 @@ lists of \cdatatype{sepsets}. It is a pointer to a struct containing
   cliques can't be defined before lists of sepsets.) When a list of
   sepsets is used, the \cstructfield{data} field has to be cast to the
   \cdatatype{sepset} type.
+
 \item[fwd] which is the next \cdatatype{nip\_sepset\_link} in the list or 
   \cdatatype{NULL} at the end of the list.
+
 \item[bwd] which is the previous \cdatatype{nip\_sepset\_link} in the list
   or \cdatatype{NULL} at the beginning of the list.
 \end{description}
@@ -1107,18 +1109,23 @@ The data type \cdatatype{nip\_clique} is a pointer to a struct containing
 all the necessary information for working with cliques. The fields are
 \begin{description}
 \item[p] is the clique potential
+
 \item[original\_p] is the original clique potential initialised
   according to the parameters of the model. This one is never affected 
   by the evidence entered into the model.
+
 \item[variables] is an \cdatatype{array of variables}. These are the
   references to the variables associated with the clique. They are in the
   same order as their cardinalities in the
   \cdatatype{nip\_potential}~\cstructfield{p}. The number of variables can
   be found in the potential~\cstructfield{p}.
+
 \item[sepsets] is a \cdatatype{sepset\_link} i.e. either
   \cdatatype{NULL} or a list of sepsets. The list contains the
   references to the adjacent sepsets.
+
 \item[num\_of\_sepsets] is the number of adjacent sepsets.
+
 \item[mark] is a \cdatatype{char} used as a flag by various
   algorithms. For example a depth-first search and the propagation of 
   evidence uses the \cstructfield{mark} field to identify the cliques 
@@ -1130,14 +1137,18 @@ fields:
 \begin{description}
 \item[old] is older of the two last \cdatatype{nip\_potentials} passed via
   the sepset.
+
 \item[new] is the last potential passed via the sepset.
+
 \item[variables] is an \cdatatype{array of variables}. These are the
   variables associated with the sepset. They are in the same order as their
   cardinalities in the potentials \cstructfield{old} and
   \cstructfield{new}. Number of the variables can be found in either of the
   potentials \cstructfield{old} and \cstructfield{new}.
+
 \item[first\_neighbour] is one of the two neighbouring
   \cdatatype{nip\_cliques}.
+
 \item[second\_neighbour] is the other of the two neighbouring
   \cdatatype{nip\_cliques}.
 \end{description}
@@ -1148,14 +1159,18 @@ following fields:
 \item[data] is a \cdatatype{nip\_potential} (typically representing a
   conditional probability distribution, i.e. model parameters, just parsed
   from an input file before constructing a join tree)
+
 \item[child] is the \cdatatype{nip\_variable} representing the variable
   conditioned on the other variables
+
 \item[parents] is an array of \cdatatype{nip\_variables} representing the
   parent variables \cstructfield{child} depends on. Number of parents is
   the number of dimensions in \cstructfield{data} potential minus one (the
   child).
+
 \item[fwd] is a pointer to the next \cdatatype{nip\_potential\_link} or
   \cdatatype{NULL} at the end of a list.
+
 \item[bwd] is a pointer to the previous \cdatatype{nip\_potential\_link} or
   \cdatatype{NULL} at the beginning of a list.
 \end{description}
@@ -1164,7 +1179,9 @@ The implementation of potential list is wrapped by the datatype
 \cdatatype{nip\_potential\_list} which is a pointer to a struct containing:
 \begin{description}
 \item[length] an integer describing the length of the list
+
 \item[first] the first \cdatatype{nip\_potential\_link} element in the list
+
 \item[last] the last \cdatatype{nip\_potential\_link} element in the list
 \end{description}
 %
@@ -1182,8 +1199,14 @@ join tree operations:
   \cdatatype{nip\_variable array} \cparameter{vars} and the number of the
   variables as the \cdatatype{integer} \cparameter{num\_of\_vars}. A
   shallow copy of the array is made, so remember to free it (but not the
-  variables themselves). The clique will not have any adjacent sepsets
-  initially: sepsets must be added separately.
+  variables themselves). 
+  
+  The clique will not have any adjacent sepsets initially: sepsets must be
+  created and added separately. Typically, a join tree is created in the
+  following order: first, a suitable set of cliques is created, a set of
+  candidate sepsets is created, subset of the sepsets are selected and
+  added to the cliques, and finally possible useless candidate sepsets are
+  freed.
 
 \item[nip\_free\_clique(c)] frees the memory allocated by the
   \cdatatype{nip\_clique}~\cparameter{c}. It will not free the memory
@@ -1192,19 +1215,22 @@ join tree operations:
   that rest of the join tree remains valid. Note that freeing an entire
   join tree can be done by calling this function for every clique.
 
-\item[add\_sepset(c, s)] adds the \cdatatype{sepset} \cparameter{s} to the 
-  \cdatatype{clique}~\cparameter{c}. Remember to add the sepset to both
-  adjacent cliques and never add the same sepset to the same clique twice.
+\item[nip\_confirm\_sepset(s)] adds the \cdatatype{nip\_sepset}
+  \cparameter{s} to the cliques referenced during
+  \cfunction{nip\_new\_sepset}. This makes the candidate sepset a final
+  part of the join tree and ensures that both the sepset and the neighbour
+  cliques reference each other properly. On the other hand, if the sepset
+  is not confirmed to be a part of a join tree, the neighbouring cliques
+  will not reference it and no message passing algorithm will reach
+  \cparameter{s}. This was made in order to have several possible candidate
+  sepsets before selecting the best ones to be included, while enforcing
+  proper bi-directional references. Make sure not to confirm sepsets that
+  would create loops in the join tree.
 
-\item[make\_sepset(variables, num\_of\_vars, cliques)] creates a
-  \cdatatype{sepset}. The associated variables are given as the
-  \cdatatype{variable array} \cparameter{variables} and the size of the
-  array as the \cdatatype{integer} \cparameter{num\_of\_vars}. Both
-  adjacent cliques must be given as \cdatatype{array of cliques}
-  (\cparameter{cliques}). This usually means that the \cdatatype{cliques}
-  must be created before the \cdatatype{sepsets}. Note that a shallow copy
-  of the parameter arrays is made, so freeing the arrays after calling the
-  function is up to the user.
+\item[nip\_new\_sepset(neighbour\_a, neighbour\_b)] creates a
+  new \cdatatype{nip\_sepset} between cliques \cparameter{neighbour\_a} and
+  \cparameter{neighbour\_b}. This usually means that all cliques
+  must be created before sepsets. 
   
 \item[free\_sepset(s)] just frees the memory allocated for the
   \cdatatype{sepset} \cparameter{s}. This is called automatically by 

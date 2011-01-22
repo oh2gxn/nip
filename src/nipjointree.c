@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.5 2010-12-17 18:15:56 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.6 2011-01-22 13:10:34 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -170,23 +170,31 @@ void nip_free_clique(nip_clique c){
 }
 
 
-int nip_add_sepset(nip_clique c, nip_sepset s){
+nip_error_code nip_confirm_sepset(nip_sepset s){
+  int i;
+  nip_clique c;
+  nip_sepset_link new, new2;
 
-  nip_sepset_link new = (nip_sepset_link) 
-    malloc(sizeof(nip_sepsetlink_struct));
-  if(!new){
+  new = (nip_sepset_link) malloc(sizeof(nip_sepsetlink_struct));
+  new2 = (nip_sepset_link) malloc(sizeof(nip_sepsetlink_struct));
+  if(!new || !new2){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NIP_ERROR_OUTOFMEMORY;
   }
+  
+  c = s->first_neighbour;
+  for (i=0; i<2; i++){
+    new->data = s;
+    new->fwd = c->sepsets;
+    new->bwd = NULL;
+    if(c->sepsets != NULL)
+      c->sepsets->bwd = new;
+    c->sepsets = new;
+    new = new2; /* init second loop */
+    c = s->second_neighbour;
+  }
 
-  new->data = s;
-  new->fwd = c->sepsets;
-  new->bwd = NULL;
-  if(c->sepsets != NULL)
-    c->sepsets->bwd = new;
-  c->sepsets = new;
-
-  return 0;
+  return NIP_NO_ERROR;
 }
 
 
@@ -218,119 +226,66 @@ static void nip_remove_sepset(nip_clique c, nip_sepset s){
 }
 
 
-/*
- * ATTENTION! Check what this does when num_of_vars == 0.
- */
-nip_sepset nip_new_sepset(nip_variable vars[], int num_of_vars, 
-			  nip_clique neighbour_a, nip_clique neighbour_b){
+nip_sepset nip_new_sepset(nip_clique neighbour_a, nip_clique neighbour_b){
 
   nip_sepset s;
+  int isect_size;
   int *cardinality = NULL;
-  int *reorder = NULL;
-  int *indices = NULL;
-  int i, j;
-  unsigned long temp;
+  /*int *reorder = NULL;
+    int *indices = NULL;*/
+  int i;
+
+  if (neighbour_a == NULL || neighbour_b == NULL){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    return NULL;
+  }    
 
   s = (nip_sepset) malloc(sizeof(nip_sepset_struct));
-
   if(!s){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
-  if(num_of_vars){
-    cardinality = (int *) calloc(num_of_vars, sizeof(int));
+  /* Take the intersection of two cliques. */
+  s->first_neighbour = neighbour_a;
+  s->second_neighbour = neighbour_b;
+  s->variables = nip_variable_isect(neighbour_a->variables, 
+				    neighbour_b->variables, 
+				    NIP_DIMENSIONALITY(neighbour_a->p),
+				    NIP_DIMENSIONALITY(neighbour_b->p),
+				    &isect_size);
+
+  if(isect_size < 0){
+    free(s);
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+    return NULL;
+  }
+
+  if(isect_size > 0){
+    cardinality = (int *) calloc(isect_size, sizeof(int));
     if(!cardinality){
-      free(s);
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-      return NULL;
-    }
-
-    reorder = (int *) calloc(num_of_vars, sizeof(int));
-    if(!reorder){
-      free(s);
-      free(cardinality);
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-      return NULL;
-    }
-
-    indices = (int *) calloc(num_of_vars, sizeof(int));
-    if(!indices){
-      free(s);
-      free(cardinality);
-      free(reorder);
+      nip_free_sepset(s);
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NULL;
     }
   }
   else{
     cardinality = NULL;
-    reorder = NULL;
-    indices = NULL;
   }
 
-  if(num_of_vars){
-    s->variables = (nip_variable *) calloc(num_of_vars, sizeof(nip_variable));
-    if(!s->variables){
-      free(cardinality);
-      free(reorder);
-      free(indices);
-      free(s);
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-      return NULL;
-    }
+  /* JJ_NOTE: reordering was not required anymore..? */
+  for(i = 0; i < isect_size; i++){
+    cardinality[i] = NIP_CARDINALITY(s->variables[i]);
   }
 
-  /* reorder[i] is the place of i:th variable (in the sense of this program) 
-   * in the array variables[].
-   * Because of this, vars[] can be given in any order.
-   */
-
-  /* init (needed?) */
-  for(i = 0; i < num_of_vars; i++)
-    indices[i] = 0;
-
-  /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
-   * Note the temporary use of indices array. */
-  for(i = 0; i < num_of_vars; i++){
-    temp = nip_variable_id(vars[i]);
-    for(j = 0; j < num_of_vars; j++){
-      if(nip_variable_id(vars[j]) > temp)
-	indices[j]++; /* counts how many greater variables there are */
-    }
-  }
-
-  for(i = 0; i < num_of_vars; i++)
-    reorder[indices[i]] = i; /* fill the reordering */
-
-
-  /* JJ_NOTE: reordering probably not required anymore... */
-  for(i = 0; i < num_of_vars; i++){
-    cardinality[i] = NIP_CARDINALITY(vars[reorder[i]]);
-    s->variables[i] = vars[reorder[i]];
-  }
-
-  s->old = nip_new_potential(cardinality, num_of_vars, NULL);
-  s->new = nip_new_potential(cardinality, num_of_vars, NULL);
-
-  /* Propagation of error */
+  s->old = nip_new_potential(cardinality, isect_size, NULL);
+  s->new = nip_new_potential(cardinality, isect_size, NULL);
+  free(cardinality); /* was copied by new_potential */
   if(s->old == NULL || s->new == NULL){
-    free(cardinality);
-    free(indices);
-    free(reorder);
-    free(s->variables);
-    nip_free_potential(s->old);
-    nip_free_potential(s->new);
-    free(s);
+    nip_free_sepset(s);
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
   }
-
-  free(cardinality); /* the array was copied ? */
-  free(reorder);
-  free(indices);
-  s->first_neighbour = neighbour_a;
-  s->second_neighbour = neighbour_b;
 
   return s;
 }
@@ -338,9 +293,7 @@ nip_sepset nip_new_sepset(nip_variable vars[], int num_of_vars,
 
 void nip_free_sepset(nip_sepset s){
   if(s){
-    if(s->old->num_of_vars)
-      free(s->variables);
-    
+    free(s->variables);
     nip_free_potential(s->old);
     nip_free_potential(s->new);
     free(s);
@@ -750,7 +703,6 @@ int nip_collect_evidence(nip_clique c1, nip_sepset s12, nip_clique c2){
  * Returns an error code.
  */
 static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2){
-  int i, j = 0, k = 0;
   int retval;
   int *mapping;
 
@@ -761,45 +713,30 @@ static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2){
   s->new = temp;
 
   /*
-   * Marginalise (projection).
-   * First: select the variables. This takes O(n^2)
+   * Marginalise (projection). Information flows from clique c1 to sepset s.
    */
   mapping = nip_mapper(c1->variables, s->variables, 
-		       c1->p->num_of_vars, s->new->num_of_vars);
-
-  /* Information flows from clique c1 to sepset s. */
+		       NIP_DIMENSIONALITY(c1->p), 
+		       NIP_DIMENSIONALITY(s->new));
   retval = nip_general_marginalise(c1->p, s->new, mapping);
+  free(mapping);
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-    free(mapping);
     return NIP_ERROR_GENERAL;
   }
-
-  j = 0; k = 0;
 
   /*
-   * Update (absorption).
+   * Update (absorption). Information flows from sepset s to clique c2.
    */
-  for(i=0; i < c2->p->num_of_vars; i++){
-    if(k == s->new->num_of_vars)
-      break; /* all found */
-    for(j=0; j < s->new->num_of_vars; j++)
-      if(nip_equal_variables((c2->variables)[i], (s->variables)[j])){
-	mapping[j] = i;
-	k++;
-	break;
-      }
-  }
-
-  /* Information flows from sepset s to clique c2. */
+  mapping = nip_mapper(c2->variables, s->variables, 
+		       NIP_DIMENSIONALITY(c2->p), 
+		       NIP_DIMENSIONALITY(s->new));
   retval = nip_update_potential(s->new, s->old, c2->p, mapping);
+  free(mapping);
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-    free(mapping);
     return NIP_ERROR_GENERAL;
   }
-
-  free(mapping);
 
   return NIP_NO_ERROR;
 }

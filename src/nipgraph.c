@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.17 2011-01-07 01:52:05 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.18 2011-01-22 13:10:34 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -476,11 +476,6 @@ nip_error_code nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
   nip_sepset s;
   nip_clique one, two;
 
-#ifdef NIP_DEBUG_GRAPH
-  int j, k;
-  int ok = 1;
-#endif
-
   /* Create a heap of candidate sepsets */
   nip_heap h = nip_build_sepset_heap(cliques, num_of_cliques);
   if(!h){
@@ -505,32 +500,27 @@ nip_error_code nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
     for(i = 0; i < num_of_cliques; i++)
       nip_unmark_clique(cliques[i]);
 
-    /* Prevent loops by checking if the cliques
+    /* Prevent loops in the join tree by checking if the cliques
      * are already in the same tree. */
     if(!nip_cliques_connected(one, two)){
 
-#ifdef NIP_DEBUG_CLIQUE
+#ifdef NIP_DEBUG_GRAPH
       printf("In nipgraph.c: Trying to add ");
       print_sepset(s);
 
-      printf(" to ");
+      printf(" between ");
       print_clique(one);
 
       printf(" and ");
       print_clique(two);
 #endif
 
-      /* Connect one and two with s */
-      if(nip_add_sepset(one, s) != NIP_NO_ERROR){
+      /* Connect s */
+      if(nip_confirm_sepset(s) != NIP_NO_ERROR){
 	nip_free_heap(h);
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }	
-      if(nip_add_sepset(two, s) != NIP_NO_ERROR){
-	nip_free_heap(h);
-	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	return NIP_ERROR_GENERAL;
-      }
 
       inserted++;
     }
@@ -640,10 +630,8 @@ nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
   int i,j;
   int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
   int hi_index = 0;
-  int isect_size;
   int retval;
   nip_clique nca, ncb;
-  nip_variable *isect;
   nip_sepset s;
   nip_heap_item hi;
   
@@ -658,18 +646,9 @@ nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
       hi = h->heap_items[hi_index++];
       nca = cliques[i];
       ncb = cliques[j];
-      
-      /* Take the intersection of two cliques. */
-      retval = nip_clique_intersection(nca, ncb, &isect, &isect_size);
-      if(retval != NIP_NO_ERROR){
-	nip_report_error(__FILE__,__LINE__,retval,1);
-	nip_free_heap(h);
-	return NULL;
-      }
 
-      /* Make a sepset */
-      s = nip_new_sepset(isect, isect_size, nca, ncb);
-      free(isect);
+      /* Make a new sepset */
+      s = nip_new_sepset(nca, ncb);
       if(!s){
 	/* In case of failure, free all sepsets and the heap. */
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);

@@ -3,7 +3,7 @@
  * Includes evidence handling and propagation of information
  * in the join tree. 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.h,v 1.4 2010-12-17 18:15:56 jatoivol Exp $
+ * Version: $Id: nipjointree.h,v 1.5 2011-01-22 13:10:34 jatoivol Exp $
  */
 
 #ifndef __NIPJOINTREE_H__
@@ -77,16 +77,15 @@ void nip_free_clique(nip_clique c);
 
 
 /* Method for adding a sepset next to a clique: returns an error code */
-int nip_add_sepset(nip_clique c, nip_sepset s);
+nip_error_code nip_confirm_sepset(nip_sepset s);
 
 
 /* Method for creating sepsets: 
-   - variables array contains the intersection of neighbour clique variables
-   - num_of_vars specifies the size of the array
-   - neighbour_a is the first neighbour clique
-   - neighbour_b is the second neighbour clique */
-nip_sepset nip_new_sepset(nip_variable variables[], int num_of_vars, 
-			  nip_clique neighbour_a, nip_clique neighbour_b);
+ * - neighbour_a is the first neighbour clique
+ * - neighbour_b is the second neighbour clique 
+ * NOTE: the cliques don't reference the sepset until nip_confirm_sepset 
+ * is called. */
+nip_sepset nip_new_sepset(nip_clique neighbour_a, nip_clique neighbour_b);
 
 
 /* Method for removing sepsets and freeing memory. */

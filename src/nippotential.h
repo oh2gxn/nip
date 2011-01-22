@@ -5,7 +5,7 @@
  * random variables
  *
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nippotential.h,v 1.4 2010-11-29 18:26:39 jatoivol Exp $
+ * Version: $Id: nippotential.h,v 1.5 2011-01-22 13:10:34 jatoivol Exp $
  */
 
 #ifndef __NIPPOTENTIAL_H__
@@ -22,6 +22,8 @@
   /*#error "HUGE_VAL not defined!"*/
 #define HUGE_DOUBLE (1.0/0.0)
 #endif /* HUGE_DOUBLE */
+
+#define NIP_DIMENSIONALITY(p) ((p)->num_of_vars)
 
 typedef struct nip_pot_array {
   int size_of_data;

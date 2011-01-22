@@ -1,6 +1,6 @@
 /* A program for testing the cliques and sepsets 
  * Author: Janne Toivola
- * Version: $Id: cliquetest.c,v 1.39 2010-12-17 18:15:56 jatoivol Exp $
+ * Version: $Id: cliquetest.c,v 1.40 2011-01-22 13:10:34 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -95,16 +95,12 @@ int main(){
   clique_pile[2] = nip_new_clique(&(variables[3]), 2);
 
   /* Create separator sets */
-  sepset_pile[0] = nip_new_sepset(&(variables[1]), 2, 
-				  clique_pile[0], clique_pile[1]);
-  sepset_pile[1] = nip_new_sepset(&(variables[3]), 1, 
-				  clique_pile[1], clique_pile[2]);
+  sepset_pile[0] = nip_new_sepset(clique_pile[0], clique_pile[1]);
+  sepset_pile[1] = nip_new_sepset(clique_pile[1], clique_pile[2]);
 
   /* Create the join tree */
-  nip_add_sepset(clique_pile[0], sepset_pile[0]);
-  nip_add_sepset(clique_pile[1], sepset_pile[0]);
-  nip_add_sepset(clique_pile[1], sepset_pile[1]);
-  nip_add_sepset(clique_pile[2], sepset_pile[1]);
+  nip_confirm_sepset(sepset_pile[0]);
+  nip_confirm_sepset(sepset_pile[1]);
 
   cardinality[0] = 3;
   cardinality[1] = 4;

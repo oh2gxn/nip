@@ -1,6 +1,6 @@
 /* nippotential.c 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nippotential.c,v 1.2 2010-11-26 17:06:02 jatoivol Exp $
+ * Version: $Id: nippotential.c,v 1.3 2011-01-22 13:10:34 jatoivol Exp $
  */
 
 #include "nippotential.h"
@@ -59,34 +59,40 @@ nip_potential nip_new_potential(int cardinality[], int num_of_vars,
   int size_of_data = 1;
   int *cardinal;
   double *dpointer = NULL;
-  nip_potential p = (nip_potential) malloc(sizeof(nip_potential_struct));
+  nip_potential p;
 
+  if(num_of_vars < 0){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NULL;
+  }
+
+  p = (nip_potential) malloc(sizeof(nip_potential_struct));
   if(!p){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }  
 
-  if(num_of_vars){
+  if(num_of_vars > 0){
     cardinal = (int *) calloc(num_of_vars, sizeof(int));
     if(!cardinal){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(p);
       return NULL;
-    }  
+    } 
+    for(i = 0; i < num_of_vars; i++){
+      size_of_data *= cardinality[i];
+      cardinal[i] = cardinality[i];
+    }    
   }
-  else
+  else {
+    size_of_data = 1;
     cardinal = NULL;
-
-  for(i = 0; i < num_of_vars; i++){
-    size_of_data *= cardinality[i];
-    cardinal[i] = cardinality[i];
   }
 
   p->cardinality = cardinal;
   p->size_of_data = size_of_data;
   p->num_of_vars = num_of_vars;
-  p->data = (double *) calloc(size_of_data, sizeof(double));
-  
+  p->data = (double *) calloc(size_of_data, sizeof(double));  
   if(!(p->data)){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     nip_free_potential(p);
