@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.7 2011-01-22 22:25:56 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.8 2011-01-22 22:32:22 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -692,9 +692,10 @@ nip_error_code nip_distribute_evidence(nip_clique c){
 }
 
 
-int nip_collect_evidence(nip_clique c1, nip_sepset s12, nip_clique c2){
-
-  int retval;
+nip_error_code nip_collect_evidence(nip_clique c1, 
+				    nip_sepset s12, 
+				    nip_clique c2){
+  nip_error_code retval;
   nip_sepset_link l;
   nip_sepset s;
 
@@ -706,15 +707,17 @@ int nip_collect_evidence(nip_clique c1, nip_sepset s12, nip_clique c2){
   while (l != NULL){
     s = l->data;
     if(!nip_clique_marked(s->first_neighbour)){
-      if(nip_collect_evidence(c2, s, s->first_neighbour) != NIP_NO_ERROR){
-	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	return NIP_ERROR_GENERAL;
+      retval = nip_collect_evidence(c2, s, s->first_neighbour);
+      if(retval != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, retval, 1);
+	return retval;
       }
     }
     else if(!nip_clique_marked(s->second_neighbour))
-      if(nip_collect_evidence(c2, s, s->second_neighbour) != NIP_NO_ERROR){
-	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	return NIP_ERROR_GENERAL;
+      retval = nip_collect_evidence(c2, s, s->second_neighbour);
+      if(retval != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, retval, 1);
+	return retval;
       }
     l = l->fwd;
   }
@@ -723,8 +726,8 @@ int nip_collect_evidence(nip_clique c1, nip_sepset s12, nip_clique c2){
   if((c1 != NULL) && (s12 != NULL)){
     retval = nip_message_pass(c2, s12, c1);
     if(retval != NIP_NO_ERROR){
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-      return NIP_ERROR_GENERAL;
+      nip_report_error(__FILE__, __LINE__, retval, 1);
+      return retval;
     }
   }
 
