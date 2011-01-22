@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.6 2011-01-22 13:10:34 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.7 2011-01-22 22:25:56 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -14,23 +14,29 @@
 #define NIP_DEBUG_RETRACTION
 */
 
-static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2);
+static nip_error_code nip_message_pass(nip_clique c1, 
+				       nip_sepset s, 
+				       nip_clique c2);
 
+/* Tells which variable v is in clique c */
 static int nip_clique_var_index(nip_clique c, nip_variable v);
 
-
-
+/* Tells if clique c is marked */
 static int nip_clique_marked(nip_clique c);
 
+/* Depth-first search in the clique tree starting from clique 'start' */
 static void nip_join_tree_dfs(nip_clique start, 
 			      void (*cFuncPointer)(nip_clique, double*),
 			      void (*sFuncPointer)(nip_sepset, double*),
 			      double* ptr);
+
+/* Some callback functions for join_tree_dfs */
 static void  nip_retract_clique(nip_clique c, double* ptr);
 static void  nip_retract_sepset(nip_sepset s, double* ptr);
 static void     nip_clique_mass(nip_clique c, double* ptr);
 static void nip_neg_sepset_mass(nip_sepset s, double* ptr);
 
+/* Internal function for removing s from c */
 static void nip_remove_sepset(nip_clique c, nip_sepset s);
 
 
@@ -227,7 +233,6 @@ static void nip_remove_sepset(nip_clique c, nip_sepset s){
 
 
 nip_sepset nip_new_sepset(nip_clique neighbour_a, nip_clique neighbour_b){
-
   nip_sepset s;
   int isect_size;
   int *cardinality = NULL;
@@ -274,9 +279,8 @@ nip_sepset nip_new_sepset(nip_clique neighbour_a, nip_clique neighbour_b){
   }
 
   /* JJ_NOTE: reordering was not required anymore..? */
-  for(i = 0; i < isect_size; i++){
+  for(i = 0; i < isect_size; i++)
     cardinality[i] = NIP_CARDINALITY(s->variables[i]);
-  }
 
   s->old = nip_new_potential(cardinality, isect_size, NULL);
   s->new = nip_new_potential(cardinality, isect_size, NULL);
@@ -302,6 +306,8 @@ void nip_free_sepset(nip_sepset s){
 }
 
 
+/* TODO: seems to be copy-paste from new_sepset... 
+ * use mapper and functions provided by nippotential.h ! */
 nip_potential nip_create_potential(nip_variable variables[], 
 				   int num_of_vars, 
 				   double data[]){
@@ -579,19 +585,57 @@ static int nip_clique_marked(nip_clique c){
 
 int nip_clique_size(nip_clique c){
   if (c)
-    return c->p->num_of_vars; /* macro? */
+    return NIP_DIMENSIONALITY(c->p); /* macro? */
   return 0;
 }
 
 
 int nip_sepset_size(nip_sepset s){
   if (s)
-    return s->old->num_of_vars; /* macro? */
+    return NIP_DIMENSIONALITY(s->old); /* macro? */
   return 0;
 }
 
 
-int nip_distribute_evidence(nip_clique c){
+/* Finds out if two cliques are in the same tree.
+ * Returns 1 if they are, 0 if not.
+ * cliques must be unmarked before calling this.
+ */
+int nip_cliques_connected(nip_clique one, nip_clique two){
+  nip_sepset_link l;
+  nip_sepset s;
+
+  if(one == NULL || two == NULL) /* normal situation or an error? */
+    return 0; /* as in FALSE */
+
+  l = one->sepsets;
+
+  /* mark */
+  one->mark = NIP_MARK_ON;
+
+  /* NOTE: this defines the equality of cliques. */
+  if(one == two)
+    return 1; /* TRUE (end of recursion) */
+
+  /* call neighbouring cliques */
+  while (l != NULL){
+    s = (nip_sepset)(l->data);
+    if(!nip_clique_marked(s->first_neighbour)){
+      if(nip_cliques_connected(s->first_neighbour, two))
+	return 1; /* TRUE */
+    }
+    else if(!nip_clique_marked(s->second_neighbour)){
+      if(nip_cliques_connected(s->second_neighbour, two))
+	return 1; /* TRUE */
+    }
+    l = l->fwd;
+  }
+
+  return 0; /* FALSE */
+}
+
+
+nip_error_code nip_distribute_evidence(nip_clique c){
 
   int retval;
   nip_sepset_link l;
@@ -702,8 +746,10 @@ int nip_collect_evidence(nip_clique c1, nip_sepset s12, nip_clique c2){
  * The message goes from clique c1 through sepset s to clique c2.
  * Returns an error code.
  */
-static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2){
-  int retval;
+static nip_error_code nip_message_pass(nip_clique c1, 
+				       nip_sepset s, 
+				       nip_clique c2){
+  nip_error_code retval;
   int *mapping;
 
   /* save the newer potential as old by switching the pointers */
@@ -765,6 +811,7 @@ int nip_init_clique(nip_clique c, nip_variable child,
     
     /* initialisation with conditional distributions 
        first: select the variables (in a stupid but working way) */
+    /* FIXME: use mapper */
     for(i=0; i < c->p->num_of_vars; i++){
       if(k == p->num_of_vars)
 	break; /* all found */
@@ -1108,44 +1155,6 @@ nip_clique nip_find_clique(nip_clique *cliques, int ncliques,
   }
 
   return NULL;
-}
-
-
-/* Finds out if two cliques are in the same tree.
- * Returns 1 if they are, 0 if not.
- * cliques must be unmarked before calling this.
- */
-int nip_cliques_connected(nip_clique one, nip_clique two){
-  nip_sepset_link l;
-  nip_sepset s;
-
-  if(one == NULL || two == NULL) /* normal situation or an error? */
-    return 0; /* as in FALSE */
-
-  l = one->sepsets;
-
-  /* mark */
-  one->mark = NIP_MARK_ON;
-
-  /* NOTE: this defines the equality of cliques. */
-  if(one == two)
-    return 1; /* TRUE (end of recursion) */
-
-  /* call neighbouring cliques */
-  while (l != NULL){
-    s = (nip_sepset)(l->data);
-    if(!nip_clique_marked(s->first_neighbour)){
-      if(nip_cliques_connected(s->first_neighbour, two))
-	return 1; /* TRUE */
-    }
-    else if(!nip_clique_marked(s->second_neighbour)){
-      if(nip_cliques_connected(s->second_neighbour, two))
-	return 1; /* TRUE */
-    }
-    l = l->fwd;
-  }
-
-  return 0; /* FALSE */
 }
 
 

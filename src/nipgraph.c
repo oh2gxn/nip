@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.18 2011-01-22 13:10:34 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.19 2011-01-22 22:25:56 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -626,11 +626,11 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
   return h;
 }
 
+
 nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
   int i,j;
   int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
   int hi_index = 0;
-  int retval;
   nip_clique nca, ncb;
   nip_sepset s;
   nip_heap_item hi;

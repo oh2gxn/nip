@@ -1,6 +1,6 @@
 % NIP - project documentation
 % Mikko Korpela, Antti Rasinen, Janne Toivola 2004
-% $Id: doc.tex,v 1.9 2011-01-22 13:10:34 jatoivol Exp $
+% $Id: doc.tex,v 1.10 2011-01-22 22:25:56 jatoivol Exp $
 
 \documentclass[12pt,a4paper]{report}
 \bibliographystyle{unsrt}
@@ -1230,16 +1230,18 @@ join tree operations:
 \item[nip\_new\_sepset(neighbour\_a, neighbour\_b)] creates a
   new \cdatatype{nip\_sepset} between cliques \cparameter{neighbour\_a} and
   \cparameter{neighbour\_b}. This usually means that all cliques
-  must be created before sepsets. 
+  must be created before sepsets. Note that
+  \cfunction{nip\_confirm\_sepset} needs to be called in order to include
+  the sepset in the join tree.
   
-\item[free\_sepset(s)] just frees the memory allocated for the
-  \cdatatype{sepset} \cparameter{s}. This is called automatically by 
-  \cfunction{free\_clique} so usually this function is needed only for
+\item[nip\_free\_sepset(s)] just frees the memory allocated for the
+  sepset \cparameter{s}. This is called automatically by 
+  \cfunction{nip\_free\_clique} so usually this function is needed only for
   freeing possible useless \cdatatype{sepsets} which are not included in the 
-  join tree.
+  join tree (via \cfunction{nip\_confirm\_sepset}).
 
-\item[create\_potential(variables, num\_of\_vars, data)] can help if you
-  need to create potentials out of \cdatatype{double arrays} like the
+\item[nip\_create\_potential(variables, num\_of\_vars, data)] can help if
+  you need to create potentials out of \cdatatype{double arrays} like the
   \cparameter{data} parameter. The function creates a \cdatatype{potential}
   which has its data arranged correcty in order to work with the system. To
   rearrange the data correctly, the function needs to know the order of the
@@ -1257,48 +1259,53 @@ join tree operations:
   the \cparameter{variables} array, and the last parent should be the 
   second right after the child variable.
 
-\item[unmark\_clique(c)] resets the mark in the 
-  \cdatatype{clique}~\cparameter{c}. Note that this has to be done for 
-  every clique before calling \cfunction{distribute\_evidence} or 
-  \cfunction{collect\_evidence}.
+\item[nip\_unmark\_clique(c)] resets the mark in the
+  clique~\cparameter{c}. Note that this has to be done for every clique
+  before calling \cfunction{nip\_distribute\_evidence},
+  \cfunction{nip\_collect\_evidence}, or
+  \cfunction{nip\_cliques\_connected}.
 
-\item[clique\_num\_of\_vars(c)] tells how many associated variables the 
-  \cdatatype{clique}~\cparameter{c} has.
+\item[nip\_clique\_size(c)] tells how many associated variables  
+  clique~\cparameter{c} has.
 
-\item[sepset\_num\_of\_vars(s)] tells how many associated variables the 
-  \cdatatype{sepset}~\cparameter{s} has.
+\item[nip\_sepset\_size(s)] tells how many associated variables  
+  sepset~\cparameter{s} has.
 
-\item[distribute\_evidence(c)] implements the algorithm which spreads 
+\item[nip\_cliques\_connected(one, two)] runs a depth-first search in the
+  join tree to find out if cliques~\cparameter{one} and \cparameter{two}
+  are connected (in the same join tree) or not. Remember to unmark all the
+  cliques before calling this.
+
+\item[nip\_distribute\_evidence(c)] implements the algorithm which spreads 
   the evidence entered in to the cliques away from the given 
-  \cdatatype{clique}~\cparameter{c}. See \cite{Huang1994} page 21 for
+  clique~\cparameter{c}. See \cite{Huang1994} page 21 for
   details. Remember to unmark all the cliques before calling this.
 
-\item[collect\_evidence(c1, s12, c2)] implements the algorithm which
+\item[nip\_collect\_evidence(c1, s12, c2)] implements the algorithm which
   collects evidence from the subtree rooted in the given
-  \cdatatype{clique}~\cparameter{c2} and passes the evidence to the
-  \cdatatype{clique}~\cparameter{c1}. The
-  \cdatatype{sepset}~\cparameter{s12} is the sepset between the two
+  clique~\cparameter{c2} and passes the evidence to 
+  clique~\cparameter{c1}. Sepset~\cparameter{s12} is the sepset between the two
   cliques. The function is recursive and is usually used like this:
   \examplecode{collect\_evidence(NULL, NULL, c);} where \examplecode{c} is
   some \cdatatype{clique}. This causes the evidence to be collected from
   the entire join tree.  Remember to unmark all the cliques before calling
   this.
 
-\item[gather\_joint\_probability(start, vars, n\_vars, isect, n\_isect)] is
-  a recursive function for computing the joint probability distribution of 
-  the \cparameter{n\_vars} variables contained by the \cdatatype{variable 
-    array} \cparameter{vars}. The recursion begins (or continues) from the 
-  \cparameter{start} \cdatatype{clique}.
+\item[nip\_gather\_joint\_probability(start, vars, n\_vars, isect,
+  n\_isect)] is a recursive function for computing the joint probability
+  distribution of the \cparameter{n\_vars} variables contained by the
+  \cdatatype{variable array} \cparameter{vars}. The recursion begins (or
+  continues) from the \cparameter{start} clique.
 
   The \cparameter{isect} parameter is an \cdatatype{array of variables}
   containing the \cparameter{n\_isect} variables shared by the start and
   previous cliques. These are needed only for the recursion and the
-  function is usually called like this:\\
-  \examplecode{gather\_joint\_probability(c, vars, n, NULL, 0);} \\ where
-  \examplecode{c} is some \cdatatype{clique} and \examplecode{vars}
-  contains the \examplecode{n} variables of interest. The function returns
-  a potential which is ordered accoding to the given variables, so the
-  result depends on the order of \examplecode{vars} array.
+  function is usually called like this:\\ 
+  \examplecode{nip\_gather\_joint\_probability(c, vars, n, NULL, 0);}\\ 
+  where \examplecode{c} is some clique and \examplecode{vars} contains the
+  \examplecode{n} variables of interest. The function returns a potential
+  which is ordered accoding to the given variables, so the result depends
+  on the order of \examplecode{vars} array.
 
 % !!! NOTE !!! This requires variables to have a certain order in clique c!
 \item[initialise(c, child, p, transient)] is used for entering the

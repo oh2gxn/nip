@@ -15,7 +15,12 @@
 
 
 TODO:
-* Check what potential and sepset does when num_of_vars == 0
+* Refactorisation: replacing a lot of copy-paste code with these...
+  - variable_union(), 
+  - variable_isect(): search for clique_intersection, and
+  - mapper(): search for various clique reordering code...
+
+* Check what potential and sepset do when num_of_vars == 0
 
 * Use Git instead of CVS
 
@@ -88,11 +93,6 @@ TODO:
 
 * clique.c could hide potential.c completely?
   - timeslice sepsets could be handled in clique.c
-
-* Refactorisation: replacing a lot of copy-paste code with these...
-  - variable_union(), 
-  - variable_isect(), and
-  - mapper(): search for various clique reordering code...
 
 * Printing potential tables should be contained in potential.c
   - Problem: how to include comments about parent variable values?
