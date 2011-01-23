@@ -5,7 +5,7 @@
  * random variables
  *
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nippotential.h,v 1.6 2011-01-23 18:25:55 jatoivol Exp $
+ * Version: $Id: nippotential.h,v 1.7 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #ifndef __NIPPOTENTIAL_H__
@@ -24,12 +24,12 @@
 #define HUGE_DOUBLE (1.0/0.0)
 #endif /* HUGE_DOUBLE */
 
-#define NIP_DIMENSIONALITY(p) ((p)->num_of_vars)
+#define NIP_DIMENSIONALITY(p) ((p)->dimensionality)
 
 typedef struct nip_pot_array {
+  int dimensionality;  /* number of dimensions */
   int* cardinality; /* dimensions of the data */
   int* temp_index;  /* space for index calculations */
-  int num_of_vars;  /* number of dimensions */
   int size_of_data; /* total number of data elements */
   double* data;     /* data array */
   nip_string_pair_list application_specific_properties;
@@ -37,9 +37,9 @@ typedef struct nip_pot_array {
 
 typedef nip_potential_struct* nip_potential;
 
-/* Make a num_of_vars -dimension potential array. 
+/* Make a potential array of certain dimensionality. 
  * The potential array data[] can be null, if it is not known. */
-nip_potential nip_new_potential(int cardinality[], int num_of_vars, 
+nip_potential nip_new_potential(int cardinality[], int dimensionality, 
 				double data[]);
 
 

@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.14 2010-12-22 13:08:40 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.15 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -55,7 +55,7 @@ nip_heap nip_new_heap(int initial_size,
 }
 
 
-int nip_heap_insert(nip_heap h, void* content, int size) {
+nip_error_code nip_heap_insert(nip_heap h, void* content, int size) {
   int i;
   nip_heap_item hi;
   nip_heap_item* bigger;

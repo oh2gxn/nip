@@ -1,6 +1,6 @@
 /* nipstring.c 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipstring.c,v 1.3 2010-11-26 17:06:02 jatoivol Exp $
+ * Version: $Id: nipstring.c,v 1.4 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #include "nipstring.h"
@@ -77,9 +77,9 @@ int nip_count_tokens(const char *s, int *chars, int q_strings,
 
 
 int* nip_tokenise(const char s[], int n, int q_strings,
-		  char *separators, int n_separators,
+		  char* separators, int n_separators,
 		  int sep_tokens, int wspace_sep){
-  int *indices;
+  int* indices;
   int i = 0, j = 0, state = 0, arraysize = 2*n, k;
   int separator_found = 0;
   char ch, ch2;

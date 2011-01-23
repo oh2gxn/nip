@@ -1,4 +1,4 @@
-/* huginnet.y $Id: huginnet.y,v 1.94 2011-01-06 01:14:26 jatoivol Exp $
+/* huginnet.y $Id: huginnet.y,v 1.95 2011-01-23 23:01:46 jatoivol Exp $
  * Grammar file for a subset of the Hugin Net language.
  */
 
@@ -1011,7 +1011,7 @@ static int parsed_vars_to_graph(nip_variable_list vl, nip_graph g){
 
   /* Add child - parent relations to the graph. */
   while(initlist != NULL){  
-    for(i = 0; i < initlist->data->num_of_vars - 1; i++){
+    for(i = 0; i < NIP_DIMENSIONALITY(initlist->data) - 1; i++){
       retval = nip_graph_add_child(g, initlist->parents[i], initlist->child);
       if(retval != NIP_NO_ERROR){
 
@@ -1030,7 +1030,7 @@ static int parsed_vars_to_graph(nip_variable_list vl, nip_graph g){
     
     /* Add child - parent relations to variables themselves also */
     nip_set_parents(initlist->child, initlist->parents, 
-		    initlist->data->num_of_vars - 1);
+		    NIP_DIMENSIONALITY(initlist->data) - 1);
 
     initlist = initlist->fwd;
   }
@@ -1056,7 +1056,7 @@ static int parsed_potentials_to_jtree(nip_potential_list potentials,
     fam_clique = nip_find_family(cliques, ncliques, initlist->child);
 
     if(fam_clique != NULL){
-      if(initlist->data->num_of_vars > 1){
+      if(NIP_DIMENSIONALITY(initlist->data) > 1){
 	/* Conditional probability distributions are initialised into
 	 * the jointree potentials */
 	retval = nip_init_clique(fam_clique, initlist->child, 
@@ -1143,7 +1143,7 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
   while(v2 != NULL){
     m = 0;
 
-    for(i = 0; i < v2->num_of_parents; i++){ /* for each parent */
+    for(i = 0; i < nip_number_of_parents(v2); i++){ /* for each parent */
       v1 = v2->parents[i];
 
       /* Condition for belonging to the incoming interface */
@@ -1170,7 +1170,7 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
       }
     }
     if(m){ /* parents of v2 in this time slice belong to incoming interface */
-      for(i = 0; i < v2->num_of_parents; i++){
+      for(i = 0; i < nip_number_of_parents(v2); i++){
 	v1 = v2->parents[i];
 	if(v1->previous == NULL){ 
 	  /* v1 (in time slice t) is married with someone in t-1 */
@@ -1201,20 +1201,20 @@ static void print_parsed_stuff(nip_potential_list pl){
     int* temp_array;
     nip_variable* variables;
 
-    if((indices = (int *) calloc(list->data->num_of_vars,
+    if((indices = (int *) calloc(NIP_DIMENSIONALITY(list->data),
 				 sizeof(int))) == NULL){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return;
     }
 
-    if((temp_array = (int *) calloc(list->data->num_of_vars,
+    if((temp_array = (int *) calloc(NIP_DIMENSIONALITY(list->data),
 				    sizeof(int))) == NULL){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(indices);
       return;
     }
 
-    if((variables = (nip_variable *) calloc(list->data->num_of_vars,
+    if((variables = (nip_variable *) calloc(NIP_DIMENSIONALITY(list->data),
 					sizeof(nip_variable))) == NULL){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free(indices);
@@ -1223,21 +1223,22 @@ static void print_parsed_stuff(nip_potential_list pl){
     }
     
     variables[0] = list->child;
-    for(i = 1; i < list->data->num_of_vars; i++)
+    for(i = 1; i < NIP_DIMENSIONALITY(list->data); i++)
       variables[i] = (list->parents)[i - 1];
 
     /* reorder[i] is the place of i:th variable (in the sense of this program) 
      * in the array variables[] */
     
     /* init (needed?) */
-    for(i = 0; i < list->data->num_of_vars; i++)
+    for(i = 0; i < NIP_DIMENSIONALITY(list->data); i++)
       temp_array[i] = 0;
     
-    /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
-     * Note the temporary use of indices array. */
-    for(i = 0; i < list->data->num_of_vars; i++){
+    /* Create the reordering table: O(dim^2) i.e. stupid but working.
+     * Note the temporary use of indices array. 
+     * TODO: use nip_mapper()! */
+    for(i = 0; i < NIP_DIMENSIONALITY(list->data); i++){
       temp = nip_variable_id(variables[i]);
-      for(j = 0; j < list->data->num_of_vars; j++){
+      for(j = 0; j < NIP_DIMENSIONALITY(list->data); j++){
 	if(nip_variable_id(variables[j]) > temp)
 	  temp_array[j]++; /* counts how many greater variables there are */
       }
@@ -1251,10 +1252,10 @@ static void print_parsed_stuff(nip_potential_list pl){
       printf("P( %s = %s", list->child->symbol, 
 	     (list->child->state_names)[indices[temp_array[0]]]);
 
-      if(list->data->num_of_vars > 1)
+      if(NIP_DIMENSIONALITY(list->data) > 1)
 	printf(" |");
 
-      for(j = 0; j < list->data->num_of_vars - 1; j++)
+      for(j = 0; j < NIP_DIMENSIONALITY(list->data) - 1; j++)
 	printf(" %s = %s", ((list->parents)[j])->symbol,
 	       (((list->parents)[j])->state_names)[indices[temp_array[j + 1]]]);
       

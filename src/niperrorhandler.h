@@ -1,6 +1,6 @@
 /* Simple error reporting utilities
  * Author: Janne Toivola
- * Version: $Id: niperrorhandler.h,v 1.3 2011-01-03 18:04:55 jatoivol Exp $
+ * Version: $Id: niperrorhandler.h,v 1.4 2011-01-23 23:01:47 jatoivol Exp $
  * */
 
 #ifndef __NIPERRORHANDLER_H__
@@ -31,12 +31,12 @@ typedef enum nip_error_code_enum {
 void nip_report_error(char *srcFile, int line, nip_error_code e, int verbose);
 
 /* Method for resetting the errorcounter. */
-void nip_reset_errorhandler();
+void nip_reset_error_handler();
 
 /* Method for checking what was the last error */
-int nip_check_errortype();
+nip_error_code nip_check_error_type();
 
 /* Method for checking how many errors have occured */
-int nip_check_errorcounter();
+int nip_check_error_counter();
 
 #endif

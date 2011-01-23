@@ -1,6 +1,6 @@
 /* nippotential.c 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nippotential.c,v 1.4 2011-01-23 18:25:55 jatoivol Exp $
+ * Version: $Id: nippotential.c,v 1.5 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #include "nippotential.h"
@@ -24,7 +24,7 @@ static double* nip_get_potential_pointer(nip_potential p, int indices[]){
   int index = 0;
   int card_temp = 1;
   /* THE mapping (JJ: I made this clearer on 22.5.2004)*/
-  for(i = 0; i < p->num_of_vars; i++){
+  for(i = 0; i < p->dimensionality; i++){
     index += indices[i] * card_temp;
     card_temp *= p->cardinality[i];
   }
@@ -36,7 +36,6 @@ static double* nip_get_potential_pointer(nip_potential p, int indices[]){
  * Drops the indices that are marginalised or multiplied. 
  * dest_indices[] must have the same size as mapping[] and smaller than 
  * source_indices[].
- * Returns an error code.
  */
 static void nip_choose_potential_indices(int source_indices[], 
 					 int dest_indices[], 
@@ -50,17 +49,17 @@ static void nip_choose_potential_indices(int source_indices[],
 }
 
 
-nip_potential nip_new_potential(int cardinality[], int num_of_vars, 
+nip_potential nip_new_potential(int cardinality[], int dimensionality, 
 				double data[]){
 
-  /* JJ NOTE: what if num_of_vars = 0 i.e. dsize = 1 ???
+  /* JJ NOTE: what if dimensionality = 0 i.e. dsize = 1 ???
    * Fixed 23.1.2011 */
   int i;
   int dsize;
   double* dpointer = NULL;
   nip_potential p;
 
-  if(num_of_vars < 0){
+  if(dimensionality < 0){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NULL;
   }
@@ -71,9 +70,9 @@ nip_potential nip_new_potential(int cardinality[], int num_of_vars,
     return NULL;
   }  
 
-  if(num_of_vars > 0){
-    p->cardinality = (int *) calloc(num_of_vars, sizeof(int));
-    p->temp_index = (int *) calloc(num_of_vars, sizeof(int));
+  if(dimensionality > 0){
+    p->cardinality = (int *) calloc(dimensionality, sizeof(int));
+    p->temp_index = (int *) calloc(dimensionality, sizeof(int));
   }
   else {
     p->cardinality = (int *) calloc(1, sizeof(int));
@@ -86,13 +85,13 @@ nip_potential nip_new_potential(int cardinality[], int num_of_vars,
     return NULL;
   }
 
-  p->num_of_vars = num_of_vars;
+  p->dimensionality = dimensionality;
   dsize = 1;
-  for(i = 0; i < num_of_vars; i++){
+  for(i = 0; i < dimensionality; i++){
     dsize *= cardinality[i];
     p->cardinality[i] = cardinality[i];
   }
-  if(num_of_vars == 0) {
+  if(dimensionality == 0) {
     p->cardinality[0] = 1;
   }
 
@@ -146,7 +145,7 @@ nip_potential nip_copy_potential(nip_potential p){
   nip_potential copy;
   if (p == NULL)
     return NULL;
-  copy = nip_new_potential(p->cardinality, p->num_of_vars, p->data);
+  copy = nip_new_potential(p->cardinality, p->dimensionality, p->data);
   /* FIXME: copy p->application_specific_properties ? */
   return copy;
 }
@@ -229,10 +228,10 @@ void nip_inverse_mapping(nip_potential p, int flat_index, int indices[]){
   /* NOTE: the first variable (a.k.a the 0th variable) is 
      'least significant' in the sense that the value of it 
      has the smallest effect on the memory address */
-  /* NOTE: never do this when p->num_of_vars == 0 */
+  /* NOTE: never do this when p->dimensionality == 0 */
   int i;
   int x = p->size_of_data;
-  for(i = p->num_of_vars - 1; i >= 0; i--){
+  for(i = p->dimensionality - 1; i >= 0; i--){
     x /= p->cardinality[i];
     indices[i] = flat_index / x;    /* integer division */
     flat_index -= indices[i] * x;
@@ -247,13 +246,13 @@ nip_error_code nip_general_marginalise(nip_potential source,
   int i;
   double *potvalue;
 
-  if(destination->num_of_vars > source->num_of_vars){
+  if(destination->dimensionality > source->dimensionality){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NIP_ERROR_INVALID_ARGUMENT;
   }
 
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) */
-  if(destination->num_of_vars == 0){
+  if(destination->dimensionality == 0){
     /* the rare event of potential being scalar */
     destination->data[0] = 0;
     for(i = 0; i < source->size_of_data; i++)
@@ -274,7 +273,7 @@ nip_error_code nip_general_marginalise(nip_potential source,
     nip_choose_potential_indices(source->temp_index, 
 				 destination->temp_index, 
 				 mapping,
-				 destination->num_of_vars);
+				 destination->dimensionality);
 
     /* get pointer to the destination potential element where the current
      data should be added */
@@ -296,7 +295,7 @@ nip_error_code nip_total_marginalise(nip_potential source,
 				     int variable){
   int i, j, x, index = 0, flat_index;
 
-  if(variable >= source->num_of_vars){
+  if(variable >= source->dimensionality){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NIP_ERROR_INVALID_ARGUMENT;
   }
@@ -304,7 +303,7 @@ nip_error_code nip_total_marginalise(nip_potential source,
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) 
                          |  |  |
      variable index:     0  1  2... (or 'significance') */
-  if(source->num_of_vars == 0){
+  if(source->dimensionality == 0){
     destination[0] = source->data[0];
     return NIP_NO_ERROR;
   }
@@ -317,7 +316,7 @@ nip_error_code nip_total_marginalise(nip_potential source,
     /* partial inverse mapping to find out the destination index */
     flat_index = i;
     x = source->size_of_data;
-    for(j = source->num_of_vars - 1; j >= variable; j--){
+    for(j = source->dimensionality - 1; j >= variable; j--){
       x /= source->cardinality[j];
       index = flat_index / x;    /* integer division */
       flat_index -= index * x;
@@ -377,26 +376,26 @@ nip_error_code nip_normalise_dimension(nip_potential p, int dimension){
   int* map = NULL; /* cardinality / mapping array */
   nip_potential denom = NULL;
 
-  if(!p || dimension < 0 || dimension >= p->num_of_vars){
+  if(!p || dimension < 0 || dimension >= p->dimensionality){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NIP_ERROR_INVALID_ARGUMENT;
   }
 
-  map = (int*) calloc(p->num_of_vars - 1, sizeof(int));
+  map = (int*) calloc(p->dimensionality - 1, sizeof(int));
   if(!map){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NIP_ERROR_OUTOFMEMORY;
   }
 
   n = 0;
-  for(i = 0; i < p->num_of_vars; i++)
+  for(i = 0; i < p->dimensionality; i++)
     if(i != dimension)
       map[n++] = p->cardinality[i];
 
-  denom = nip_new_potential(map, p->num_of_vars - 1, NULL);
+  denom = nip_new_potential(map, p->dimensionality - 1, NULL);
 
   n = 0;
-  for(i = 0; i < p->num_of_vars; i++)
+  for(i = 0; i < p->dimensionality; i++)
     if(i != dimension)
       map[n++] = i;
 
@@ -436,7 +435,7 @@ nip_error_code nip_update_potential(nip_potential numerator,
   int* source_index;
 
   if((numerator && denominator && 
-      (numerator->num_of_vars != denominator->num_of_vars)) || 
+      (numerator->dimensionality != denominator->dimensionality)) || 
      (numerator == NULL && denominator == NULL)){
     /* I hope the logic behind &&-evaluation is "fail fast" */
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
@@ -444,11 +443,11 @@ nip_error_code nip_update_potential(nip_potential numerator,
   }
 
   if(numerator){
-    nvars = numerator->num_of_vars;
+    nvars = numerator->dimensionality;
     source_index = numerator->temp_index;
   }
   else{
-    nvars = denominator->num_of_vars;
+    nvars = denominator->dimensionality;
     source_index = denominator->temp_index;
   }
 
@@ -498,7 +497,7 @@ nip_error_code nip_update_evidence(double numerator[],
 				   int var){
   int i, source_index;
 
-  /* target->num_of_vars > 0  always */
+  /* target->dimensionality > 0  always */
 
   /* The general idea is the same as in marginalise */
   for(i = 0; i < target->size_of_data; i++){
@@ -542,7 +541,7 @@ nip_error_code nip_init_potential(nip_potential probs,
     }
   }
 
-  if(probs->num_of_vars == 0)
+  if(probs->dimensionality == 0)
     return NIP_NO_ERROR; /* probs is a scalar & normalised => probs == 1 */
 
   /* The general idea is the same as in marginalise */
@@ -555,7 +554,7 @@ nip_error_code nip_init_potential(nip_potential probs,
     nip_choose_potential_indices(target->temp_index, 
 				 probs->temp_index, 
 				 mapping, 
-				 probs->num_of_vars);    
+				 probs->dimensionality);    
 
     potvalue = nip_get_potential_pointer(probs, probs->temp_index);
     target->data[i] *= *potvalue;  /* THE multiplication */
@@ -565,11 +564,11 @@ nip_error_code nip_init_potential(nip_potential probs,
 }
 
 
+/* TODO: some better representation? */
 void nip_fprintf_potential(FILE* stream, nip_potential p){
-
   int big_index, i;
 
-  if(p->num_of_vars == 0){
+  if(p->dimensionality == 0){
     fprintf(stream, "P(0) = %f\n", p->data[0]);
     return;
   }
@@ -577,9 +576,9 @@ void nip_fprintf_potential(FILE* stream, nip_potential p){
   for(big_index = 0; big_index < p->size_of_data; big_index++){
     nip_inverse_mapping(p, big_index, p->temp_index);
     fprintf(stream, "P(");
-    for(i = 0; i < p->num_of_vars; i++){
+    for(i = 0; i < p->dimensionality; i++){
       fprintf(stream, "%d", p->temp_index[i]);
-      if(i < p->num_of_vars - 1)
+      if(i < p->dimensionality - 1)
 	fprintf(stream, ", ");
     }
     fprintf(stream, ") = %f\n", p->data[big_index]);

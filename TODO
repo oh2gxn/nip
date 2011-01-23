@@ -25,6 +25,7 @@ TODO:
 * Use Git instead of CVS
 
 * Define enumeration types instead of a set of defines
+  + typedef enum nip_direction_type {backward, forward} nip_direction;
   + typedef enum nip_error_code_enum { NO_ERROR = 0, ...} nip_error_code;
   - use nip_error_code instead of int, done so far: 
     + lists, 

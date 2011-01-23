@@ -1,6 +1,7 @@
 /* nip.h 
+ * Top level abstractions of the NIP system
  * Author: Janne Toivola
- * Version: $Id: nip.h,v 1.67 2010-12-07 17:23:18 jatoivol Exp $
+ * Version: $Id: nip.h,v 1.68 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #ifndef __NIP_H__
@@ -31,7 +32,7 @@
 /* "How probable is the impossible" (0 < epsilon << 1) */
 /*#define PARAMETER_EPSILON 0.00001*/
 
-enum nip_direction_type {backward, forward};
+enum nip_direction_type {BACKWARD, FORWARD};
 typedef enum nip_direction_type nip_direction;
 
 typedef struct{
@@ -70,7 +71,7 @@ typedef struct{
   int node_size_y;
 }nip_struct;
 
-typedef nip_struct *nip;
+typedef nip_struct* nip;
 
 
 typedef struct{
@@ -89,10 +90,10 @@ typedef time_series_struct* time_series;
 
 
 typedef struct{
-  nip_variable *variables; /* variables of interest */
+  nip_variable* variables; /* variables of interest */
   int num_of_vars;
   int length;     /* length of the time series */
-  double ***data; /* probability distribution of every variable at every t */
+  double*** data; /* probability distribution of every variable at every t */
 }uncertain_series_struct;
 
 typedef uncertain_series_struct* uncertain_series;
@@ -253,7 +254,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
 
 
 /* Teaches the given model according to the given time series with
- * EM-algorithm. Returns an error code as an integer.  
+ * EM-algorithm. Returns an error code.  
  * NOTE: call random_seed() before this!  
  * NOTE2: the model is included in the time_series 
  * <learning_curve> can be NULL: if it isn't, it will be
@@ -263,8 +264,8 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * NOTE: only evidence for the marked variables is used. Unmarked are
  * ignored and you can thus easily omit evidence for an entire variable.
  */
-int em_learn(time_series* ts, int n_ts, double threshold, 
-	     nip_double_list learning_curve);
+nip_error_code em_learn(time_series* ts, int n_ts, double threshold, 
+			nip_double_list learning_curve);
 
 
 /* Tells the likelihood of observations (not normalised). 

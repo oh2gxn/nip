@@ -2,7 +2,7 @@
  * Functions for representing and manipulating graphs, and methods for 
  * constructing the join tree.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipgraph.h,v 1.10 2011-01-07 01:52:05 jatoivol Exp $
+ * Version: $Id: nipgraph.h,v 1.11 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #ifndef __NIPGRAPH_H__
@@ -145,7 +145,7 @@ int nip_graph_to_cliques(nip_graph g, nip_clique** cliques_p);
 nip_error_code nip_create_sepsets(nip_clique *cliques, int num_of_cliques);
 
 
-/* Internal helper */
+/* Internal helper function for finding cliques from a moral graph. */
 int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p);
 
 #endif /* __GRAPH_H__ */

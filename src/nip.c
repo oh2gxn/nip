@@ -1,4 +1,7 @@
-/* nip.c $Id: nip.c,v 1.217 2010-12-07 17:23:18 jatoivol Exp $
+/* nip.c 
+ * Top level abstractions of the NIP system
+ * Author: Janne Toivola
+ * Version: $Id: nip.c,v 1.218 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #include "nip.h"
@@ -22,15 +25,17 @@ int get_cliques(nip_clique** clique_array_pointer);
 void get_parsed_node_size(int* x, int* y);
 
 /* Internal helper functions */
-static int start_timeslice_message_pass(nip model, nip_direction dir, 
-					nip_potential sepset);
-static int finish_timeslice_message_pass(nip model, nip_direction dir,
-					 nip_potential num, 
-					 nip_potential den);
+static nip_error_code start_timeslice_message_pass(nip model, 
+						   nip_direction dir, 
+						   nip_potential sepset);
+static nip_error_code finish_timeslice_message_pass(nip model, 
+						    nip_direction dir,
+						    nip_potential num, 
+						    nip_potential den);
 
-static int e_step(time_series ts, nip_potential* parameters, 
-		  double* loglikelihood);
-static int m_step(nip_potential* results, nip model);
+static nip_error_code e_step(time_series ts, nip_potential* parameters, 
+			     double* loglikelihood);
+static nip_error_code m_step(nip_potential* results, nip model);
 
 
 
@@ -992,12 +997,13 @@ int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask){
 
 
 /* Starts a message pass between timeslices */
-static int start_timeslice_message_pass(nip model, nip_direction dir,
-					nip_potential alpha_or_gamma){
-  int *mapping;
+static nip_error_code start_timeslice_message_pass(nip model, 
+						   nip_direction dir,
+					 nip_potential alpha_or_gamma){
+  int* mapping;
   nip_clique c;
   int nvars = model->outgoing_interface_size;
-  nip_variable *vars;
+  nip_variable* vars;
 
   /* What if there are no subsequent time slices? */
   if(nvars == 0){
@@ -1005,7 +1011,7 @@ static int start_timeslice_message_pass(nip model, nip_direction dir,
     return NIP_NO_ERROR;
   }
 
-  if(dir == forward){
+  if(dir == FORWARD){
     vars = model->outgoing_interface;
     c = model->out_clique;
   }
@@ -1015,7 +1021,7 @@ static int start_timeslice_message_pass(nip model, nip_direction dir,
   }
 
   /* map the variables */
-  mapping = nip_mapper(c->variables, vars, c->p->num_of_vars, nvars);
+  mapping = nip_mapper(c->variables, vars, NIP_DIMENSIONALITY(c->p), nvars);
 
   /* the marginalisation */
   nip_general_marginalise(c->p, alpha_or_gamma, mapping);
@@ -1029,19 +1035,20 @@ static int start_timeslice_message_pass(nip model, nip_direction dir,
 
 
 /* Finishes the message pass between timeslices */
-static int finish_timeslice_message_pass(nip model, nip_direction dir,
-					 nip_potential num, 
-					 nip_potential den){
-  int *mapping;
+static nip_error_code finish_timeslice_message_pass(nip model, 
+						    nip_direction dir,
+						    nip_potential num, 
+						    nip_potential den){
+  int* mapping;
   nip_clique c;
   int nvars = model->outgoing_interface_size;
-  nip_variable *vars;
+  nip_variable* vars;
 
   if(nvars == 0) /* independent time slices (multiplication with 1) */
     return NIP_NO_ERROR;
 
   /* Find a suitable clique c */
-  if(dir == forward){
+  if(dir == FORWARD){
     vars = model->previous_outgoing_interface;
     c = model->in_clique;
   }
@@ -1051,7 +1058,7 @@ static int finish_timeslice_message_pass(nip model, nip_direction dir,
   }
 
   /* map the variables */
-  mapping = nip_mapper(c->variables, vars, c->p->num_of_vars, nvars);
+  mapping = nip_mapper(c->variables, vars, NIP_DIMENSIONALITY(c->p), nvars);
 
   /* the multiplication (and division, if den != NULL) */
   nip_update_potential(num, den, c->p, mapping);
@@ -1183,7 +1190,7 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
 
     if(t > 0){ /*  Fwd or Fwd1  */
       /*  clique_in = clique_in * alpha  */
-      if(finish_timeslice_message_pass(model, forward, 
+      if(finish_timeslice_message_pass(model, FORWARD, 
 				       alpha, NULL    ) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
@@ -1251,7 +1258,7 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
     } 
 
     /* Start a message pass between time slices (compute new alpha) */
-    if(start_timeslice_message_pass(model, forward, 
+    if(start_timeslice_message_pass(model, FORWARD, 
 				    alpha) != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free_uncertainseries(results);
@@ -1397,7 +1404,7 @@ uncertain_series forward_backward_inference(time_series ts,
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     if(t > 0)
-      if(finish_timeslice_message_pass(model, forward, 
+      if(finish_timeslice_message_pass(model, FORWARD, 
 				       alpha_gamma[t-1], NULL) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
@@ -1436,7 +1443,7 @@ uncertain_series forward_backward_inference(time_series ts,
     }
 
     /* Start a message pass between timeslices */
-    if(start_timeslice_message_pass(model, forward,
+    if(start_timeslice_message_pass(model, FORWARD,
 				    alpha_gamma[t]) != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free_uncertainseries(results);
@@ -1461,7 +1468,7 @@ uncertain_series forward_backward_inference(time_series ts,
     
     /* Pass the message from the past */
     if(t > 0)
-      if(finish_timeslice_message_pass(model, forward, 
+      if(finish_timeslice_message_pass(model, FORWARD, 
 				       alpha_gamma[t-1], 
 				       NULL)                   != NIP_NO_ERROR){
 	
@@ -1478,7 +1485,7 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* Pass the message from the future */
     if(t < ts->length - 1)
-      if(finish_timeslice_message_pass(model, backward, 
+      if(finish_timeslice_message_pass(model, BACKWARD, 
 				       alpha_gamma[t+1], /* gamma */
 				       alpha_gamma[t]  ) /* alpha */
 	 != NIP_NO_ERROR){
@@ -1516,7 +1523,7 @@ uncertain_series forward_backward_inference(time_series ts,
 
     /* Pass the message to the past */
     if(t > 0)
-      if(start_timeslice_message_pass(model, backward, 
+      if(start_timeslice_message_pass(model, BACKWARD, 
 				      alpha_gamma[t]) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_uncertainseries(results);
@@ -1667,22 +1674,22 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts){
  *   because they can't deliver the results without global variables
  * - some parts of the code could be (and have been) transformed into 
  *   separate procedures */
-static int e_step(time_series ts, nip_potential* parameters, 
-		  double* loglikelihood){
+static nip_error_code e_step(time_series ts, nip_potential* parameters, 
+			     double* loglikelihood){
   int i, t;
-  int error;
-  int *cardinalities = NULL;
+  int* cardinalities = NULL;
   int nobserved;
-  int *data = NULL;
-  int *mapping;
+  int* data = NULL;
+  int* mapping;
   nip_variable* observed = NULL;
   nip_variable v;
-  nip_potential *alpha_gamma = NULL;
-  nip_potential *results = NULL;
+  nip_potential* alpha_gamma = NULL;
+  nip_potential* results = NULL;
   nip_potential p;
   nip_clique c = NULL;
   nip model = ts->model;
   double m1, m2;
+  nip_error_code error;
 
   /* Reserve some memory for computation */
   nobserved = ts->num_of_observed;
@@ -1705,8 +1712,10 @@ static int e_step(time_series ts, nip_potential* parameters,
   }
   for(i = 0; i < model->num_of_vars; i++){
     p = parameters[i];
-    results[i] = nip_new_potential(NIP_CARDINALITY(p), p->num_of_vars, NULL);
-    /* in principle, make_potential can return NULL */
+    results[i] = nip_new_potential(NIP_CARDINALITY(p), 
+				   NIP_DIMENSIONALITY(p), 
+				   NULL);
+    /* in principle, new_potential can return NULL */
   }  
 
   /* Allocate some space for the intermediate potentials between timeslices */
@@ -1749,7 +1758,7 @@ static int e_step(time_series ts, nip_potential* parameters,
   for(t = 0; t < ts->length; t++){ /* FOR EVERY TIMESLICE */
     
     if(t > 0){
-      if(finish_timeslice_message_pass(model, forward, 
+      if(finish_timeslice_message_pass(model, FORWARD, 
 				       alpha_gamma[t-1], NULL) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	/* i is useless at this point */
@@ -1811,7 +1820,7 @@ static int e_step(time_series ts, nip_potential* parameters,
     }
     
     /* Start a message pass between timeslices */
-    if(start_timeslice_message_pass(model, forward,
+    if(start_timeslice_message_pass(model, FORWARD,
 				    alpha_gamma[t]) != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       for(i = 0; i < model->num_of_vars; i++)
@@ -1840,7 +1849,7 @@ static int e_step(time_series ts, nip_potential* parameters,
 
     /* Pass the message from the past */
     if(t > 0)
-      if(finish_timeslice_message_pass(model, forward, 
+      if(finish_timeslice_message_pass(model, FORWARD, 
 				       alpha_gamma[t-1], 
 				       NULL)            != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
@@ -1860,7 +1869,7 @@ static int e_step(time_series ts, nip_potential* parameters,
     
     /* Pass the message from the future */
     if(t < ts->length - 1)
-      if(finish_timeslice_message_pass(model, backward, 
+      if(finish_timeslice_message_pass(model, BACKWARD, 
 				       alpha_gamma[t+1], 
 				       alpha_gamma[t]) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
@@ -1902,12 +1911,12 @@ static int e_step(time_series ts, nip_potential* parameters,
 #ifdef DEBUG_NIP
       /* DEBUG */
       printf("Marginalising the family of %s ", v->symbol);
-      for(j = 0; j < p->num_of_vars - 1; j++)
+      for(j = 0; j < NIP_DIMENSIONALITY(p) - 1; j++)
 	printf("%s ", v->parents[j]->symbol);
       printf("from \n");
       nip_fprintf_clique(stdout, c);
       printf("with mapping [");
-      for(j = 0; j < p->num_of_vars; j++)
+      for(j = 0; j < NIP_DIMENSIONALITY(p); j++)
 	printf("%d,", mapping[j]);
       printf("]\n");
       /* FIXME: correct mapping??? */
@@ -1926,7 +1935,7 @@ static int e_step(time_series ts, nip_potential* parameters,
 
     /* Pass the message to the past */
     if(t > 0)
-      if(start_timeslice_message_pass(model, backward, 
+      if(start_timeslice_message_pass(model, BACKWARD, 
 				      alpha_gamma[t]) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	for(i = 0; i < model->num_of_vars; i++)
@@ -1964,7 +1973,7 @@ static int e_step(time_series ts, nip_potential* parameters,
 }
 
 
-static int m_step(nip_potential* parameters, nip model){
+static nip_error_code m_step(nip_potential* parameters, nip model){
   int i, j, k;
   int* fam_map;
   nip_clique fam_clique = NULL;
@@ -2000,7 +2009,7 @@ static int m_step(nip_potential* parameters, nip model){
   for(i = 0; i < model->num_of_vars; i++){
     child = model->variables[i];
 
-    if(child->num_of_parents > 0){
+    if(nip_number_of_parents(child) > 0){
       fam_clique = nip_find_family(model->cliques,
 				   model->num_of_cliques, 
 				   child);
@@ -2030,9 +2039,9 @@ static int m_step(nip_potential* parameters, nip model){
 
 /* Trains the given model (ts[0]->model) according to the given set of 
  * time series (ts[*]) with EM-algorithm. Returns an error code. */
-int em_learn(time_series* ts, int n_ts, double threshold,
-	     nip_double_list learning_curve){
-  int e, i, n, v;
+nip_error_code em_learn(time_series* ts, int n_ts, double threshold,
+			nip_double_list learning_curve){
+  int i, n, v;
   int *card;
   int ts_steps;
   double old_loglikelihood; 
@@ -2040,6 +2049,7 @@ int em_learn(time_series* ts, int n_ts, double threshold,
   double probe = 0;
   nip_potential* parameters = NULL;
   nip model = NULL;
+  nip_error_code e;
 
   if(!ts[0] || !ts[0]->model){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
@@ -2062,7 +2072,7 @@ int em_learn(time_series* ts, int n_ts, double threshold,
   }
 
   for(v = 0; v < model->num_of_vars; v++){
-    n = model->variables[v]->num_of_parents + 1;
+    n = nip_number_of_parents(model->variables[v]) + 1;
     card = (int*) calloc(n, sizeof(int));
     if(!card){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
@@ -2214,7 +2224,7 @@ double model_prob_mass(nip model){
 }
 
 
-double *get_probability(nip model, nip_variable v){
+double* get_probability(nip model, nip_variable v){
   nip_clique clique_of_interest;
   double *result;
   int cardinality;
@@ -2255,7 +2265,7 @@ double *get_probability(nip model, nip_variable v){
 
 
 nip_potential get_joint_probability(nip model, nip_variable *vars, 
-				int num_of_vars){
+				    int nvars){
   nip_potential p;
   int i;
 
@@ -2265,7 +2275,7 @@ nip_potential get_joint_probability(nip model, nip_variable *vars,
 
   /* Make a DFS in the tree... */
   p = nip_gather_joint_probability(model->cliques[0], 
-				   vars, num_of_vars, NULL, 0);
+				   vars, nvars, NULL, 0);
   if(p == NULL){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
@@ -2304,7 +2314,7 @@ time_series generate_data(nip model, int length){
   j = 0;
   for(i = 0; i < model->num_of_vars; i++){
     v = model->variables[i];
-    if(!v->num_of_parents){
+    if(nip_number_of_parents(v) == 0){
       vars[j++] = v;
       nip_mark_variable(v);
     }
@@ -2317,7 +2327,7 @@ time_series generate_data(nip model, int length){
       if(nip_variable_marked(v))
 	continue;
       t = 1;
-      for(k = 0; k < v->num_of_parents; k++){
+      for(k = 0; k < nip_number_of_parents(v); k++){
 	if(!nip_variable_marked(v->parents[k])){
 	  t = 0;
 	  break;
@@ -2392,7 +2402,7 @@ time_series generate_data(nip model, int length){
 
     /* influence from the previous time step */
     if(t > 0){
-      if(finish_timeslice_message_pass(model, forward, 
+      if(finish_timeslice_message_pass(model, FORWARD, 
 				       alpha, NULL) != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	free_timeseries(ts);
@@ -2418,7 +2428,7 @@ time_series generate_data(nip model, int length){
     make_consistent(model);
 
     /* influence from the current time slice to the next one */
-    if(start_timeslice_message_pass(model, forward, alpha) != NIP_NO_ERROR){
+    if(start_timeslice_message_pass(model, FORWARD, alpha) != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       free_timeseries(ts);
       nip_free_potential(alpha);

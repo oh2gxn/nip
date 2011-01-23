@@ -3,7 +3,7 @@
  * Includes evidence handling and propagation of information
  * in the join tree. 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.h,v 1.7 2011-01-23 18:25:55 jatoivol Exp $
+ * Version: $Id: nipjointree.h,v 1.8 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #ifndef __NIPJOINTREE_H__
@@ -28,7 +28,7 @@ typedef nip_sepsetlink_struct* nip_sepset_link;
 typedef struct {
   nip_potential p;
   nip_potential original_p;
-  nip_variable* variables; /* array size == p->num_of_vars */
+  nip_variable* variables; /* array size == p->dimensionality */
   nip_sepset_link sepsets;
   int num_of_sepsets;
   char mark; /* the way to prevent endless loops, either MARK_ON or MARK_OFF */
@@ -69,7 +69,7 @@ typedef nip_potential_list_struct* nip_potential_list;
 /* Method for creating cliques (without pointers to sepsets).
  * vars[] can be in any order.
  */
-nip_clique nip_new_clique(nip_variable vars[], int num_of_vars);
+nip_clique nip_new_clique(nip_variable vars[], int nvars);
 
 
 /* Method for removing cliques and freeing memory. */
@@ -94,15 +94,15 @@ void nip_free_sepset(nip_sepset s);
 
 /* Method for creating potentials with correct structure.
  * - variables[] is an array of the variables in a suitable order
- * - num_of_vars tells how many variables there are
+ * - nvars tells how many variables there are
  * - data[] is the data array in the order according to variables */
 nip_potential nip_create_potential(nip_variable variables[], 
-				   int num_of_vars, 
+				   int nvars, 
 				   double data[]);
 
 
 /* Something very dangerous...
-double* reorder_potential(nip_variable vars[], nip_potential p); 
+nip_potential reorder_potential(nip_variable vars[], nip_potential p); 
 */
 
 /* Method for unmarking a clique: call this to every clique before 
@@ -166,7 +166,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
  * This is basically a potential multiplication so that the clique keeps 
  * the parameters even when retraction is used. If transient==1, the 
  * potential can be "wiped" with retraction...
- * !!! p->num_of_vars equals "number of parents + 1" !!! 
+ * !!! p->dimensionality equals "number of parents + 1" !!! 
  * Sum of the elements in the potential is assumed to be 1. 
  * The "ownership" of the potential changes.
  */
@@ -239,7 +239,7 @@ int nip_enter_prior(nip_variable* vars, int nvars,
  * Returns NULL if no such clique is found.
  * Parameters:
  *  - cliques : an array of cliques
- *  - num_of_cliques : the size of the array 'cliques'
+ *  - ncliques : the size of the array 'cliques'
  *  - var : the variable whose family is to be found
  */
 nip_clique nip_find_family(nip_clique* cliques, int ncliques, 
@@ -257,9 +257,9 @@ int* nip_find_family_mapping(nip_clique family, nip_variable child);
  * more expensive than find_family().
  * Parameters:
  *  - cliques : an array of cliques
- *  - num_of_cliques : the size of the array 'cliques'
+ *  - ncliques : the size of the array 'cliques'
  *  - variables : the variables expected to be included in the clique
- *  - num_of_vars : size of the given array of variables
+ *  - nvars : size of the given array of variables
  */
 nip_clique nip_find_clique(nip_clique* cliques, int ncliques, 
 			   nip_variable* variables, int nvars);

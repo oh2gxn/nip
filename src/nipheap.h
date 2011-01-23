@@ -1,7 +1,7 @@
 /* nipheap.h 
  * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Janne Toivola, Antti Rasinen, Mikko Korpela
- * $Id: nipheap.h,v 1.10 2010-12-21 16:34:06 jatoivol Exp $
+ * $Id: nipheap.h,v 1.11 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #ifndef __NIPHEAP_H__
@@ -44,7 +44,7 @@ nip_heap nip_new_heap(int initial_size,
 
 /* Inserts a new element into the heap h. 
  * The heap property is not valid after this, so remember to heapify... */
-int nip_heap_insert(nip_heap h, void* content, int size);
+nip_error_code nip_heap_insert(nip_heap h, void* content, int size);
 
 /* Makes the heap obey the heap property after modifications to the root */
 void nip_build_min_heap(nip_heap h);

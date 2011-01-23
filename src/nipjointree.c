@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.9 2011-01-23 18:25:55 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.10 2011-01-23 23:01:47 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -40,7 +40,7 @@ static nip_error_code nip_neg_sepset_mass(nip_sepset s, double* ptr);
 static void nip_remove_sepset(nip_clique c, nip_sepset s);
 
 
-nip_clique nip_new_clique(nip_variable vars[], int num_of_vars){
+nip_clique nip_new_clique(nip_variable vars[], int nvars){
   nip_clique c;
   int *cardinality;
   int *reorder;
@@ -54,14 +54,14 @@ nip_clique nip_new_clique(nip_variable vars[], int num_of_vars){
     return NULL;
   }    
 
-  cardinality = (int *) calloc(num_of_vars, sizeof(int));
+  cardinality = (int *) calloc(nvars, sizeof(int));
   if(!cardinality){
     free(c);
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }    
 
-  reorder = (int *) calloc(num_of_vars, sizeof(int));
+  reorder = (int *) calloc(nvars, sizeof(int));
   if(!reorder){
     free(c);
     free(cardinality);
@@ -69,7 +69,7 @@ nip_clique nip_new_clique(nip_variable vars[], int num_of_vars){
     return NULL;
   }    
 
-  indices = (int *) calloc(num_of_vars, sizeof(int));
+  indices = (int *) calloc(nvars, sizeof(int));
   if(!indices){
     free(c);
     free(cardinality);
@@ -84,23 +84,23 @@ nip_clique nip_new_clique(nip_variable vars[], int num_of_vars){
    */
 
   /* init (needed?) */
-  for(i = 0; i < num_of_vars; i++)
+  for(i = 0; i < nvars; i++)
     indices[i] = 0;
 
-  /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
+  /* Create the reordering table: O(nvars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
-  for(i = 0; i < num_of_vars; i++){
+  for(i = 0; i < nvars; i++){
     temp = nip_variable_id(vars[i]);
-    for(j = 0; j < num_of_vars; j++){
+    for(j = 0; j < nvars; j++){
       if(nip_variable_id(vars[j]) > temp)
 	indices[j]++; /* counts how many greater variables there are */
     }
   }
 
-  for(i = 0; i < num_of_vars; i++)
+  for(i = 0; i < nvars; i++)
     reorder[indices[i]] = i; /* fill the reordering */
 
-  c->variables = (nip_variable *) calloc(num_of_vars, sizeof(nip_variable));
+  c->variables = (nip_variable *) calloc(nvars, sizeof(nip_variable));
   if(!(c->variables)){
     free(c);
     free(cardinality);
@@ -111,13 +111,13 @@ nip_clique nip_new_clique(nip_variable vars[], int num_of_vars){
   }
 
   /* JJ_NOTE: reordering probably not required anymore... */
-  for(i = 0; i < num_of_vars; i++){
+  for(i = 0; i < nvars; i++){
     cardinality[i] = NIP_CARDINALITY(vars[reorder[i]]);
     c->variables[i] = vars[reorder[i]];
   }
   
-  c->p = nip_new_potential(cardinality, num_of_vars, NULL);
-  c->original_p = nip_new_potential(cardinality, num_of_vars, NULL);
+  c->p = nip_new_potential(cardinality, nvars, NULL);
+  c->original_p = nip_new_potential(cardinality, nvars, NULL);
 
   /* Propagation of error */
   if(c->p == NULL || c->original_p == NULL){
@@ -306,10 +306,10 @@ void nip_free_sepset(nip_sepset s){
 }
 
 
-/* TODO: seems to be copy-paste from new_sepset... 
+/* FIXME: seems to be copy-paste from new_sepset... 
  * use mapper and functions provided by nippotential.h ! */
 nip_potential nip_create_potential(nip_variable variables[], 
-				   int num_of_vars, 
+				   int nvars, 
 				   double data[]){
   /*
    * Suppose we get an array of variables with IDs {5, 2, 3, 4, 0, 1}.
@@ -340,25 +340,25 @@ nip_potential nip_create_potential(nip_variable variables[],
   unsigned long temp;
   nip_potential p;
 
-  if((cardinality = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
+  if((cardinality = (int *) calloc(nvars, sizeof(int))) == NULL) {
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
   }
 
-  if((indices = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
+  if((indices = (int *) calloc(nvars, sizeof(int))) == NULL) {
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinality);
     return NULL;
   }
 
-  if((temp_array = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
+  if((temp_array = (int *) calloc(nvars, sizeof(int))) == NULL) {
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinality);
     free(indices);
     return NULL;
   }
 
-  if((reorder = (int *) malloc(num_of_vars * sizeof(int))) == NULL) {
+  if((reorder = (int *) calloc(nvars, sizeof(int))) == NULL) {
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinality);
     free(indices);
@@ -370,30 +370,30 @@ nip_potential nip_create_potential(nip_variable variables[],
    * in the array variables[] */
 
   /* init (needed?) */
-  for(i = 0; i < num_of_vars; i++)
+  for(i = 0; i < nvars; i++)
     temp_array[i] = 0;
 
-  /* Create the reordering table: O(num_of_vars^2) i.e. stupid but working.
+  /* Create the reordering table: O(nvars^2) i.e. stupid but working.
    * Note the temporary use of indices array. */
-  for(i = 0; i < num_of_vars; i++){
+  for(i = 0; i < nvars; i++){
     temp = nip_variable_id(variables[i]);
-    for(j = 0; j < num_of_vars; j++){
+    for(j = 0; j < nvars; j++){
       if(nip_variable_id(variables[j]) > temp)
 	temp_array[j]++; /* counts how many greater variables there are */
     }
   }
 
-  for(i = 0; i < num_of_vars; i++)
+  for(i = 0; i < nvars; i++)
     reorder[temp_array[i]] = i; /* fill the reordering */
 
   /* Figure out some stuff */
-  for(i = 0; i < num_of_vars; i++){
+  for(i = 0; i < nvars; i++){
     size_of_data *= NIP_CARDINALITY(variables[i]); /* optimal? */
     cardinality[i] = NIP_CARDINALITY(variables[reorder[i]]);
   }
 
   /* Create a potential */
-  p = nip_new_potential(cardinality, num_of_vars, NULL);
+  p = nip_new_potential(cardinality, nvars, NULL);
 
   /* Propagation of error */
   if(p == NULL){
@@ -431,7 +431,7 @@ nip_potential nip_create_potential(nip_variable variables[],
       card_temp = 1;
 
       /* THE mapping */
-      for(j = 0; j < num_of_vars; j++){
+      for(j = 0; j < nvars; j++){
 	index += indices[temp_array[j]] * card_temp;
 	card_temp *= cardinality[temp_array[j]];
       }
@@ -451,18 +451,9 @@ nip_potential nip_create_potential(nip_variable variables[],
 
 
 /* NOTE: don't use this. This is just a bad idea we had... */
-double* nip_reorder_potential(nip_variable vars[], nip_potential p){
+nip_potential nip_reorder_potential(nip_variable vars[], nip_potential p){
 
   int old_flat_index, new_flat_index;
-  int i, j;
-  int *old_indices, *new_indices;
-  int *new_card;
-  unsigned long smallest_id = 0;
-  unsigned long this_id = 0;
-  unsigned long biggest_taken = 0;
-  int smallest_index = 0;
-  double *new_data;
-  int card_temp;
 
   /* Simple (stupid) checks */
   if(!p){
@@ -473,96 +464,14 @@ double* nip_reorder_potential(nip_variable vars[], nip_potential p){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return NULL;
   }
-  old_indices = (int *) calloc(p->num_of_vars, sizeof(int));
-  if(!old_indices){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    return NULL;
-  }
-  new_indices = (int *) calloc(p->num_of_vars, sizeof(int));
-  if(!new_indices){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    free(old_indices);
-    return NULL;
-  }
-  new_card = (int *) calloc(p->num_of_vars, sizeof(int));
-  if(!new_card){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    free(old_indices);
-    free(new_indices);
-    return NULL;
-  }
-  new_data = (double *) calloc(p->size_of_data, sizeof(double));
-  if(!new_data){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    free(old_indices);
-    free(new_indices);
-    free(new_card);
-    return NULL;
-  }
-  for(old_flat_index = 0; old_flat_index < p->size_of_data; old_flat_index++){
 
-    /* 1. old_flat_index -> old_indices (inverse_mapping) */
-    nip_inverse_mapping(p, old_flat_index, old_indices);
+  /* Old crappy code removed, this does nothing. */
+  /* The original idea could now be implemented with:
+   * - creating a suitable mapping array
+   * - nip_new_potential
+   * - nip_update_potential(p, NULL, newp, mapping) */
 
-    /* FIXME: This is totally wrong. */
-    /* 2. "old_indices" is re-ordered according to "variables"
-     *    -> new_indices */
-    for(i = 0; i < p->num_of_vars; i++){
-
-      for(j = 0; j < p->num_of_vars; j++){
-	this_id = vars[j]->id;
-	if(j != 0 && i != 0){
-	  if(this_id < smallest_id &&
-	     this_id > biggest_taken){
-	    smallest_index = j;
-	    smallest_id = this_id;
-	  }
-	}
-	else if(j != 0 && i == 0){
-	  if(this_id < smallest_id){
-	    smallest_index = j;
-	    smallest_id = this_id;
-	  }
-	}
-	else if(j == 0 && i != 0){
-	  if(this_id > biggest_taken){
-	    smallest_index = j;
-	    smallest_id = this_id;
-	  }
-	}
-	else{
-	  smallest_index = j;
-	  smallest_id = this_id;
-	}
-      }
-
-      new_indices[smallest_index] = old_indices[i];
-      new_card[smallest_index] = p->cardinality[i];
-      biggest_taken = vars[smallest_index]->id;
-    }
-    /* <\totally wrong> */
-
-    /* 3. new_indices -> new_flat_index (look at get_ppointer()) */
-    new_flat_index = 0;
-    card_temp = 1;
-
-    for(i = 0; i < p->num_of_vars; i++){
-      new_flat_index += new_indices[i] * card_temp;
-      card_temp *= new_card[i];
-    }
-
-    printf("New flat index == %d\n", new_flat_index);
-
-    /* 4. */
-    new_data[new_flat_index] = p->data[old_flat_index];
-  }
-
-  free(old_indices);
-  free(new_indices);
-  free(new_card);
-
-  /* Pointer to allocated memory. Potential p remains alive also. */
-  return new_data;
+  return nip_copy_potential(p);
 }
 
 
@@ -791,16 +700,18 @@ static nip_error_code nip_message_pass(nip_clique c1,
 }
 
 
+/* TODO: check that this has a correct mapping between p and c! */
 int nip_init_clique(nip_clique c, nip_variable child, 
 		    nip_potential p, int transient){
-  int i, j = 0, k = 0;
-  int *mapping = NULL;
-  int retval;
+  int i, j, k;
+  int* mapping = NULL;
+  nip_error_code err;
   nip_variable var = NULL;
   nip_variable* parents = nip_get_parents(child);
 
-  if(p->num_of_vars < c->p->num_of_vars){
-    mapping = (int *) calloc(p->num_of_vars, sizeof(int));
+  if(NIP_DIMENSIONALITY(p) < NIP_DIMENSIONALITY(c->p)){
+
+    mapping = (int *) calloc(NIP_DIMENSIONALITY(p), sizeof(int));
     if(!mapping){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       return NIP_ERROR_OUTOFMEMORY;
@@ -814,13 +725,14 @@ int nip_init_clique(nip_clique c, nip_variable child,
     
     /* initialisation with conditional distributions 
        first: select the variables (in a stupid but working way) */
-    /* FIXME: use mapper */
-    for(i=0; i < c->p->num_of_vars; i++){
-      if(k == p->num_of_vars)
+    /* FIXME: use mapper? */
+    k = 0;
+    for(i=0; i < NIP_DIMENSIONALITY(c->p); i++){
+      if(k == NIP_DIMENSIONALITY(p))
 	break; /* all found */
       var = (c->variables)[i];
       
-      for(j=0; j < p->num_of_vars - 1; j++)
+      for(j=0; j < NIP_DIMENSIONALITY(p) - 1; j++)
 	if(nip_equal_variables(var, parents[j]))
 	  mapping[k++] = i;
       
@@ -830,21 +742,21 @@ int nip_init_clique(nip_clique c, nip_variable child,
   }
 
   /* rest the case */
-  retval = nip_init_potential(p, c->p, mapping);
-  if(retval != NIP_NO_ERROR){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+  err = nip_init_potential(p, c->p, mapping);
+  if(err != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, err, 1);
     free(mapping);
-    return NIP_ERROR_GENERAL;
+    return err;
   }
 
   /* Some extra work is done here,
    * because only the last initialisation counts. */
   if(!transient){
-    retval = nip_init_potential(p, c->original_p, mapping);
-    if(retval != NIP_NO_ERROR){
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+    err = nip_init_potential(p, c->original_p, mapping);
+    if(err != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, err, 1);
       free(mapping);
-      return NIP_ERROR_GENERAL;
+      return err;
     }
   }
   /* This should be an optional phase: in timeslice models 
@@ -1061,9 +973,8 @@ static int nip_clique_var_index(nip_clique c, nip_variable v){
 
   while(!nip_equal_variables(v, c->variables[var])){
     var++;
-    if(var == c->p->num_of_vars)
-      /* variable not in this clique => -1 */
-      return -1;
+    if(var == NIP_DIMENSIONALITY(c->p))
+      return -1; /* variable not in this clique => -1 */
   }
   return var;
 }
@@ -1100,10 +1011,18 @@ nip_clique nip_find_family(nip_clique *cliques, int ncliques,
 
 int* nip_find_family_mapping(nip_clique family, nip_variable child){
   int i, j, n, p;
-  int *result = NULL;
+  int* result = NULL;
+  nip_variable* parents;
 
+  if(!family || !child){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  /* FIXME: accesses nip_variable_struct, bad... */
   if(child->family_mapping == NULL){ /* if not found yet */
-    n = child->num_of_parents + 1;
+    parents = nip_get_parents(child);
+    n = nip_number_of_parents(child) + 1;
     result = (int *) calloc(n, sizeof(int));
     if(!result){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
@@ -1111,7 +1030,7 @@ int* nip_find_family_mapping(nip_clique family, nip_variable child){
     }
 
     /* NOTE: Child must always be the first in the target potential! */
-    for(i=0; i < family->p->num_of_vars; i++)
+    for(i=0; i < NIP_DIMENSIONALITY(family->p); i++)
       if(nip_equal_variables((family->variables)[i], child)){
 	result[0] = i;
 	break;
@@ -1119,12 +1038,12 @@ int* nip_find_family_mapping(nip_clique family, nip_variable child){
 
     if(n > 1){ /* if child actually has any parents */
       p = 0;
-      n--;
-      for(i=0; i < family->p->num_of_vars; i++){
+      n--; /* from #parents+1 down to #parents */
+      for(i=0; i < NIP_DIMENSIONALITY(family->p); i++){
 	if(p == n)
 	  break; /* all pointers found */
 	for(j=0; j < n; j++)
-	  if(nip_equal_variables((family->variables)[i], child->parents[j])){
+	  if(nip_equal_variables((family->variables)[i], parents[j])){
 	    result[j+1] = i;
 	    p++;
 	    break;
@@ -1145,7 +1064,7 @@ nip_clique nip_find_clique(nip_clique *cliques, int ncliques,
   for(i = 0; i < ncliques; i++){
     ok = 0;
     for(j = 0; j < nvars; j++){
-      for(k = 0; k < cliques[i]->p->num_of_vars; k++){
+      for(k = 0; k < NIP_DIMENSIONALITY(cliques[i]->p); k++){
 	if(nip_equal_variables(variables[j], cliques[i]->variables[k])){
 	  ok++;
 	  break; /* found the variable in the clique */
@@ -1165,8 +1084,8 @@ void nip_fprintf_clique(FILE* stream, nip_clique c){
   int i;
   fprintf(stream, "clique ");
   /*fprintf(stream, "( ");*/
-  for(i = 0; i < c->p->num_of_vars; i++)
-    fprintf(stream, "%s ", c->variables[i]->symbol);
+  for(i = 0; i < NIP_DIMENSIONALITY(c->p); i++)
+    fprintf(stream, "%s ", nip_variable_symbol(c->variables[i]));
   /*fprintf(stream, ")");*/
   fprintf(stream, "\n");
 }
@@ -1176,8 +1095,8 @@ void nip_fprintf_sepset(FILE* stream, nip_sepset s){
   int i;
   fprintf(stream, "sepset ");
   /*fprintf(stream, "[ ");*/
-  for(i = 0; i < s->old->num_of_vars; i++)
-    fprintf(stream, "%s ", s->variables[i]->symbol);
+  for(i = 0; i < NIP_DIMENSIONALITY(s->old); i++)
+    fprintf(stream, "%s ", nip_variable_symbol(s->variables[i]));
   /*fprintf(stream, "]");*/
   fprintf(stream, "\n");
 }
@@ -1186,6 +1105,9 @@ void nip_fprintf_sepset(FILE* stream, nip_sepset s){
 static nip_error_code nip_retract_clique(nip_clique c, double* ptr){
   if(!c)
     return NIP_ERROR_NULLPOINTER;
+  /* another option: 
+   * nip_uniform_potential(c->p, 1.0);
+   * nip_init_potential(c->original_p, c->p); */
   return nip_retract_potential(c->p, c->original_p);
 }
 
@@ -1348,8 +1270,8 @@ nip_potential nip_gather_joint_probability(nip_clique start,
 
   /* 1.1 Form the union of given variables and clique variables */
   nuv = 0; /* size of intersection */
-  for(i = 0; i < n_vars; i++){
-    for(j = 0; j < start->p->num_of_vars; j++){
+  for(i = 0; i < n_vars; i++){ /* FIXME: use nip_variable_union()? */
+    for(j = 0; j < NIP_DIMENSIONALITY(start->p); j++){
       /* (variables in isect are a subset of clique variables) */
       if(nip_equal_variables(vars[i], start->variables[j])){
 	nuv++;
@@ -1357,7 +1279,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
       }
     }
   }
-  nuv = n_vars + start->p->num_of_vars - nuv; /* size of union */
+  nuv = n_vars + NIP_DIMENSIONALITY(start->p) - nuv; /* size of union */
   union_vars = (nip_variable*) calloc(nuv, sizeof(nip_variable));
   if(!union_vars){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
@@ -1369,7 +1291,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
   for(i = 0; i < n_isect; i++)
     union_vars[n_vars + i] = isect[i];
   k = n_vars + n_isect; /* ...then rest of the clique variables */
-  for(i = 0; i < start->p->num_of_vars; i++){
+  for(i = 0; i < NIP_DIMENSIONALITY(start->p); i++){
     m = 1;
     for(j = 0; j < n_vars; j++){
       if(nip_equal_variables(vars[j], start->variables[i])){
@@ -1416,7 +1338,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
     return NULL;
   }
   /* perhaps this could have beed done earlier... */
-  for(i = 0; i < start->p->num_of_vars; i++){
+  for(i = 0; i < NIP_DIMENSIONALITY(start->p); i++){
     for(j = 0; j < nuv; j++){ /* linear search */
       if(nip_equal_variables(start->variables[i], union_vars[j])){
 	mapping[i] = j;
@@ -1453,7 +1375,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
 	/*** 3. Operations on potentials ***/
 
 	/* 3.1 Mapping between sepset and product potentials */
-	for(j = 0; j < s->new->num_of_vars; j++){
+	for(j = 0; j < NIP_DIMENSIONALITY(s->new); j++){
 	  for(k = 0; k < nuv; k++){ /* linear search */
 	    if(nip_equal_variables(s->variables[j], union_vars[k])){
 	      mapping[j] = k;
@@ -1479,7 +1401,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
 	/* original <vars> and intersection of cliques */
 	/* unfortunately we have to remove duplicates */
 	temp = s->variables;
-	nt = s->new->num_of_vars;
+	nt = NIP_DIMENSIONALITY(s->new);
 	nrv = nt;
 	for(j = 0; j < nt; j++){
 	  for(k = 0; k < n_vars; k++){

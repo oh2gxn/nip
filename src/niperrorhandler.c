@@ -8,10 +8,10 @@
 static int NIP_ERROR_COUNTER = 0;
 
 /* Errorcode of the last error */
-static int NIP_ERRORCODE = NIP_NO_ERROR; 
+static nip_error_code NIP_ERROR_CODE = NIP_NO_ERROR; 
 
 void nip_report_error(char *srcFile, int line, nip_error_code e, int verbose){
-  NIP_ERRORCODE = e;
+  NIP_ERROR_CODE = e;
   NIP_ERROR_COUNTER++;
   if(verbose){
     fprintf(stderr, "In %s (%d): ", srcFile, line);
@@ -39,15 +39,15 @@ void nip_report_error(char *srcFile, int line, nip_error_code e, int verbose){
   }
 }
 
-void nip_reset_errorhandler(){
-  NIP_ERRORCODE = NIP_NO_ERROR;
+void nip_reset_error_handler(){
+  NIP_ERROR_CODE = NIP_NO_ERROR;
   NIP_ERROR_COUNTER = 0;
 }
 
-int nip_check_errortype(){
-  return NIP_ERRORCODE;
+nip_error_code nip_check_error_type(){
+  return NIP_ERROR_CODE;
 }
 
-int nip_check_errorcounter(){
+int nip_check_error_counter(){
   return NIP_ERROR_COUNTER;
 }
