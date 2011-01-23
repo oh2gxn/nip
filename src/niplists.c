@@ -1,7 +1,7 @@
 /* Functions for using list structures
  * (a C++ implementation would use STL)
  * Author: Janne Toivola
- * Version: $Id: niplists.c,v 1.6 2010-12-02 18:15:21 jatoivol Exp $
+ * Version: $Id: niplists.c,v 1.7 2011-01-23 18:25:55 jatoivol Exp $
  */
 
 
@@ -52,7 +52,7 @@ nip_string_pair_list nip_new_string_pair_list(){
 }
 
 
-int nip_append_int_array(nip_int_array_list l, int* i, int ni) {
+nip_error_code nip_append_int_array(nip_int_array_list l, int* i, int ni) {
   nip_int_array_link new = (nip_int_array_link) 
     malloc(sizeof(nip_int_array_link_struct));
 
@@ -80,7 +80,7 @@ int nip_append_int_array(nip_int_array_list l, int* i, int ni) {
 }
 
 
-int nip_append_double(nip_double_list l, double d){
+nip_error_code nip_append_double(nip_double_list l, double d){
   nip_double_link new = 
     (nip_double_link) malloc(sizeof(nip_double_link_struct));
 
@@ -107,7 +107,7 @@ int nip_append_double(nip_double_list l, double d){
 }
 
 
-int nip_append_string(nip_string_list l, char* s){
+nip_error_code nip_append_string(nip_string_list l, char* s){
   nip_string_link new = 
     (nip_string_link) malloc(sizeof(nip_string_link_struct));
 
@@ -134,7 +134,8 @@ int nip_append_string(nip_string_list l, char* s){
 }
 
 
-int nip_append_string_pair(nip_string_pair_list l, char* key, char* value){
+nip_error_code nip_append_string_pair(nip_string_pair_list l, 
+				      char* key, char* value){
   nip_string_pair_link new = 
     (nip_string_pair_link) malloc(sizeof(nip_string_pair_link_struct));
 
@@ -162,7 +163,7 @@ int nip_append_string_pair(nip_string_pair_list l, char* key, char* value){
 }
 
 
-int nip_prepend_int_array(nip_int_array_list l, int* i, int ni) {
+nip_error_code nip_prepend_int_array(nip_int_array_list l, int* i, int ni) {
   nip_int_array_link new = 
     (nip_int_array_link) malloc(sizeof(nip_int_array_link_struct));
 
@@ -190,7 +191,7 @@ int nip_prepend_int_array(nip_int_array_list l, int* i, int ni) {
 }
 
 
-int nip_prepend_double(nip_double_list l, double d){
+nip_error_code nip_prepend_double(nip_double_list l, double d){
   nip_double_link new = 
     (nip_double_link) malloc(sizeof(nip_double_link_struct));
 
@@ -218,7 +219,7 @@ int nip_prepend_double(nip_double_list l, double d){
 }
 
 
-int nip_prepend_string(nip_string_list l, char* s){
+nip_error_code nip_prepend_string(nip_string_list l, char* s){
   nip_string_link new = 
     (nip_string_link) malloc(sizeof(nip_string_link_struct));
 
@@ -246,7 +247,8 @@ int nip_prepend_string(nip_string_list l, char* s){
 }
 
 
-int nip_prepend_string_pair(nip_string_pair_list l, char* key, char* value){
+nip_error_code nip_prepend_string_pair(nip_string_pair_list l, 
+				       char* key, char* value){
   nip_string_pair_link new = 
     (nip_string_pair_link) malloc(sizeof(nip_string_pair_link_struct));
 

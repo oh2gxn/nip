@@ -5,7 +5,7 @@
  * random variables
  *
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nippotential.h,v 1.5 2011-01-22 13:10:34 jatoivol Exp $
+ * Version: $Id: nippotential.h,v 1.6 2011-01-23 18:25:55 jatoivol Exp $
  */
 
 #ifndef __NIPPOTENTIAL_H__
@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "niplists.h"
 #include "niperrorhandler.h"
 
 /* Mac OS X had invalid HUGE_VAL ? */
@@ -26,11 +27,12 @@
 #define NIP_DIMENSIONALITY(p) ((p)->num_of_vars)
 
 typedef struct nip_pot_array {
-  int size_of_data;
-  int *cardinality;
-  int num_of_vars; /* TODO: getter for this */
-  double *data;
-  /* TODO: stringpairlist application_specific_properties; ? */
+  int* cardinality; /* dimensions of the data */
+  int* temp_index;  /* space for index calculations */
+  int num_of_vars;  /* number of dimensions */
+  int size_of_data; /* total number of data elements */
+  double* data;     /* data array */
+  nip_string_pair_list application_specific_properties;
 } nip_potential_struct;
 
 typedef nip_potential_struct* nip_potential;
@@ -40,8 +42,24 @@ typedef nip_potential_struct* nip_potential;
 nip_potential nip_new_potential(int cardinality[], int num_of_vars, 
 				double data[]);
 
+
+/* Saves a pair of string to the potential... */
+nip_error_code nip_set_potential_property(nip_potential p, 
+					  char* key, char* value);
+
+/* Retrieves a string... */
+char* nip_get_potential_property(nip_potential p, char* key);
+
+
 /* Creates a new potential as an exact copy of p. */
 nip_potential nip_copy_potential(nip_potential p);
+
+
+/* Copies the content of ref potential to p potential, assuming they 
+ * have equal dimensionality. Used for reverting back to original model 
+ * parameters (ref) after messing p with old evidence. */
+nip_error_code nip_retract_potential(nip_potential p, nip_potential ref);
+
 
 /* Free the memory used by potential p. */
 void nip_free_potential(nip_potential p);
@@ -78,19 +96,21 @@ void nip_inverse_mapping(nip_potential p, int flat_index, int indices[]);
  *          marginalise(cliquePotential, newSepsetPotential, {1, 2}) 
  * -Returns an error code.
  */
-int nip_general_marginalise(nip_potential source, nip_potential destination, 
-			    int mapping[]);
+nip_error_code nip_general_marginalise(nip_potential source, 
+				       nip_potential destination, 
+				       int mapping[]);
 
 /* Method for finding out the probability distribution of a single variable 
  * according to a clique potential. This one is a marginalisation too, but 
  * this one is not generic. The outcome is not normalized. 
  * -source: the potential to be marginalised
  * -destination: the double array for the answer
- *               SIZE OF THE ARRAY MUST BE CORRECT (check it from the variable)
+ *     SIZE OF THE ARRAY MUST BE CORRECT (check it from the variable)
  * -variable: the index of the variable of interest 
  */
-int nip_total_marginalise(nip_potential source, double destination[], 
-			  int variable);
+nip_error_code nip_total_marginalise(nip_potential source, 
+				     double destination[], 
+				     int variable);
 
 
 /* Normalises an array. Divides every member by their sum.
@@ -104,7 +124,7 @@ void nip_normalise_array(double result[], int array_size);
  * (except when all of the elements are zero)
  * Returns an error code.
  */
-int nip_normalise_potential(nip_potential p);
+nip_error_code nip_normalise_potential(nip_potential p);
 
 
 /* Normalises a potential so that it is a valid conditional probability 
@@ -112,18 +132,18 @@ int nip_normalise_potential(nip_potential p);
  * is the child. (faster than normalise_dimension(p, 0) ) 
  * Returns an error code. 
  */
-int nip_normalise_cpd(nip_potential p);
+nip_error_code nip_normalise_cpd(nip_potential p);
 
 
 /* A more general way of normalising a potential along any single dimension. 
  * ( normalise_cpd(p) <==> normalise_dimension(p, 0) )
  */
-int nip_normalise_dimension(nip_potential p, int dimension);
+nip_error_code nip_normalise_dimension(nip_potential p, int dimension);
 
 
 /* Method for counting a sum of potentials: 
  * "sum += increment" for potential tables. */
-int nip_sum_potential(nip_potential sum, nip_potential increment);
+nip_error_code nip_sum_potential(nip_potential sum, nip_potential increment);
 
 
 /* Method for updating target potential by multiplying with numerator 
@@ -144,8 +164,10 @@ int nip_sum_potential(nip_potential sum, nip_potential increment);
  *      If numerator is NULL, only the division is done.
  *      If both are NULL or have different geometry, an error is reported.
  */
-int nip_update_potential(nip_potential numerator, nip_potential denominator, 
-			 nip_potential target, int mapping[]);
+nip_error_code nip_update_potential(nip_potential numerator, 
+				    nip_potential denominator, 
+				    nip_potential target, 
+				    int mapping[]);
 
 /* Method for updating potential according to new evidence.
  * MUST BE: evidence[i] > 0 => v->likelihood[i] > 0
@@ -155,18 +177,21 @@ int nip_update_potential(nip_potential numerator, nip_potential denominator,
  * -target: the potential to be updated
  * -var: the index (in the potential) of the variable that gets new evidence
  */
-int nip_update_evidence(double numerator[], double denominator[], 
-			nip_potential target, int var);
+nip_error_code nip_update_evidence(double numerator[], 
+				   double denominator[], 
+				   nip_potential target, 
+				   int var);
 
 /* This one implements the initialisation with observations. 
  * See the Procedural Guide page 25, step 2. 
  * Similar to update_potential() so look at the info about 
  * arguments there.
  */
-int nip_init_potential(nip_potential probs, nip_potential target, 
-		       int mapping[]);
+nip_error_code nip_init_potential(nip_potential probs, 
+				  nip_potential target, 
+				  int mapping[]);
 
-/* TODO: make "fprintf_potential" ! */
+/* Prints a textual representation of the potential p to stream. */
 void nip_fprintf_potential(FILE* stream, nip_potential p);
 
 #endif

@@ -3,7 +3,7 @@
  * Includes evidence handling and propagation of information
  * in the join tree. 
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.h,v 1.6 2011-01-22 22:25:56 jatoivol Exp $
+ * Version: $Id: nipjointree.h,v 1.7 2011-01-23 18:25:55 jatoivol Exp $
  */
 
 #ifndef __NIPJOINTREE_H__
@@ -300,10 +300,14 @@ nip_potential_list nip_new_potential_list();
 
 
 /* Adds potentials to the list */
-int nip_append_potential(nip_potential_list l, nip_potential p, 
-			 nip_variable child, nip_variable* parents);
-int nip_prepend_potential(nip_potential_list l, nip_potential p, 
-			  nip_variable child, nip_variable* parents);
+nip_error_code nip_append_potential(nip_potential_list l, 
+				    nip_potential p, 
+				    nip_variable child, 
+				    nip_variable* parents);
+nip_error_code nip_prepend_potential(nip_potential_list l, 
+				     nip_potential p, 
+				     nip_variable child, 
+				     nip_variable* parents);
 
 
 /* Frees the memory allocated to a potentialList.

@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.8 2011-01-22 22:32:22 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.9 2011-01-23 18:25:55 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -25,16 +25,16 @@ static int nip_clique_var_index(nip_clique c, nip_variable v);
 static int nip_clique_marked(nip_clique c);
 
 /* Depth-first search in the clique tree starting from clique 'start' */
-static void nip_join_tree_dfs(nip_clique start, 
-			      void (*cFuncPointer)(nip_clique, double*),
-			      void (*sFuncPointer)(nip_sepset, double*),
-			      double* ptr);
+static nip_error_code nip_join_tree_dfs(nip_clique start, 
+					nip_error_code (*cFuncPointer)(nip_clique, double*),
+					nip_error_code (*sFuncPointer)(nip_sepset, double*),
+					double* ptr);
 
 /* Some callback functions for join_tree_dfs */
-static void  nip_retract_clique(nip_clique c, double* ptr);
-static void  nip_retract_sepset(nip_sepset s, double* ptr);
-static void     nip_clique_mass(nip_clique c, double* ptr);
-static void nip_neg_sepset_mass(nip_sepset s, double* ptr);
+static nip_error_code nip_retract_clique(nip_clique c, double* ptr);
+static nip_error_code nip_retract_sepset(nip_sepset s, double* ptr);
+static nip_error_code nip_clique_mass(nip_clique c, double* ptr);
+static nip_error_code nip_neg_sepset_mass(nip_sepset s, double* ptr);
 
 /* Internal function for removing s from c */
 static void nip_remove_sepset(nip_clique c, nip_sepset s);
@@ -1183,16 +1183,19 @@ void nip_fprintf_sepset(FILE* stream, nip_sepset s){
 }
 
 
-static void nip_retract_clique(nip_clique c, double* ptr){
-  int i;
-  for(i = 0; i < c->p->size_of_data; i++)
-    c->p->data[i] = c->original_p->data[i]; /* TODO: nip_copy_potential? */
+static nip_error_code nip_retract_clique(nip_clique c, double* ptr){
+  if(!c)
+    return NIP_ERROR_NULLPOINTER;
+  return nip_retract_potential(c->p, c->original_p);
 }
 
 
-static void nip_retract_sepset(nip_sepset s, double* ptr){
+static nip_error_code nip_retract_sepset(nip_sepset s, double* ptr){
+  if(!s)
+    return NIP_ERROR_NULLPOINTER;  
   nip_uniform_potential(s->old, 1);
   nip_uniform_potential(s->new, 1);
+  return NIP_NO_ERROR;
 }
 
 
@@ -1205,59 +1208,78 @@ static void nip_retract_sepset(nip_sepset s, double* ptr){
  * - a function pointer to the function to be used for every sepset on the way
  * - a double pointer where a return value can be written
  */
-static void nip_join_tree_dfs(nip_clique start, 
-			      void (*cFuncPointer)(nip_clique, double*),
-			      void (*sFuncPointer)(nip_sepset, double*),
-			      double* ptr) {
+static nip_error_code nip_join_tree_dfs(nip_clique start, 
+					nip_error_code (*cFuncPointer)(nip_clique, double*),
+					nip_error_code (*sFuncPointer)(nip_sepset, double*),
+					double* ptr) {
 
   /* a lot of copy-paste from collect/distribute_evidence and clique_search */
-  nip_sepset_link l = start->sepsets;
+  nip_sepset_link l;
   nip_sepset s;
+  nip_error_code err;
   
-  if(start == NULL) /* error? */
-    return;
+  if(start == NULL){ /* error? */
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    return NIP_ERROR_NULLPOINTER;
+  }
 
   /* mark */
   start->mark = NIP_MARK_ON;
 
-  if(cFuncPointer)
-    cFuncPointer(start, ptr); /* do it now or after the children ??? */
+  if(cFuncPointer){
+    err = cFuncPointer(start, ptr); /* do it now or after the children ??? */
+    if(err != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, err, 1);
+      return err;
+    }
+  }
 
   /* call neighboring cliques */
+  l = start->sepsets;
   while (l != NULL){
     s = (nip_sepset)(l->data);
     if(!nip_clique_marked(s->first_neighbour)){
-      if(sFuncPointer)
-	sFuncPointer(s, ptr);
+      if(sFuncPointer){
+	err = sFuncPointer(s, ptr);
+	if(err != NIP_NO_ERROR){
+	  nip_report_error(__FILE__, __LINE__, err, 1);
+	  return err;
+	}
+      }
       nip_join_tree_dfs(s->first_neighbour, cFuncPointer, sFuncPointer, ptr);
     }
     else if(!nip_clique_marked(s->second_neighbour)){
-      if(sFuncPointer)
-	sFuncPointer(s, ptr);
+      if(sFuncPointer){
+	err = sFuncPointer(s, ptr);
+	if(err != NIP_NO_ERROR){
+	  nip_report_error(__FILE__, __LINE__, err, 1);
+	  return err;
+	}
+      }
       nip_join_tree_dfs(s->second_neighbour, cFuncPointer, sFuncPointer, ptr);
     }
     l = l->fwd;
   }
-  return;
+  return NIP_NO_ERROR;
 }
 
 
-static void nip_clique_mass(nip_clique c, double* ptr){
+static nip_error_code nip_clique_mass(nip_clique c, double* ptr){
   int i;
   double m = 0;
   for(i = 0; i < c->p->size_of_data; i++)
     m += c->p->data[i]; /* TODO: nip_potential_mass? */
   *ptr += m;
-  return;
+  return NIP_NO_ERROR;
 }
 
-static void nip_neg_sepset_mass(nip_sepset s, double* ptr){
+static nip_error_code nip_neg_sepset_mass(nip_sepset s, double* ptr){
   int i;
   double m = 0;
   for(i = 0; i < s->new->size_of_data; i++)
     m += s->new->data[i];
   *ptr -= m;
-  return;
+  return NIP_NO_ERROR;
 }
 
 double nip_probability_mass(nip_clique* cliques, int ncliques){
@@ -1569,60 +1591,6 @@ nip_potential nip_gather_joint_probability(nip_clique start,
   return sum;
 }
 
-/* TODO: replace with nip_variable_isect() ! */
-int nip_clique_intersection(nip_clique cl1, nip_clique cl2, 
-			    nip_variable **vars, int *n){
-
-  int i, j;
-  int max_vars = cl2->p->num_of_vars;
-  int realsize = 0;
-  nip_variable *isect;
-  nip_variable *shaved_isect;
-
-  if(cl1->p->num_of_vars < max_vars)
-    max_vars = cl1->p->num_of_vars;
-
-  isect = (nip_variable *) calloc(max_vars, sizeof(nip_variable));
-
-  if(!isect){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    return NIP_ERROR_OUTOFMEMORY;
-  }
-
-  for(i = 0; i < cl1->p->num_of_vars; i++)
-    for(j = 0; j < cl2->p->num_of_vars; j++){
-
-      if(nip_equal_variables(cl1->variables[i], cl2->variables[j]))
-	isect[realsize++] = cl1->variables[i];
-    }
-
-  if(realsize == 0){
-    free(isect);
-    *vars = NULL;
-    *n = 0;
-    return NIP_NO_ERROR;
-  }
-
-  /* Intersection is non-empty, realsize > 0 */
-
-  shaved_isect = (nip_variable *) calloc(realsize, sizeof(nip_variable));
-
-  if(!shaved_isect){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    free(isect);
-    return NIP_ERROR_OUTOFMEMORY;
-  }
-
-  for(i = 0; i < realsize; i++)
-    shaved_isect[i] = isect[i];
-  
-  free(isect);
-  *vars = shaved_isect;
-  *n = realsize;
-
-  return NIP_NO_ERROR;
-}
-
 
 nip_potential_list nip_new_potential_list(){
   nip_potential_list pl = (nip_potential_list) 
@@ -1635,8 +1603,10 @@ nip_potential_list nip_new_potential_list(){
 }
 
 
-int nip_append_potential(nip_potential_list l, nip_potential p, 
-			 nip_variable child, nip_variable* parents){
+nip_error_code nip_append_potential(nip_potential_list l, 
+				    nip_potential p, 
+				    nip_variable child, 
+				    nip_variable* parents){
   nip_potential_link new = (nip_potential_link) 
     malloc(sizeof(nip_potential_link_struct));
 
@@ -1667,8 +1637,10 @@ int nip_append_potential(nip_potential_list l, nip_potential p,
 }
 
 
-int nip_prepend_potential(nip_potential_list l, nip_potential p, 
-			  nip_variable child, nip_variable* parents){
+nip_error_code nip_prepend_potential(nip_potential_list l, 
+				     nip_potential p, 
+				     nip_variable child, 
+				     nip_variable* parents){
   nip_potential_link new = (nip_potential_link) 
     malloc(sizeof(nip_potential_link_struct));
 
