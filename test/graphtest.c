@@ -1,6 +1,6 @@
 /* Program for testing the graph implementation.
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: graphtest.c,v 1.8 2011-01-06 01:14:27 jatoivol Exp $
+ * Version: $Id: graphtest.c,v 1.9 2011-01-24 08:13:14 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -126,16 +126,17 @@ void test4(nip_graph g) {
     n = nip_graph_size(g);
     v = nip_graph_nodes(g);
     for (i = 0; i < n; i++) {
-        for (j=0;j < n;j++) {
-            if (nip_graph_linked(g, v[i], v[j])) {
-                assert(nip_graph_linked(gu, v[i], v[j]));
-                assert(nip_graph_linked(gu, v[j], v[i]));
-            }
-            if (nip_graph_linked(gu, v[i], v[j])) {
-                assert(nip_graph_linked(g,v[i],v[j]) || 
-		       nip_graph_linked(g,v[j],v[i]));
-            }
-        }
+      for (j=0;j < n;j++) {
+	if (nip_graph_linked(g, v[i], v[j])) {
+	  /* printf("%s -> %s\n", v[i]->symbol, v[j]->symbol); */
+	  assert(nip_graph_linked(gu, v[i], v[j]));
+	  assert(nip_graph_linked(gu, v[j], v[i]));
+	}
+	if (nip_graph_linked(gu, v[i], v[j])) {
+	  assert(nip_graph_linked(g,v[i],v[j]) || 
+		 nip_graph_linked(g,v[j],v[i]));
+	}
+      }
     }
     nip_free_graph(gu);
     printf("\tTest 4 done.\n");

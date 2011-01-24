@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.19 2011-01-22 22:25:56 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.20 2011-01-24 08:13:14 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -59,7 +59,7 @@ nip_graph nip_new_graph(unsigned n) {
 }
 
 nip_graph nip_copy_graph(nip_graph g) {
-    int n, var_ind_size;
+    int n;
     nip_graph g_copy;
 
     n = g->size;
@@ -67,19 +67,11 @@ nip_graph nip_copy_graph(nip_graph g) {
 
     memcpy(g_copy->adj_matrix, g->adj_matrix, n*n*sizeof(int));
     memcpy(g_copy->variables, g->variables, n*sizeof(nip_variable));
-    if (g->var_ind == NULL)
-      g_copy->var_ind = NULL;
-    else {
-      var_ind_size = (g->max_id - g->min_id +1)*sizeof(long);      
-      g_copy->var_ind = (unsigned long*) malloc(var_ind_size);
-      if(!(g_copy->var_ind)){
-	nip_free_graph(g_copy);
-	return NULL;
-      }
-      memcpy(g_copy->var_ind, g->var_ind, var_ind_size);
-    }
     g_copy->max_id = g->max_id;
     g_copy->min_id = g->min_id;
+    g_copy->top = g->top; /* remember this too! 24.1.2011 */
+
+    g_copy->var_ind = NULL; /* this gets sorted during the first search */
 
     return g_copy;
 }

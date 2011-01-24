@@ -16,22 +16,11 @@
 
 TODO:
 * Refactorisation: replacing a lot of copy-paste code with these...
-  - variable_union(), 
-  - variable_isect(): search for clique_intersection, and
-  - mapper(): search for various clique reordering code...
-
-* Check what potential and sepset do when num_of_vars == 0
+  - nip_variable_union(), 
+  - nip_variable_isect(): search for clique_intersection, and
+  - nip_mapper(): search for various clique reordering code...
 
 * Use Git instead of CVS
-
-* Define enumeration types instead of a set of defines
-  + typedef enum nip_direction_type {backward, forward} nip_direction;
-  + typedef enum nip_error_code_enum { NO_ERROR = 0, ...} nip_error_code;
-  - use nip_error_code instead of int, done so far: 
-    + lists, 
-    + graph, 
-    + variable,
-    + potential,
 
 * Check if the library is UTF-8 compatible...
   - hard byte length limit of some strings cuts UTF-8 chars?
@@ -57,29 +46,6 @@ TODO:
 * Solve circular dependency between Heap and clique!
   + heap.h uses clique.h, which does not depend on heap.h itself!
   
-* Consistent conventions in naming functions, variables, and data structures?
-  - make the naming conventions uniform, e.g. 
-    state_names instead of statenames or stateNames
-  - prefix everything with "nip" to simulate namespace
-  + errorhandler.h -> niperrorhandler.h
-  + lists.h -> niplists.h
-  + fileio.h -> nipstring.h
-  + variable.h -> nipvariable.h
-  + potential.h -> nippotential.h
-  + clique.h -> nipjointree.h
-  + Heap.h -> nipheap.h
-  + Graph.h -> nipgraph.h
-  + parser.h -> nipparsers.h ?
-  - nip.h ok?
-  + convert -> nipconvert
-  + em_test -> niptrain
-  + gen_test -> nipsample
-  + inftest -> nipinference
-  + joint_test -> nipjoint
-  + likelihood -> niplikelihood
-  + map -> nipmap
-  + loo_prediction_test -> nipbenchmark
-
 * Make it a library
   + makefile rules for static
   + makefile rules for a shared library
@@ -149,7 +115,7 @@ TODO:
   + output: the likelihood value "p (d e f | a b c)"
   - the same for DBN models???
 
-* Use separate structure for the first time step
+* Use separate structure for the first time step (or not?)
   - How to create the graph for it automatically?
   - How to use the new piece for inference in the first step?
 
@@ -179,6 +145,39 @@ TODO:
 * BUG: Evidence about variables without parents cancels the prior
   + Solved: Priors should not be entered as if they were evidence
 
+* DONE: A more dynamic Graph, allocated size vs. number of added nodes
+
+* DONE: Check what potential and sepset do when dimensionality == 0
+  + inverse_mapping can't be called when dimensionality == 0
+  + p->size_of_data becomes 1 and the single number represents total sum
+
+* DONE: Define enumeration types instead of a set of separate defines
+  + typedef enum nip_direction_type {backward, forward} nip_direction;
+  + typedef enum nip_error_code_enum { NO_ERROR = 0, ...} nip_error_code;
+  + use nip_error_code instead of int
+
+* Consistent conventions in naming functions, variables, and data structures?
+  + make the naming conventions uniform, e.g. 
+    state_names instead of statenames or stateNames
+  + prefix everything with "nip" to simulate namespace
+  + errorhandler.h -> niperrorhandler.h
+  + lists.h -> niplists.h
+  + fileio.h -> nipstring.h
+  + variable.h -> nipvariable.h
+  + potential.h -> nippotential.h
+  + clique.h -> nipjointree.h
+  + Heap.h -> nipheap.h
+  + Graph.h -> nipgraph.h
+  + parser.h -> nipparsers.h ?
+  - nip.h ok?
+  + convert -> nipconvert
+  + em_test -> niptrain
+  + gen_test -> nipsample
+  + inftest -> nipinference
+  + joint_test -> nipjoint
+  + likelihood -> niplikelihood
+  + map -> nipmap
+  + loo_prediction_test -> nipbenchmark
 
 
 
