@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.20 2011-01-24 08:13:14 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.21 2011-01-24 08:29:02 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -188,11 +188,15 @@ nip_error_code nip_graph_add_node(nip_graph g, nip_variable v){
     g->min_id = id;
     /* TODO: update g->var_ind ? */
   }
-  if (id > g->max_id || g->min_id == NIP_VAR_INVALID_ID){
+  if (id > g->max_id || g->max_id == NIP_VAR_INVALID_ID){
     g->max_id = id;
     /* TODO: update g->var_ind ? */
   }
-    
+  if(g->var_ind != NULL){
+    free(g->var_ind); /* old var_ind became invalid */
+    g->var_ind = NULL;
+  }
+
   if (g->top == g->size)
     nip_build_graph_index(g); /* TODO: continuous update? */
   
