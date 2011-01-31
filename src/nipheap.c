@@ -1,11 +1,11 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.16 2011-01-31 09:28:57 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.17 2011-01-31 18:01:03 jatoivol Exp $
  */
 
 #include "nipheap.h"
 
-/*#define NIP_DEBUG_HEAP*/
+#define NIP_DEBUG_HEAP
 
 /* Defines the heap order between two heap items */
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2);
@@ -102,52 +102,41 @@ static void nip_clean_heap_item(nip_heap h,
     nip_variable v_i;
     nip_variable V_removed = ((nip_variable*)min->content)[0];
     nip_variable* cluster_vars;
+    nip_variable* hic;
+    nip_variable* minc;
 
-    /* Copy all variables in hi and min together.
-     * Copy hi first, because hi->content[0] must be the generating node 
-     * also in the future */
-    n_total = hi->content_size + min->content_size;
-    cluster_vars = (nip_variable*) calloc(n_total, sizeof(nip_variable));
-    if(!cluster_vars)
-      return; /* FIXME: report error? */
+    /* Union of hi->content[1...end] and min->content[1...end] 
+     * NOTE: cluster_vars[0] == hi->content[0] */
+    hic = (nip_variable*) hi->content;
+    minc = (nip_variable*) min->content;
+    cluster_vars = nip_variable_union(hic, minc,
+				      hi->content_size,
+				      min->content_size,
+				      &n_total);
+    if(!cluster_vars){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+      return;
+    }
+    assert(cluster_vars[0] == hic[0]);
 
-    /*for (i = 0; i < hi->content_size; i++)
-      cluster_vars[i] = hi->content[i];
-      for (i = 0; i < min->content_size; i++)
-      cluster_vars[hi->n +i] = min->content[i];*/
-
-    memcpy(cluster_vars, hi->content, 
-	   hi->content_size*sizeof(nip_variable));
-    memcpy(cluster_vars+hi->content_size, min->content, 
-	   min->content_size*sizeof(nip_variable));
-    
-    /* Remove duplicates and min_vs[0] */
+    /* Remove min_vs[0] */
     n_vars = 0;
     for (i = 0; i < n_total; i++) {
       v_i = cluster_vars[i];
-      if (v_i == NULL) 
-	continue;
-      for (j = i+1; j < n_total; j++) {
-	if (cluster_vars[j] == NULL) 
-	  continue;
-	if (nip_equal_variables(v_i, cluster_vars[j]) ||
-	    nip_equal_variables(V_removed, cluster_vars[j]))
-	  cluster_vars[j] = NULL;
-      }
-      cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
+      cluster_vars[i] = NULL;    
+      if (!nip_equal_variables(V_removed, v_i))
+	cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
     }
 
 
 #ifdef NIP_DEBUG_HEAP
-    if(n_vars > hi->content_size){
-      printf("Heap: expanding cluster from ");
-      for (i=0; i<hi->content_size; i++)
-	printf("%s ", ((nip_variable*)(hi->content))[i]->symbol);
-      printf("to ");
-      for (i=0; i<n_vars; i++)
-	printf("%s ", cluster_vars[i]->symbol);
-      printf("\n");
-    }
+    printf("%s: changing cluster from ", __FILE__);
+    for (i=0; i<hi->content_size; i++)
+      printf("%s ", nip_variable_symbol(((nip_variable*)(hi->content))[i]));
+    printf("to ");
+    for (i=0; i<n_vars; i++)
+      printf("%s ", nip_variable_symbol(cluster_vars[i]));
+    printf("\n");
 #endif
 
     /* Replace the old content with updated one */
@@ -232,9 +221,9 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
     min = h->heap_items[0];
 
 #ifdef NIP_DEBUG_HEAP
-    printf("Eliminated node: %s (%i)\n", 
+    printf("%s: Eliminated node %s (%i neighbours)\n", __FILE__,  
 	   nip_variable_symbol(((nip_variable*)min->content)[0]), 
-	   min->content_size);
+	   min->content_size - 1);
 #endif
     
     /* Move the last one to the top */
@@ -248,8 +237,8 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
     /*** TODO: this belongs to nip_triangulate_graph() in nipgraph.c ***/
     /*--- begin weird stuff ---*/
     /* Iterate over potential join tree neighbours where the child node of the 
-     * just removed (minimum cost) cluster has its parent as the child
-     * ("grandparent clusters") and update keys. The loop could be heavy. */
+     * just removed (minimum cost) cluster has its neighbours as the center
+     * ("neighbour clusters") and update keys. The loop could be heavy. */
     for (i = 1; i < min->content_size; i++) {
       heap_i = nip_heap_index(h, ((nip_variable*)min->content)[i]);
       nip_clean_heap_item(h, h->heap_items[heap_i], min);

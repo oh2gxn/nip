@@ -13,7 +13,7 @@
  * EXAMPLE: ./nipjoint model.net data.txt height weight
  *
  * Author: Janne Toivola
- * Version: $Id: nipjoint.c,v 1.2 2010-12-07 17:23:19 jatoivol Exp $
+ * Version: $Id: nipjoint.c,v 1.3 2011-01-31 18:01:03 jatoivol Exp $
  */
 
 #include <stdlib.h>
@@ -106,9 +106,9 @@ int main(int argc, char *argv[]){
   }
   /* The inputs have been parsed. -- */
   
-  /**************************************************/
-  /* The joint probability computation to be tested */
-  /**************************************************/
+  /****************************************************/
+  /* The joint probability computation not tested yet */
+  /****************************************************/
   result = get_joint_probability(model, vars, num_of_vars);
 
   /* Print stuff */

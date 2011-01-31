@@ -1,4 +1,10 @@
 TODO:
+* Refactor Heap, Graph, and cls2clq:
+  - replace nip_clean_heap_item with general user-defined functionality
+  + Heap should not depend on Graph: reform Heap
+  + Some graph operations need to be reconsidered: e.g. add_variable
+  + cls2clq.h -> niplists.h + nipgraph.h
+
 * Refactorisation: replacing a lot of copy-paste code with these...
   - nip_variable_union(), 
   - nip_variable_isect(): search for clique_intersection, and
@@ -27,11 +33,9 @@ TODO:
 * Refactor nip.c and jointree.c
   - functions that want collections of all variables and sepsets as parameters
 
-* Refactor Heap, Graph, and cls2clq:
-  - Heap should not depend on Graph: reform Heap
-    - replace nip_clean_heap_item with general user-defined functionality
-  - Some graph operations need to be reconsidered: e.g. add_variable
-  + cls2clq.h -> niplists.h + nipgraph.h
+* Figure out and test how nip_gather_joint_probability() works
+  - probably has several errors in it
+
   
 * Make it a library
   + makefile rules for static
@@ -123,6 +127,10 @@ TODO:
 * Online forward_inference (+ refactor offline forward_inference?)
 
 * Online fixed_lag_smoothing...
+
+
+
+DONE:
 
 * DONE: Refactor the list implementations
   - potentialList needs to be "hidden" better?

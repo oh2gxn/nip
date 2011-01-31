@@ -1,7 +1,9 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.22 2011-01-31 09:28:57 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.23 2011-01-31 18:01:03 jatoivol Exp $
  */
 
 #include "nipgraph.h"
+
+/*#define NIP_DEBUG_GRAPH*/
 
 /* Internal helper functions */
 static nip_error_code nip_build_graph_index(nip_graph g);
@@ -133,13 +135,17 @@ int nip_graph_cluster(nip_graph g, nip_variable v,
   int i, j, n, vi;
   nip_variable* cluster;
   
-  if (g == NULL)
+  if (g == NULL){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
     return -1;
+  }
   
   n = nip_graph_size(g);
   vi = nip_graph_index(g, v);
-  if (n < 0 || vi < 0)
+  if (n < 0 || vi < 0){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return -1; /* invalid input */
+  }
   
   /* Count number of neighbours */
   j = 0;
@@ -149,8 +155,10 @@ int nip_graph_cluster(nip_graph g, nip_variable v,
 
   /* Allocate array */
   cluster = (nip_variable*) calloc(j+1, sizeof(nip_variable));
-  if(cluster == NULL)
+  if (cluster == NULL){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return -1;
+  }
   
   /* Populate the array */
   cluster[0] = v;
@@ -415,6 +423,8 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
       }
 
       /*** TODO: updating clusters in the heap belongs here ***/
+      /* Remove certain clusters, add updated clusters, or
+       * update certain clusters, heapify appropriately? */
 
       /* Add the cluster to a list of cliques if valid */
       if (!nip_int_array_list_contains_subset(clusters, variable_set, n))
@@ -503,14 +513,14 @@ nip_error_code nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
     if(!nip_cliques_connected(one, two)){
 
 #ifdef NIP_DEBUG_GRAPH
-      printf("In nipgraph.c: Trying to add ");
-      print_sepset(s);
+      printf("%s: Trying to add ", __FILE__);
+      nip_fprintf_sepset(stdout,s);
 
       printf(" between ");
-      print_clique(one);
+      nip_fprintf_clique(stdout,one);
 
       printf(" and ");
-      print_clique(two);
+      nip_fprintf_clique(stdout,two);
 #endif
 
       /* Connect s */
@@ -614,8 +624,15 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
 	free(cluster);
       nip_free_heap(h);
     }
-    
+
     nip_heap_insert(h, (void*)cluster, csize);
+
+#ifdef NIP_DEBUG_GRAPH
+    printf("%s: possible clique ", __FILE__);
+    while (0 < csize--)
+      printf("%s,", nip_variable_symbol(cluster[csize]));
+    printf("\n");
+#endif
   }
 
   /* Make it obey the heap property */

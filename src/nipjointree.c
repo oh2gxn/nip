@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.10 2011-01-23 23:01:47 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.11 2011-01-31 18:01:03 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -452,8 +452,6 @@ nip_potential nip_create_potential(nip_variable variables[],
 
 /* NOTE: don't use this. This is just a bad idea we had... */
 nip_potential nip_reorder_potential(nip_variable vars[], nip_potential p){
-
-  int old_flat_index, new_flat_index;
 
   /* Simple (stupid) checks */
   if(!p){
@@ -1226,26 +1224,31 @@ double nip_probability_mass(nip_clique* cliques, int ncliques){
  ** remember the found variables and prune the DFS after all necessary 
  ** variables have been encountered.
  **/
+/* TODO: a lot of copy-paste, what if a dummy clique was used */
+/* FIXME: this is probably a big mess... */
 nip_potential nip_gather_joint_probability(nip_clique start, 
 					   nip_variable *vars, int n_vars,
 					   nip_variable *isect, int n_isect){  
-  /* a lot of copy-paste from jtree_dfs */
-  int i, j, k, m, n;
-  int retval;
-  int *mapping = NULL;
-  int *cardinality = NULL;
-  nip_potential product = NULL;
-  nip_potential sum = NULL;
-  nip_potential rest = NULL;
-  nip_variable *union_vars = NULL; 
-  int nuv;
-  nip_variable *rest_vars = NULL; /* for recursion */
-  int nrv;
-  nip_variable *temp = NULL;
-  int nt;
+  int i;
+  int* mapping = NULL;
+  int* cardinality = NULL;
+
+  nip_potential prod = NULL; /* product of all messages and start */
+  nip_variable* prod_vars = NULL; /* vars + clique */
+  int nprod;                      /* size of prod */
+
+  nip_potential msg = NULL;  /* message received from a branch */
+  nip_variable* msg_vars = NULL;  /* vars + msg_isect */
+  int nmsg;                       /* size of msg */
+
+  nip_variable* msg_isect = NULL; /* isect in a branch */
+  int nmsgi;                      /* size of msg_isect */
+
+  nip_potential sum = NULL;  /* the result marginalized from prod */
   nip_sepset_link l;
-  nip_sepset s;
-  nip_clique c;
+  nip_sepset s; /* a neighbour sepset */
+  nip_clique c; /* a neighbour clique */
+  nip_error_code err;
   
   /* error? */
   if(start == NULL || n_vars < 0){
@@ -1253,7 +1256,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
     return NULL;
   }
   if(n_vars == 0)
-    return nip_new_potential(NULL, 0, NULL); /* NOTE: verify correctness!? */
+    return nip_new_potential(NULL, 0, NULL); /* potential of an empty set */
   if(vars == NULL){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NULL;
@@ -1265,100 +1268,57 @@ nip_potential nip_gather_joint_probability(nip_clique start,
   /* Mark the clique */
   start->mark = NIP_MARK_ON;
 
-
   /*** 1. Reserve space ***/
-
   /* 1.1 Form the union of given variables and clique variables */
-  nuv = 0; /* size of intersection */
-  for(i = 0; i < n_vars; i++){ /* FIXME: use nip_variable_union()? */
-    for(j = 0; j < NIP_DIMENSIONALITY(start->p); j++){
-      /* (variables in isect are a subset of clique variables) */
-      if(nip_equal_variables(vars[i], start->variables[j])){
-	nuv++;
-	break;
-      }
-    }
-  }
-  nuv = n_vars + NIP_DIMENSIONALITY(start->p) - nuv; /* size of union */
-  union_vars = (nip_variable*) calloc(nuv, sizeof(nip_variable));
-  if(!union_vars){
+  prod_vars = nip_variable_union(vars, start->variables, 
+				 n_vars, NIP_DIMENSIONALITY(start->p),
+				 &nprod);
+  if(!prod_vars){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NULL;
-  }
-  /* A certain kind of union */
-  for(i = 0; i < n_vars; i++)
-    union_vars[i] = vars[i]; /* first the given variables... */
-  for(i = 0; i < n_isect; i++)
-    union_vars[n_vars + i] = isect[i];
-  k = n_vars + n_isect; /* ...then rest of the clique variables */
-  for(i = 0; i < NIP_DIMENSIONALITY(start->p); i++){
-    m = 1;
-    for(j = 0; j < n_vars; j++){
-      if(nip_equal_variables(vars[j], start->variables[i])){
-	m = 0; /* don't add duplicates */
-	break;
-      }
-    }
-    for(j = 0; j < n_isect; j++){
-      if(nip_equal_variables(isect[j], start->variables[i])){
-	m = 0; /* don't add duplicates */
-	break;
-      }
-    }
-    if(m)
-      union_vars[k++] = start->variables[i];
   }
 
   /* 1.2 Potential for the union of variables */
-  cardinality = (int*) calloc(nuv, sizeof(int));
+  cardinality = (int*) calloc(nprod, sizeof(int));
   if(!cardinality){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    free(union_vars);
+    free(prod_vars);
     return NULL;
   }
-  for(i = 0; i < nuv; i++)
-    cardinality[i] = NIP_CARDINALITY(union_vars[i]);
+  for(i = 0; i < nprod; i++)
+    cardinality[i] = NIP_CARDINALITY(prod_vars[i]);
 
   /* ### possibly HUGE potential array ! ### */
-  product = nip_new_potential(cardinality, nuv, NULL); 
+  prod = nip_new_potential(cardinality, nprod, NULL); 
 
   /* free(cardinality);
-   * reuse the larger cardinality array: nuv >= n_vars */
+   * reuse the larger cardinality array: nprod >= n_vars */
 
   /*** 2. Multiply (<start> clique) ***/
   
   /* 2.1 Form the mapping between potentials */
-  /* NOTE: a slightly bigger array allocated for future purposes also. */
-  mapping = (int*) calloc(nuv, sizeof(int));
+  /* NOTE: a slightly bigger array allocated for future purposes also. 
+   * TODO: use nip_mapper() ??? */
+  mapping = nip_mapper(prod_vars, start->variables, 
+		       nprod, NIP_DIMENSIONALITY(start->p));
   if(!mapping){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     free(cardinality);
-    free(union_vars);
-    nip_free_potential(product);
+    free(prod_vars);
+    nip_free_potential(prod);
     return NULL;
-  }
-  /* perhaps this could have beed done earlier... */
-  for(i = 0; i < NIP_DIMENSIONALITY(start->p); i++){
-    for(j = 0; j < nuv; j++){ /* linear search */
-      if(nip_equal_variables(start->variables[i], union_vars[j])){
-	mapping[i] = j;
-	break;
-      }
-    }
   }
 
   /* 2.2 Do the multiplication of potentials */
-  retval = nip_update_potential(start->p, NULL, product, mapping);
-  if(retval != NIP_NO_ERROR){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+  err = nip_update_potential(start->p, NULL, prod, mapping);
+  free(mapping);
+  if(err != NIP_NO_ERROR){
+    nip_report_error(__FILE__, __LINE__, err, 1);
     free(cardinality);
-    free(union_vars);
-    nip_free_potential(product);
+    free(prod_vars);
+    nip_free_potential(prod);
     return NULL;
   }
-  /* free(mapping);
-   * reuse the mapping array: 
-   * the recursive result may require one with <nrv> elements. */
 
   /** Traverse to the neighboring cliques in the tree **/
   while (l != NULL){
@@ -1374,24 +1334,18 @@ nip_potential nip_gather_joint_probability(nip_clique start,
 	
 	/*** 3. Operations on potentials ***/
 
-	/* 3.1 Mapping between sepset and product potentials */
-	for(j = 0; j < NIP_DIMENSIONALITY(s->new); j++){
-	  for(k = 0; k < nuv; k++){ /* linear search */
-	    if(nip_equal_variables(s->variables[j], union_vars[k])){
-	      mapping[j] = k;
-	      break;
-	    }
-	  }
-	}
+	/* 3.1 Mapping between sepset and prod potentials */
+	mapping = nip_mapper(prod_vars, s->variables, 
+			     nprod, NIP_DIMENSIONALITY(s->new));
 
 	/* 3.2 Division with sepset potential */
-	retval = nip_update_potential(NULL, s->new, product, mapping);
-	if(retval != NIP_NO_ERROR){
-	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	err = nip_update_potential(NULL, s->new, prod, mapping);
+	free(mapping);
+	if(err != NIP_NO_ERROR){
+	  nip_report_error(__FILE__, __LINE__, err, 1);
 	  free(cardinality);
-	  free(union_vars);
-	  free(mapping);
-	  nip_free_potential(product);
+	  free(prod_vars);
+	  nip_free_potential(prod);
 	  return NULL;
 	}
 
@@ -1399,83 +1353,50 @@ nip_potential nip_gather_joint_probability(nip_clique start,
 	 *     from the rest of the tree */
 
 	/* original <vars> and intersection of cliques */
-	/* unfortunately we have to remove duplicates */
-	temp = s->variables;
-	nt = NIP_DIMENSIONALITY(s->new);
-	nrv = nt;
-	for(j = 0; j < nt; j++){
-	  for(k = 0; k < n_vars; k++){
-	    if(nip_equal_variables(temp[j], vars[k])){
-	      nrv--;
-	      break;
-	    }
-	  }
-	}
-	rest_vars = (nip_variable*) calloc(nrv, sizeof(nip_variable));
-	if(!rest_vars){
+	msg_isect = nip_variable_isect(s->variables, vars, 
+				       NIP_DIMENSIONALITY(s->new), n_vars, 
+				       &nmsgi);
+	if(!msg_isect){
 	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	  free(cardinality);
-	  free(union_vars);
-	  free(mapping);
-	  nip_free_potential(product);
+	  free(prod_vars);
+	  nip_free_potential(prod);
 	  return NULL;
-	}
-	n = 0;
-	for(j = 0; j < nt; j++){
-	  m = 1;
-	  for(k = 0; k < n_vars; k++){
-	    if(nip_equal_variables(temp[j], vars[k])){
-	      m = 0; /* don't add duplicates */
-	      break;
-	    }
-	  }
-	  if(m)
-	    rest_vars[n++] = temp[j];
 	}
 
 	/* 3.4 Continue DFS */
-	rest = nip_gather_joint_probability(c, vars, n_vars, rest_vars, nrv);
+	msg = nip_gather_joint_probability(c, vars, n_vars, msg_isect, nmsgi);
 	
-	/* 3.5 Mapping between product potential and recursive result */
-	for(j = 0; j < n_vars; j++)
-	  mapping[j] = j; /* the first part is trivial */
-	for(j = 0; j < nrv; j++){
-	  for(k = n_vars; k < nuv; k++){
-	    if(nip_equal_variables(rest_vars[j], union_vars[k])){
-	      mapping[n_vars + j] = k;
-	      break;
-	      /* (Reminder: once this block missed braces...
-	       * Had a lot of fun while hunting for the bug... :)*/
-	    }
-	  }
-	}
+
+	/* 3.5 Mapping between prod potential and recursive result */
+	msg_vars = nip_variable_union(vars, msg_isect, n_vars, nmsgi, &nmsg);
+	mapping = nip_mapper(prod_vars, msg_vars, nprod, nmsg);
+	free(msg_vars);
 
 	/* 3.6 Multiplication with the recursive results */
-	retval = nip_update_potential(rest, NULL, product, mapping);
-	if(retval != NIP_NO_ERROR){
-	  nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+	err = nip_update_potential(msg, NULL, prod, mapping);
+	free(mapping);
+	nip_free_potential(msg);
+	if(err != NIP_NO_ERROR){
+	  nip_report_error(__FILE__, __LINE__, err, 1);
 	  free(cardinality);
-	  free(union_vars);
-	  free(mapping);
-	  nip_free_potential(product);
-	  nip_free_potential(rest);
+	  nip_free_potential(prod);
 	  return NULL;
 	}
-	free(rest_vars);
-	nip_free_potential(rest);
       }
     }
 
     l = l->fwd; /* next neigboring sepset */
   }
-  free(union_vars);
+  free(prod_vars);
 
   /*** 4. Marginalisation (if any?) ***/
 
   /* If we already have what we need, no marginalisation needed... */
-  if(nuv == n_vars + n_isect){
+  if(nprod == n_vars + n_isect){
+    /* FIXME: is the above condition enough? */
     free(cardinality);
-    sum = product;
+    sum = prod;
   }
   else{
     
@@ -1488,28 +1409,27 @@ nip_potential nip_gather_joint_probability(nip_clique start,
     sum = nip_new_potential(cardinality, n_vars + n_isect, NULL); 
     free(cardinality);
     
-    /* 4.2 Form the mapping between product and sum potentials */
+    /* 4.2 Form the mapping between prod and sum potentials */
+    mapping = (int*) calloc(n_vars + n_isect, sizeof(int));
     for(i = 0; i < n_vars + n_isect; i++)
       mapping[i] = i; /* Trivial because of the union operation above */
     
     /* 4.3 Marginalise */
-    retval = nip_general_marginalise(product, sum, mapping);
-    if(retval != NIP_NO_ERROR){
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-      free(mapping);
-      nip_free_potential(product);
+    err = nip_general_marginalise(prod, sum, mapping);
+    free(mapping);
+    /* The gain of having a join tree in the first place: */
+    nip_free_potential(prod);
+    if(err != NIP_NO_ERROR){
+      nip_report_error(__FILE__, __LINE__, err, 1);
       nip_free_potential(sum);
       return NULL;
     }
-    /* The gain of having a join tree in the first place: */
-    nip_free_potential(product);
   }
   
   /* 4.4 Normalise (?) */
   /* Q: is this a good idea at this point? */
   /*normalise_potential(sum);*/
 
-  free(mapping);
   return sum;
 }
 
