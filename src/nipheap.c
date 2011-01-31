@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.15 2011-01-23 23:01:47 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.16 2011-01-31 09:28:57 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -245,6 +245,7 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
 
     h->heap_size--;
 
+    /*** TODO: this belongs to nip_triangulate_graph() in nipgraph.c ***/
     /*--- begin weird stuff ---*/
     /* Iterate over potential join tree neighbours where the child node of the 
      * just removed (minimum cost) cluster has its parent as the child
@@ -254,7 +255,7 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
       nip_clean_heap_item(h, h->heap_items[heap_i], min);
     }
 
-    /* Rebuild the heap. */
+    /* Rebuild the heap. NOTE: elements can only become "bigger" */
     for (i = 1; i < min->content_size; i++) {
       heap_i = nip_heap_index(h, ((nip_variable*)min->content)[i]);
       nip_min_heapify(h, heap_i);

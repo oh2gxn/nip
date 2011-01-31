@@ -1,19 +1,3 @@
-* AN OLD PROBLEM:
-  The time slice concept features some major difficulties because the
-  actual calculations are done in the join tree instead of the graph. The
-  program should be able to figure out how the join tree repeats itself and
-  store some kind of sepsets between the time slices... Note that there can
-  be only one sepset between two adjacent time slices, because the join
-  tree can't have loops. This implies that the variables, which have links
-  to the variables in the next time slice, should be found in the
-  same clique.
-
-* UPDATE: 
-  It seems that Mr. Murphy has a solution: additional moralization of 
-  "interface" variables to include them in a single clique.
-
-
-
 TODO:
 * Refactorisation: replacing a lot of copy-paste code with these...
   - nip_variable_union(), 
@@ -33,6 +17,12 @@ TODO:
   + lists
   + fileio -> string
   + variable
+
+* Document the code structure with a call graph, where:
+  - each function is a node
+  - each call is represented by an edge (func A calls func B)
+  - static and context-insensitive (the simple case) 
+  - automated script to create DOT (GraphViz): codeviz?
 
 * Refactor nip.c and jointree.c
   - functions that want collections of all variables and sepsets as parameters
@@ -134,7 +124,7 @@ TODO:
 
 * Online fixed_lag_smoothing...
 
-* Refactor the list implementations (ADTs, almost done?)
+* DONE: Refactor the list implementations
   - potentialList needs to be "hidden" better?
   - still massive amounts of copy-paste stuff... let it be?
   + Next time: make a general void* list or use C++
@@ -179,6 +169,17 @@ TODO:
   + map -> nipmap
   + loo_prediction_test -> nipbenchmark
 
+* AN OLD PROBLEM:
+  The time slice concept features some major difficulties because the
+  actual calculations are done in the join tree instead of the graph. The
+  program should be able to figure out how the join tree repeats itself and
+  store some kind of sepsets between the time slices... Note that there can
+  be only one sepset between two adjacent time slices, because the join
+  tree can't have loops. This implies that the variables, which have links
+  to the variables in the next time slice, should be found in the
+  same clique.
+  + It seems that Mr. Murphy has a solution: additional moralization of 
+  "interface" variables to include them in a single clique.
 
 
 --- Original huomioita.txt ---

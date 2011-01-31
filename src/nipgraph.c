@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.21 2011-01-24 08:29:02 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.22 2011-01-31 09:28:57 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -413,6 +413,8 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
 	  NIP_ADJM(gm, k_index, j_index) = 1;
 	}
       }
+
+      /*** TODO: updating clusters in the heap belongs here ***/
 
       /* Add the cluster to a list of cliques if valid */
       if (!nip_int_array_list_contains_subset(clusters, variable_set, n))
