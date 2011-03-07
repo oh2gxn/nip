@@ -1,7 +1,7 @@
 /* Functions for using list structures
  * (a C++ implementation would use STL)
  * Author: Janne Toivola
- * Version: $Id: niplists.c,v 1.7 2011-01-23 18:25:55 jatoivol Exp $
+ * Version: $Id: niplists.c,v 1.8 2011-03-07 17:31:07 jatoivol Exp $
  */
 
 
@@ -16,6 +16,17 @@ nip_int_array_list nip_new_int_array_list() {
   ial->first = NULL;
   ial->last = NULL;
   return ial;
+}
+
+
+nip_int_list nip_new_int_list(){
+  nip_int_list il = 
+    (nip_int_list) malloc(sizeof(nip_int_list_struct));
+  /* Q: What if NULL was returned? */
+  il->length = 0;
+  il->first  = NULL;
+  il->last   = NULL;
+  return il;
 }
 
 
@@ -68,6 +79,33 @@ nip_error_code nip_append_int_array(nip_int_array_list l, int* i, int ni) {
 
   new->data = i;
   new->size = ni;
+  new->fwd = NULL;
+  new->bwd = l->last;
+  if(l->first == NULL)
+    l->first = new;
+  else
+    l->last->fwd = new;
+  l->last = new;
+  l->length++;
+  return NIP_NO_ERROR;
+}
+
+
+nip_error_code nip_append_int(nip_int_list l, int i){
+  nip_int_link new = 
+    (nip_int_link) malloc(sizeof(nip_int_link_struct));
+
+  if(!l){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
+  }
+
+  new->data = i;
   new->fwd = NULL;
   new->bwd = l->last;
   if(l->first == NULL)
@@ -191,6 +229,34 @@ nip_error_code nip_prepend_int_array(nip_int_array_list l, int* i, int ni) {
 }
 
 
+nip_error_code nip_prepend_int(nip_int_list l, int i){
+  nip_int_link new = 
+    (nip_int_link) malloc(sizeof(nip_int_link_struct));
+
+  if(!l){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
+  }
+
+  if(!new){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NIP_ERROR_OUTOFMEMORY;
+  }
+
+  new->data = i;
+  new->bwd = NULL;
+  new->fwd = l->first;
+  if(l->last == NULL)
+    l->last = new;
+  else
+    l->first->bwd = new;
+
+  l->first = new;
+  l->length++;
+  return NIP_NO_ERROR;
+}
+
+
 nip_error_code nip_prepend_double(nip_double_list l, double d){
   nip_double_link new = 
     (nip_double_link) malloc(sizeof(nip_double_link_struct));
@@ -277,6 +343,34 @@ nip_error_code nip_prepend_string_pair(nip_string_pair_list l,
 }
 
 
+int* nip_int_list_to_array(nip_int_list l){
+  int i;
+  nip_int_link ln;
+  int* new;
+  
+  if(!l){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NULL;
+  }
+
+  if(l->length == 0)
+    return NULL;
+
+  new = (int*) calloc(l->length, sizeof(int));
+  if(!new){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    return NULL;
+  }
+
+  ln = l->first;
+  for(i = 0; i < l->length; i++){
+    new[i] = ln->data; /* the data is copied here */
+    ln = ln->fwd;
+  }
+  return new;
+}
+
+
 double* nip_double_list_to_array(nip_double_list l){
   int i;
   nip_double_link ln;
@@ -335,6 +429,26 @@ char** nip_string_list_to_array(nip_string_list l){
 
 void nip_empty_int_array_list(nip_int_array_list l) {
   nip_int_array_link ln;
+
+  if(!l)
+    return;
+  
+  ln = l->last;
+
+  l->last = NULL;
+  while(ln != NULL){
+    free(ln->fwd); /* free(NULL) is O.K. at the beginning */
+    ln = ln->bwd;
+  }
+  free(l->first);
+  l->first = NULL;
+  l->length = 0;
+  return;
+}
+
+
+void nip_empty_int_list(nip_int_list l){
+  nip_int_link ln;
 
   if(!l)
     return;

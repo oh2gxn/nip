@@ -1,8 +1,9 @@
 TODO:
 * Replace nip_clean_heap_item with general user-defined functionality
-  - int nip_search_heap_item(nip_heap h, int (*criterion)(void* item, int size))
+  - int nip_search_heap_item(...)
+  - int nip_get_heap_item(nip_heap h, int i, void** content)
   - nip_error_code nip_update_heap_item(nip_heap h, int i, void* elem, int size)
-  - nip_error_code nip_heapify_updated(nip_heap h)
+  - nip_error_code nip_heapify_updated(nip_heap h) or build_min_heap?
 
 * Refactorisation: replacing a lot of copy-paste code with these...
   - nip_variable_union(), 

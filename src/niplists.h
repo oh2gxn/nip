@@ -1,6 +1,8 @@
-/* Various linked list data structures used e.g. in parser
+/* Various linked list data structures used e.g. in parser.
+ * This code is a prime example why object oriented programming 
+ * was invented.
  * Author: Janne Toivola
- * Version: $Id: niplists.h,v 1.7 2011-01-23 18:25:55 jatoivol Exp $
+ * Version: $Id: niplists.h,v 1.8 2011-03-07 17:31:07 jatoivol Exp $
  */
 
 #ifndef __NIPLISTS_H__
@@ -37,13 +39,30 @@ typedef struct nip_int_array_list_type {
 typedef nip_int_array_list_struct* nip_int_array_list;
 
 
+/* Element for linked list of integers */
+typedef struct nip_int_link_type {
+  int data;                      /* the data */
+  struct nip_int_link_type* fwd; /* next element */
+  struct nip_int_link_type* bwd; /* previous element */
+} nip_int_link_struct;
+typedef nip_int_link_struct* nip_int_link;
+
+/* Linked list of integers */
+typedef struct nip_int_list_type {
+  int length;         /* length of the list */
+  nip_int_link first; /* first element */
+  nip_int_link last;  /* last element */
+} nip_int_list_struct;
+typedef nip_int_list_struct* nip_int_list;
+
+
 /* Element for linked list of doubles */
 typedef struct nip_double_link_type {
   double data;                      /* the data */
   struct nip_double_link_type* fwd; /* next element */
   struct nip_double_link_type* bwd; /* previous element */
 } nip_double_link_struct;
-typedef nip_double_link_struct *nip_double_link;
+typedef nip_double_link_struct* nip_double_link;
 
 /* Linked list of doubles */
 typedef struct nip_double_list_type {
@@ -51,16 +70,16 @@ typedef struct nip_double_list_type {
   nip_double_link first; /* first element */
   nip_double_link last;  /* last element */
 } nip_double_list_struct;
-typedef nip_double_list_struct *nip_double_list;
+typedef nip_double_list_struct* nip_double_list;
 
 
 /* Element for linked list of strings */
 typedef struct nip_string_link_type {
   char* data;                       /* The string */
-  struct nip_string_link_type *fwd; /* next element */
-  struct nip_string_link_type *bwd; /* previous element */
+  struct nip_string_link_type* fwd; /* next element */
+  struct nip_string_link_type* bwd; /* previous element */
 } nip_string_link_struct;
-typedef nip_string_link_struct *nip_string_link;
+typedef nip_string_link_struct* nip_string_link;
 
 /* Linked list of strings */
 typedef struct nip_string_list_type {
@@ -68,7 +87,7 @@ typedef struct nip_string_list_type {
   nip_string_link first;
   nip_string_link last;
 } nip_string_list_struct;
-typedef nip_string_list_struct *nip_string_list;
+typedef nip_string_list_struct* nip_string_list;
 
 
 /* Element for linked list of <key> = "<value>" string pairs. 
@@ -76,22 +95,23 @@ typedef nip_string_list_struct *nip_string_list;
 typedef struct nip_string_pair_link_type {
   char* key;
   char* value;
-  struct nip_string_pair_link_type *fwd;
-  struct nip_string_pair_link_type *bwd;
+  struct nip_string_pair_link_type* fwd;
+  struct nip_string_pair_link_type* bwd;
 } nip_string_pair_link_struct;
-typedef nip_string_pair_link_struct *nip_string_pair_link;
+typedef nip_string_pair_link_struct* nip_string_pair_link;
 
 typedef struct nip_string_pair_list_type {
   int length;
   nip_string_pair_link first;
   nip_string_pair_link last;
 } nip_string_pair_list_struct;
-typedef nip_string_pair_list_struct *nip_string_pair_list;
+typedef nip_string_pair_list_struct* nip_string_pair_list;
 
 
 
 /* Creates an empty list */
 nip_int_array_list nip_new_int_array_list();
+nip_int_list nip_new_int_list();
 nip_double_list nip_new_double_list();
 nip_string_list nip_new_string_list();
 nip_string_pair_list nip_new_string_pair_list();
@@ -101,6 +121,7 @@ nip_string_pair_list nip_new_string_pair_list();
  * NOTE: In case of a pointer, only the pointer is copied, not the content 
  */
 nip_error_code nip_append_int_array(nip_int_array_list l, int* i, int ni);
+nip_error_code nip_append_int(nip_int_list l, int i);
 nip_error_code nip_append_double(nip_double_list l, double d);
 nip_error_code nip_append_string(nip_string_list l, char* s);
 nip_error_code nip_append_string_pair(nip_string_pair_list l, 
@@ -111,6 +132,7 @@ nip_error_code nip_append_string_pair(nip_string_pair_list l,
  * NOTE: In case of a pointer, only the pointer is copied, not the content 
  */
 nip_error_code nip_prepend_int_array(nip_int_array_list l, int* i, int ni);
+nip_error_code nip_prepend_int(nip_int_list l, int i);
 nip_error_code nip_prepend_double(nip_double_list l, double d);
 nip_error_code nip_prepend_string(nip_string_list l, char*  s);
 nip_error_code nip_prepend_string_pair(nip_string_pair_list l, 
@@ -121,15 +143,17 @@ nip_error_code nip_prepend_string_pair(nip_string_pair_list l,
  * NOTE: In case of pointer contents (strings etc.), only the pointer is 
  * copied, not the actual content. 
  * Remember to free it (and the list too). */
+int* nip_int_list_to_array(nip_int_list l);
 double* nip_double_list_to_array(nip_double_list l);
 char**  nip_string_list_to_array(nip_string_list l);
 
 
 /* Makes a list empty, free it with free(x) 
  * NOTE: Only the list is deleted, not the content. If you had a list 
- *       of dynamically allocated stuff (pointers), you just leaked memory.
+ * of dynamically allocated stuff (like strings), you just leaked memory.
  */
 void nip_empty_int_array_list(nip_int_array_list l);
+void nip_empty_int_list(nip_int_list l);
 void nip_empty_double_list(nip_double_list l);
 void nip_empty_string_list(nip_string_list l);
 

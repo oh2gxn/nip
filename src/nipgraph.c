@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.23 2011-01-31 18:01:03 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.24 2011-03-07 17:31:07 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -25,6 +25,14 @@ static int nip_sepset_secondary_cost(void* sepset, int n);
 /* Creates a heap of nip_variable arrays (possible cliques) from 
  * an undirected and moralized graph gm */
 static nip_heap nip_build_cluster_heap(nip_graph gm);
+
+/* Callback function for searching certain heap items */
+static int nip_family_cluster(void* i, int isize, void* r, int rsize);
+
+/* Updates remaining candidate clusters after removing one... */
+static nip_error_code nip_update_cluster_heap(nip_heap h, 
+					      nip_variable* cluster, 
+					      int csize);
 
 /* Creates a heap of possible sepsets from a set of cliques */
 static nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques);
@@ -396,7 +404,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     clusters = nip_new_int_array_list();
     for (i = 0; i < n; i++) {
       cluster_size = nip_extract_min_cluster(h, &min_cluster);
-      
+
       /* New variable_set for this cluster */
       variable_set = (int*) calloc(n, sizeof(int));
       if(!variable_set) {
@@ -422,9 +430,8 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
 	}
       }
 
-      /*** TODO: updating clusters in the heap belongs here ***/
-      /* Remove certain clusters, add updated clusters, or
-       * update certain clusters, heapify appropriately? */
+      /* Update certain clusters, heapify appropriately */
+      nip_update_cluster_heap(h, min_cluster, cluster_size);
 
       /* Add the cluster to a list of cliques if valid */
       if (!nip_int_array_list_contains_subset(clusters, variable_set, n))
@@ -625,7 +632,7 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
       nip_free_heap(h);
     }
 
-    nip_heap_insert(h, (void*)cluster, csize);
+    nip_heap_insert(h, (void*) cluster, csize);
 
 #ifdef NIP_DEBUG_GRAPH
     printf("%s: possible clique ", __FILE__);
@@ -642,7 +649,77 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
 }
 
 
-nip_heap nip_build_sepset_heap(nip_clique* cliques, int num_of_cliques) {
+static int nip_family_cluster(void* i, int isize, void* r, int rsize){
+  if (isize < 1 || rsize != 1)
+    return 0; /* invalid input */
+  if (nip_equal_variables(((nip_variable*)i)[0], ((nip_variable*)r)[0]))
+    return 1;
+  return 0;
+}
+
+
+static nip_error_code nip_update_cluster_heap(nip_heap h, 
+					      nip_variable* cluster, 
+					      int csize){
+  int i, j, k, index;
+  int osize;
+  void* old_item;
+  nip_variable* old_cluster;
+  int nsize;
+  nip_variable* new_cluster;
+  nip_variable v, v_i;
+  nip_variable v_removed = cluster[0];
+  
+  /* Iterate over potential join tree neighbours where the child node of the 
+   * just removed (minimum cost) cluster has its neighbours as the center
+   * ("neighbour clusters") and update keys. The loop could be heavy. */
+  for (i = 1; i < csize; i++){
+    v = cluster[i]; /* search for neighbour clusters */
+    index = nip_search_heap_item(h, *nip_family_cluster, &v, 1);
+    osize = nip_get_heap_item(h, index, &old_item);
+    old_cluster = (nip_variable*) old_item;
+
+    /* Union of old_cluster[1...end] and cluster[1...end] 
+     * NOTE: new_cluster[0] == old_cluster[0] */
+    new_cluster = nip_variable_union(old_cluster, cluster,
+				      osize, csize, &nsize);
+    if(!new_cluster){
+      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+      return NIP_ERROR_GENERAL;
+    }
+    assert(new_cluster[0] == old_cluster[0]);
+
+    /* Remove cluster[0] */
+    k = 0;
+    for (j = 0; j < nsize; j++) {
+      v_i = new_cluster[j];
+      new_cluster[j] = NULL;
+      if (!nip_equal_variables(v_removed, v_i))
+	new_cluster[k++] = v_i; /* Note: overwrites itself */
+    }
+    /* if (k == nsize-1), new_cluster was allocated one element too much */
+
+#ifdef NIP_DEBUG_HEAP
+    printf("%s: changing cluster from ", __FILE__);
+    for (j=0; j<osize; j++)
+      printf("%s ", nip_variable_symbol(old_cluster[j]));
+    printf("to ");
+    for (j=0; j<k; j++)
+      printf("%s ", nip_variable_symbol(new_cluster[j]));
+    printf("\n");
+#endif
+
+    free(old_cluster); /* FIXME: here or in nip_set_heap_item? */
+    nip_set_heap_item(h, index, (void*)new_cluster, k);
+  }
+
+  nip_build_min_heap(h); /* Rebuild the heap. */
+  return NIP_NO_ERROR;
+}
+
+
+static nip_heap nip_build_sepset_heap(nip_clique* cliques, 
+				      int num_of_cliques) {
   int i,j;
   int n = (num_of_cliques * (num_of_cliques - 1)) / 2;
   int hi_index = 0;

@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.17 2011-01-31 18:01:03 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.18 2011-03-07 17:31:07 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -10,18 +10,12 @@
 /* Defines the heap order between two heap items */
 static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2);
 
-/* FIXME: this assumes we have stored nip_variable[] as content! 
- * Just make it "void* v" ??? */
-static int nip_heap_index(nip_heap h, nip_variable v);
-
-/* An undocumented function by Antti Rasinen:
- * seems to update heap item hi after removing heap item min from h.
- * After this, hi contains the union of hi->content and min->content,
- * except min->content[0]. */
-static void nip_clean_heap_item(nip_heap h, nip_heap_item hi, 
-				nip_heap_item min);
+/* Helper function for nip_build_min_heap */
+static void nip_min_heapify(nip_heap h, int i);
 
 
+
+/*** Public functions ***/
 nip_heap nip_new_heap(int initial_size, 
 		      int (*primary)(void* item, int size),
 		      int (*secondary)(void* item, int size)) {
@@ -50,7 +44,14 @@ nip_heap nip_new_heap(int initial_size,
   h->primary_key = primary;
   h->secondary_key = secondary;
   h->heapified = 0;
-  
+  h->updated_items = nip_new_int_list();
+  if(!h->updated_items){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    free(h->heap_items);
+    free(h);
+    return NULL;
+  }
+
   return h;
 }
 
@@ -90,130 +91,92 @@ nip_error_code nip_heap_insert(nip_heap h, void* content, int size) {
   h->heap_items[h->heap_size] = hi;
   h->heap_size++;
   h->heapified = 0;
+  /* TODO: Just prepend index to h->updated_items? */
 
   return NIP_NO_ERROR;
 }
 
 
-static void nip_clean_heap_item(nip_heap h,
-				nip_heap_item hi, 
-				nip_heap_item min) {
-    int i, j, n_vars, n_total;
-    nip_variable v_i;
-    nip_variable V_removed = ((nip_variable*)min->content)[0];
-    nip_variable* cluster_vars;
-    nip_variable* hic;
-    nip_variable* minc;
+int nip_search_heap_item(nip_heap h, 
+			 int (*comparison)(void* i, int isize, 
+					   void* r, int rsize), 
+			 void* ref, int refsize){
+    /* Finds the heap element that matches the comparison operation with
+     * provided reference content. */
+    /* Linear search, but at the moment the only option */
+    /* Hopefully this will not be too slow */
+    int n;
+    nip_heap_item hi;
 
-    /* Union of hi->content[1...end] and min->content[1...end] 
-     * NOTE: cluster_vars[0] == hi->content[0] */
-    hic = (nip_variable*) hi->content;
-    minc = (nip_variable*) min->content;
-    cluster_vars = nip_variable_union(hic, minc,
-				      hi->content_size,
-				      min->content_size,
-				      &n_total);
-    if(!cluster_vars){
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-      return;
+    for (n = 0; n < h->heap_size; n++) {
+      hi = h->heap_items[n];
+      if ((*comparison)(hi->content, hi->content_size, ref, refsize))
+	return n;
     }
-    assert(cluster_vars[0] == hic[0]);
-
-    /* Remove min_vs[0] */
-    n_vars = 0;
-    for (i = 0; i < n_total; i++) {
-      v_i = cluster_vars[i];
-      cluster_vars[i] = NULL;    
-      if (!nip_equal_variables(V_removed, v_i))
-	cluster_vars[n_vars++] = v_i; /* Note: overwrites itself */
-    }
-
-
-#ifdef NIP_DEBUG_HEAP
-    printf("%s: changing cluster from ", __FILE__);
-    for (i=0; i<hi->content_size; i++)
-      printf("%s ", nip_variable_symbol(((nip_variable*)(hi->content))[i]));
-    printf("to ");
-    for (i=0; i<n_vars; i++)
-      printf("%s ", nip_variable_symbol(cluster_vars[i]));
-    printf("\n");
-#endif
-
-    /* Replace the old content with updated one */
-    hi->content_size = n_vars;
-    free(hi->content);
-    hi->content = calloc(n_vars, sizeof(nip_variable));
-    if(!(hi->content)){
-      free(cluster_vars);
-      return;
-    }
-    memcpy(hi->content, cluster_vars, n_vars*sizeof(nip_variable));
-    free(cluster_vars);
-
-    hi->primary_key = (*h->primary_key)(hi->content, hi->content_size);
-    hi->secondary_key = (*h->secondary_key)(hi->content, hi->content_size);
-
-    return;
+    return -1;
 }
 
 
-/* Heap management */
-
-static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2) {
-  if(h1!=NULL){
-    if(h2!=NULL)
-      return ((h1->primary_key < h2->primary_key) || 
-	      (h1->primary_key == h2->primary_key && 
-	       h1->secondary_key < h2->secondary_key));
-    else
-      return 1; /* h2 == NULL => belongs to the bottom of the heap */
+int nip_get_heap_item(nip_heap h, int index, void** content) {
+  nip_heap_item hi;
+  if (h == NULL || index < 0 || index >= h->heap_size){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return -1;
   }
-  return 0; /* h1 == NULL => belongs to the bottom */
+  hi = h->heap_items[index];
+  *content = hi->content;
+  return hi->content_size;
+}
+
+
+nip_error_code nip_set_heap_item(nip_heap h, int index,
+				 void* content, int size) {
+  nip_heap_item hi; 
+  
+  if (h == NULL || index < 0 || index >= h->heap_size || size <= 0){
+    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    return NIP_ERROR_INVALID_ARGUMENT;
+  }
+  hi = h->heap_items[index];
+
+  hi->content = content; /* FIXME: free(hi->content) here or in nipgraph.c */
+  hi->content_size = size;
+  hi->primary_key = (*h->primary_key)(hi->content, hi->content_size);
+  hi->secondary_key = (*h->secondary_key)(hi->content, hi->content_size);
+  /*h->heapified = 0;*/
+  nip_append_int(h->updated_items, index);
+
+  return NIP_NO_ERROR;
 }
 
 
 void nip_build_min_heap(nip_heap h) {
-  int i;
+  int i, index;
+  nip_int_link il;
   if(!h)
     return;
-  for (i = NIP_HEAP_PARENT(h->heap_size-1); i >= 0; i--)
-    nip_min_heapify(h, i);
+  if(!h->heapified){
+    /* heapify everything */
+    for (i = NIP_HEAP_PARENT(h->heap_size-1); i >= 0; i--)
+      nip_min_heapify(h, i);
+  }
+  else {
+    /* heapify only updated items */
+    il = NIP_LIST_ITERATOR(h->updated_items);
+    while (il != NULL){
+      index = NIP_LIST_ELEMENT(il);
+      nip_min_heapify(h, index);
+      il = NIP_LIST_NEXT(il);
+    }
+  }
+  nip_empty_int_list(h->updated_items);
   h->heapified = 1;
-}
-
-
-void nip_min_heapify(nip_heap h, int i) {
-    int l,r;
-    int min, flag;
-    nip_heap_item temp;
-    
-    do {
-        flag = 0;   
-        l = NIP_HEAP_LEFT(i); r = NIP_HEAP_RIGHT(i);
-    
-        /* Note the difference between l (ell) and i (eye) */
-	min = i;
-	if (l < h->heap_size && 
-	    nip_heap_less_than(h->heap_items[l], h->heap_items[i]))
-	  min = l;
-        if (r < h->heap_size && 
-	    nip_heap_less_than(h->heap_items[r], h->heap_items[min]))
-	  min = r;
-            
-        if (min != i) {
-            /* Exchange array[min] and array[i] */
-            temp = h->heap_items[min];
-            h->heap_items[min] = h->heap_items[i];
-            h->heap_items[i] = temp;
-            i = min; flag = 1;
-        }
-    } while (flag);
 }
 
 
 int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
     nip_heap_item min;	/* Cluster with smallest weight */
-    int i, heap_i;
+    int i;
 
     if (h->heap_size < 1)
       return 0;
@@ -234,23 +197,8 @@ int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
 
     h->heap_size--;
 
-    /*** TODO: this belongs to nip_triangulate_graph() in nipgraph.c ***/
-    /*--- begin weird stuff ---*/
-    /* Iterate over potential join tree neighbours where the child node of the 
-     * just removed (minimum cost) cluster has its neighbours as the center
-     * ("neighbour clusters") and update keys. The loop could be heavy. */
-    for (i = 1; i < min->content_size; i++) {
-      heap_i = nip_heap_index(h, ((nip_variable*)min->content)[i]);
-      nip_clean_heap_item(h, h->heap_items[heap_i], min);
-    }
-
-    /* Rebuild the heap. NOTE: elements can only become "bigger" */
-    for (i = 1; i < min->content_size; i++) {
-      heap_i = nip_heap_index(h, ((nip_variable*)min->content)[i]);
-      nip_min_heapify(h, heap_i);
-    }
+    /* JJ: nip_update_cluster_heap() was originally here */
     nip_min_heapify(h, 0);
-    /*--- end weird stuff --- */
     
     *cluster_vars = min->content;
     i = min->content_size;
@@ -286,28 +234,6 @@ int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
 }
 
 
-static int nip_heap_index(nip_heap h, nip_variable v){
-    /* Finds the heap element that contains the variable v */
-    /* Linear search, but at the moment the only option */
-    /* Hopefully this will not be too slow */
-    int i;
-    nip_variable child;
-    nip_heap_item hi;
-    /* DEBUG */
-    /*printf("Heap looking for variable %s\n", v->symbol);*/
-
-    for (i = 0; i < h->heap_size; i++) {
-      hi = h->heap_items[i];
-      /*printf("  heap item %d should have %d variables", i, hi->nvariables);*/
-      child = ((nip_variable*)hi->content)[0]; /* FIXME! */
-      /*printf("  comparing to child %s\n", child->symbol);*/
-      if (nip_equal_variables(child, v))
-	return i;
-    }
-    return -1;
-}
-
-
 void nip_free_heap(nip_heap h) {
   int i;
   nip_heap_item hi;
@@ -323,12 +249,57 @@ void nip_free_heap(nip_heap h) {
     }
   }
   free(h->heap_items);
+  nip_empty_int_list(h->updated_items);
+  free(h->updated_items);
   free(h);
   return;
 }
+
 
 int nip_heap_size(nip_heap h) {
   if(h)
     return h->heap_size;
   return 0;
+}
+
+
+static int nip_heap_less_than(nip_heap_item h1, nip_heap_item h2) {
+  if(h1!=NULL){
+    if(h2!=NULL)
+      return ((h1->primary_key < h2->primary_key) || 
+	      (h1->primary_key == h2->primary_key && 
+	       h1->secondary_key < h2->secondary_key));
+    else
+      return 1; /* h2 == NULL => belongs to the bottom of the heap */
+  }
+  return 0; /* h1 == NULL => belongs to the bottom */
+}
+
+
+static void nip_min_heapify(nip_heap h, int i) {
+    int l,r;
+    int min, flag;
+    nip_heap_item temp;
+    
+    do {
+        flag = 0;   
+        l = NIP_HEAP_LEFT(i); r = NIP_HEAP_RIGHT(i);
+    
+        /* Note the difference between l (ell) and i (eye) */
+	min = i;
+	if (l < h->heap_size && 
+	    nip_heap_less_than(h->heap_items[l], h->heap_items[i]))
+	  min = l;
+        if (r < h->heap_size && 
+	    nip_heap_less_than(h->heap_items[r], h->heap_items[min]))
+	  min = r;
+            
+        if (min != i) {
+            /* Exchange array[min] and array[i] */
+            temp = h->heap_items[min];
+            h->heap_items[min] = h->heap_items[i];
+            h->heap_items[i] = temp;
+            i = min; flag = 1;
+        }
+    } while (flag);
 }
