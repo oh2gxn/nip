@@ -1,9 +1,8 @@
 TODO:
-* Refactor Heap, Graph, and cls2clq:
-  - replace nip_clean_heap_item with general user-defined functionality
-  + Heap should not depend on Graph: reform Heap
-  + Some graph operations need to be reconsidered: e.g. add_variable
-  + cls2clq.h -> niplists.h + nipgraph.h
+* Replace nip_clean_heap_item with general user-defined functionality
+  - int nip_search_heap_item(nip_heap h, int (*criterion)(void* item, int size))
+  - nip_error_code nip_update_heap_item(nip_heap h, int i, void* elem, int size)
+  - nip_error_code nip_heapify_updated(nip_heap h)
 
 * Refactorisation: replacing a lot of copy-paste code with these...
   - nip_variable_union(), 
@@ -132,6 +131,14 @@ TODO:
 
 DONE:
 
+* DONE: Refactor Heap, Graph, and cls2clq
+  + Heap should not depend on Graph: reform Heap
+  + Some graph operations need to be reconsidered: e.g. add_variable
+  + cls2clq.h -> niplists.h + nipgraph.h
+
+* DONE: Solve circular dependency between Heap and clique!
+  + heap.h uses clique.h, which does not depend on heap.h itself!
+
 * DONE: Refactor the list implementations
   - potentialList needs to be "hidden" better?
   - still massive amounts of copy-paste stuff... let it be?
@@ -139,9 +146,6 @@ DONE:
 
 * DONE: Bug: evidence about variables without parents cancels the prior
   + Solved: Priors should not be entered as if they were evidence
-
-* DONE: Solve circular dependency between Heap and clique!
-  + heap.h uses clique.h, which does not depend on heap.h itself!
 
 * DONE: A more dynamic Graph, allocated size vs. number of added nodes
 
