@@ -1,7 +1,7 @@
 /* nipheap.h 
  * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Janne Toivola, Antti Rasinen, Mikko Korpela
- * $Id: nipheap.h,v 1.12 2011-03-07 17:31:07 jatoivol Exp $
+ * $Id: nipheap.h,v 1.13 2011-03-08 16:25:18 jatoivol Exp $
  */
 
 #ifndef __NIPHEAP_H__
@@ -78,12 +78,9 @@ nip_error_code nip_set_heap_item(nip_heap h, int index,
 void nip_build_min_heap(nip_heap h);
 
 
-/* Returns the least expensive cluster of variables from the heap. */
-int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars);
-
-
-/* Returns the least expensive sepset from the heap. */
-int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset);
+/* Returns the least expensive item from the heap. The content array is
+   assigned to the given pointer, size of the array returned as an int. */
+int nip_heap_extract_min(nip_heap h, void** content);
 
 
 /* Frees the memory allocated to the heap.

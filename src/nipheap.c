@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.18 2011-03-07 17:31:07 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.19 2011-03-08 16:25:18 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -174,63 +174,34 @@ void nip_build_min_heap(nip_heap h) {
 }
 
 
-int nip_extract_min_cluster(nip_heap h, nip_variable** cluster_vars) {
-    nip_heap_item min;	/* Cluster with smallest weight */
+int nip_heap_extract_min(nip_heap h, void** content) {
+    nip_heap_item min;	/* item with smallest weight */
     int i;
 
-    if (h->heap_size < 1)
+    if (h->heap_size < 1) {
+      *content = NULL;
       return 0;
-    
+    }
+
+    /* FIXME: check h->heapified and h->updated_items ? */
+
+    /* Min is the first one in the array, _if heapified_ */
     min = h->heap_items[0];
 
-#ifdef NIP_DEBUG_HEAP
-    printf("%s: Eliminated node %s (%i neighbours)\n", __FILE__,  
-	   nip_variable_symbol(((nip_variable*)min->content)[0]), 
-	   min->content_size - 1);
-#endif
-    
     /* Move the last one to the top */
     h->heap_items[0] = h->heap_items[h->heap_size-1]; 
-
-    /* Mark this as NULL, so that free() won't be called twice */
     h->heap_items[h->heap_size-1] = NULL;
-
     h->heap_size--;
 
     /* JJ: nip_update_cluster_heap() was originally here */
+
+    /* Push the new root downwards if not smaller than children */
     nip_min_heapify(h, 0);
     
-    *cluster_vars = min->content;
+    *content = min->content; /* Return content */
     i = min->content_size;
     free(min);
-    return i; /* Cluster size*/
-}
-
-
-int nip_extract_min_sepset(nip_heap h, nip_sepset* sepset) {
-  nip_heap_item min; /* Sepset with smallest weight */
-  
-  /* Empty heap, nothing to extract. */
-  if (h->heap_size < 1) {
-    *sepset = NULL;
-    return 0; /* no sepsets found */
-  }
-  
-  min = h->heap_items[0];
-
-  /* Return the min */
-  *sepset = (nip_sepset)(min->content);
-  free(min);
-  
-  /* Replace the root with the last item */
-  h->heap_items[0] = h->heap_items[h->heap_size - 1];
-  h->heap_items[h->heap_size - 1] = NULL;
-  h->heap_size--;
-    
-  /* Rebuild the heap. Is this enough? */
-  nip_min_heapify(h, 0);
-  
-  return 1; /* one sepset found */
+    return i; /* Return content size*/
 }
 
 
