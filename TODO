@@ -10,7 +10,13 @@ TODO:
   - nip_variable_isect(): search for clique_intersection, and
   - nip_mapper(): search for various clique reordering code...
 
+* Publish the code
+  - http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
+
 * Use Git instead of CVS
+
+* Decide licencing: http://wiki.ics.tkk.fi/OpenLicensingOfScientificMaterial
+  - http://www.gnu.org/software/bison/manual/bison.html#Conditions
 
 * Check if the library is UTF-8 compatible...
   - hard byte length limit of some strings cuts UTF-8 chars?
