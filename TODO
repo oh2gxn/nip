@@ -2,7 +2,15 @@ TODO:
 * Refactorisation: replacing a lot of copy-paste code with these...
   - nip_variable_union(), 
   - nip_variable_isect(): search for clique_intersection, and
-  - nip_mapper(): search for various clique reordering code...
+  - nip_mapper(): to be used in following functions of nipjointree.c
+    - nip_create_potential()
+    - nip_init_clique()
+    - nip_find_family_mapping()?
+
+* Required functionality: double nip_potential_mass(nip_potential p)
+  - used in nip_clique_mass and nip_neg_sepset_mass
+
+* Separate nip_potential_list from nipjointree ?
 
 * Check if the library is UTF-8 compatible...
   - hard byte length limit of some strings cuts UTF-8 chars?
@@ -23,8 +31,18 @@ TODO:
   - automated script to create DOT (GraphViz): codeviz?
 
 * Automated test scripts
-  - test models and data
-  - script with simple diff operations?
+  - iotest
+  - parsertest
+  - potentialtest
+  - cliquetest
+  - graphtest
+  - bisontest
+  - datafiletest
+  - hmmtest
+  - htmtest
+  - memleaktest
+  - models and data for testing nip.c
+  - script with simple diff operations? (not for memleaktest)
 
 * Refactor nip.c and jointree.c
   - functions that want collections of all variables and sepsets as parameters
@@ -52,7 +70,6 @@ TODO:
 
 * Publish the code
   - http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
-
 
 
 
@@ -132,6 +149,10 @@ TODO:
 
 * Online fixed_lag_smoothing...
 
+* Particle filtering by having a sibling class for potential arrays?
+  - representing distribution as a collection of samples instead of a
+    probability table
+  - automatic compatibility in multiplying potentials of different type?
 
 
 DONE:

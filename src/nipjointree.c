@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.12 2011-03-14 13:22:10 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.13 2011-03-14 14:37:36 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -1197,7 +1197,7 @@ static nip_error_code nip_neg_sepset_mass(nip_sepset s, double* ptr){
   int i;
   double m = 0;
   for(i = 0; i < s->new->size_of_data; i++)
-    m += s->new->data[i];
+    m += s->new->data[i]; /* TODO: nip_potential_mass? */
   *ptr -= m;
   return NIP_NO_ERROR;
 }
