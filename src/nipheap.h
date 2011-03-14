@@ -1,7 +1,7 @@
 /* nipheap.h 
  * Heap for storing candidate groups of variables for various algorithms.
  * Authors: Janne Toivola, Antti Rasinen, Mikko Korpela
- * $Id: nipheap.h,v 1.13 2011-03-08 16:25:18 jatoivol Exp $
+ * $Id: nipheap.h,v 1.14 2011-03-14 11:09:35 jatoivol Exp $
  */
 
 #ifndef __NIPHEAP_H__
@@ -63,9 +63,9 @@ int nip_search_heap_item(nip_heap h,
 
 
 /* Retrieves the content stored to given index (random access to heap).
- * Returns the size of the content (or negative in case of error) and 
- * the actual content via pointer. */
-int nip_get_heap_item(nip_heap h, int index, void** content);
+ * Returns the void pointer contained by the heap and size of the content 
+ * (or 0 in case of error) via given pointer. */
+void* nip_get_heap_item(nip_heap h, int index, int* size);
 
 
 /* Replaces the heap item referenced by index (given by nip_search_heap_item)
@@ -78,9 +78,10 @@ nip_error_code nip_set_heap_item(nip_heap h, int index,
 void nip_build_min_heap(nip_heap h);
 
 
-/* Returns the least expensive item from the heap. The content array is
-   assigned to the given pointer, size of the array returned as an int. */
-int nip_heap_extract_min(nip_heap h, void** content);
+/* Returns the least expensive item from the heap. The content pointer is 
+ * returned and size of the content returned via int pointer. If the heap 
+ * is empty, NULL pointer and 0 is returned. */
+void* nip_heap_extract_min(nip_heap h, int* size);
 
 
 /* Frees the memory allocated to the heap.

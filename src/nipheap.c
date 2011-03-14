@@ -1,6 +1,6 @@
 /* nipheap.c 
  * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.19 2011-03-08 16:25:18 jatoivol Exp $
+ * Version: $Id: nipheap.c,v 1.20 2011-03-14 11:09:35 jatoivol Exp $
  */
 
 #include "nipheap.h"
@@ -117,15 +117,18 @@ int nip_search_heap_item(nip_heap h,
 }
 
 
-int nip_get_heap_item(nip_heap h, int index, void** content) {
+void* nip_get_heap_item(nip_heap h, int index, int* size) {
   nip_heap_item hi;
   if (h == NULL || index < 0 || index >= h->heap_size){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return -1;
+    if (size != NULL)
+      *size = 0;
+    return NULL;
   }
   hi = h->heap_items[index];
-  *content = hi->content;
-  return hi->content_size;
+  if (size != NULL)
+    *size = hi->content_size;
+  return hi->content;
 }
 
 
@@ -174,13 +177,14 @@ void nip_build_min_heap(nip_heap h) {
 }
 
 
-int nip_heap_extract_min(nip_heap h, void** content) {
+void* nip_heap_extract_min(nip_heap h, int* size) {
     nip_heap_item min;	/* item with smallest weight */
-    int i;
+    void* c;
 
     if (h->heap_size < 1) {
-      *content = NULL;
-      return 0;
+      if (size != NULL)
+	*size = 0;
+      return NULL;
     }
 
     /* FIXME: check h->heapified and h->updated_items ? */
@@ -198,10 +202,11 @@ int nip_heap_extract_min(nip_heap h, void** content) {
     /* Push the new root downwards if not smaller than children */
     nip_min_heapify(h, 0);
     
-    *content = min->content; /* Return content */
-    i = min->content_size;
+    if (size != NULL)
+      *size = min->content_size; /* Return content size */
+    c = min->content;
     free(min);
-    return i; /* Return content size*/
+    return c; /* Return content */
 }
 
 

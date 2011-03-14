@@ -1,22 +1,8 @@
 TODO:
-* Replace nip_clean_heap_item with general user-defined functionality
-  - int nip_search_heap_item(...)
-  - int nip_get_heap_item(nip_heap h, int i, void** content)
-  - nip_error_code nip_update_heap_item(nip_heap h, int i, void* elem, int size)
-  - nip_error_code nip_heapify_updated(nip_heap h) or build_min_heap?
-
 * Refactorisation: replacing a lot of copy-paste code with these...
   - nip_variable_union(), 
   - nip_variable_isect(): search for clique_intersection, and
   - nip_mapper(): search for various clique reordering code...
-
-* Publish the code
-  - http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
-
-* Use Git instead of CVS
-
-* Decide licencing: http://wiki.ics.tkk.fi/OpenLicensingOfScientificMaterial
-  - http://www.gnu.org/software/bison/manual/bison.html#Conditions
 
 * Check if the library is UTF-8 compatible...
   - hard byte length limit of some strings cuts UTF-8 chars?
@@ -36,27 +22,39 @@ TODO:
   - static and context-insensitive (the simple case) 
   - automated script to create DOT (GraphViz): codeviz?
 
+* Automated test scripts
+  - test models and data
+  - script with simple diff operations?
+
 * Refactor nip.c and jointree.c
   - functions that want collections of all variables and sepsets as parameters
 
 * Figure out and test how nip_gather_joint_probability() works
   - probably has several errors in it
-
   
 * Make it a library
   + makefile rules for static
   + makefile rules for a shared library
   - GNU libtool or Automake for portability???
 
-* automated test scripts
-  - test models and data
-  - script with simple diff operations?
-
 * the data file abstraction should be "lighter" and separate from model
   - Hide time_series and uncertain_series implementations better
     - more useful operations for them?
   - write_X() functions could take file id's instead of file names...
     (opening a file or other output would be users responsibility)
+
+
+
+* Use Git instead of CVS
+
+* Decide licencing: http://wiki.ics.tkk.fi/OpenLicensingOfScientificMaterial
+  - http://www.gnu.org/software/bison/manual/bison.html#Conditions
+
+* Publish the code
+  - http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
+
+
+
 
 * clique.c could hide potential.c completely?
   - timeslice sepsets could be handled in clique.c
@@ -137,6 +135,12 @@ TODO:
 
 
 DONE:
+
+* DONE: Replace nip_clean_heap_item with general user-defined functionality
+  + int nip_search_heap_item(...)
+  + int nip_get_heap_item(nip_heap h, int i, void** content)
+  + nip_error_code nip_set_heap_item(nip_heap h, int i, void* elem, int size)
+  + revise build_min_heap
 
 * DONE: Refactor Heap, Graph, and cls2clq
   + Heap should not depend on Graph: reform Heap

@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.25 2011-03-08 16:25:18 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.26 2011-03-14 11:09:34 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -404,7 +404,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     /* Extract a list of potentially good clusters */
     clusters = nip_new_int_array_list();
     for (i = 0; i < n; i++) {
-      cluster_size = nip_heap_extract_min(h, &min_item);
+      min_item = nip_heap_extract_min(h, &cluster_size);
       min_cluster = (nip_variable*) min_item;
 
       /* New variable_set for this cluster */
@@ -412,7 +412,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
       if(!variable_set) {
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
 	nip_free_int_array_list(clusters);
-	while(nip_heap_extract_min(h, &min_item))
+	while(NULL != (min_item = nip_heap_extract_min(h, NULL)))
 	  free((nip_variable*)min_item);
 	nip_free_heap(h);
 	return -1;
@@ -449,7 +449,7 @@ int nip_triangulate_graph(nip_graph gm, nip_clique** clique_p) {
     clique_count = NIP_LIST_LENGTH(clusters);
 
     /* free the rest of nip_variable arrays stored in the heap */
-    while(nip_heap_extract_min(h, &min_item))
+    while(NULL != (min_item = nip_heap_extract_min(h, NULL)))
       free((nip_variable*) min_item);
     nip_free_heap(h);
     nip_free_int_array_list(clusters); /* JJT: Free the cluster list */
@@ -504,7 +504,7 @@ nip_error_code nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
   /* Take the n-1 most promising and useful sepsets */
   while(inserted < num_of_cliques - 1){
     /* Extract the "best" candidate sepset */
-    if(nip_heap_extract_min(h, &item) == 0){
+    if(NULL != (item = nip_heap_extract_min(h, NULL))){
       nip_free_heap(h);
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
@@ -544,9 +544,9 @@ nip_error_code nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
       inserted++;
     }
   }
-
+    
   /* Free the useless sepsets */
-  while(nip_heap_extract_min(h, &item))
+  while(NULL != (item = nip_heap_extract_min(h, NULL)))
     nip_free_sepset((nip_sepset)item);
   nip_free_heap(h);
 
@@ -632,7 +632,7 @@ static nip_heap nip_build_cluster_heap(nip_graph gm) {
     csize = nip_graph_cluster(gm, gm->variables[i], &cluster);
     if(csize < 0){
       /* Something went wrong, clean up */
-      while(nip_heap_extract_min(h, &item))
+      while(NULL != (item = nip_heap_extract_min(h, NULL)))
 	free((nip_variable*)item);
       nip_free_heap(h);
     }
@@ -681,7 +681,7 @@ static nip_error_code nip_update_cluster_heap(nip_heap h,
   for (i = 1; i < csize; i++){
     v = cluster[i]; /* search for neighbour clusters */
     index = nip_search_heap_item(h, *nip_family_cluster, &v, 1);
-    osize = nip_get_heap_item(h, index, &old_item);
+    old_item = nip_get_heap_item(h, index, &osize);
     old_cluster = (nip_variable*) old_item;
 
     /* Union of old_cluster[1...end] and cluster[1...end] 
@@ -747,7 +747,7 @@ static nip_heap nip_build_sepset_heap(nip_clique* cliques,
       if(!s){
 	/* In case of failure, free all sepsets and the heap. */
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	while(nip_heap_extract_min(h, &item))
+	while(NULL != (item = nip_heap_extract_min(h, NULL)))
 	  nip_free_sepset((nip_sepset)item);
 	nip_free_heap(h);
 	return NULL;
