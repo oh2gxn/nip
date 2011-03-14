@@ -1,4 +1,4 @@
-/* nipgraph.c $Id: nipgraph.c,v 1.26 2011-03-14 11:09:34 jatoivol Exp $
+/* nipgraph.c $Id: nipgraph.c,v 1.27 2011-03-14 13:22:10 jatoivol Exp $
  */
 
 #include "nipgraph.h"
@@ -504,7 +504,8 @@ nip_error_code nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
   /* Take the n-1 most promising and useful sepsets */
   while(inserted < num_of_cliques - 1){
     /* Extract the "best" candidate sepset */
-    if(NULL != (item = nip_heap_extract_min(h, NULL))){
+    if(NULL == (item = nip_heap_extract_min(h, NULL))){
+      /* Heap empty, but not supposed to be */
       nip_free_heap(h);
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
       return NIP_ERROR_GENERAL;
@@ -536,16 +537,19 @@ nip_error_code nip_create_sepsets(nip_clique *cliques, int num_of_cliques){
 
       /* Connect s */
       if(nip_confirm_sepset(s) != NIP_NO_ERROR){
+	nip_free_sepset(s); /* free all remaining sepsets and heap */
+	while(NULL != (item = nip_heap_extract_min(h, NULL)))
+	  nip_free_sepset((nip_sepset)item);
 	nip_free_heap(h);
 	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
 	return NIP_ERROR_GENERAL;
       }	
 
-      inserted++;
+      inserted++; /* successfully added one sepset */
     }
   }
     
-  /* Free the useless sepsets */
+  /* Free the useless sepsets and the heap */
   while(NULL != (item = nip_heap_extract_min(h, NULL)))
     nip_free_sepset((nip_sepset)item);
   nip_free_heap(h);

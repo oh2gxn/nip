@@ -1,6 +1,6 @@
 /* nipjointree.c
  * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipjointree.c,v 1.11 2011-01-31 18:01:03 jatoivol Exp $
+ * Version: $Id: nipjointree.c,v 1.12 2011-03-14 13:22:10 jatoivol Exp $
  */
 
 #include "nipjointree.h"
@@ -297,9 +297,9 @@ nip_sepset nip_new_sepset(nip_clique neighbour_a, nip_clique neighbour_b){
 
 void nip_free_sepset(nip_sepset s){
   if(s){
-    free(s->variables);
     nip_free_potential(s->old);
     nip_free_potential(s->new);
+    free(s->variables);
     free(s);
   }
   return;
