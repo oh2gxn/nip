@@ -19,7 +19,7 @@ TODO:
   - graph
   - heap
   - join tree
-  - potential
+  + potential
   + lists
   + fileio -> string
   + variable
@@ -79,6 +79,11 @@ TODO:
 * Printing potential tables should be contained in potential.c
   - Problem: how to include comments about parent variable values?
   - Solution: do the stuff in clique.c..?
+
+* Architecture support for various BN file parsers:
+  - Hugin Expert Net files
+  - XMLBIF http://www.cs.cmu.edu/~fgcozman/Research/InterchangeFormat/
+  - XBN?
 
 * Hugin Net parser should use a struct instead of global variables!
 
