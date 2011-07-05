@@ -1,0 +1,13 @@
+bisontest
+cliquetest
+datafiletest
+graphtest
+hmmtest
+htmtest
+iotest
+memleaktest
+parsertest
+potentialtest
+potentialtest.output
+potentialtest.reference
+runtests.sh
