@@ -31,6 +31,7 @@ TODO:
   - automated script to create DOT (GraphViz): codeviz?
 
 * Automated test scripts
+  - Use Robot Framework from Google?
   - iotest
   - parsertest
   - potentialtest
