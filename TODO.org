@@ -1,0 +1,294 @@
+TODO:
+
+* DL: 15.6.2012
+
+* TODO Refactorisation: replacing a lot of copy-paste code with these
+** nip_variable_union(), 
+** nip_variable_isect(): search for clique_intersection, and
+** nip_mapper(): to be used in following functions of nipjointree.c
+*** nip_create_potential()
+*** nip_init_clique()
+*** nip_find_family_mapping()?
+
+* TODO Required functionality: double nip_potential_mass(nip_potential p)
+** used in nip_clique_mass and nip_neg_sepset_mass
+
+* TODO Separate nip_potential_list from nipjointree ?
+
+* TODO Check if the library is UTF-8 compatible
+** hard byte length limit of some strings cuts UTF-8 chars?
+
+* TODO Document the code structure with UML "class" diagram
+** TODO graph
+** TODO heap
+** TODO join tree
+** DONE potential
+** DONE lists
+** DONE fileio -> string
+** DONE variable
+
+* TODO Document the code structure with a call graph, where:
+** each function is a node
+** each call is represented by an edge (func A calls func B)
+** static and context-insensitive (the simple case) 
+** automated script to create DOT (GraphViz): codeviz? Python?
+
+* TODO Automated test scripts
+** Use Robot Framework from Google?
+** TODO iotest
+** TODO parsertest
+** TODO potentialtest
+** TODO cliquetest
+** TODO graphtest
+** TODO bisontest
+** TODO datafiletest
+** TODO hmmtest
+** TODO htmtest
+** TODO memleaktest
+** TODO models and data for testing nip.c
+** TODO script with simple diff operations? (not for memleaktest)
+
+* TODO Refactor nip.c and jointree.c
+** functions that want collections of all variables and sepsets as parameters
+
+* TODO Figure out and test how nip_gather_joint_probability() works
+** probably has several errors in it
+  
+* TODO Make it a library
+** DONE makefile rules for static
+** DONE makefile rules for a shared library
+** TODO GNU libtool or Automake for portability???
+
+* TODO Data file abstraction should be "lighter" and separate from model
+** TODO Hide time_series and uncertain_series implementations better
+*** more useful operations for them?
+** TODO write_X() functions could take file id's instead of file names...
+*** opening a file or other output would be users responsibility
+
+
+
+* TODO Use Git instead of CVS
+
+* TODO Decide licencing: http://wiki.ics.tkk.fi/OpenLicensingOfScientificMaterial
+** http://www.gnu.org/software/bison/manual/bison.html#Conditions
+
+* TODO Publish the code
+** http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
+
+
+
+* TODO clique.c could hide potential.c completely?
+** timeslice sepsets could be handled in clique.c
+
+* TODO Printing potential tables should be contained in potential.c
+** Problem: how to include comments about parent variable values?
+** Solution: do the stuff in clique.c..?
+
+* TODO Architecture support for various BN file parsers:
+** Hugin Expert Net files
+** XMLBIF http://www.cs.cmu.edu/~fgcozman/Research/InterchangeFormat/
+** XBN?
+
+* TODO Hugin Net parser should use a struct instead of global variables!
+
+* TODO Tiny addition to huginnet.y: 
+** potentialDeclaration without data (uniform potential) AND parents. 
+** Copy-paste the similar thing currently made for priors?
+
+* TODO Parse and preserve other fields specified in Hugin Net files 
+** currently this program ignores them
+** How to store potential-specific fields?
+** What are net{input/output}-fields?
+
+* TODO BUG: net parser segfaults if <symbols> is an empty list:
+** "potential( A | ) { }" - it should report an error and quit
+
+* TODO print_model
+** writes an input file for graphviz/dot for automated visualization?
+
+* TODO "Viterbi" algorithm for the ML-estimate of the latent variables
+** It is a descendant of the algorithm called "max-product" or "max-sum"
+** another forward-like algorithm with elements of dynamic programming
+** To save huge amounts of memory, could the process use some kind of "timeslice sepsets" for encoding the progress throughout time?
+** It has to have the backtracking ability...
+
+* TODO Leave-one-out program based on em_test and inftest...
+** DONE loo_prediction_test
+** DONE for each time series: predict the values of a given variable given a model learned from other series and given data about the other variables
+** TODO testing
+
+* TODO BUG: some DBN models work, equivalent static ones don't... WHY?
+** Does this happen only on MRF-like models? Is it because of bad triangulation?
+** Should use_priors() be used automatically by reset_model() ?
+** Is the condition for entering priors really correct ?
+** Make sure priors get multiplied into the model only once!
+*** previously they were treated like evidence and this wasn't a problem
+
+* TODO Program for computing conditional likelihoods: likelihood.c
+** DONE command line parameters:
+*** "foo.net", the model
+*** "bar.txt", the data
+*** "D E F", at least one variable!
+** DONE output: the likelihood value "p (d e f | a b c)"
+** TODO the same for DBN models???
+
+* TODO Use separate structure for the first time step (or not?)
+** How to create the graph for it automatically?
+** How to use the new piece for inference in the first step?
+
+* TODO Implement some sort of structural learning algorithm?
+** NIP_potential_parents = "P1 P2 P3"; ?
+** There is a static set of edges and defined set of possible additional edges in a graph
+** The graph has to be stored in the nip struct ?
+*** nip struct       <=> net file
+*** variable struct  <=> node() definition
+*** potential struct <=> potential() definition???
+** What about graphs without any static edges?
+*** Net file without any potential() definitions? (or only priors)
+*** nip struct == a set of graphs and their clique trees?
+
+* TODO Get rid of copy-paste stuff in inference procedures... but how?
+
+* TODO Online forward_inference (+ refactor offline forward_inference?)
+
+* TODO Online fixed_lag_smoothing...
+
+* TODO Particle filtering by having a sibling class for potential arrays?
+** representing distribution as a collection of samples instead of a probability table
+** automatic compatibility in multiplying potentials of different type?
+
+
+DONE:
+
+* DONE: Replace nip_clean_heap_item with general user-defined functionality
+** int nip_search_heap_item(...)
+** int nip_get_heap_item(nip_heap h, int i, void** content)
+** nip_error_code nip_set_heap_item(nip_heap h, int i, void* elem, int size)
+** revise build_min_heap
+
+* DONE: Refactor Heap, Graph, and cls2clq
+** Heap should not depend on Graph: reform Heap
+** Some graph operations need to be reconsidered: e.g. add_variable
+** cls2clq.h -> niplists.h + nipgraph.h
+
+* DONE: Solve circular dependency between Heap and clique!
+** heap.h uses clique.h, which does not depend on heap.h itself!
+
+* DONE: Refactor the list implementations
+** potentialList needs to be "hidden" better?
+** still massive amounts of copy-paste stuff... let it be?
+** Next time: make a general void* list or use C++
+
+* DONE: Bug: evidence about variables without parents cancels the prior
+** Solved: Priors should not be entered as if they were evidence
+
+* DONE: A more dynamic Graph, allocated size vs. number of added nodes
+
+* DONE: Check what potential and sepset do when dimensionality == 0
+** inverse_mapping can't be called when dimensionality == 0
+** p->size_of_data becomes 1 and the single number represents total sum
+
+* DONE: Define enumeration types instead of a set of separate defines
+** typedef enum nip_direction_type {backward, forward} nip_direction;
+** typedef enum nip_error_code_enum { NO_ERROR = 0, ...} nip_error_code;
+** use nip_error_code instead of int
+
+* DONE: Consistent conventions in naming functions, variables, and data structures?
+** DONE make the naming conventions uniform, e.g. state_names instead of statenames or stateNames
+** DONE prefix everything with "nip" to simulate namespace
+** DONE errorhandler.h -> niperrorhandler.h
+** DONE lists.h -> niplists.h
+** DONE fileio.h -> nipstring.h
+** DONE variable.h -> nipvariable.h
+** DONE potential.h -> nippotential.h
+** DONE clique.h -> nipjointree.h
+** DONE Heap.h -> nipheap.h
+** DONE Graph.h -> nipgraph.h
+** DONE parser.h -> nipparsers.h ?
+** TODO nip.h ok?
+** DONE convert -> nipconvert
+** DONE em_test -> niptrain
+** DONE gen_test -> nipsample
+** DONE inftest -> nipinference
+** DONE joint_test -> nipjoint
+** DONE likelihood -> niplikelihood
+** DONE map -> nipmap
+** DONE loo_prediction_test -> nipbenchmark
+
+* DONE AN OLD PROBLEM:
+  The time slice concept features some major difficulties because the
+  actual calculations are done in the join tree instead of the graph. The
+  program should be able to figure out how the join tree repeats itself and
+  store some kind of sepsets between the time slices... Note that there can
+  be only one sepset between two adjacent time slices, because the join
+  tree can't have loops. This implies that the variables, which have links
+  to the variables in the next time slice, should be found in the
+  same clique.
+** It seems that Mr. Murphy has a solution: 
+*** additional moralization of "interface" variables to include them in a single clique.
+
+
+* Original huomioita.txt
+Sekalaisia huomioita:
+
+** voisi olla j‰rkev‰‰ yhdist‰‰ myˆs moralisaatio find_cliquesiin
+** pit‰isikˆ t‰ss‰ heappikin tehd‰. lienee j‰rkevint‰.
+** Variable.c:n new_variable n‰ytt‰‰ tyˆl‰‰lt‰
+*** id tuntuu konseptina hankalalta, equal-vertailu kosahtaa NULLiin ja pointteri tekee saman (ellei sitten haluta muuttujille j‰rjestyst‰... sen saisi Graphista. T‰h‰n oli joku syy...)
+
+** Myˆs Graph n‰ht‰v‰sti ei-pointteri. Mieti korjaus kun ei v‰syt‰.
+** potential copy_potential n‰ytt‰‰ NULL-robustilta
+  
+** Potentiaalin choose_indices-funktiota kutsutaan jokaiselle potentiaalin alkiolle eli monta kertaa. Saattaisi olla tehokkaampaa tehd‰ ensiksi jonkinlainen "maski" ja k‰ytt‰‰ sit‰ _ehk‰_ tehokkaampana keinona valita indeksit. 
+*** -> ehk‰ kakkosversioon
+
+** 16.1.2004 (Janne, Mikko)
+*** Taulukoita ei voi esitell‰ ilmoittamatta kokoa, eli tyyliin "int i[]" (pit‰‰ olla "int *i"). Taulukkoa ei myˆsk‰‰n voi esitell‰ tyyliin "int[] i" (t‰m‰ on javaa).
+*** Variable on nyt osoitintyyppi. Tarvittavat muutokset on periaatteessa tehty.
+
+** 22.1.2004 (Mikko)
+*** Ovatko Graphin moralise-funktion parametrit j‰rkev‰t? Pit‰‰kˆ sille tosiaan antaa kopio alkuper‰isest‰ verkosta. Eikˆ se voisi itse tehd‰ verkosta kopion ja palauttaa sen? Ehk‰ oli joku syy, miksi ei tehd‰ n‰in. Oliko?
+
+** 23.2.2004 (Janne, Mikko)
+*** Alettiin ihmettelem‰‰n Bison-systeemeit‰. Teemme seuraavaksi parserin, jolla saadaan malleja ja niiden parametreja luettua tiedostosta. T‰llˆin p‰‰semme ehk‰ jopa testaamaan tuotoksia...
+
+** 16.3.2004 (Janne)
+*** Parserin m‰‰ritteleminen ei ole aivan triviaalia. 
+**** On hieman muokattava mm. Variable-juttuja s.e. muuttujille voi asettaa tilojen nimet ja muut parametrit helposti. 
+**** Parseriin tulee tietorakenteet, joihin tiedoston mukaisia muuttujia/nodeja tulee... Verkon, riippuvuuksien ja taulukoiden parsettaminen vaikuttaa erityisen ik‰v‰lt‰. Tutkitaan...
+
+** 24.5.2004 (Janne)
+*** Clique.c:ss‰ on nyt funktio create_Potential(...), jonka avulla voi luoda ohjelmalle kelpaavan potentiaalin mink‰ tahansa muuttujaj‰rjestyksen mukaan j‰rjestetyst‰ taulukosta. T‰m‰ on tarpeen, koska Huginin tiedostoformaatissa esim. potentiaalin P(C | BD) "v‰hiten merkitsev‰" muuttuja on C, mutta ohjelmassamme oletetaan, ett‰ j‰rjestys on esim. BCD.
+
+** 26.5.2004
+*** Tarttis keksi‰ mihin muuttujia (Variable), klikkej‰ (Clique) ja sepsettej‰ (Sepset) tallennetaan! Eli miten koodiamme hyv‰ksi k‰ytt‰v‰ ohjelma p‰‰see k‰siksi mihink‰‰n ja miten parseri antaa tuotoksensa ulkomaailman n‰ht‰v‰ksi?
+
+** 27.5.2004 (Mikko)
+*** Mik‰ ajatus on Variable.c:n funktiossa int variable_statenames(Variable v, char **states) ? Tuo ei n‰yt‰ kovin paljon tekev‰n...
+
+** 2.6.2004 (Janne)
+*** variable_statenames() mahdollistaa takin k‰‰nt‰misen, jos joskus vaikka vaihdettaisiin muistinvarausstrategiaa. Nyt taulukoita ei kopioida, mutta vaarana on k‰ytˆss‰ olevan muistin vapauttaminen tai uudelleen k‰ytt‰minen merkkijonojen osalta.
+*** Mit‰s mit‰s... Meill‰ ei muuten taida olla semmoista kuin "GLOBAL RETRACTION", vaikka jonkunlaiset valmiudet onkin. T‰m‰ vain tarkoittaa sit‰, ett‰ mik‰‰n ei saisi olla mahdotonta l. todenn‰kˆisyydelt‰‰n nollaa kun dataa syˆtet‰‰n sis‰‰n.
+
+** 8.6.2004 (Janne)
+*** No voi hevon kettu. Ei sitten voinut Huginin net-tiedoston esittelyss‰ kertoa kaikkia likaisia yksityiskohtia... Menee parseri pikkuisen remonttiin, mutta onneksi tehtiin Bisonilla.
+
+** 11.6.2004 (Janne ja Mikko)
+*** Klikeill‰ ei taida olla sepsettej‰. Ei nimitt‰in etene distribute_evidence mihink‰‰n. Nyt viikonloppua viett‰m‰‰n.
+
+** 17.6.2004 (Janne ja Mikko)
+*** Melko monimutkainen Huginilla tehty verkko onnistutaan laskemaan oikein, JOS riippumattomien muuttujien jakaumaa ei yritet‰ asettaa .net -tiedoston potentiaaleilla. Tasajakauma (1 1 ... 1) siis toimii mutta muunlainen n‰kˆj‰‰n ei. Miten t‰llaiset tilanteet pit‰isi hoitaa? enter_evidence ?
+
+** 21.6.2004 (Janne ja Mikko)
+*** enter_evidencen k‰yttˆ riippumattomien muuttujien todenn‰kˆisyyksien initialisoinnissa toimii. T‰ytynee viel‰ tarkistaa, mit‰ sellaista oleellista eroa initialisen ja enter_evidencen v‰lill‰ on, joka aiheuttaa virheellisi‰ tuloksia ensin mainitun kanssa. Toki Variablen likelihood pit‰‰ alustaa, mutta sen alustamattomuus ei liene syyllinen esimerkkitapauksen v‰‰riin tuloksiin.
+
+** 9.7.2004 (Janne ja Mikko)
+*** Jouduttiin menem‰‰n muutoksissa takaisinp‰in kolmisen tuntia. Yritettiin pikaisesti integroida "Clique unmark" collect_evidenceen, distribute_evidenceen yms. Kone meni rikki, mink‰ takia paluu vanhaan. T‰ytyy tehd‰ loman j‰lkeen paremmin.
+
+** 3.8.2004 (Mikko)
+*** Ajateltiin eilen, ett‰ ei kannata viel‰ yhdist‰‰ "Clique unmark" -hommaa, koska koko ohjelman rakenne on v‰h‰n hakusessa. Jonkinlainen "nip"-rakenne olisi kai hyv‰ olla. Mutta mit‰ seuraavaksi?
+
+** 5.8.2004 (Janne ja Mikko)
+*** Mietit‰‰n, mink‰laisia rakenneuudistuksia tehd‰‰n. Parasta olisi, jos homma saataisiin yksisuuntaiseksi, eli uusi "nip"-systeemi tulee vanhan p‰‰lle.
+*** nip.c:hen joku "parse_model" tms. joka k‰ynnist‰‰ parserin ja kopioi muuttujalistan ja klikkitaulukon (ainakin) malliin. Palauttaa mallin.
+
