@@ -1,6 +1,15 @@
 TODO:
 
-* DL: 15.6.2012
+* TODO Use Git instead of CVS
+
+* TODO Decide licencing: http://wiki.ics.tkk.fi/OpenLicensingOfScientificMaterial
+** http://www.gnu.org/software/bison/manual/bison.html#Conditions
+
+* TODO Publish the code
+** http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
+
+
+** DL: 15.6.2012
 
 * TODO Refactorisation: replacing a lot of copy-paste code with these
 ** nip_variable_union(), 
@@ -64,16 +73,6 @@ TODO:
 *** more useful operations for them?
 ** TODO write_X() functions could take file id's instead of file names...
 *** opening a file or other output would be users responsibility
-
-
-
-* TODO Use Git instead of CVS
-
-* TODO Decide licencing: http://wiki.ics.tkk.fi/OpenLicensingOfScientificMaterial
-** http://www.gnu.org/software/bison/manual/bison.html#Conditions
-
-* TODO Publish the code
-** http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
 
 
 
