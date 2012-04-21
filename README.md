@@ -4,7 +4,7 @@ dnip
 Dynamic Bayesian Network library
 
 This repo will soon contain the code used in my MSc thesis:
-http://www.cis.hut.fi/jatoivol/di-oneside.pdf
+http://users.ics.tkk.fi/jatoivol/di-oneside.pdf
 
 tl;dr: 
 - (Dynamic) Bayesian Network (DBN) library in C
