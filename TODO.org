@@ -1,14 +1,7 @@
 TODO:
 
-* TODO Use Git instead of CVS
-
-* TODO Decide licencing: http://wiki.ics.tkk.fi/OpenLicensingOfScientificMaterial
-** http://www.gnu.org/software/bison/manual/bison.html#Conditions
-
 * TODO Publish the code
 ** http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
-
-
 ** DL: 15.6.2012
 
 * TODO Refactorisation: replacing a lot of copy-paste code with these
@@ -73,7 +66,6 @@ TODO:
 *** more useful operations for them?
 ** TODO write_X() functions could take file id's instead of file names...
 *** opening a file or other output would be users responsibility
-
 
 
 * TODO clique.c could hide potential.c completely?
@@ -159,40 +151,64 @@ TODO:
 
 DONE:
 
-* DONE: Replace nip_clean_heap_item with general user-defined functionality
+
+* DONE Decide licencing
+** http://wiki.ics.tkk.fi/OpenLicensingOfScientificMaterial
+** http://www.gnu.org/software/bison/manual/bison.html#Conditions
+** http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+** Add license note to source code:
+    NIP - Dynamic Bayesian Network library
+    Copyright (C) 2012  Janne Toivola
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, see <http://www.gnu.org/licenses/>.
+
+* DONE Use Git instead of CVS
+
+* DONE Replace nip_clean_heap_item with general user-defined functionality
 ** int nip_search_heap_item(...)
 ** int nip_get_heap_item(nip_heap h, int i, void** content)
 ** nip_error_code nip_set_heap_item(nip_heap h, int i, void* elem, int size)
 ** revise build_min_heap
 
-* DONE: Refactor Heap, Graph, and cls2clq
+* DONE Refactor Heap, Graph, and cls2clq
 ** Heap should not depend on Graph: reform Heap
 ** Some graph operations need to be reconsidered: e.g. add_variable
 ** cls2clq.h -> niplists.h + nipgraph.h
 
-* DONE: Solve circular dependency between Heap and clique!
+* DONE Solve circular dependency between Heap and clique!
 ** heap.h uses clique.h, which does not depend on heap.h itself!
 
-* DONE: Refactor the list implementations
+* DONE Refactor the list implementations
 ** potentialList needs to be "hidden" better?
 ** still massive amounts of copy-paste stuff... let it be?
 ** Next time: make a general void* list or use C++
 
-* DONE: Bug: evidence about variables without parents cancels the prior
+* DONE Bug: evidence about variables without parents cancels the prior
 ** Solved: Priors should not be entered as if they were evidence
 
-* DONE: A more dynamic Graph, allocated size vs. number of added nodes
+* DONE A more dynamic Graph, allocated size vs. number of added nodes
 
-* DONE: Check what potential and sepset do when dimensionality == 0
+* DONE Check what potential and sepset do when dimensionality == 0
 ** inverse_mapping can't be called when dimensionality == 0
 ** p->size_of_data becomes 1 and the single number represents total sum
 
-* DONE: Define enumeration types instead of a set of separate defines
+* DONE Define enumeration types instead of a set of separate defines
 ** typedef enum nip_direction_type {backward, forward} nip_direction;
 ** typedef enum nip_error_code_enum { NO_ERROR = 0, ...} nip_error_code;
 ** use nip_error_code instead of int
 
-* DONE: Consistent conventions in naming functions, variables, and data structures?
+* DONE Consistent conventions in naming functions, variables, and data structures?
 ** DONE make the naming conventions uniform, e.g. state_names instead of statenames or stateNames
 ** DONE prefix everything with "nip" to simulate namespace
 ** DONE errorhandler.h -> niperrorhandler.h
