@@ -1,3 +1,4 @@
+# compiled test programs #
 bisontest
 cliquetest
 datafiletest
@@ -8,6 +9,3 @@ iotest
 memleaktest
 parsertest
 potentialtest
-potentialtest.output
-potentialtest.reference
-runtests.sh

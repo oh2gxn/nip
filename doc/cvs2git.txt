@@ -1,0 +1,1176 @@
+# Documentation about converting from cvs to git
+
+> cvs2git --version
+cvs2git version 2.3.0
+
+> mkdir cvs2svn-tmp
+> cvs2git --encoding=latin_1 --blobfile=cvs2svn-tmp/git-blob.dat --dumpfile=cvs2svn-tmp/git-dump.dat --username=oh2gxn /home/jatoivol/cvsroot/nip
+
+----- pass 1 (CollectRevsPass) -----
+Examining all CVS ',v' files...
+/home/jatoivol/cvsroot/nip/.project,v
+/home/jatoivol/cvsroot/nip/Makefile,v
+/home/jatoivol/cvsroot/nip/TODO.org,v
+/home/jatoivol/cvsroot/nip/ennen_rakennemuutosta.zip,v
+/home/jatoivol/cvsroot/nip/nip-2010-10-27.tar.gz,v
+/home/jatoivol/cvsroot/nip/nip_before_rearrangement.zip,v
+/home/jatoivol/cvsroot/nip/Attic/Clique.c,v
+/home/jatoivol/cvsroot/nip/Attic/Clique.h,v
+/home/jatoivol/cvsroot/nip/Attic/Graph.c,v
+/home/jatoivol/cvsroot/nip/Attic/Graph.h,v
+/home/jatoivol/cvsroot/nip/Attic/Heap.c,v
+/home/jatoivol/cvsroot/nip/Attic/Heap.h,v
+/home/jatoivol/cvsroot/nip/Attic/Jointree.c,v
+/home/jatoivol/cvsroot/nip/Attic/Jointree.h,v
+/home/jatoivol/cvsroot/nip/Attic/Nip_show.pdf,v
+/home/jatoivol/cvsroot/nip/Attic/TODO,v
+/home/jatoivol/cvsroot/nip/Attic/Timeslice.c,v
+/home/jatoivol/cvsroot/nip/Attic/Timeslice.h,v
+/home/jatoivol/cvsroot/nip/Attic/Variable.c,v
+/home/jatoivol/cvsroot/nip/Attic/Variable.h,v
+/home/jatoivol/cvsroot/nip/Attic/arhmm.c,v
+/home/jatoivol/cvsroot/nip/Attic/baligga.net,v
+/home/jatoivol/cvsroot/nip/Attic/baligga_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/bisontest.c,v
+/home/jatoivol/cvsroot/nip/Attic/clique.c,v
+/home/jatoivol/cvsroot/nip/Attic/clique.h,v
+/home/jatoivol/cvsroot/nip/Attic/cliquetest.c,v
+/home/jatoivol/cvsroot/nip/Attic/cls2clq.c,v
+/home/jatoivol/cvsroot/nip/Attic/cls2clq.h,v
+/home/jatoivol/cvsroot/nip/Attic/convert.c,v
+/home/jatoivol/cvsroot/nip/Attic/datafile_example.txt,v
+/home/jatoivol/cvsroot/nip/Attic/datafiletest.c,v
+/home/jatoivol/cvsroot/nip/Attic/demo.m,v
+/home/jatoivol/cvsroot/nip/Attic/demo1.net,v
+/home/jatoivol/cvsroot/nip/Attic/demo2.net,v
+/home/jatoivol/cvsroot/nip/Attic/dokumentaatio.bib,v
+/home/jatoivol/cvsroot/nip/Attic/dokumentaatio.tex,v
+/home/jatoivol/cvsroot/nip/Attic/em_test.c,v
+/home/jatoivol/cvsroot/nip/Attic/errorhandler.c,v
+/home/jatoivol/cvsroot/nip/Attic/errorhandler.h,v
+/home/jatoivol/cvsroot/nip/Attic/errorhandlertest.c,v
+/home/jatoivol/cvsroot/nip/Attic/fileio.c,v
+/home/jatoivol/cvsroot/nip/Attic/fileio.h,v
+/home/jatoivol/cvsroot/nip/Attic/gen_test.c,v
+/home/jatoivol/cvsroot/nip/Attic/graph_test.c,v
+/home/jatoivol/cvsroot/nip/Attic/graphtest.c,v
+/home/jatoivol/cvsroot/nip/Attic/hmm.net,v
+/home/jatoivol/cvsroot/nip/Attic/hmm_2o.net,v
+/home/jatoivol/cvsroot/nip/Attic/hmm_2o_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hmm_2o_timeslice.net,v
+/home/jatoivol/cvsroot/nip/Attic/hmm_2o_timeslice_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hmm_2o_tulokset.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hmm_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hmm_timeslice.net,v
+/home/jatoivol/cvsroot/nip/Attic/hmm_timeslice_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hmm_tulokset.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hmmtest.c,v
+/home/jatoivol/cvsroot/nip/Attic/hrsfm.net,v
+/home/jatoivol/cvsroot/nip/Attic/hrsfm_control.net,v
+/home/jatoivol/cvsroot/nip/Attic/hrsfm_control_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hrsfm_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hsmm.net,v
+/home/jatoivol/cvsroot/nip/Attic/hsmm_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/htm.net,v
+/home/jatoivol/cvsroot/nip/Attic/htm2.net,v
+/home/jatoivol/cvsroot/nip/Attic/htm2_timeslice.net,v
+/home/jatoivol/cvsroot/nip/Attic/htm2_tulokset.txt,v
+/home/jatoivol/cvsroot/nip/Attic/htm3.net,v
+/home/jatoivol/cvsroot/nip/Attic/htm3_timeslice.net,v
+/home/jatoivol/cvsroot/nip/Attic/htm3_tulokset.txt,v
+/home/jatoivol/cvsroot/nip/Attic/htm_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/htm_lite.net,v
+/home/jatoivol/cvsroot/nip/Attic/htm_lite_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/htm_lite_timeslice.net,v
+/home/jatoivol/cvsroot/nip/Attic/htm_lite_timeslice_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/htm_lite_tulokset.txt,v
+/home/jatoivol/cvsroot/nip/Attic/htm_timeslice.net,v
+/home/jatoivol/cvsroot/nip/Attic/htm_timeslice_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/htm_tulokset.txt,v
+/home/jatoivol/cvsroot/nip/Attic/htmtest.c,v
+/home/jatoivol/cvsroot/nip/Attic/hugin_datafiles.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hugin_sotku.net,v
+/home/jatoivol/cvsroot/nip/Attic/hugin_sotku_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/hugin_sotku_ones.net,v
+/home/jatoivol/cvsroot/nip/Attic/huginnet.h,v
+/home/jatoivol/cvsroot/nip/Attic/huginnet.tab.c,v
+/home/jatoivol/cvsroot/nip/Attic/huginnet.tab.h,v
+/home/jatoivol/cvsroot/nip/Attic/huginnet.y,v
+/home/jatoivol/cvsroot/nip/Attic/hugintest.net,v
+/home/jatoivol/cvsroot/nip/Attic/hugintest_nested.net,v
+/home/jatoivol/cvsroot/nip/Attic/huomioita.txt,v
+/home/jatoivol/cvsroot/nip/Attic/inftest.c,v
+/home/jatoivol/cvsroot/nip/Attic/iotest.c,v
+/home/jatoivol/cvsroot/nip/Attic/joint_test.c,v
+/home/jatoivol/cvsroot/nip/Attic/likelihood.c,v
+/home/jatoivol/cvsroot/nip/Attic/lists.c,v
+/home/jatoivol/cvsroot/nip/Attic/lists.h,v
+/home/jatoivol/cvsroot/nip/Attic/loo_prediction_test.c,v
+/home/jatoivol/cvsroot/nip/Attic/made_with_hugin.net,v
+/home/jatoivol/cvsroot/nip/Attic/maptest.c,v
+/home/jatoivol/cvsroot/nip/Attic/memleaktest.c,v
+/home/jatoivol/cvsroot/nip/Attic/network_example.txt,v
+/home/jatoivol/cvsroot/nip/Attic/nip.c,v
+/home/jatoivol/cvsroot/nip/Attic/nip.h,v
+/home/jatoivol/cvsroot/nip/Attic/palikka.net,v
+/home/jatoivol/cvsroot/nip/Attic/palikka_data.txt,v
+/home/jatoivol/cvsroot/nip/Attic/parser.c,v
+/home/jatoivol/cvsroot/nip/Attic/parser.h,v
+/home/jatoivol/cvsroot/nip/Attic/parsertest.c,v
+/home/jatoivol/cvsroot/nip/Attic/potential.c,v
+/home/jatoivol/cvsroot/nip/Attic/potential.h,v
+/home/jatoivol/cvsroot/nip/Attic/potentialtest.c,v
+/home/jatoivol/cvsroot/nip/Attic/prior.txt,v
+/home/jatoivol/cvsroot/nip/Attic/select.awk,v
+/home/jatoivol/cvsroot/nip/Attic/sotku_omat_tulokset.txt,v
+/home/jatoivol/cvsroot/nip/Attic/variable.c,v
+/home/jatoivol/cvsroot/nip/Attic/variable.h,v
+/home/jatoivol/cvsroot/nip/.externalToolBuilders/make.launch,v
+/home/jatoivol/cvsroot/nip/doc/.cvsignore,v
+/home/jatoivol/cvsroot/nip/doc/Nip_show.pdf,v
+/home/jatoivol/cvsroot/nip/doc/classdiagram.xmi,v
+/home/jatoivol/cvsroot/nip/doc/doc.bib,v
+/home/jatoivol/cvsroot/nip/doc/doc.tex,v
+/home/jatoivol/cvsroot/nip/doc/example.net,v
+/home/jatoivol/cvsroot/nip/doc/layers.eps,v
+/home/jatoivol/cvsroot/nip/doc/layers.fig,v
+/home/jatoivol/cvsroot/nip/doc/tree.eps,v
+/home/jatoivol/cvsroot/nip/doc/tree.fig,v
+/home/jatoivol/cvsroot/nip/doc/wiki.html,v
+/home/jatoivol/cvsroot/nip/documentation/Attic/Nip_show.pdf,v
+/home/jatoivol/cvsroot/nip/documentation/Attic/classdiagram.xmi,v
+/home/jatoivol/cvsroot/nip/documentation/Attic/doc.bib,v
+/home/jatoivol/cvsroot/nip/documentation/Attic/doc.tex,v
+/home/jatoivol/cvsroot/nip/documentation/Attic/layers.eps,v
+/home/jatoivol/cvsroot/nip/documentation/Attic/layers.fig,v
+/home/jatoivol/cvsroot/nip/grphmnp/Attic/Graph.c,v
+/home/jatoivol/cvsroot/nip/grphmnp/Attic/Graph.h,v
+/home/jatoivol/cvsroot/nip/grphmnp/Attic/Heap.c,v
+/home/jatoivol/cvsroot/nip/grphmnp/Attic/Heap.c_janne,v
+/home/jatoivol/cvsroot/nip/grphmnp/Attic/Heap.h,v
+/home/jatoivol/cvsroot/nip/grphmnp/Attic/Heap.h_janne,v
+/home/jatoivol/cvsroot/nip/grphmnp/Attic/cls2clq.c,v
+/home/jatoivol/cvsroot/nip/grphmnp/Attic/cls2clq.h,v
+/home/jatoivol/cvsroot/nip/grphmnp/Attic/graph_test.c,v
+/home/jatoivol/cvsroot/nip/lib/.cvsignore,v
+/home/jatoivol/cvsroot/nip/src/.cvsignore,v
+/home/jatoivol/cvsroot/nip/src/huginnet.y,v
+/home/jatoivol/cvsroot/nip/src/nip.c,v
+/home/jatoivol/cvsroot/nip/src/nip.h,v
+/home/jatoivol/cvsroot/nip/src/niperrorhandler.c,v
+/home/jatoivol/cvsroot/nip/src/niperrorhandler.h,v
+/home/jatoivol/cvsroot/nip/src/nipgraph.c,v
+/home/jatoivol/cvsroot/nip/src/nipgraph.h,v
+/home/jatoivol/cvsroot/nip/src/nipheap.c,v
+/home/jatoivol/cvsroot/nip/src/nipheap.h,v
+/home/jatoivol/cvsroot/nip/src/nipjointree.c,v
+/home/jatoivol/cvsroot/nip/src/nipjointree.h,v
+/home/jatoivol/cvsroot/nip/src/niplists.c,v
+/home/jatoivol/cvsroot/nip/src/niplists.h,v
+/home/jatoivol/cvsroot/nip/src/nipparsers.c,v
+/home/jatoivol/cvsroot/nip/src/nipparsers.h,v
+/home/jatoivol/cvsroot/nip/src/nippotential.c,v
+/home/jatoivol/cvsroot/nip/src/nippotential.h,v
+/home/jatoivol/cvsroot/nip/src/nipstring.c,v
+/home/jatoivol/cvsroot/nip/src/nipstring.h,v
+/home/jatoivol/cvsroot/nip/src/nipvariable.c,v
+/home/jatoivol/cvsroot/nip/src/nipvariable.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/Graph.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/Graph.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/Heap.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/Heap.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/clique.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/clique.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/cls2clq.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/cls2clq.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/errorhandler.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/errorhandler.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/fileio.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/fileio.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/lists.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/lists.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/parser.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/parser.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/potential.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/potential.h,v
+/home/jatoivol/cvsroot/nip/src/Attic/variable.c,v
+/home/jatoivol/cvsroot/nip/src/Attic/variable.h,v
+/home/jatoivol/cvsroot/nip/src/grphmnp/Attic/Graph.c,v
+/home/jatoivol/cvsroot/nip/src/grphmnp/Attic/Graph.h,v
+/home/jatoivol/cvsroot/nip/src/grphmnp/Attic/Heap.c,v
+/home/jatoivol/cvsroot/nip/src/grphmnp/Attic/Heap.c_janne,v
+/home/jatoivol/cvsroot/nip/src/grphmnp/Attic/Heap.h,v
+/home/jatoivol/cvsroot/nip/src/grphmnp/Attic/Heap.h_janne,v
+/home/jatoivol/cvsroot/nip/src/grphmnp/Attic/cls2clq.c,v
+/home/jatoivol/cvsroot/nip/src/grphmnp/Attic/cls2clq.h,v
+/home/jatoivol/cvsroot/nip/src/grphmnp/Attic/graph_test.c,v
+/home/jatoivol/cvsroot/nip/test/.cvsignore,v
+/home/jatoivol/cvsroot/nip/test/bisontest.c,v
+/home/jatoivol/cvsroot/nip/test/cliquetest.c,v
+/home/jatoivol/cvsroot/nip/test/datafiletest.c,v
+/home/jatoivol/cvsroot/nip/test/errorhandlertest.c,v
+/home/jatoivol/cvsroot/nip/test/graphtest.c,v
+/home/jatoivol/cvsroot/nip/test/hmmtest.c,v
+/home/jatoivol/cvsroot/nip/test/htmtest.c,v
+/home/jatoivol/cvsroot/nip/test/iotest.c,v
+/home/jatoivol/cvsroot/nip/test/memleaktest.c,v
+/home/jatoivol/cvsroot/nip/test/parsertest.c,v
+/home/jatoivol/cvsroot/nip/test/potentialtest.c,v
+/home/jatoivol/cvsroot/nip/test/Attic/graph_test.c,v
+/home/jatoivol/cvsroot/nip/util/.cvsignore,v
+/home/jatoivol/cvsroot/nip/util/hide_values.awk,v
+/home/jatoivol/cvsroot/nip/util/loo_prediction_test.c,v
+/home/jatoivol/cvsroot/nip/util/nipbenchmark.c,v
+/home/jatoivol/cvsroot/nip/util/nipconvert.c,v
+/home/jatoivol/cvsroot/nip/util/nipinference.c,v
+/home/jatoivol/cvsroot/nip/util/nipjoint.c,v
+/home/jatoivol/cvsroot/nip/util/niplikelihood.c,v
+/home/jatoivol/cvsroot/nip/util/nipmap.c,v
+/home/jatoivol/cvsroot/nip/util/nipsample.c,v
+/home/jatoivol/cvsroot/nip/util/niptrain.c,v
+/home/jatoivol/cvsroot/nip/util/select.awk,v
+/home/jatoivol/cvsroot/nip/util/Attic/convert.c,v
+/home/jatoivol/cvsroot/nip/util/Attic/em_test.c,v
+/home/jatoivol/cvsroot/nip/util/Attic/gen_test.c,v
+/home/jatoivol/cvsroot/nip/util/Attic/inftest.c,v
+/home/jatoivol/cvsroot/nip/util/Attic/joint_test.c,v
+/home/jatoivol/cvsroot/nip/util/Attic/likelihood.c,v
+/home/jatoivol/cvsroot/nip/util/Attic/map.c,v
+Done
+Time for pass1 (CollectRevsPass): 29.78 seconds.
+----- pass 2 (CleanMetadataPass) -----
+Converting metadata to UTF8...
+Done
+Time for pass2 (CleanMetadataPass): 0.127 seconds.
+----- pass 3 (CollateSymbolsPass) -----
+Checking for forced tags with commits...
+Done
+Time for pass3 (CollateSymbolsPass): 0.021 seconds.
+----- pass 4 (FilterSymbolsPass) -----
+Filtering out excluded symbols and summarizing items...
+Done
+Time for pass4 (FilterSymbolsPass): 0.263 seconds.
+----- pass 5 (SortRevisionSummaryPass) -----
+Sorting CVS revision summaries...
+Done
+Time for pass5 (SortRevisionSummaryPass): 0.025 seconds.
+----- pass 6 (SortSymbolSummaryPass) -----
+Sorting CVS symbol summaries...
+Done
+Time for pass6 (SortSymbolSummaryPass): 0.018 seconds.
+----- pass 7 (InitializeChangesetsPass) -----
+Creating preliminary commit sets...
+Done
+Time for pass7 (InitializeChangesetsPass): 0.298 seconds.
+----- pass 8 (BreakRevisionChangesetCyclesPass) -----
+Breaking revision changeset dependency cycles...
+Done
+Time for pass8 (BreakRevisionChangesetCyclesPass): 0.261 seconds.
+----- pass 9 (RevisionTopologicalSortPass) -----
+Generating CVSRevisions in commit order...
+Done
+Time for pass9 (RevisionTopologicalSortPass): 0.259 seconds.
+----- pass 10 (BreakSymbolChangesetCyclesPass) -----
+Breaking symbol changeset dependency cycles...
+Done
+Time for pass10 (BreakSymbolChangesetCyclesPass): 0.086 seconds.
+----- pass 11 (BreakAllChangesetCyclesPass) -----
+Breaking CVSSymbol dependency loops...
+Done
+Time for pass11 (BreakAllChangesetCyclesPass): 0.225 seconds.
+----- pass 12 (TopologicalSortPass) -----
+Generating CVSRevisions in commit order...
+Done
+Time for pass12 (TopologicalSortPass): 0.198 seconds.
+----- pass 13 (CreateRevsPass) -----
+Mapping CVS revisions to Subversion commits...
+Creating Subversion r1 (Project initialization)
+Creating Subversion r2 (commit)
+Creating Subversion r3 (commit)
+Creating Subversion r4 (commit)
+Creating Subversion r5 (commit)
+Creating Subversion r6 (commit)
+Creating Subversion r7 (commit)
+Creating Subversion r8 (commit)
+Creating Subversion r9 (commit)
+Creating Subversion r10 (commit)
+Creating Subversion r11 (commit)
+Creating Subversion r12 (commit)
+Creating Subversion r13 (commit)
+Creating Subversion r14 (commit)
+Creating Subversion r15 (commit)
+Creating Subversion r16 (commit)
+Creating Subversion r17 (commit)
+Creating Subversion r18 (commit)
+Creating Subversion r19 (commit)
+Creating Subversion r20 (commit)
+Creating Subversion r21 (commit)
+Creating Subversion r22 (commit)
+Creating Subversion r23 (commit)
+Creating Subversion r24 (commit)
+Creating Subversion r25 (commit)
+Creating Subversion r26 (commit)
+Creating Subversion r27 (commit)
+Creating Subversion r28 (commit)
+Creating Subversion r29 (commit)
+Creating Subversion r30 (commit)
+Creating Subversion r31 (commit)
+Creating Subversion r32 (commit)
+Creating Subversion r33 (commit)
+Creating Subversion r34 (commit)
+Creating Subversion r35 (commit)
+Creating Subversion r36 (commit)
+Creating Subversion r37 (commit)
+Creating Subversion r38 (commit)
+Creating Subversion r39 (commit)
+Creating Subversion r40 (commit)
+Creating Subversion r41 (commit)
+Creating Subversion r42 (commit)
+Creating Subversion r43 (commit)
+Creating Subversion r44 (commit)
+Creating Subversion r45 (commit)
+Creating Subversion r46 (commit)
+Creating Subversion r47 (commit)
+Creating Subversion r48 (commit)
+Creating Subversion r49 (commit)
+Creating Subversion r50 (commit)
+Creating Subversion r51 (commit)
+Creating Subversion r52 (commit)
+Creating Subversion r53 (commit)
+Creating Subversion r54 (commit)
+Creating Subversion r55 (commit)
+Creating Subversion r56 (commit)
+Creating Subversion r57 (commit)
+Creating Subversion r58 (commit)
+Creating Subversion r59 (commit)
+Creating Subversion r60 (commit)
+Creating Subversion r61 (commit)
+Creating Subversion r62 (commit)
+Creating Subversion r63 (commit)
+Creating Subversion r64 (commit)
+Creating Subversion r65 (commit)
+Creating Subversion r66 (commit)
+Creating Subversion r67 (commit)
+Creating Subversion r68 (commit)
+Creating Subversion r69 (commit)
+Creating Subversion r70 (commit)
+Creating Subversion r71 (commit)
+Creating Subversion r72 (commit)
+Creating Subversion r73 (commit)
+Creating Subversion r74 (commit)
+Creating Subversion r75 (commit)
+Creating Subversion r76 (commit)
+Creating Subversion r77 (commit)
+Creating Subversion r78 (commit)
+Creating Subversion r79 (commit)
+Creating Subversion r80 (commit)
+Creating Subversion r81 (commit)
+Creating Subversion r82 (commit)
+Creating Subversion r83 (commit)
+Creating Subversion r84 (commit)
+Creating Subversion r85 (commit)
+Creating Subversion r86 (commit)
+Creating Subversion r87 (commit)
+Creating Subversion r88 (commit)
+Creating Subversion r89 (commit)
+Creating Subversion r90 (commit)
+Creating Subversion r91 (commit)
+Creating Subversion r92 (commit)
+Creating Subversion r93 (commit)
+Creating Subversion r94 (commit)
+Creating Subversion r95 (commit)
+Creating Subversion r96 (commit)
+Creating Subversion r97 (commit)
+Creating Subversion r98 (commit)
+Creating Subversion r99 (commit)
+Creating Subversion r100 (commit)
+Creating Subversion r101 (commit)
+Creating Subversion r102 (commit)
+Creating Subversion r103 (commit)
+Creating Subversion r104 (commit)
+Creating Subversion r105 (commit)
+Creating Subversion r106 (commit)
+Creating Subversion r107 (commit)
+Creating Subversion r108 (commit)
+Creating Subversion r109 (commit)
+Creating Subversion r110 (commit)
+Creating Subversion r111 (commit)
+Creating Subversion r112 (commit)
+Creating Subversion r113 (commit)
+Creating Subversion r114 (commit)
+Creating Subversion r115 (commit)
+Creating Subversion r116 (commit)
+Creating Subversion r117 (commit)
+Creating Subversion r118 (commit)
+Creating Subversion r119 (commit)
+Creating Subversion r120 (commit)
+Creating Subversion r121 (commit)
+Creating Subversion r122 (commit)
+Creating Subversion r123 (commit)
+Creating Subversion r124 (commit)
+Creating Subversion r125 (commit)
+Creating Subversion r126 (commit)
+Creating Subversion r127 (commit)
+Creating Subversion r128 (commit)
+Creating Subversion r129 (commit)
+Creating Subversion r130 (commit)
+Creating Subversion r131 (commit)
+Creating Subversion r132 (commit)
+Creating Subversion r133 (commit)
+Creating Subversion r134 (commit)
+Creating Subversion r135 (commit)
+Creating Subversion r136 (commit)
+Creating Subversion r137 (commit)
+Creating Subversion r138 (commit)
+Creating Subversion r139 (commit)
+Creating Subversion r140 (commit)
+Creating Subversion r141 (commit)
+Creating Subversion r142 (commit)
+Creating Subversion r143 (commit)
+Creating Subversion r144 (commit)
+Creating Subversion r145 (commit)
+Creating Subversion r146 (commit)
+Creating Subversion r147 (commit)
+Creating Subversion r148 (commit)
+Creating Subversion r149 (commit)
+Creating Subversion r150 (commit)
+Creating Subversion r151 (commit)
+Creating Subversion r152 (commit)
+Creating Subversion r153 (commit)
+Creating Subversion r154 (commit)
+Creating Subversion r155 (commit)
+Creating Subversion r156 (commit)
+Creating Subversion r157 (commit)
+Creating Subversion r158 (commit)
+Creating Subversion r159 (commit)
+Creating Subversion r160 (commit)
+Creating Subversion r161 (commit)
+Creating Subversion r162 (commit)
+Creating Subversion r163 (commit)
+Creating Subversion r164 (commit)
+Creating Subversion r165 (commit)
+Creating Subversion r166 (commit)
+Creating Subversion r167 (commit)
+Creating Subversion r168 (commit)
+Creating Subversion r169 (commit)
+Creating Subversion r170 (commit)
+Creating Subversion r171 (commit)
+Creating Subversion r172 (commit)
+Creating Subversion r173 (commit)
+Creating Subversion r174 (commit)
+Creating Subversion r175 (commit)
+Creating Subversion r176 (commit)
+Creating Subversion r177 (commit)
+Creating Subversion r178 (commit)
+Creating Subversion r179 (commit)
+Creating Subversion r180 (commit)
+Creating Subversion r181 (commit)
+Creating Subversion r182 (commit)
+Creating Subversion r183 (commit)
+Creating Subversion r184 (commit)
+Creating Subversion r185 (commit)
+Creating Subversion r186 (commit)
+Creating Subversion r187 (commit)
+Creating Subversion r188 (commit)
+Creating Subversion r189 (commit)
+Creating Subversion r190 (commit)
+Creating Subversion r191 (commit)
+Creating Subversion r192 (commit)
+Creating Subversion r193 (commit)
+Creating Subversion r194 (commit)
+Creating Subversion r195 (commit)
+Creating Subversion r196 (commit)
+Creating Subversion r197 (commit)
+Creating Subversion r198 (commit)
+Creating Subversion r199 (commit)
+Creating Subversion r200 (commit)
+Creating Subversion r201 (commit)
+Creating Subversion r202 (commit)
+Creating Subversion r203 (commit)
+Creating Subversion r204 (commit)
+Creating Subversion r205 (commit)
+Creating Subversion r206 (commit)
+Creating Subversion r207 (commit)
+Creating Subversion r208 (commit)
+Creating Subversion r209 (commit)
+Creating Subversion r210 (commit)
+Creating Subversion r211 (commit)
+Creating Subversion r212 (commit)
+Creating Subversion r213 (commit)
+Creating Subversion r214 (commit)
+Creating Subversion r215 (commit)
+Creating Subversion r216 (commit)
+Creating Subversion r217 (commit)
+Creating Subversion r218 (commit)
+Creating Subversion r219 (commit)
+Creating Subversion r220 (commit)
+Creating Subversion r221 (commit)
+Creating Subversion r222 (commit)
+Creating Subversion r223 (commit)
+Creating Subversion r224 (commit)
+Creating Subversion r225 (commit)
+Creating Subversion r226 (commit)
+Creating Subversion r227 (commit)
+Creating Subversion r228 (commit)
+Creating Subversion r229 (commit)
+Creating Subversion r230 (commit)
+Creating Subversion r231 (commit)
+Creating Subversion r232 (commit)
+Creating Subversion r233 (commit)
+Creating Subversion r234 (commit)
+Creating Subversion r235 (commit)
+Creating Subversion r236 (commit)
+Creating Subversion r237 (commit)
+Creating Subversion r238 (commit)
+Creating Subversion r239 (commit)
+Creating Subversion r240 (commit)
+Creating Subversion r241 (commit)
+Creating Subversion r242 (commit)
+Creating Subversion r243 (commit)
+Creating Subversion r244 (commit)
+Creating Subversion r245 (commit)
+Creating Subversion r246 (commit)
+Creating Subversion r247 (commit)
+Creating Subversion r248 (commit)
+Creating Subversion r249 (commit)
+Creating Subversion r250 (commit)
+Creating Subversion r251 (commit)
+Creating Subversion r252 (commit)
+Creating Subversion r253 (commit)
+Creating Subversion r254 (commit)
+Creating Subversion r255 (commit)
+Creating Subversion r256 (commit)
+Creating Subversion r257 (commit)
+Creating Subversion r258 (commit)
+Creating Subversion r259 (commit)
+Creating Subversion r260 (commit)
+Creating Subversion r261 (commit)
+Creating Subversion r262 (commit)
+Creating Subversion r263 (commit)
+Creating Subversion r264 (commit)
+Creating Subversion r265 (commit)
+Creating Subversion r266 (commit)
+Creating Subversion r267 (commit)
+Creating Subversion r268 (commit)
+Creating Subversion r269 (commit)
+Creating Subversion r270 (commit)
+Creating Subversion r271 (commit)
+Creating Subversion r272 (commit)
+Creating Subversion r273 (commit)
+Creating Subversion r274 (commit)
+Creating Subversion r275 (commit)
+Creating Subversion r276 (commit)
+Creating Subversion r277 (commit)
+Creating Subversion r278 (commit)
+Creating Subversion r279 (commit)
+Creating Subversion r280 (commit)
+Creating Subversion r281 (commit)
+Creating Subversion r282 (commit)
+Creating Subversion r283 (commit)
+Creating Subversion r284 (commit)
+Creating Subversion r285 (commit)
+Creating Subversion r286 (commit)
+Creating Subversion r287 (commit)
+Creating Subversion r288 (commit)
+Creating Subversion r289 (commit)
+Creating Subversion r290 (commit)
+Creating Subversion r291 (commit)
+Creating Subversion r292 (commit)
+Creating Subversion r293 (commit)
+Creating Subversion r294 (commit)
+Creating Subversion r295 (commit)
+Creating Subversion r296 (commit)
+Creating Subversion r297 (commit)
+Creating Subversion r298 (commit)
+Creating Subversion r299 (commit)
+Creating Subversion r300 (commit)
+Creating Subversion r301 (commit)
+Creating Subversion r302 (commit)
+Creating Subversion r303 (commit)
+Creating Subversion r304 (commit)
+Creating Subversion r305 (commit)
+Creating Subversion r306 (commit)
+Creating Subversion r307 (commit)
+Creating Subversion r308 (commit)
+Creating Subversion r309 (commit)
+Creating Subversion r310 (commit)
+Creating Subversion r311 (commit)
+Creating Subversion r312 (commit)
+Creating Subversion r313 (commit)
+Creating Subversion r314 (commit)
+Creating Subversion r315 (commit)
+Creating Subversion r316 (commit)
+Creating Subversion r317 (commit)
+Creating Subversion r318 (commit)
+Creating Subversion r319 (commit)
+Creating Subversion r320 (commit)
+Creating Subversion r321 (commit)
+Creating Subversion r322 (commit)
+Creating Subversion r323 (commit)
+Creating Subversion r324 (commit)
+Creating Subversion r325 (commit)
+Creating Subversion r326 (commit)
+Creating Subversion r327 (commit)
+Creating Subversion r328 (commit)
+Creating Subversion r329 (commit)
+Creating Subversion r330 (commit)
+Creating Subversion r331 (commit)
+Creating Subversion r332 (commit)
+Creating Subversion r333 (commit)
+Creating Subversion r334 (commit)
+Creating Subversion r335 (commit)
+Creating Subversion r336 (commit)
+Creating Subversion r337 (commit)
+Creating Subversion r338 (commit)
+Creating Subversion r339 (commit)
+Creating Subversion r340 (commit)
+Creating Subversion r341 (commit)
+Creating Subversion r342 (commit)
+Creating Subversion r343 (commit)
+Creating Subversion r344 (commit)
+Creating Subversion r345 (commit)
+Creating Subversion r346 (commit)
+Creating Subversion r347 (commit)
+Creating Subversion r348 (commit)
+Creating Subversion r349 (commit)
+Creating Subversion r350 (commit)
+Creating Subversion r351 (commit)
+Creating Subversion r352 (commit)
+Creating Subversion r353 (commit)
+Creating Subversion r354 (commit)
+Creating Subversion r355 (commit)
+Creating Subversion r356 (commit)
+Creating Subversion r357 (commit)
+Creating Subversion r358 (commit)
+Creating Subversion r359 (commit)
+Creating Subversion r360 (commit)
+Creating Subversion r361 (commit)
+Creating Subversion r362 (commit)
+Creating Subversion r363 (commit)
+Creating Subversion r364 (commit)
+Creating Subversion r365 (commit)
+Creating Subversion r366 (commit)
+Creating Subversion r367 (commit)
+Creating Subversion r368 (commit)
+Creating Subversion r369 (commit)
+Creating Subversion r370 (commit)
+Creating Subversion r371 (commit)
+Creating Subversion r372 (commit)
+Creating Subversion r373 (commit)
+Creating Subversion r374 (commit)
+Creating Subversion r375 (commit)
+Creating Subversion r376 (commit)
+Creating Subversion r377 (commit)
+Creating Subversion r378 (commit)
+Creating Subversion r379 (commit)
+Creating Subversion r380 (commit)
+Creating Subversion r381 (commit)
+Creating Subversion r382 (commit)
+Creating Subversion r383 (commit)
+Creating Subversion r384 (commit)
+Creating Subversion r385 (commit)
+Creating Subversion r386 (commit)
+Creating Subversion r387 (commit)
+Creating Subversion r388 (commit)
+Creating Subversion r389 (commit)
+Creating Subversion r390 (commit)
+Creating Subversion r391 (commit)
+Creating Subversion r392 (commit)
+Creating Subversion r393 (commit)
+Creating Subversion r394 (commit)
+Creating Subversion r395 (commit)
+Creating Subversion r396 (commit)
+Creating Subversion r397 (commit)
+Creating Subversion r398 (commit)
+Creating Subversion r399 (commit)
+Creating Subversion r400 (commit)
+Creating Subversion r401 (commit)
+Creating Subversion r402 (commit)
+Creating Subversion r403 (commit)
+Creating Subversion r404 (commit)
+Creating Subversion r405 (commit)
+Creating Subversion r406 (commit)
+Creating Subversion r407 (commit)
+Creating Subversion r408 (commit)
+Creating Subversion r409 (commit)
+Creating Subversion r410 (commit)
+Creating Subversion r411 (commit)
+Creating Subversion r412 (commit)
+Creating Subversion r413 (commit)
+Creating Subversion r414 (copying to tag 'ordered_potentials')
+Creating Subversion r415 (commit)
+Creating Subversion r416 (commit)
+Creating Subversion r417 (commit)
+Creating Subversion r418 (commit)
+Creating Subversion r419 (commit)
+Creating Subversion r420 (commit)
+Creating Subversion r421 (commit)
+Creating Subversion r422 (commit)
+Creating Subversion r423 (commit)
+Creating Subversion r424 (commit)
+Creating Subversion r425 (commit)
+Creating Subversion r426 (commit)
+Creating Subversion r427 (commit)
+Creating Subversion r428 (commit)
+Creating Subversion r429 (commit)
+Creating Subversion r430 (commit)
+Creating Subversion r431 (commit)
+Creating Subversion r432 (commit)
+Creating Subversion r433 (commit)
+Creating Subversion r434 (commit)
+Creating Subversion r435 (commit)
+Creating Subversion r436 (commit)
+Creating Subversion r437 (commit)
+Creating Subversion r438 (commit)
+Creating Subversion r439 (commit)
+Creating Subversion r440 (commit)
+Creating Subversion r441 (commit)
+Creating Subversion r442 (commit)
+Creating Subversion r443 (commit)
+Creating Subversion r444 (commit)
+Creating Subversion r445 (commit)
+Creating Subversion r446 (commit)
+Creating Subversion r447 (commit)
+Creating Subversion r448 (commit)
+Creating Subversion r449 (commit)
+Creating Subversion r450 (commit)
+Creating Subversion r451 (commit)
+Creating Subversion r452 (commit)
+Creating Subversion r453 (commit)
+Creating Subversion r454 (commit)
+Creating Subversion r455 (commit)
+Creating Subversion r456 (commit)
+Creating Subversion r457 (commit)
+Creating Subversion r458 (commit)
+Creating Subversion r459 (commit)
+Creating Subversion r460 (commit)
+Creating Subversion r461 (commit)
+Creating Subversion r462 (commit)
+Creating Subversion r463 (commit)
+Creating Subversion r464 (commit)
+Creating Subversion r465 (commit)
+Creating Subversion r466 (commit)
+Creating Subversion r467 (commit)
+Creating Subversion r468 (commit)
+Creating Subversion r469 (commit)
+Creating Subversion r470 (commit)
+Creating Subversion r471 (commit)
+Creating Subversion r472 (commit)
+Creating Subversion r473 (commit)
+Creating Subversion r474 (commit)
+Creating Subversion r475 (commit)
+Creating Subversion r476 (commit)
+Creating Subversion r477 (commit)
+Creating Subversion r478 (commit)
+Creating Subversion r479 (commit)
+Creating Subversion r480 (commit)
+Creating Subversion r481 (commit)
+Creating Subversion r482 (copying to tag 'JointDistributions')
+Creating Subversion r483 (commit)
+Creating Subversion r484 (commit)
+Creating Subversion r485 (commit)
+Creating Subversion r486 (commit)
+Creating Subversion r487 (copying to tag 'JointDistributionsV2')
+Creating Subversion r488 (commit)
+Creating Subversion r489 (commit)
+Creating Subversion r490 (commit)
+Creating Subversion r491 (commit)
+Creating Subversion r492 (commit)
+Creating Subversion r493 (commit)
+Creating Subversion r494 (commit)
+Creating Subversion r495 (commit)
+Creating Subversion r496 (commit)
+Creating Subversion r497 (commit)
+Creating Subversion r498 (commit)
+Creating Subversion r499 (commit)
+Creating Subversion r500 (commit)
+Creating Subversion r501 (commit)
+Creating Subversion r502 (commit)
+Creating Subversion r503 (commit)
+Creating Subversion r504 (commit)
+Creating Subversion r505 (commit)
+Creating Subversion r506 (commit)
+Creating Subversion r507 (commit)
+Creating Subversion r508 (commit)
+Creating Subversion r509 (commit)
+Creating Subversion r510 (commit)
+Creating Subversion r511 (commit)
+Creating Subversion r512 (commit)
+Creating Subversion r513 (commit)
+Creating Subversion r514 (commit)
+Creating Subversion r515 (commit)
+Creating Subversion r516 (commit)
+Creating Subversion r517 (commit)
+Creating Subversion r518 (commit)
+Creating Subversion r519 (commit)
+Creating Subversion r520 (commit)
+Creating Subversion r521 (commit)
+Creating Subversion r522 (commit)
+Creating Subversion r523 (commit)
+Creating Subversion r524 (commit)
+Creating Subversion r525 (commit)
+Creating Subversion r526 (commit)
+Creating Subversion r527 (commit)
+Creating Subversion r528 (commit)
+Creating Subversion r529 (commit)
+Creating Subversion r530 (commit)
+Creating Subversion r531 (commit)
+Creating Subversion r532 (commit)
+Creating Subversion r533 (commit)
+Creating Subversion r534 (commit)
+Creating Subversion r535 (commit)
+Creating Subversion r536 (commit)
+Creating Subversion r537 (commit)
+Creating Subversion r538 (commit)
+Creating Subversion r539 (commit)
+Creating Subversion r540 (commit)
+Creating Subversion r541 (commit)
+Creating Subversion r542 (commit)
+Creating Subversion r543 (commit)
+Creating Subversion r544 (commit)
+Creating Subversion r545 (commit)
+Creating Subversion r546 (commit)
+Creating Subversion r547 (commit)
+Creating Subversion r548 (commit)
+Creating Subversion r549 (commit)
+Creating Subversion r550 (commit)
+Creating Subversion r551 (commit)
+Creating Subversion r552 (commit)
+Creating Subversion r553 (commit)
+Creating Subversion r554 (commit)
+Creating Subversion r555 (commit)
+Creating Subversion r556 (commit)
+Creating Subversion r557 (commit)
+Creating Subversion r558 (commit)
+Creating Subversion r559 (commit)
+Creating Subversion r560 (commit)
+Creating Subversion r561 (commit)
+Creating Subversion r562 (commit)
+Creating Subversion r563 (copying to tag 'interface_algorithm_v1')
+Creating Subversion r564 (commit)
+Creating Subversion r565 (copying to tag 'interface_algorithm_v1_1')
+Creating Subversion r566 (commit)
+Creating Subversion r567 (commit)
+Creating Subversion r568 (commit)
+Creating Subversion r569 (commit)
+Creating Subversion r570 (commit)
+Creating Subversion r571 (commit)
+Creating Subversion r572 (commit)
+Creating Subversion r573 (commit)
+Creating Subversion r574 (commit)
+Creating Subversion r575 (commit)
+Creating Subversion r576 (commit)
+Creating Subversion r577 (commit)
+Creating Subversion r578 (commit)
+Creating Subversion r579 (commit)
+Creating Subversion r580 (commit)
+Creating Subversion r581 (commit)
+Creating Subversion r582 (commit)
+Creating Subversion r583 (copying to tag 'interface_algorithm_v1_2')
+Creating Subversion r584 (commit)
+Creating Subversion r585 (commit)
+Creating Subversion r586 (commit)
+Creating Subversion r587 (commit)
+Creating Subversion r588 (commit)
+Creating Subversion r589 (commit)
+Creating Subversion r590 (commit)
+Creating Subversion r591 (commit)
+Creating Subversion r592 (commit)
+Creating Subversion r593 (commit)
+Creating Subversion r594 (commit)
+Creating Subversion r595 (commit)
+Creating Subversion r596 (commit)
+Creating Subversion r597 (commit)
+Creating Subversion r598 (commit)
+Creating Subversion r599 (commit)
+Creating Subversion r600 (commit)
+Creating Subversion r601 (commit)
+Creating Subversion r602 (commit)
+Creating Subversion r603 (commit)
+Creating Subversion r604 (commit)
+Creating Subversion r605 (commit)
+Creating Subversion r606 (commit)
+Creating Subversion r607 (commit)
+Creating Subversion r608 (commit)
+Creating Subversion r609 (commit)
+Creating Subversion r610 (commit)
+Creating Subversion r611 (commit)
+Creating Subversion r612 (commit)
+Creating Subversion r613 (commit)
+Creating Subversion r614 (commit)
+Creating Subversion r615 (commit)
+Creating Subversion r616 (commit)
+Creating Subversion r617 (commit)
+Creating Subversion r618 (commit)
+Creating Subversion r619 (commit)
+Creating Subversion r620 (commit)
+Creating Subversion r621 (commit)
+Creating Subversion r622 (commit)
+Creating Subversion r623 (commit)
+Creating Subversion r624 (commit)
+Creating Subversion r625 (commit)
+Creating Subversion r626 (commit)
+Creating Subversion r627 (commit)
+Creating Subversion r628 (copying to tag 'EM_algorithm_v1_1')
+Creating Subversion r629 (commit)
+Creating Subversion r630 (commit)
+Creating Subversion r631 (commit)
+Creating Subversion r632 (commit)
+Creating Subversion r633 (commit)
+Creating Subversion r634 (commit)
+Creating Subversion r635 (commit)
+Creating Subversion r636 (commit)
+Creating Subversion r637 (commit)
+Creating Subversion r638 (commit)
+Creating Subversion r639 (commit)
+Creating Subversion r640 (commit)
+Creating Subversion r641 (commit)
+Creating Subversion r642 (commit)
+Creating Subversion r643 (commit)
+Creating Subversion r644 (commit)
+Creating Subversion r645 (commit)
+Creating Subversion r646 (commit)
+Creating Subversion r647 (commit)
+Creating Subversion r648 (commit)
+Creating Subversion r649 (commit)
+Creating Subversion r650 (commit)
+Creating Subversion r651 (copying to tag 'Dippa+fix_v1_1')
+Creating Subversion r652 (commit)
+Creating Subversion r653 (commit)
+Creating Subversion r654 (commit)
+Creating Subversion r655 (commit)
+Creating Subversion r656 (commit)
+Creating Subversion r657 (commit)
+Creating Subversion r658 (commit)
+Creating Subversion r659 (commit)
+Creating Subversion r660 (commit)
+Creating Subversion r661 (commit)
+Creating Subversion r662 (commit)
+Creating Subversion r663 (commit)
+Creating Subversion r664 (commit)
+Creating Subversion r665 (commit)
+Creating Subversion r666 (commit)
+Creating Subversion r667 (commit)
+Creating Subversion r668 (commit)
+Creating Subversion r669 (commit)
+Creating Subversion r670 (commit)
+Creating Subversion r671 (commit)
+Creating Subversion r672 (commit)
+Creating Subversion r673 (commit)
+Creating Subversion r674 (commit)
+Creating Subversion r675 (commit)
+Creating Subversion r676 (commit)
+Creating Subversion r677 (commit)
+Creating Subversion r678 (commit)
+Creating Subversion r679 (commit)
+Creating Subversion r680 (commit)
+Creating Subversion r681 (commit)
+Creating Subversion r682 (commit)
+Creating Subversion r683 (commit)
+Creating Subversion r684 (commit)
+Creating Subversion r685 (commit)
+Creating Subversion r686 (commit)
+Creating Subversion r687 (commit)
+Creating Subversion r688 (commit)
+Creating Subversion r689 (commit)
+Creating Subversion r690 (commit)
+Creating Subversion r691 (commit)
+Creating Subversion r692 (commit)
+Creating Subversion r693 (commit)
+Creating Subversion r694 (commit)
+Creating Subversion r695 (commit)
+Creating Subversion r696 (commit)
+Creating Subversion r697 (commit)
+Creating Subversion r698 (commit)
+Creating Subversion r699 (commit)
+Creating Subversion r700 (commit)
+Creating Subversion r701 (commit)
+Creating Subversion r702 (commit)
+Creating Subversion r703 (commit)
+Creating Subversion r704 (commit)
+Creating Subversion r705 (commit)
+Creating Subversion r706 (commit)
+Creating Subversion r707 (commit)
+Creating Subversion r708 (commit)
+Creating Subversion r709 (commit)
+Creating Subversion r710 (commit)
+Creating Subversion r711 (commit)
+Creating Subversion r712 (commit)
+Creating Subversion r713 (commit)
+Creating Subversion r714 (commit)
+Creating Subversion r715 (commit)
+Creating Subversion r716 (commit)
+Creating Subversion r717 (commit)
+Creating Subversion r718 (commit)
+Creating Subversion r719 (commit)
+Creating Subversion r720 (commit)
+Creating Subversion r721 (commit)
+Creating Subversion r722 (commit)
+Creating Subversion r723 (commit)
+Creating Subversion r724 (commit)
+Creating Subversion r725 (commit)
+Creating Subversion r726 (commit)
+Creating Subversion r727 (commit)
+Creating Subversion r728 (commit)
+Creating Subversion r729 (commit)
+Creating Subversion r730 (commit)
+Creating Subversion r731 (commit)
+Creating Subversion r732 (commit)
+Creating Subversion r733 (commit)
+Creating Subversion r734 (commit)
+Creating Subversion r735 (commit)
+Creating Subversion r736 (commit)
+Creating Subversion r737 (commit)
+Creating Subversion r738 (commit)
+Creating Subversion r739 (commit)
+Creating Subversion r740 (commit)
+Creating Subversion r741 (commit)
+Creating Subversion r742 (commit)
+Creating Subversion r743 (commit)
+Creating Subversion r744 (commit)
+Creating Subversion r745 (commit)
+Creating Subversion r746 (commit)
+Creating Subversion r747 (commit)
+Creating Subversion r748 (commit)
+Creating Subversion r749 (commit)
+Creating Subversion r750 (commit)
+Creating Subversion r751 (commit)
+Creating Subversion r752 (commit)
+Creating Subversion r753 (commit)
+Creating Subversion r754 (commit)
+Creating Subversion r755 (commit)
+Creating Subversion r756 (commit)
+Creating Subversion r757 (commit)
+Creating Subversion r758 (commit)
+Creating Subversion r759 (commit)
+Creating Subversion r760 (commit)
+Creating Subversion r761 (commit)
+Creating Subversion r762 (commit)
+Creating Subversion r763 (commit)
+Creating Subversion r764 (commit)
+Creating Subversion r765 (commit)
+Creating Subversion r766 (commit)
+Creating Subversion r767 (commit)
+Creating Subversion r768 (commit)
+Creating Subversion r769 (commit)
+Creating Subversion r770 (commit)
+Creating Subversion r771 (commit)
+Creating Subversion r772 (commit)
+Creating Subversion r773 (commit)
+Creating Subversion r774 (commit)
+Creating Subversion r775 (commit)
+Creating Subversion r776 (commit)
+Creating Subversion r777 (commit)
+Creating Subversion r778 (commit)
+Creating Subversion r779 (commit)
+Creating Subversion r780 (commit)
+Creating Subversion r781 (commit)
+Creating Subversion r782 (commit)
+Creating Subversion r783 (commit)
+Done
+Time for pass13 (CreateRevsPass): 0.391 seconds.
+----- pass 14 (SortSymbolsPass) -----
+Sorting symbolic name source revisions...
+Done
+Time for pass14 (SortSymbolsPass): 0.026 seconds.
+----- pass 15 (IndexSymbolsPass) -----
+Determining offsets for all symbolic names...
+Done.
+Time for pass15 (IndexSymbolsPass): 0.018 seconds.
+----- pass 16 (OutputPass) -----
+Time for pass16 (OutputPass): 0.335 seconds.
+
+cvs2svn Statistics:
+------------------
+Total CVS Files:               228
+Total CVS Revisions:          3734
+Total CVS Branches:              0
+Total CVS Tags:                961
+Total Unique Tags:               8
+Total Unique Branches:           0
+CVS Repos Size in KB:        11711
+Total SVN Commits:             783
+First Revision Date:    Fri Oct 24 15:53:38 2003
+Last Revision Date:     Tue Apr 10 00:25:49 2012
+------------------
+Timings (seconds):
+------------------
+29.78   pass1    CollectRevsPass
+ 0.13   pass2    CleanMetadataPass
+ 0.02   pass3    CollateSymbolsPass
+ 0.26   pass4    FilterSymbolsPass
+ 0.02   pass5    SortRevisionSummaryPass
+ 0.02   pass6    SortSymbolSummaryPass
+ 0.30   pass7    InitializeChangesetsPass
+ 0.26   pass8    BreakRevisionChangesetCyclesPass
+ 0.26   pass9    RevisionTopologicalSortPass
+ 0.09   pass10   BreakSymbolChangesetCyclesPass
+ 0.23   pass11   BreakAllChangesetCyclesPass
+ 0.20   pass12   TopologicalSortPass
+ 0.39   pass13   CreateRevsPass
+ 0.03   pass14   SortSymbolsPass
+ 0.02   pass15   IndexSymbolsPass
+ 0.34   pass16   OutputPass
+32.33   total
+
+> mkdir nip.git
+> cd nip.git
+> git init --bare
+Initialized empty Git repository in /home/jatoivol/workspace/nip.git/
+
+> cat ../cvs2svn-tmp/git-blob.dat ../cvs2svn-tmp/git-dump.dat | git fast-import
+git-fast-import statistics:
+---------------------------------------------------------------------
+Alloc'd objects:       5000
+Total objects:         4699 (      1310 duplicates                  )
+      blobs  :         2298 (      1269 duplicates       1991 deltas)
+      trees  :         1626 (        41 duplicates       1459 deltas)
+      commits:          775 (         0 duplicates          0 deltas)
+      tags   :            0 (         0 duplicates          0 deltas)
+Total branches:          10 (         2 loads     )
+      marks:     1073741824 (      4342 unique    )
+      atoms:            166
+Memory total:          2344 KiB
+       pools:          2110 KiB
+     objects:           234 KiB
+---------------------------------------------------------------------
+pack_report: getpagesize()            =       4096
+pack_report: core.packedGitWindowSize = 1073741824
+pack_report: core.packedGitLimit      = 8589934592
+pack_report: pack_used_ctr            =         17
+pack_report: pack_mmap_calls          =          9
+pack_report: pack_open_windows        =          1 /          1
+pack_report: pack_mapped              =    6052049 /    6052049
+---------------------------------------------------------------------
+
+
+> cd
+> git clone nip.git
+
+
+
+##### There was an unsuccessful effort to fix the old author names
+> cd nip
+> emacs .mailmap
+Janne Toivola <janne.toivola@aalto.fi> jatoivol <jatoivol>
+Mikko Korpela <mikko.korpela@aalto.fi> mvkorpel <mvkorpel>
+Antti Rasinen <ars@iki.fi> arasinen <arasinen>
+Jaakko Hollmen <jaakko.hollmen@aalto.fi> jhollmen <jhollmen>
+
+> emacs ~/.gitconfig
+[alias]
+    # git reauthor $START..$END
+    reauthor = !sh -c 'eval `git log --reverse --topo-order \
+    --pretty=format:\"git cherry-pick %H &&  git commit --amend -C %H \
+    --author=\\\"%aN <%aE>\\\" && \" $0 ` "echo success" '
+
+> git checkout -b FixedAuthors a1defd3b695984e1d8952936e41fd79b69baf2f9
+> git reauthor a1defd3b695984e1d8952936e41fd79b69baf2f9..master
+...
+> git checkout master
+> git reset --hard FixedAuthors
+HEAD is now at d0091e2 prioritize TODO list
+> git branch -d FixedAuthors
+Deleted branch FixedAuthors (was d0091e2).
+
+#####
