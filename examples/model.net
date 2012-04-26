@@ -1,0 +1,58 @@
+% Simple DBN model (an HMM actually): 
+% A man lives in his house, sleeping and being awake (variable A1),
+% and keeps his lights on (variable L1) usually only when awake.
+% Daily (secret) activities are governed by transitions 
+% (state of A1, given A0) and reflected in the (observed) lights.
+%
+% Author: Janne Toivola
+
+%%% global properties of the network
+net
+{
+    node_size = (80 40);
+}
+
+%%% random variables
+node L1
+{
+    label = "Lights(t)";
+    position = (235 86);
+    states = ("On" "Off");
+}
+
+node A1
+{
+    label = "Awake(t)";
+    position = (234 172);
+    states = ("Yes" "No");
+    NIP_next = "A0";
+}
+
+node A0
+{
+    label = "Awake(t)";
+    position = (105 174);
+    states = ("Yes" "No");
+}
+
+% Emission probabilities: Light | Awake
+potential (L1 | A1)
+{
+    data
+     = (( 0.9 0.1 )	%  A1=Yes
+	( 0.01 0.99 ));	%  A1=No
+}
+
+% Transition probabilities between sleep/awake
+potential (A1 | A0)
+{
+    data
+     = (( 0.96 0.04 )	%  A0=Yes
+	( 0.08 0.92 ));	%  A0=No
+}
+
+% Prior for the first time step
+potential (A0)
+{
+    data = ( 0.3 0.7 );
+}
