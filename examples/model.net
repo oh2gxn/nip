@@ -1,5 +1,5 @@
 % Simple DBN model (an HMM actually): 
-% A man lives in his house, sleeping and being awake (variable A1),
+% A man lives in his house, sleeping or being awake (variable A1),
 % and keeps his lights on (variable L1) usually only when awake.
 % Daily (secret) activities are governed by transitions 
 % (state of A1, given A0) and reflected in the (observed) lights.
@@ -17,14 +17,14 @@ node L1
 {
     label = "Lights(t)";
     position = (200 100);
-    states = ("On" "Off");
+    states = ("on" "off");
 }
 
 node A1
 {
     label = "Awake(t)";
     position = (200 200);
-    states = ("Yes" "No");
+    states = ("awake" "sleep");
     NIP_next = "A0";
 }
 
@@ -32,27 +32,27 @@ node A0
 {
     label = "Awake(t)";
     position = (100 200);
-    states = ("Yes" "No");
+    states = ("awake" "sleep");
 }
 
-% Emission probabilities: Light | Awake
+% Emission probabilities: Lights on/off while awake/sleeping
 potential (L1 | A1)
 {
     data
-     = (( 0.8 0.2 )	%  A1=Yes
-	( 0.01 0.99 ));	%  A1=No
+     = (( 0.80 0.20 )	%  A1=awake
+	( 0.01 0.99 ));	%  A1=sleep
 }
 
 % Transition probabilities between sleep/awake
 potential (A1 | A0)
 {
     data
-     = (( 0.9  0.10 )	%  A0=Yes
-	( 0.08 0.92 ));	%  A0=No
+     = (( 0.9 0.1 )	%  A0=awake
+	( 0.1 0.9 ));	%  A0=sleep
 }
 
 % Prior for the first time step
 potential (A0)
 {
-    data = ( 0.3 0.7 );
+    data = ( 0.5 0.5 );
 }
