@@ -15,10 +15,10 @@ make
 
 # ...but instead of assuming we can observe every variable,
 # we hide some of them. Data is space delimited and L1 is the third column.
-cut -d' ' -f3 examples/data.txt > examples/data-L1.txt
+gawk -f util/select.awk var=L1 examples/data.txt > examples/data-L1.txt
 
 # Alternatively: hide just some of the data, see hide_values.awk
-# gawk -f hide_values.awk examples/data.txt > examples/data-L1.txt
+# gawk -f util/hide_values.awk examples/data.txt > examples/data-L1.txt
 
 
 
@@ -38,10 +38,10 @@ cut -d' ' -f3 examples/data.txt > examples/data-L1.txt
 ./util/nipmap examples/trained.net examples/data-L1.txt examples/data-A-map.txt
 
 # ...see what happened
-#cut -d' ' -f2 examples/data.txt > examples/data-A1.txt
-#cut -d' ' -f1 examples/data-A-map.txt > examples/data-A1-map.txt
-#diff examples/data-A1.txt examples/data-A1-map.txt > examples/predictions.txt
-#echo 'examples/predictions.txt makes any sense (labels may have switched)?'
+gawk -f util/select.awk var=A1 examples/data.txt > examples/data-A1.txt
+gawk -f util/select.awk var=A1 examples/data-A-map.txt > examples/data-A1-map.txt
+paste -d' ' examples/data-A1.txt examples/data-A1-map.txt > examples/predictions.txt
+echo 'examples/predictions.txt makes any sense (labels may have switched)?'
 
 
 

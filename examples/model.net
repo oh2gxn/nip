@@ -16,14 +16,14 @@ net
 node L1
 {
     label = "Lights(t)";
-    position = (235 86);
+    position = (200 100);
     states = ("On" "Off");
 }
 
 node A1
 {
     label = "Awake(t)";
-    position = (234 172);
+    position = (200 200);
     states = ("Yes" "No");
     NIP_next = "A0";
 }
@@ -31,7 +31,7 @@ node A1
 node A0
 {
     label = "Awake(t)";
-    position = (105 174);
+    position = (100 200);
     states = ("Yes" "No");
 }
 

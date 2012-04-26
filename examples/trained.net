@@ -1,0 +1,46 @@
+net
+{
+    node_size = (80 40);
+}
+
+node L1
+{
+    label = "Lights(t)";
+    position = (235 86);
+    states = ( "On" 
+               "Off" );
+}
+
+node A1
+{
+    label = "Awake(t)";
+    position = (234 172);
+    states = ( "Yes" 
+               "No" );
+    NIP_next = "A0";
+}
+
+node A0
+{
+    label = "Awake(t)";
+    position = (105 174);
+    states = ( "Yes" 
+               "No" );
+}
+
+potential (A0)
+{
+    data = ( 0.470483  0.529517  );
+}
+
+potential (L1 | A1)
+{ 
+    data = ( 0.125281  0.874719  % A1=Yes 
+             0.084073  0.915927 );
+}
+
+potential (A1 | A0)
+{ 
+    data = ( 0.244748  0.755252  % A0=Yes 
+             0.648132  0.351868 );
+}
