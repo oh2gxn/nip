@@ -637,12 +637,14 @@ nip_error_code nip_collect_evidence(nip_clique c1,
 	return retval;
       }
     }
-    else if(!nip_clique_marked(s->second_neighbour))
+    /* Reminder: don't "else" if you don't really mean it... */
+    if(!nip_clique_marked(s->second_neighbour)){
       retval = nip_collect_evidence(c2, s, s->second_neighbour);
       if(retval != NIP_NO_ERROR){
 	nip_report_error(__FILE__, __LINE__, retval, 1);
 	return retval;
       }
+    }
     l = l->fwd;
   }
 
