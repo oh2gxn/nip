@@ -13,7 +13,7 @@ tl;dr:
 - exact join tree inference (batch/offline mode)
 - Expectation Maximization (EM) learning
 - sampling from a given model
-- some elementary command line tools
+- some elementary command line tools, see demo.sh
 
 Somebody used acronym PIN: probabilistic independence network (BN), so I named this NIP
 
