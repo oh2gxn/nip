@@ -3,8 +3,9 @@ nip
 
 NIP - Dynamic Bayesian Network library
 
-This repo will soon contain the code used in my MSc thesis:
+This repo contains the code used in my MSc thesis:
 http://users.ics.tkk.fi/jatoivol/di-oneside.pdf
+(there has been some revision since then, though)
 
 tl;dr: 
 - (Dynamic) Bayesian Network (DBN) library in C
@@ -15,8 +16,8 @@ tl;dr:
 - sampling from a given model
 - some elementary command line tools, see demo.sh
 
-Somebody used acronym PIN: probabilistic independence network (BN), so I named this NIP
+[Smyth, Heckerman, Jordan 1996] used acronym PIN: probabilistic independence network (for BN), so I named this NIP
 
-Intended licence: GPLv2+...
+Licence: GPLv2+
 
 --Janne OH2GXN
