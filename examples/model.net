@@ -39,7 +39,7 @@ node A0
 potential (L1 | A1)
 {
     data
-     = (( 0.9 0.1 )	%  A1=Yes
+     = (( 0.8 0.2 )	%  A1=Yes
 	( 0.01 0.99 ));	%  A1=No
 }
 
@@ -47,7 +47,7 @@ potential (L1 | A1)
 potential (A1 | A0)
 {
     data
-     = (( 0.96 0.04 )	%  A0=Yes
+     = (( 0.9  0.10 )	%  A0=Yes
 	( 0.08 0.92 ));	%  A0=No
 }
 

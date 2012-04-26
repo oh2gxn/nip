@@ -125,7 +125,7 @@ int main(int argc, char *argv[]){
   fprintf(f, "%s", nip_variable_symbol(ts->hidden[0]));
   for(i = 1; i < ts->num_of_hidden; i++){
     temp = ts->hidden[i];
-    fprintf(f, ", %s", nip_variable_symbol(temp));
+    fprintf(f, " %s", nip_variable_symbol(temp));
   }
   fputs("\n", f);
 
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]){
 	    k = j;
 	  }
 	}
-	fprintf(f, "%s, ", (temp->state_names)[k]);
+	fprintf(f, "%s ", (temp->state_names)[k]);
       }
 
       i = ucs->num_of_vars - 1;
