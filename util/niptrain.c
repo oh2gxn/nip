@@ -62,6 +62,8 @@ int main(int argc, char *argv[]) {
   char* tailptr = NULL;
   long seed;
 
+  printf("niptrain:\n");
+
   if(argc < 6){
     printf("You must specify: \n"); 
     printf(" - the original NET file, \n");
@@ -93,10 +95,10 @@ int main(int argc, char *argv[]) {
 
   /* print a summary about the variables */
   ts = ts_set[0];
-  printf("Hidden variables are:\n");
+  printf("  Hidden variables are:\n");
   for(i = 0; i < ts->num_of_hidden; i++)
     printf("  %s", nip_variable_symbol(ts->hidden[i]));
-  printf("\nObserved variables are:\n");
+  printf("\n  Observed variables are:\n");
   for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
     printf("  %s", nip_variable_symbol(ts->observed[i]));
   printf("\n");
@@ -126,7 +128,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* THE algorithm (may take a while) */
-  printf("Computing... \n");
+  printf("  Computing... \n");
 
   seed = random_seed(NULL);
   printf("  Random seed = %ld\n", seed);
@@ -162,7 +164,7 @@ int main(int argc, char *argv[]) {
 
     /* find out the last value in learning curve */
     if(NIP_LIST_LENGTH(learning_curve) == 0){
-      printf("Run %d failed 0.0  with 0 iterations, delta = 0.0 \n", t);
+      printf("  Run %d failed 0.0  with 0 iterations, delta = 0.0 \n", t);
     }
     else{
       i = 1;
@@ -176,10 +178,10 @@ int main(int argc, char *argv[]) {
       last = link->data;
       
       if(link->bwd)
-	printf("Run %d reached %g  with %d iterations, delta = %g \n", 
+	printf("  Run %d reached %g  with %d iterations, delta = %g \n", 
 	       t, last, i, last - link->bwd->data);
       else
-	printf("Run %d reached %g  with %d iterations, delta = 0.0 \n", 
+	printf("  Run %d reached %g  with %d iterations, delta = 0.0 \n", 
 	       t, last, i);
     }
 
@@ -187,13 +189,13 @@ int main(int argc, char *argv[]) {
   } while(e == NIP_ERROR_BAD_LUCK || 
 	  last < min_log_likelihood);
 
-  printf("...done.\n");
+  printf("  ...done.\n");
 
   /* Print the learning curve */
   link = learning_curve->first; t = 0;
   while(link != NULL){
     /* Reminder: rint() is NOT ANSI C. */
-    printf("Iteration %d: \t average loglikelihood = %g\n", t++, 
+    printf("  Iteration %d: \t average loglikelihood = %g\n", t++, 
 	   rint(link->data / threshold) * threshold);
     link = link->fwd;
   }

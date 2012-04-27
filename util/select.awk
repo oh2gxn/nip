@@ -23,8 +23,8 @@
 # $Id: select.awk,v 1.1 2008-12-19 20:53:50 jatoivol Exp $
 
 BEGIN{
-# Field Separator is ", "
-  FS = ", "
+# Field Separator, was ", "
+  FS = " "
 
 # Reset line counter (only non-empty lines)
   line = 0;

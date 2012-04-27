@@ -60,6 +60,8 @@ int main(int argc, char *argv[]) {
   double log_likelihood = 0;
   nip_variable v = NULL;
 
+  printf("niplikelihood:\n");
+
   if(argc < 4){
     printf("You must specify: \n"); 
     printf(" - the NET file, e.g. model.net, \n");

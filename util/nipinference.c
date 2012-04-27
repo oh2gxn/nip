@@ -53,6 +53,8 @@ int main(int argc, char *argv[]){
   time_series *ts_set = NULL;
   uncertain_series *ucs_set = NULL;
 
+  printf("nipinference:\n");
+
   /*****************************************/
   /* Parse the model from a Hugin NET file */
   /*****************************************/
@@ -100,7 +102,7 @@ int main(int argc, char *argv[]){
   v = model_variable(model, argv[3]);
   if(!v){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    fprintf(stderr, "No such variable in the model.\n");
+    fprintf(stderr, "No such variable (%s) in the model.\n", argv[3]);
     for(i = 0; i < n_max; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
@@ -117,7 +119,7 @@ int main(int argc, char *argv[]){
   /*****************/
   /* The inference */
   /*****************/
-  printf("## Computing ##\n");  
+  printf("  Computing...\n");  
   loglikelihood = 0; /* init */
 
   for(i = 0; i < n_max; i++){
@@ -134,7 +136,7 @@ int main(int argc, char *argv[]){
   write_uncertainseries(ucs_set, n_max, v, argv[4]);
 
   printf("  Average log. likelihood = %g\n", loglikelihood);
-  printf("done.\n"); /* new line for the prompt */
+  printf("  ...done.\n"); /* new line for the prompt */
 
   /* free some memory */
   for(i = 0; i < n_max; i++){

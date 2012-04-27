@@ -53,6 +53,8 @@ int main(int argc, char *argv[]){
   time_series *ts_set = NULL;
   uncertain_series ucs = NULL;
 
+  printf("nipmap:\n");
+
   /*****************************************/
   /* Parse the model from a Hugin NET file */
   /*****************************************/
@@ -105,10 +107,10 @@ int main(int argc, char *argv[]){
   }
 
   /** DEBUG **/
-  printf("Observed variables:\n  ");
+  printf("  Observed variables:\n  ");
   for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
     printf("%s ", ts->observed[i]->symbol);
-  printf("\nHidden variables:\n  ");
+  printf("\n  Hidden variables:\n  ");
   for(i = 0; i < ts->num_of_hidden; i++)
     printf("%s ", ts->hidden[i]->symbol);
   printf("\n");
@@ -123,18 +125,18 @@ int main(int argc, char *argv[]){
   fprintf(f, "%s", nip_variable_symbol(ts->hidden[0]));
   for(i = 1; i < ts->num_of_hidden; i++){
     temp = ts->hidden[i];
-    fprintf(f, ", %s", nip_variable_symbol(temp));
+    fprintf(f, " %s", nip_variable_symbol(temp));
   }
   fputs("\n", f);
 
   /**************************************/
   /* The inference for each time series */
   /**************************************/
-  printf("## Computing ##\n");  
+  printf("  Computing...\n");  
 
   for(n = 0; n < n_max; n++){
 
-    printf("Time series %d of %d\r               ", n+1, n_max);
+    /*printf("Time series %d of %d\r               ", n+1, n_max);*/
 
     /* select time series */
     ts = ts_set[n];
@@ -157,7 +159,7 @@ int main(int argc, char *argv[]){
 	    k = j;
 	  }
 	}
-	fprintf(f, "%s, ", (temp->state_names)[k]);
+	fprintf(f, "%s ", (temp->state_names)[k]);
       }
 
       i = ucs->num_of_vars - 1;
@@ -177,7 +179,7 @@ int main(int argc, char *argv[]){
     free_uncertainseries(ucs); /* remember to free ucs */
   }
 
-  printf("\n"); /* new line for the prompt */
+  printf("  ...done\n"); /* new line for the prompt */
 
   /* close the file */
   if(fclose(f)){
