@@ -58,6 +58,8 @@ int main(int argc, char *argv[]) {
   ;
   /** </Some experimental code>**/
 
+  printf("nipsample:\n");
+
   if(argc < 5){
     printf("You must specify: \n"); 
     printf(" - the NET file for the model, \n");
@@ -70,7 +72,7 @@ int main(int argc, char *argv[]) {
   /* read the model */
   model = parse_model(argv[1]);
   if(!model){
-    printf("Unable to parse the NET file: %s?\n", argv[1]);
+    printf("  Unable to parse the NET file: %s?\n", argv[1]);
     return -1;
   }
 
@@ -78,7 +80,7 @@ int main(int argc, char *argv[]) {
   d = strtod(argv[2], &tailptr);
   n = (int)d;
   if(d <= 0 || d > 1000000  || tailptr == argv[2]){
-    printf("Invalid number of time series: %s?\n", argv[2]);
+    printf("  Invalid number of time series: %s?\n", argv[2]);
     free_model(model);
     return -1;
   }
@@ -87,13 +89,13 @@ int main(int argc, char *argv[]) {
   d = strtod(argv[3], &tailptr);
   t = (int)d;
   if(d <= 0 || d > 1000000  || tailptr == argv[3]){
-    printf("Invalid time series length: %s?\n", argv[3]);
+    printf("  Invalid time series length: %s?\n", argv[3]);
     free_model(model);
     return -1;
   }
 
   /* THE algorithm (may take a while) */
-  printf("Generating data... \n");
+  printf("  Generating data... \n");
 
   seed = random_seed(NULL);
   printf("  Random seed = %ld\n", seed);
@@ -116,7 +118,7 @@ int main(int argc, char *argv[]) {
     }
     ts_set[i] = ts;
   }
-  printf("...done.\n");
+  printf("  ...done.\n");
 
   /* Write the results to the file */
   i =  write_timeseries(ts_set, n, argv[4]);

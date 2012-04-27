@@ -58,6 +58,8 @@ int main(int argc, char *argv[]){
 
   double m1, m2;
 
+  printf("nipjoint:\n");
+
   /*****************************************/
   /* Parse the model from a Hugin NET file */
   /*****************************************/

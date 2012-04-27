@@ -69,6 +69,8 @@ int main(int argc, char *argv[]){
   nip_double_list learning_curve = NULL;
   nip_double_link link = NULL;
 
+  printf("nipbenchmark:\n");
+
   /*****************************************/
   /* Parse the model from a Hugin NET file */
   /*****************************************/
@@ -155,7 +157,7 @@ int main(int argc, char *argv[]){
   /*****************/
   /* The inference */
   /*****************/
-  printf("## Computing ##\n");  
+  printf("  Computing...\n");  
   loglikelihood = 0; /* init */
   seed = random_seed(NULL);
   printf("  Random seed = %ld\n", seed);
@@ -224,7 +226,7 @@ int main(int argc, char *argv[]){
     loglikelihood += probe / TIME_SERIES_LENGTH(ts);
 
     /* Display progress */
-    printf("%d / %d\n", i+1, n_max);
+    printf("  %d / %d\n", i+1, n_max);
   }
   loglikelihood /= n_max;
 
@@ -232,7 +234,7 @@ int main(int argc, char *argv[]){
   write_uncertainseries(ucs_set, n_max, v, argv[6]);
 
   printf("  Average log. likelihood = %g\n", loglikelihood);
-  printf("done.\n"); /* new line for the prompt */
+  printf("  ...done.\n"); /* new line for the prompt */
 
   /* free some memory */
   if(NIP_LIST_LENGTH(learning_curve) > 0)
