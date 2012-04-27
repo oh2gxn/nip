@@ -16,12 +16,12 @@ make
 
 # ...but instead of assuming we can observe every variable,
 # we hide some of them. Data is space delimited and L1 is the third column.
-gawk -f util/select.awk var=L1 examples/data1.txt > examples/data1-L1.txt
-gawk -f util/select.awk var=L1 examples/data2.txt > examples/data2-L1.txt
+awk -f util/select.awk var=L1 examples/data1.txt > examples/data1-L1.txt
+awk -f util/select.awk var=L1 examples/data2.txt > examples/data2-L1.txt
 
 # Alternatively: hide just some of the data, see hide_values.awk
-# gawk -f util/hide_values.awk examples/data1.txt > examples/data1-L1.txt
-# gawk -f util/hide_values.awk examples/data2.txt > examples/data2-L1.txt
+# awk -f util/hide_values.awk examples/data1.txt > examples/data1-L1.txt
+# awk -f util/hide_values.awk examples/data2.txt > examples/data2-L1.txt
 
 
 
@@ -42,11 +42,13 @@ echo 'See if examples/trained.net makes any sense compared to model.net.'
 ./util/nipmap examples/trained.net examples/data2-L1.txt examples/data2-A-map.txt
 
 # ...see what happened
-gawk -f util/select.awk var=A1 examples/data2.txt > examples/data2-A1.txt
-gawk -f util/select.awk var=A1 examples/data2-A-map.txt > examples/data2-A1-map.txt
+awk -f util/select.awk var=A1 examples/data2.txt > examples/data2-A1.txt
+awk -f util/select.awk var=A1 examples/data2-A-map.txt > examples/data2-A1-map.txt
 paste -d' ' examples/data2-A1.txt examples/data2-A1-map.txt > examples/predictions.txt
 echo 'See if examples/predictions.txt match at all.'
-
+# NOTE: data2-A1-map.txt does NOT contain most likely state sequences
+# (like in the result of the Viterbi algorithm), just independently most 
+# probable states
 
 
 ### 5. Cross validating accuracy
