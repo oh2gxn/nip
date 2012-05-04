@@ -691,7 +691,7 @@ placed in \cfilename{nippotential.c} and are as follows:
   \examplecode{p->size\_of\_data - 1} inclusive. Shortly, this function is
   made for finding out which configuration of states of the variables
   corresponds to each element in the potential. Note that the
-  \cparameter{indices} array (of size at least \cstructfield{num_of_vars})
+  \cparameter{indices} array (of size at least \cstructfield{num\_of\_vars})
   is not allocated by the function: it must be allocated by the caller
   prior to calling this function.
   
@@ -836,7 +836,7 @@ implementation of potentials from the implementation of variables, in case
 we need representations of potentials irrespective of the variable
 identity, and in case other kind of variables or potentials are introduced
 in the future development\footnote{although C has poor support for
-  polymorphism}. The \cdatatype{nip_clique} and \cdatatype{nip_sepset}
+  polymorphism}. The \cdatatype{nip\_clique} and \cdatatype{nip\_sepset}
 structures, described below, are responsible for representing a complete
 ``belief universe''~\cite{Jensen1990} by handling a potential and the
 set of variables related to it.
@@ -2185,7 +2185,7 @@ mentioned in the XXX. Because we have to dynamically update the
 
 
 \section{Net language example}
-\VerbatimInput{example.net}
+\VerbatimInput{../examples/model.net}
 
 \newpage
 \bibliography{doc}
