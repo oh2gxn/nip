@@ -31,7 +31,7 @@
 
 #define MIN_EM_ITERATIONS 3
 
-/* #define DEBUG_NIP */
+/*#define DEBUG_NIP*/
 
 /* External Hugin Net parser functions */
 FILE* open_net_file(const char *filename);
@@ -218,7 +218,8 @@ nip parse_model(char* file){
 
     if(temp->next){
       new->next[j] = temp;
-      new->previous[j] = temp->next;
+      new->previous[j] = temp->next; 
+      /* NOTE: this is coupled with temp->next->previous */
       j++;
     }
     
@@ -226,8 +227,9 @@ nip parse_model(char* file){
       new->incoming_interface[k++] = temp;
     if(temp->interface_status & NIP_INTERFACE_OLD_OUTGOING){
       new->previous_outgoing_interface[m] = temp;
-      new->outgoing_interface[m] = temp->previous;
-      assert(temp->previous->interface_status & NIP_INTERFACE_OUTGOING);
+      new->outgoing_interface[m] = temp->next; 
+      /* IMPORTANT: temp and temp->next have the same index m */
+      assert(temp->next->interface_status & NIP_INTERFACE_OUTGOING);
       m++;
     }
   }
@@ -358,9 +360,9 @@ int write_model(nip model, char* filename){
     for(j = 0; j < n; j++)
       fprintf(f, " \"%s\" \n%s              ", v->state_names[j], indent);
     fprintf(f, " \"%s\" );\n", v->state_names[n]);
-    if(v->previous)
+    if(v->previous) /* semantics of next/previous?*/
       fprintf(f, "%s    NIP_next = \"%s\";\n", indent, 
-	      nip_variable_symbol(v->previous));
+	      nip_variable_symbol(v->previous)); 
     fprintf(f, "%s}\n", indent);
     fflush(f);
   }
@@ -1694,6 +1696,9 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts){
 static nip_error_code e_step(time_series ts, nip_potential* parameters, 
 			     double* loglikelihood){
   int i, t;
+#ifdef DEBUG_NIP
+  int j;
+#endif
   int* cardinalities = NULL;
   int nobserved;
   int* data = NULL;

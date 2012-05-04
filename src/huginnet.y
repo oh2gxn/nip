@@ -1138,8 +1138,8 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
 	}
       }
       /* the core */
-      v2->next = v1;     /* v2 belongs to V(t)   */
-      v1->previous = v2; /* v1 belongs to V(t-1) */
+      v1->next = v2;     /* v2 belongs to V(t)   */
+      v2->previous = v1; /* v1 belongs to V(t-1) */
     }
     else{
       fprintf(stderr, 
@@ -1164,11 +1164,10 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
       v1 = v2->parents[i];
 
       /* Condition for belonging to the incoming interface */
-      if(v1->previous != NULL && 
-	 v2->previous == NULL){ 
+      if(v1->next != NULL){ 
 	/* v2 has the parent v1 in the previous time slice */
 	v1->interface_status |= NIP_INTERFACE_OLD_OUTGOING;
-	v1->previous->interface_status |= NIP_INTERFACE_OUTGOING;
+	v1->next->interface_status |= NIP_INTERFACE_OUTGOING;
 	v2->interface_status |= NIP_INTERFACE_INCOMING;
 	m = 1;
 	/* break; ?? */
@@ -1176,7 +1175,7 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
 #ifdef DEBUG_BISON
 	fprintf(stdout, 
 	      "NET parser: Node %s in I_{t}->\n",
-	      nip_variable_symbol(v1->previous));
+	      nip_variable_symbol(v1->next));
 	fprintf(stdout, 
 	      "NET parser: Node %s in I_{t-1}->\n",
 	      nip_variable_symbol(v1));
@@ -1189,7 +1188,7 @@ static int interface_to_vars(nip_interface_list il, nip_variable_list vl){
     if(m){ /* parents of v2 in this time slice belong to incoming interface */
       for(i = 0; i < nip_number_of_parents(v2); i++){
 	v1 = v2->parents[i];
-	if(v1->previous == NULL){ 
+	if(v1->next == NULL){ 
 	  /* v1 (in time slice t) is married with someone in t-1 */
 	  v1->interface_status |= NIP_INTERFACE_INCOMING;
 

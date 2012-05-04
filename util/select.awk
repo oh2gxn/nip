@@ -20,14 +20,16 @@
 # Example: gawk -f select.awk var=X original_data.txt > variable_X.txt
 #
 # Janne Toivola, 19.06.2006
-# $Id: select.awk,v 1.1 2008-12-19 20:53:50 jatoivol Exp $
 
 BEGIN{
-# Field Separator, was ", "
+  # Field Separator, was ", "
   FS = " "
 
-# Reset line counter (only non-empty lines)
+  # Reset line counter (only non-empty lines)
   line = 0;
+
+  # Is var found on the first line
+  varfound = 0;
 }
 
 {
@@ -40,8 +42,19 @@ BEGIN{
   for (i = 1; i <= NF; i++) {
     if (line == 0) {
       name[i] = $i; # establish field->name mapping
+      if (var == $i) {
+        varfound = 1;
+      }
     }
-
+    else if (line == 1) {
+      if (varfound == 0) {
+        # awk way
+        printf "select.awk: Variable %s not found!\n",var | "cat 1>&2";
+	#print "Variable not found!" > "/dev/stderr"; # gawk way
+        exit 1;
+      }
+    }
+    
     if (name[i] == var){
       printf "%s", $i;
     }

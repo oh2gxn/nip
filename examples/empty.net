@@ -1,10 +1,4 @@
-% Simple DBN model (an HMM actually): 
-% A man lives in his house, sleeping or being awake (variable A1),
-% and keeps his lights on (variable L1) usually only when awake.
-% Daily (secret) activities are governed by transitions 
-% (state of A1, given A0) and reflected in the (observed) lights.
-% Parameters left out.
-%
+% Simple DBN model (HMM actually) without parameter values
 % Author: Janne Toivola
 
 %%% global properties of the network
@@ -14,42 +8,48 @@ net
 }
 
 %%% random variables
-node L1
+node P0
 {
-    label = "Lights(t)";
-    position = (200 100);
-    states = ("on" "off");
-}
-
-node A1
-{
-    label = "Awake(t)";
-    position = (200 200);
-    states = ("awake" "sleep");
-    NIP_next = "A0";
-}
-
-node A0
-{
-    label = "Awake(t)";
+    label = "Process(t-1)";
     position = (100 200);
-    states = ("awake" "sleep");
+    states = ("1" "2" "3" "4"); % labels probably not identifiable from data
+    NIP_next = "P1";
 }
 
-% Emission probabilities: Light | Awake
-potential (L1 | A1)
+node P1
 {
-    data = (1 1 1 1); % empty
+    label = "Process(t)";
+    position = (200 200);
+    states = ("1" "2" "3" "4"); % labels probably not identifiable from data
 }
 
-% Transition probabilities between sleep/awake
-potential (A1 | A0)
+node M1
 {
-    data = (1 1 1 1); % empty
+    label = "Measurement(t)";
+    position = (200 100);
+    states = ("0" "1" "2" "3" "4");
+}
+
+% Emission probabilities
+potential (M1 | P1)
+{
+  data = (( 1 1 1 1 1 )   % P1=1
+          ( 1 1 1 1 1 )   % P1=2
+          ( 1 1 1 1 1 )   % P1=3
+          ( 1 1 1 1 1 )); % P1=4
+}
+
+% Transition probabilities
+potential (P1 | P0)
+{
+  data= (( 1 1 1 1 )   %  P0=1
+         ( 1 1 1 1 )   %  P0=2
+         ( 1 1 1 1 )   %  P0=3
+         ( 1 1 1 1 )); %  P0=4
 }
 
 % Prior for the first time step
-potential (A0)
+potential (P0)
 {
-    data = (1 1); % empty
+    data = ( 1 1 1 1 );
 }
