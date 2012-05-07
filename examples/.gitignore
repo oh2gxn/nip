@@ -1,0 +1,4 @@
+# generated data #
+data*.txt
+# estimated models #
+trained.net

@@ -9,3 +9,5 @@ iotest
 memleaktest
 parsertest
 potentialtest
+# OS X debug symbols #
+*.dSYM

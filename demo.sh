@@ -40,7 +40,7 @@ echo 'See if examples/trained.net makes any sense compared to model.net.'
 echo ''
 echo '4. Probabilistic inference with the learned model:'
 # See if the learned model can infer state of P1 from M1 in data2.txt
-./util/nipinference examples/trained.net examples/data2-P1.txt P1 examples/data2-P1-inferred.txt
+./util/nipinference examples/trained.net examples/data2-M1.txt P1 examples/data2-P1-inferred.txt
 
 # ...choose the maximum a posteriori state, instead of just probabilities
 ./util/nipmap examples/trained.net examples/data2-M1.txt examples/data2-P-map.txt

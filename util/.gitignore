@@ -7,3 +7,5 @@ niplikelihood
 nipmap
 nipsample
 niptrain
+# OS X debug symbols #
+*.dSYM
