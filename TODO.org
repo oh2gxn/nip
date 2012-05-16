@@ -1,9 +1,5 @@
 TODO:
 
-* TODO Publish the code
-** http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
-** DL: 15.6.2012
-
 * TODO Refactorisation: replacing a lot of copy-paste code with these
 ** nip_variable_union(), 
 ** nip_variable_isect(): search for clique_intersection, and
@@ -79,7 +75,7 @@ TODO:
 ** Hugin Expert Net files
 ** XMLBIF http://www.cs.cmu.edu/~fgcozman/Research/InterchangeFormat/
 ** XBN?
-
+** JSON?
 * TODO Hugin Net parser should use a struct instead of global variables!
 
 * TODO Tiny addition to huginnet.y: 
@@ -104,7 +100,7 @@ TODO:
 ** It has to have the backtracking ability...
 
 * TODO Leave-one-out program based on em_test and inftest...
-** DONE loo_prediction_test
+** DONE loo_prediction_test (later named util/nipbenchmark)
 ** DONE for each time series: predict the values of a given variable given a model learned from other series and given data about the other variables
 ** TODO testing
 
@@ -152,6 +148,8 @@ TODO:
 DONE:
 
 
+* DONE Publish the code
+** http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
 * DONE Decide licencing
 ** http://wiki.ics.tkk.fi/OpenLicensingOfScientificMaterial
 ** http://www.gnu.org/software/bison/manual/bison.html#Conditions
