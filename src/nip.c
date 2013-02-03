@@ -483,6 +483,9 @@ int write_model(nip model, char* filename){
 void free_model(nip model){
   int i;
 
+  if (!model)
+    return;
+
   /* 1. Free cliques and adjacent sepsets */
   for(i = 0; i < model->num_of_cliques; i++)
     nip_free_clique(model->cliques[i]);
