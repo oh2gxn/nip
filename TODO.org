@@ -3,17 +3,58 @@
 Top priority:
 
 * TODO Make it a library
-** DONE makefile rules for static
+** TODO a single header file instead of nip*.h
+This raises the suspicion of "baklava code" - a set of too thin layers,
+or "lasagne code" - a nice set of layers but monolithic / impossible to change
+** TODO consider ABI vs. future development
+Some parts of the library are likely to change soon
+** DONE makefile rules for static library
 ** DONE makefile rules for a shared library
-** TODO GNU libtool or Automake for portability???
+** TODO CMake ?
 
 * TODO Check if the library is UTF-8 compatible
 ** Hard byte length limit of some strings cuts UTF-8 chars?
 ** The only source of UTF-8/wide chars is the input?
 *** option a: transparency: output them as is, but don't mess them
-Wide chars hopelessly "opaque"?
 *** option b: transform input to/accept only UTF-8, output only UTF-8
 
+* TODO Automated test scripts
+** Use Robot Framework from Google?
+** TODO iotest
+** TODO parsertest
+** TODO potentialtest
+** TODO cliquetest
+** TODO graphtest
+** TODO bisontest
+** TODO datafiletest
+** TODO hmmtest
+** TODO htmtest
+** TODO memleaktest
+** TODO models and data for testing nip.c
+** TODO script with simple diff operations? (not for memleaktest)
+
+
+* TODO Better demo case?
+** CW decoding or some other time series smoothing case?
+* TODO Graphical interactive demos with Tcl/Python/<web tech X here>?
+** A set of windows with one potential / belief universe each
+** Click on the marginal inserts evidence for the variable
+** Click inside the bitmap modifies conditional/prior probs
+
+
+* TODO Online forward_inference (+ refactor offline forward_inference?)
+** Utilize stdin, stdout, and named pipes
+- stderr for "interactive" messages, not just errors
+- I/O only from the main program
+* TODO Online fixed_lag_smoothing
+** Have more than 1.5 temporal slices?
+** Implement re-use of allocated slices: "tank track" method?
+* TODO Use online forward mode or fixed-lag smoothing with SDR?
+* TODO ZeroMQ support for distributing join trees over network?
+* TODO Support for OpenCL in potential.c
+** Divide into suitable chunks if bigger than available alloc?
+* TODO "Plan 9 from belief universe"
+** Does this compile on Plan9?
 * TODO Refactorisation: replacing a lot of copy-paste code with these
 ** nip_variable_union(), 
 ** nip_variable_isect(): search for clique_intersection, and
@@ -41,21 +82,6 @@ Wide chars hopelessly "opaque"?
 ** static and context-insensitive (the simple case) 
 ** automated script to create DOT (GraphViz): codeviz? Python?
 
-* TODO Automated test scripts
-** Use Robot Framework from Google?
-** TODO iotest
-** TODO parsertest
-** TODO potentialtest
-** TODO cliquetest
-** TODO graphtest
-** TODO bisontest
-** TODO datafiletest
-** TODO hmmtest
-** TODO htmtest
-** TODO memleaktest
-** TODO models and data for testing nip.c
-** TODO script with simple diff operations? (not for memleaktest)
-
 * TODO Refactor nip.c and jointree.c
 ** functions that want collections of all variables and sepsets as parameters
 
@@ -68,7 +94,6 @@ Wide chars hopelessly "opaque"?
 ** TODO write_X() functions could take file id's instead of file names...
 *** opening a file or other output would be users responsibility
 
-* TODO Support for CUDA or OpenCL in potential.c?
 
 
 * TODO clique.c could hide potential.c completely?
@@ -143,10 +168,6 @@ Wide chars hopelessly "opaque"?
 
 * TODO Get rid of copy-paste stuff in inference procedures... but how?
 
-* TODO Online forward_inference (+ refactor offline forward_inference?)
-
-* TODO Online fixed_lag_smoothing...
-
 * TODO Particle filtering by having a sibling class for potential arrays?
 ** representing distribution as a collection of samples instead of a probability table
 ** automatic compatibility in multiplying potentials of different type?
@@ -154,6 +175,7 @@ Wide chars hopelessly "opaque"?
 ** representing distribution in terms of parameters instead of a probability table
 ** automatic compatibility in multiplying potentials of different type?
 
+* TODO Spectral clustering vs EM?
 
 * DONE Publish the code
 ** http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
@@ -215,9 +237,10 @@ Wide chars hopelessly "opaque"?
 ** typedef enum nip_error_code_enum { NO_ERROR = 0, ...} nip_error_code;
 ** use nip_error_code instead of int
 
-* DONE Consistent conventions in naming functions, variables, and data structures?
+* TODO Consistent conventions in naming functions, variables, and data structures?
 ** DONE make the naming conventions uniform, e.g. state_names instead of statenames or stateNames
 ** DONE prefix everything with "nip" to simulate namespace
+This is also known as "Smurf naming convention"
 ** DONE errorhandler.h -> niperrorhandler.h
 ** DONE lists.h -> niplists.h
 ** DONE fileio.h -> nipstring.h
@@ -227,7 +250,7 @@ Wide chars hopelessly "opaque"?
 ** DONE Heap.h -> nipheap.h
 ** DONE Graph.h -> nipgraph.h
 ** DONE parser.h -> nipparsers.h ?
-** TODO nip.h ok?
+** TODO nip.h ok, but needs nip->nip_model etc.
 ** DONE convert -> nipconvert
 ** DONE em_test -> niptrain
 ** DONE gen_test -> nipsample

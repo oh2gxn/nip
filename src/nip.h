@@ -105,6 +105,7 @@ typedef struct{
 
 typedef time_series_struct* time_series;
 
+/* JJ NOTE: Should there be something else for streams / online inference? */
 
 typedef struct{
   nip_variable* variables; /* variables of interest */
