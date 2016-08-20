@@ -18,6 +18,22 @@ Some parts of the library are likely to change soon
 *** option a: transparency: output them as is, but don't mess them
 *** option b: transform input to/accept only UTF-8, output only UTF-8
 
+* TODO Document the code structure with UML "class" diagram
+** TODO graph
+** TODO heap
+** TODO join tree
+** DONE potential
+** DONE lists
+** DONE fileio -> string
+** DONE variable
+
+* TODO Document the code structure with a call graph, where:
+** each function is a node
+** each call is represented by an edge (func A calls func B)
+** static and context-insensitive (the simple case) 
+** automated script to create DOT (GraphViz): Doxygen
+
+
 * TODO Automated test scripts
 ** Use Robot Framework from Google?
 ** TODO iotest
@@ -67,21 +83,6 @@ Some parts of the library are likely to change soon
 ** used in nip_clique_mass and nip_neg_sepset_mass
 
 * TODO Separate nip_potential_list from nipjointree ?
-* TODO Document the code structure with UML "class" diagram
-** TODO graph
-** TODO heap
-** TODO join tree
-** DONE potential
-** DONE lists
-** DONE fileio -> string
-** DONE variable
-
-* TODO Document the code structure with a call graph, where:
-** each function is a node
-** each call is represented by an edge (func A calls func B)
-** static and context-insensitive (the simple case) 
-** automated script to create DOT (GraphViz): codeviz? Python?
-
 * TODO Refactor nip.c and jointree.c
 ** functions that want collections of all variables and sepsets as parameters
 

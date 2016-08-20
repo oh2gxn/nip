@@ -15,10 +15,11 @@
     with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-/* nip.h 
- * Top level abstractions of the NIP system
- * Author: Janne Toivola
- * Version: $Id: nip.h,v 1.68 2011-01-23 23:01:47 jatoivol Exp $
+/**
+ * @file
+ * @brief Top level abstractions of the NIP system: probably all you need
+ * @author Janne Toivola
+ * @copyright &copy; Janne Toivola
  */
 
 #ifndef __NIP_H__
@@ -32,6 +33,7 @@
 #include <math.h>
 #include <time.h>
 
+/* The exposed part of NIP */
 #include "niplists.h"
 #include "nipvariable.h"
 #include "nippotential.h"
@@ -39,6 +41,8 @@
 #include "niperrorhandler.h"
 #include "nipparsers.h"
 #include "huginnet.tab.h"
+
+/* Hidden: nipgraph.h, nipheap.h, nipstring.h */
 
 #define TIME_SERIES_LENGTH(ts) ( (ts)->length )
 #define UNCERTAIN_SERIES_LENGTH(ucs) ( (ucs)->length )
