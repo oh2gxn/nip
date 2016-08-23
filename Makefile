@@ -1,7 +1,7 @@
 # Makefile for the "nip" project.
 #
 # TODO
-# - Automake?
+# - CMake / Automake?
 # + make a library out of the basic source files
 # + make test programs separately
 # + make utility programs separately
@@ -40,7 +40,7 @@ INC = -Isrc/
 #	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 # The default target
-all: test util
+all: test util doc
 
 
 # Rules for the library object files
@@ -238,14 +238,14 @@ util: $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET) \
 $(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
 
 
-
-
 # All targets
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
 $(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
 $(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) \
 $(INF_TARGET) $(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
 
+doc: doc/Doxyfile src/*.c src/*.h
+	doxygen doc/Doxyfile
 
 # More rules for make
 # The first rule tells make what to do by default.
@@ -264,8 +264,8 @@ clean:
 # "make realclean" does the same as "make clean", and also removes the
 # compiled programs, libraries, and a possible "core" file.
 realclean: clean
-	rm -f $(TARGET) $(SLIB) $(DLIBRN) core
+	rm -rf $(TARGET) $(SLIB) $(DLIBRN) core doc/html doc/latex
 
 # Tells make that all, clean, realclean etc. are not the names of
 # programs to compile.
-.PHONY: all clean realclean test util lib
+.PHONY: all clean realclean test util doc lib

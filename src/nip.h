@@ -1,25 +1,25 @@
-/*  NIP - Dynamic Bayesian Network library
-    Copyright (C) 2012  Janne Toivola
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
-
 /**
  * @file
- * @brief Top level abstractions of the NIP system: probably all you need
+ * @brief Top level abstractions of the NIP system: probably all you need to use
+ * 
+ * Include this header to use the NIP library. This includes:
+ * - methods for creating, reading, and writing a DBN model,
+ * - reading data from files,
+ * - running inference and learning steps with the model & data,
+ * - freeing the memory after use.
+ *
  * @author Janne Toivola
- * @copyright &copy; Janne Toivola
+ * @copyright &copy; 2012  Janne Toivola <br>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. <br>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. <br>
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __NIP_H__
