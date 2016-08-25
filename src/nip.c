@@ -1,45 +1,47 @@
-/*  NIP - Dynamic Bayesian Network library
-    Copyright (C) 2012  Janne Toivola
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
-
-/* nip.c 
- * Top level abstractions of the NIP system
- * Author: Janne Toivola
- * Version: $Id: nip.c,v 1.218 2011-01-23 23:01:47 jatoivol Exp $
+/**
+ * @file
+ * @brief Top level abstractions of the NIP system: probably all you need to use
+ * 
+ * @author Janne Toivola
+ * @copyright &copy; 2007,2012 Janne Toivola <br>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. <br>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. <br>
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "nip.h"
 
 
-/* write new kind of net files (net language rev.2) */
+/** Write new kind of net files (net language rev.2) */
 #define NET_LANG_V2
 
+/** This many probabilities / row of text */
 #define POTENTIAL_ELEMENTS_PER_LINE 7
 
+/** Run EM steps at least this many times */
 #define MIN_EM_ITERATIONS 3
 
 /*#define DEBUG_NIP*/
 
 /* External Hugin Net parser functions */
+#include "huginnet.tab.h" // int yyparse();
+
+/* TODO: Put these guys into a separate shared header?
+ * Or find The Proper Way to do stuff without global variables!
+ * Hint: %parse-param in huginnet.y? */
 FILE* open_net_file(const char *filename);
 void close_net_file();
-int yyparse();
 nip_variable_list get_parsed_variables();
 int get_cliques(nip_clique** clique_array_pointer);
 void get_parsed_node_size(int* x, int* y);
+
 
 /* Internal helper functions */
 static nip_error_code start_timeslice_message_pass(nip model, 
@@ -804,6 +806,8 @@ void free_timeseries(time_series ts){
 
 /* Replace this with the macro TIME_SERIES_LENGTH() */
 int timeseries_length(time_series ts){
+  if !ts
+    return 0;
   return ts->length;
 }
 
@@ -905,6 +909,8 @@ void free_uncertainseries(uncertain_series ucs){
 
 
 int uncertainseries_length(uncertain_series ucs){
+  if !ucs
+    return 0;
   return ucs->length;
 }
 
@@ -918,6 +924,9 @@ char* get_observation(time_series ts, nip_variable v, int time){
   if(j < 0)
     return NULL;
 
+  if (time < 0 || ts->length <= time)
+    return NULL;
+  
   return v->state_names[ts->data[time][j]];
 }
 
@@ -934,7 +943,7 @@ int set_observation(time_series ts, nip_variable v, int time,
   if((j < 0) || (i < 0))
     return NIP_ERROR_INVALID_ARGUMENT;
 
-  ts->data[time][j] = i;
+  ts->data[time][j] = i; // FIXME: check time < ts->length ?
   return 0;
 }
 

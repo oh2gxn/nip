@@ -18,20 +18,13 @@ Some parts of the library are likely to change soon
 *** option a: transparency: output them as is, but don't mess them
 *** option b: transform input to/accept only UTF-8, output only UTF-8
 
-* TODO Document the code structure with UML "class" diagram
-** TODO graph
-** TODO heap
-** TODO join tree
-** DONE potential
-** DONE lists
-** DONE fileio -> string
-** DONE variable
-
-* TODO Document the code structure with a call graph, where:
-** each function is a node
-** each call is represented by an edge (func A calls func B)
-** static and context-insensitive (the simple case) 
-** automated script to create DOT (GraphViz): Doxygen
+* TODO Document the code structure
+** Convert comments to Doxygen format
+** UML "class" diagram
+Doxygen generates fancy graphs for explaining dependencies.
+** Call graph
+- Static and context-insensitive (the simple case).
+- Doxygen?
 
 
 * TODO Automated test scripts

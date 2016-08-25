@@ -1,25 +1,22 @@
-/*  NIP - Dynamic Bayesian Network library
-    Copyright (C) 2012  Janne Toivola
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
-
-/* huginnet.y $Id: huginnet.y,v 1.95 2011-01-23 23:01:46 jatoivol Exp $
- * Grammar file for a subset of the Hugin Net language.
+%{
+/**
+ * @file
+ * @brief Parser for a subset of the Hugin Net language.
+ * 
+ * @author Janne Toivola
+ * @copyright &copy; 2007,2012 Janne Toivola <br>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. <br>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. <br>
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-%{
 #define _GNU_SOURCE
 
 #include <assert.h>
@@ -91,8 +88,22 @@ static int parsed_potentials_to_jtree(nip_potential_list potentials,
 static int interface_to_vars(nip_interface_list il, nip_variable_list vl);
 
 static void print_parsed_stuff(nip_potential_list pl);
+%}
 
 
+/* BISON Declarations */
+/* These are the data types for semantic values. 
+ * NOTE: there could be more of these to get rid of global variables... */
+%union {
+  double numval;
+  double *doublearray;
+  char *name;
+  char **stringarray;
+  nip_variable var;
+  /* list of X to get rid of global variables? */
+}
+
+%{
 /* Opens an input file. Returns 0 if file was opened or if some file was
  * already open. Returns ERROR_GENERAL if an error occurred
  * opening the file.
@@ -115,17 +126,6 @@ int get_cliques (nip_clique** clique_array_pointer);
 void get_parsed_node_size(int* x, int* y);
 %}
 
-/* BISON Declarations */
-/* These are the data types for semantic values. 
- * NOTE: there could be more of these to get rid of global variables... */
-%union {
-  double numval;
-  double *doublearray;
-  char *name;
-  char **stringarray;
-  nip_variable var;
-  /* list of X to get rid of global variables? */
-}
 
 /***********************/
 /* NOTE ABOUT STRINGS! ********************************************/
