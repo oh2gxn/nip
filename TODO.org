@@ -3,15 +3,28 @@
 Top priority:
 
 * TODO Make it a library
+** TODO decide on a minimal set of standards
+- ANSI C + GNU Bison? C99 and POSIX.1-2001?
+- Define _POSIX_C_SOURCE in config.h or nip.h?
+- Minimal Makefile without funny extensions?
+  - CC: the C compiler program
+  - CFLAGS: flags to pass to the C compiler
+  - LDFLAGS: flags to pass to the linker (via the C compiler)
+  - LDLIBS: libraries to pass to the linker
+  - User is left with overriding them as appropriate
 ** TODO a single header file instead of nip*.h
-This raises the suspicion of "baklava code" - a set of too thin layers,
-or "lasagne code" - a nice set of layers but monolithic / impossible to change
+This raises suspicions of 
+- baklava code :: a set of too thin layers, or 
+- lasagne code :: a nice set of layers but monolithic / impossible to change
+More recommendations for headers: 
+- No includes in include files, and 
+- Get rid of the ifdef wrappers? Compiler will warn when something is wrong.
 ** TODO consider ABI vs. future development
 Some parts of the library are likely to change soon
 ** DONE makefile rules for static library
 ** DONE makefile rules for a shared library
 ** TODO CMake ?
-
+CMake and especially Automake would be overengineering and risk portability.
 * TODO Check if the library is UTF-8 compatible
 ** Hard byte length limit of some strings cuts UTF-8 chars?
 ** The only source of UTF-8/wide chars is the input?
