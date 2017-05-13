@@ -14,7 +14,7 @@ Top priority:
   - User is left with overriding them as appropriate
 ** TODO a single header file instead of nip*.h
 This raises suspicions of 
-- baklava code :: a set of too thin layers, or 
+- baklava code :: a stack of too thin layers, or 
 - lasagne code :: a nice set of layers but monolithic / impossible to change
 More recommendations for headers: 
 - No includes in include files, and 
@@ -26,10 +26,10 @@ Some parts of the library are likely to change soon
 ** TODO CMake ?
 CMake and especially Automake would be overengineering and risk portability.
 * TODO Check if the library is UTF-8 compatible
-** Hard byte length limit of some strings cuts UTF-8 chars?
+** BUG: Hard byte length limit of some strings cuts UTF-8 chars?
 ** The only source of UTF-8/wide chars is the input?
-*** option a: transparency: output them as is, but don't mess them
-*** option b: transform input to/accept only UTF-8, output only UTF-8
+- option a :: transparency: output them as is, but don't mess them
+- option b :: transform input to/accept only UTF-8, output only UTF-8
 
 * TODO Document the code structure
 ** Convert comments to Doxygen format
