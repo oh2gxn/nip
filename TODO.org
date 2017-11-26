@@ -4,8 +4,10 @@ Top priority:
 
 * TODO Make it a library
 ** TODO decide on a minimal set of standards
-- ANSI C + GNU Bison? C99 and POSIX.1-2001?
-- Define _POSIX_C_SOURCE in config.h or nip.h?
+- C99 and POSIX.1-2001
+  : __STDC_VERSION__ = 199901L
+  : _POSIX_VERSION = 200112L
+- Requires GNU Bison for parser generation
 - Minimal Makefile without funny extensions?
   - CC: the C compiler program
   - CFLAGS: flags to pass to the C compiler
@@ -17,6 +19,10 @@ This raises suspicions of
 - baklava code :: a stack of too thin layers, or 
 - lasagne code :: a nice set of layers but monolithic / impossible to change
 More recommendations for headers: 
+- Included in some order:
+  - matching local header, like x.c includes x.h
+  - standard headers, like <stdio.h>
+  - other local nip headers, like "niperrorhandler.h"
 - No includes in include files, and 
 - Get rid of the ifdef wrappers? Compiler will warn when something is wrong.
 ** TODO consider ABI vs. future development
@@ -30,6 +36,7 @@ CMake and especially Automake would be overengineering and risk portability.
 ** The only source of UTF-8/wide chars is the input?
 - option a :: transparency: output them as is, but don't mess them
 - option b :: transform input to/accept only UTF-8, output only UTF-8
+- option c :: remove limits, allocate all strings dynamically?
 
 * TODO Document the code structure
 ** Convert comments to Doxygen format
@@ -41,24 +48,26 @@ Doxygen generates fancy graphs for explaining dependencies.
 
 
 * TODO Automated test scripts
-** Use Robot Framework from Google?
-** TODO iotest
-** TODO parsertest
-** TODO potentialtest
-** TODO cliquetest
-** TODO graphtest
-** TODO bisontest
-** TODO datafiletest
-** TODO hmmtest
-** TODO htmtest
-** TODO memleaktest
-** TODO models and data for testing nip.c
-** TODO script with simple diff operations? (not for memleaktest)
+** Acceptance tests
+Cucumber?
+** Unit tests
+*** TODO iotest
+*** TODO parsertest
+*** TODO potentialtest
+*** TODO cliquetest
+*** TODO graphtest
+*** TODO bisontest
+*** TODO datafiletest
+*** TODO hmmtest
+*** TODO htmtest
+*** TODO memleaktest
+*** TODO models and data for testing nip.c
+*** TODO script with simple diff operations? (not for memleaktest)
 
 
 * TODO Better demo case?
 ** CW decoding or some other time series smoothing case?
-* TODO Graphical interactive demos with Tcl/Python/<web tech X here>?
+* TODO Graphical interactive demos with Tcl/Python/Go/X?
 ** A set of windows with one potential / belief universe each
 ** Click on the marginal inserts evidence for the variable
 ** Click inside the bitmap modifies conditional/prior probs

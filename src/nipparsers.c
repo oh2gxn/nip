@@ -1,27 +1,38 @@
-/*  NIP - Dynamic Bayesian Network library
-    Copyright (C) 2012  Janne Toivola
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
-
-/* nipparsers.c
- * Author: Janne Toivola
- * Version: $Id: nipparsers.c,v 1.1 2010-12-07 17:23:18 jatoivol Exp $
+/**
+ * @file
+ * @brief Basic tokeniser functions for the Hugin Net file parser.
+ * Contains also other parser functions and structs for data files.
+ *
+ * JJ Comment: Currently the parser is ugly as hell...
+ *             Get rid of global variables and ad-hoc data structures!
+ *             (add_X(), get_X(), and set_X() are probably the worst)
+ *
+ * @author Janne Toivola
+ * @copyright &copy; 2007,2012 Janne Toivola <br>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. <br>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. <br>
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "nipparsers.h"
+
+/* There are some reasons to include stuff here (lack of huginnet.h)
+ * TODO: check if these are required in nipparsers.h anyway... */
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "niplists.h"
+#include "nipstring.h"
+#include "nipvariable.h"
+#include "niperrorhandler.h"
 
 
 /* #define DEBUG_PARSER */

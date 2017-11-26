@@ -1,50 +1,41 @@
-/*  NIP - Dynamic Bayesian Network library
-    Copyright (C) 2012  Janne Toivola
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
-
-/* 
- * Basic tokeniser function for the Hugin Net file parser.
- * Contains also another parser functions for handling data files.
+/**
+ * @file
+ * @brief Basic tokeniser functions for the Hugin Net file parser.
+ * Contains also other parser functions and structs for data files.
  *
  * JJ Comment: Currently the parser is ugly as hell...
  *             Get rid of global variables and ad-hoc data structures!
  *             (add_X(), get_X(), and set_X() are probably the worst)
  *
- * $Id: nipparsers.h,v 1.1 2010-12-07 17:23:18 jatoivol Exp $
+ * @author Janne Toivola
+ * @copyright &copy; 2007,2012 Janne Toivola <br>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. <br>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. <br>
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __NIPPARSERS_H__
 #define __NIPPARSERS_H__
 
+/**
+ * Hard length limit (in bytes) when reading lines from files
+ */
 #define MAX_LINELENGTH 10000
 
-/* Comment character in input files.
- * After this, the rest of the line is ignored.
+/**
+ * Comment character in input files. The rest of the line is ignored.
  */
 #define NIP_COMMENT_CHAR '%'
 
-/* there are some reasons to include stuff here (lack of huginnet.h...) */
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "niplists.h"
-#include "nipstring.h"
-#include "nipvariable.h"
-#include "niperrorhandler.h"
+#include <stdio.h> // FILE
+
 
 typedef struct {
   char* name;     /* file name */

@@ -1,26 +1,32 @@
-/*  NIP - Dynamic Bayesian Network library
-    Copyright (C) 2012  Janne Toivola
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
-
-/* nipheap.c 
- * Authors: Antti Rasinen, Janne Toivola
- * Version: $Id: nipheap.c,v 1.20 2011-03-14 11:09:35 jatoivol Exp $
+/**
+ * @file 
+ * @brief Heap for storing candidate groups of variables for various algorithms.
+ *
+ * @author Janne Toivola
+ * @author Antti Rasinen
+ * @author Mikko Korpela
+ * @copyright &copy; 2007,2012 Janne Toivola <br>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. <br>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. <br>
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "nipheap.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+#include "niplists.h"
+#include "niperrorhandler.h"
 
 #define NIP_DEBUG_HEAP
 
@@ -39,19 +45,19 @@ nip_heap nip_new_heap(int initial_size,
   nip_heap h;
 
   if (initial_size <= 0){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, EINVAL, 1);
     return NULL;
   }
 
   h = (nip_heap) malloc(sizeof(nip_heap_struct));
   if(!h){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
   }
   
   h->heap_items = (nip_heap_item*) calloc(initial_size, sizeof(nip_heap_item));
   if(!h->heap_items){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     free(h);
     return NULL;
   }
@@ -63,7 +69,7 @@ nip_heap nip_new_heap(int initial_size,
   h->heapified = 0;
   h->updated_items = nip_new_int_list();
   if(!h->updated_items){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     free(h->heap_items);
     free(h);
     return NULL;
@@ -73,17 +79,15 @@ nip_heap nip_new_heap(int initial_size,
 }
 
 
-nip_error_code nip_heap_insert(nip_heap h, void* content, int size) {
+int nip_heap_insert(nip_heap h, void* content, int size) {
   int i;
   nip_heap_item hi;
   nip_heap_item* bigger;
 
   /* Create a new heap element */
   hi = (nip_heap_item) malloc(sizeof(nip_heap_item_struct));
-  if(!hi){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    return NIP_ERROR_OUTOFMEMORY;
-  }
+  if(!hi)
+    return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
   hi->content = content;
   hi->content_size = size;
   hi->primary_key = (*h->primary_key)(hi->content, hi->content_size);
@@ -100,17 +104,15 @@ nip_error_code nip_heap_insert(nip_heap h, void* content, int size) {
       for(i = h->allocated_size-1; i >= h->heap_size; i--)
 	h->heap_items[i] = NULL; /* Empty the newly allocated area */
     }
-    else {
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-      return NIP_ERROR_OUTOFMEMORY;
-    }
+    else
+      return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
   }
   h->heap_items[h->heap_size] = hi;
   h->heap_size++;
   h->heapified = 0;
   /* TODO: Just prepend index to h->updated_items? */
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
@@ -137,7 +139,7 @@ int nip_search_heap_item(nip_heap h,
 void* nip_get_heap_item(nip_heap h, int index, int* size) {
   nip_heap_item hi;
   if (h == NULL || index < 0 || index >= h->heap_size){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     if (size != NULL)
       *size = 0;
     return NULL;
@@ -149,16 +151,14 @@ void* nip_get_heap_item(nip_heap h, int index, int* size) {
 }
 
 
-nip_error_code nip_set_heap_item(nip_heap h, int index,
-				 void* content, int size) {
+int nip_set_heap_item(nip_heap h, int index,
+		      void* content, int size) {
   nip_heap_item hi; 
   
-  if (h == NULL || index < 0 || index >= h->heap_size || size <= 0){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
-  hi = h->heap_items[index];
+  if (h == NULL || index < 0 || index >= h->heap_size || size <= 0)
+    return nip_report_error(__FILE__, __LINE__, EINVAL, 1);
 
+  hi = h->heap_items[index];
   hi->content = content; /* FIXME: free(hi->content) here or in nipgraph.c */
   hi->content_size = size;
   hi->primary_key = (*h->primary_key)(hi->content, hi->content_size);
@@ -166,7 +166,7 @@ nip_error_code nip_set_heap_item(nip_heap h, int index,
   /*h->heapified = 0;*/
   nip_append_int(h->updated_items, index);
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 

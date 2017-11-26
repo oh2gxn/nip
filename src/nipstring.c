@@ -1,32 +1,37 @@
-/*  NIP - Dynamic Bayesian Network library
-    Copyright (C) 2012  Janne Toivola
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
-
-/* nipstring.c 
- * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipstring.c,v 1.4 2011-01-23 23:01:47 jatoivol Exp $
+/**
+ * @file
+ * @brief String tokeniser for parsers
+ * 
+ * @author Mikko Korpela
+ * @author Janne Toivola
+ * @copyright &copy; 2007,2012 Janne Toivola <br>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. <br>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. <br>
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "nipstring.h"
+#include <ctype.h>  // isspace
+#include <stdlib.h> // calloc, free
+#include <string.h> // strncpy
+#include "niperrorhandler.h"
 
-/* #define DEBUG_IO */
+/*
+#define DEBUG_IO
+#include <stdio.h> // fprintf
+*/
 
 int nip_count_words(const char *s, int *chars){
   return nip_count_tokens(s, chars, 0, NULL, 0, 0, 1);
 }
+
 
 int nip_count_tokens(const char *s, int *chars, int q_strings,
 		     char *separators, int n_separators, int sep_tokens,
@@ -102,11 +107,11 @@ int* nip_tokenise(const char s[], int n, int q_strings,
   char ch, ch2;
 
   if(s == NULL){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 0);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 0);
     return NULL;
   }
   if(n < 0){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, EINVAL, 1);
     return NULL;
   }
 
@@ -117,7 +122,7 @@ int* nip_tokenise(const char s[], int n, int q_strings,
 
   /* Couldn't allocate memory */
   if(!indices){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
   }
 
@@ -184,7 +189,7 @@ int* nip_tokenise(const char s[], int n, int q_strings,
       break;
     i++;
 #ifdef DEBUG_IO
-    printf("i = %d, state = %d\n", i, state);
+    fprintf(stderr, "i = %d, state = %d\n", i, state);
 #endif
   }
 
@@ -195,13 +200,14 @@ int* nip_tokenise(const char s[], int n, int q_strings,
   /* Not enough words */
   else if(j < arraysize - 1){
 #ifdef DEBUG_IO
-    printf("tokenise failed to find the specified amount of tokens\n", i);
-    printf("j = %d, arraysize = %d\n", j, arraysize);
-    printf("indices =\n");
+    fprintf(stderr, "tokenise failed to find enough tokens\n", i);
+    fprintf(stderr, "j = %d, arraysize = %d\n", j, arraysize);
+    fprintf(stderr, "indices =\n");
     for(i = 0; i < j; i++)
-      printf("%d ", indices[i]);
-    printf("\n");
+      fprintf(stderr, "%d ", indices[i]);
+    fprintf(stderr, "\n");
 #endif
+    nip_report_error(__FILE__, __LINE__, EINVAL, 1);
     free(indices);
     return NULL;
   }
@@ -209,13 +215,14 @@ int* nip_tokenise(const char s[], int n, int q_strings,
   return indices;
 }
 
+
 char** nip_split(const char s[], int indices[], int n){
   int i, j, wordlength, begin, end;
   char** words = (char **) calloc(n, sizeof(char *));
 
   /* Couldn't allocate memory */
   if(!words){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
   }
 
@@ -227,7 +234,7 @@ char** nip_split(const char s[], int indices[], int n){
 
     /* Couldn't allocate memory */
     if(!words[i]){
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
       for(j = 0; j < i; j++)
 	free(words[j]);
       free(words);

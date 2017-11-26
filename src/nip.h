@@ -34,19 +34,20 @@
 #include <time.h>
 
 /* The exposed part of NIP */
-#include "niplists.h"
-#include "nipvariable.h"
-#include "nippotential.h"
-#include "nipjointree.h"
-#include "niperrorhandler.h"
-#include "nipparsers.h"
-//#include "huginnet.tab.h"
-
-/* Hidden: nipgraph.h, nipheap.h, nipstring.h */
+#include "niperrorhandler.h" ///< runtime error reporting
+#include "niplists.h" ///< structures for lists of basic data
+//#include "nipstring.h" ///< tokeniser for parser
+#include "nipparsers.h" ///< TODO: doxygen + error handling
+//#include "huginnet.tab.h" ///< TODO: doxygen + error handling
+//#include "nipheap.h" ///< priority heap for building graphs
+#include "nipvariable.h" ///< random categorical variables
+#include "nippotential.h" ///< multidimensional probability distributions
+#include "nipjointree.h" ///< clique tree and probabilistic inference
+//#include "nipgraph.h" ///< conversions from Bayes net into join tree
 
 /* TODO: consider separating these from NIP core, let users have their own */
-#define TIME_SERIES_LENGTH(ts) ( (ts)->length )
-#define UNCERTAIN_SERIES_LENGTH(ucs) ( (ucs)->length )
+#define TIME_SERIES_LENGTH(ts) ( (ts)->length ) ///< gets time series length
+#define UNCERTAIN_SERIES_LENGTH(ucs) ( (ucs)->length ) ///< gets ucs length
 
 #define NIP_FIELD_SEPARATOR ' '
 #define NIP_HAD_A_PREVIOUS_TIMESLICE 1
@@ -66,33 +67,34 @@ typedef enum nip_direction_type nip_direction; /// hide enum notation
  * except the input data itself
  */
 typedef struct {
-  int num_of_cliques;      ///< number of cliques/potentials in the join tree
-  nip_clique *cliques;     ///< the actual cliques/potentials
-  int num_of_vars;         ///< number of random variables in the model
+  int num_of_cliques; ///< number of cliques/potentials in the join tree
+  nip_clique *cliques; ///< the actual cliques/potentials
+
+  int num_of_vars; ///< number of random variables in the model
   nip_variable *variables; ///< the actual variables (names of values etc.)
   
-  nip_variable *next;      /**< The variables that will substitute 
-                              another one in the next timeslice. */
-  nip_variable *previous;  /**< The variables that are substituted 
-                              by some variables from the previous timeslice. 
-                              (Waste of memory?) */
-  int num_of_nexts;        ///< Number of variables in 'next' and 'previous'
+  int num_of_nexts; ///< Number of variables in 'next' and 'previous'
+  nip_variable *next; /**< The variables that will substitute 
+			 another one in the next timeslice. */
+  nip_variable *previous; /**< The variables that are substituted 
+			     by some variables from the previous timeslice. */
 
-  int outgoing_interface_size;      ///< number of variables in I_{t}->
-  nip_variable* outgoing_interface;          ///< I_{t}->
+  int outgoing_interface_size; ///< number of variables in I_{t}->
+  nip_variable* outgoing_interface; ///< I_{t}->
   nip_variable* previous_outgoing_interface; ///< I_{t-1}->
-  int incoming_interface_size;      ///< number of variables in I_{t}<-
+
+  int incoming_interface_size; ///< number of variables in I_{t}<-
   nip_variable* incoming_interface; ///< I_{t}<-
 
-  nip_clique in_clique;  /**< The clique which receives the message
-			    from the past timeslices */
+  nip_clique in_clique; /**< The clique which receives the message
+			   from the past timeslices */
 
   nip_clique out_clique; /**< The clique which handles the connection to the 
 			    future timeslices */
 
-  nip_variable *children;    ///< all the variables that have parents
+  int num_of_children; ///< number of children < num_of_vars
+  nip_variable *children; ///< all the variables that have parents
   nip_variable *independent; ///< ...and those who dont. (Redundant?)
-  int num_of_children;       ///< number of children < num_of_vars
 
   int node_size_x; ///< node width, for drawing the graph
   int node_size_y; ///< node height, for drawing the graph
@@ -107,15 +109,17 @@ typedef nip_struct* nip; /// hide pointer notation
  * Structure for storing a batch of "crisp" observations
  */
 typedef struct {
-  nip model;              ///< The model (variables and state names)
-  nip_variable *hidden;   ///< The variables never observed (but not missing)
-  int num_of_hidden;      ///< Number of latent variables
+  nip model; ///< The model (variables and state names)
+
+  int num_of_hidden; ///< Number of latent variables
+  nip_variable *hidden; ///< The variables never observed (but not missing)
+
+  int num_of_observed; ///< == model->num_of_vars - num_of_hidden
   nip_variable *observed; /**< Variables included in data
                            (even if missing in each time step) */
-  int num_of_observed;    ///< == model->num_of_vars - num_of_hidden
 
   int length; ///< Number of time steps
-  int **data; ///< The time series data
+  int** data; ///< The time series data
   /* TODO: Should there be a cache for extremely large time series? */
 } time_series_struct;
 
@@ -127,9 +131,10 @@ typedef time_series_struct* time_series;
  * Structure for storing "soft" uncertain observations or inference results
  */
 typedef struct {
+  int num_of_vars; ///< number of variables
   nip_variable* variables; ///< variables of interest
-  int num_of_vars;         ///< number of variables
-  int length;              ///< length of the time series or sequence
+
+  int length; ///< length of the time series or sequence
   double*** data; ///< probability distribution of every variable at every t
 } uncertain_series_struct;
 

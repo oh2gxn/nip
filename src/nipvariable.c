@@ -1,28 +1,29 @@
-/*  NIP - Dynamic Bayesian Network library
-    Copyright (C) 2012  Janne Toivola
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
-
-/* nipvariable.c 
- * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nipvariable.c,v 1.8 2011-01-07 01:52:05 jatoivol Exp $
+/**
+ * @file
+ * @brief Representation of categorical random variables in Dynamic Bayes Network models
+ *
+ * @author Janne Toivola
+ * @author Mikko Korpela
+ * @copyright &copy; 2007,2012 Janne Toivola <br>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. <br>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. <br>
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
-
 
 #include "nipvariable.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "niperrorhandler.h"
 
 static int nip_set_variable_text(char** record, const char *name);
 
@@ -33,7 +34,7 @@ static int nip_set_variable_text(char** record, const char *name){
   int len;
 
   if(!record || !name)
-    return NIP_ERROR_NULLPOINTER; /* possibly a normal situation? */
+    return EFAULT; /* possibly a normal situation? */
 
   len = strlen(name);
   if(len > NIP_VAR_TEXT_LENGTH)
@@ -44,11 +45,11 @@ static int nip_set_variable_text(char** record, const char *name){
 
   *record = (char*) calloc(len+1, sizeof(char));
   if(!(*record))
-    return NIP_ERROR_OUTOFMEMORY;
+    return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 
   strncpy(*record, name, len);
   (*record)[len] = '\0'; /* null termination */
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
@@ -63,7 +64,7 @@ nip_variable nip_new_variable(const char* symbol, const char* name,
 
   v = (nip_variable) malloc(sizeof(nip_variable_struct));
   if(!v){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
   }
 
@@ -94,14 +95,13 @@ nip_variable nip_new_variable(const char* symbol, const char* name,
   if(states){
     v->state_names = (char **) calloc(cardinality, sizeof(char *));
     if(!(v->state_names)){
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
       free(v);
       return NULL;
     }
     for(i = 0; i < cardinality; i++){
-      if(nip_set_variable_text(&(v->state_names[i]), states[i]) == 
-	 NIP_ERROR_OUTOFMEMORY){
-	nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      if(nip_set_variable_text(&(v->state_names[i]), states[i])){
+	nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 	for(j = 0; j < i; j++)
 	  free(v->state_names[j]);
 	free(v->state_names);
@@ -110,11 +110,11 @@ nip_variable nip_new_variable(const char* symbol, const char* name,
     }
   }
   else
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 
   v->likelihood = (double *) calloc(cardinality, sizeof(double));
   if(!(v->likelihood)){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     for(i = 0; i < v->cardinality; i++)
       free(v->state_names[i]);
     free(v->state_names);
@@ -131,7 +131,6 @@ nip_variable nip_new_variable(const char* symbol, const char* name,
 /* Useful? Get rid of this function? */
 nip_variable nip_copy_variable(nip_variable v){
   int i;
-  int len;
   nip_variable copy;
 
   if(v == NULL)
@@ -139,14 +138,13 @@ nip_variable nip_copy_variable(nip_variable v){
 
   copy = (nip_variable) malloc(sizeof(nip_variable_struct));
   if(!copy){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
   }
 
   copy->cardinality = v->cardinality;
   copy->id = v->id;
 
-  len = strlen(v->name);
   nip_set_variable_text(&(copy->name), v->name);
   /* symbol etc? */
 
@@ -155,7 +153,7 @@ nip_variable nip_copy_variable(nip_variable v){
     copy->parents = (nip_variable*) calloc(v->num_of_parents, 
 					   sizeof(nip_variable));
     if(!(copy->parents)){
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+      nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
       free(copy);
       return NULL;
     }
@@ -168,7 +166,7 @@ nip_variable nip_copy_variable(nip_variable v){
 
   copy->likelihood = (double*) calloc(copy->cardinality, sizeof(double));
   if(!(copy->likelihood)){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     free(copy->parents);
     free(copy);
     return NULL;
@@ -272,25 +270,23 @@ nip_variable nip_search_variable_array(nip_variable* vars, int nvars,
 }
 
 
-nip_error_code nip_update_likelihood(nip_variable v, double likelihood[]){
+int nip_update_likelihood(nip_variable v, double likelihood[]){
 
   int i;
-  if(v == NULL || likelihood == NULL){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
-    return NIP_ERROR_NULLPOINTER;
-  }
+  if(v == NULL || likelihood == NULL)
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 
   for(i = 0; i < v->cardinality; i++)
     (v->likelihood)[i] = likelihood[i];
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
 void nip_reset_likelihood(nip_variable v){
   int i;
   if(v == NULL){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     return;
   }
   
@@ -312,7 +308,7 @@ int nip_number_of_values(nip_variable v){
 
 int nip_number_of_parents(nip_variable v){
   if(v == NULL){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     return -1;
   }
   return v->num_of_parents;
@@ -325,7 +321,7 @@ void nip_set_variable_position(nip_variable v, int x, int y){
     v->pos_y = y;
   }
   else
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 }
 
 
@@ -335,40 +331,38 @@ void nip_get_variable_position(nip_variable v, int* x, int* y){
     *y = v->pos_y;
   }
   else
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 }
 
 
-nip_error_code nip_set_parents(nip_variable v, 
+int nip_set_parents(nip_variable v, 
 			       nip_variable* parents, 
 			       int nparents){
   int i;
-  if(v == NULL || (nparents > 0 && parents == NULL)){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
-    return NIP_ERROR_NULLPOINTER;
-  }
+  if(v == NULL || (nparents > 0 && parents == NULL))
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 
   free(v->parents); /* in case it previously had another array */
   
   if(nparents > 0){
     v->parents = (nip_variable *) calloc(nparents, sizeof(nip_variable));
-    if(!(v->parents)){
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-      return NIP_ERROR_OUTOFMEMORY;
-    }
+    if(!(v->parents))
+      return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     
     for(i = 0; i < nparents; i++)
       v->parents[i] = parents[i]; /* makes a copy of the array */
   }
+  else
+    v->parents = NULL;
   
   v->num_of_parents = nparents;  
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
 nip_variable* nip_get_parents(nip_variable v){
   if(v == NULL){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     return NULL;
   }
   return v->parents;
@@ -388,27 +382,25 @@ int nip_variable_is_parent(nip_variable parent, nip_variable child) {
 }
 
 
-nip_error_code nip_set_prior(nip_variable v, double* prior){
+int nip_set_prior(nip_variable v, double* prior){
   int i;
-  if(v == NULL){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
-    return NIP_ERROR_NULLPOINTER;
-  }
+  if(v == NULL)
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
   if(!prior)
-    return NIP_NO_ERROR;
+    return 0; // FIXME: is this a feature?
 
-  free(v->prior); /* reuse the allocated space??? */
+  free(v->prior); /* FIXME: reuse the allocated space??? */
   v->prior = (double*) calloc(v->cardinality, sizeof(double));
   for(i = 0; i < v->cardinality; i++)
     v->prior[i] = prior[i]; /* makes a copy of the array */
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
 double* nip_get_prior(nip_variable v){
   if(v == NULL){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     return NULL;
   }
   return v->prior;
@@ -421,14 +413,14 @@ nip_variable* nip_sort_variables(nip_variable* vars, int nvars){
   nip_variable temp;
 
   if(nvars < 1){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, EINVAL, 1);
     return NULL;
   }
 
   sorted = (nip_variable *) calloc(nvars, sizeof(nip_variable));
 
   if(!sorted){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
   }
 
@@ -458,7 +450,7 @@ nip_variable* nip_variable_union(nip_variable* a, nip_variable* b,
 
   /* Check stuff */
   if((nc == NULL) || (na > 0 && a == NULL) || (nb > 0 && b == NULL)){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     if(nc)
       *nc = -1;
     return NULL;
@@ -486,7 +478,7 @@ nip_variable* nip_variable_union(nip_variable* a, nip_variable* b,
   /* The union operation */
   c = (nip_variable*) calloc(*nc, sizeof(nip_variable));
   if(!c){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     if(nc)
       *nc = -1;
     return NULL;
@@ -517,8 +509,13 @@ nip_variable* nip_variable_isect(nip_variable *a, nip_variable *b,
   nip_variable *c = NULL;
   
   /* Check stuff */
-  if(!(a && b && na > 0 && nb > 0)){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+  if(na == 0 || nb == 0){
+    if(nc)
+      *nc = 0;
+    return NULL;
+  }
+  if(!a || !b){
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     if(nc)
       *nc = -1;
     return NULL;
@@ -541,7 +538,7 @@ nip_variable* nip_variable_isect(nip_variable *a, nip_variable *b,
   /* The intersection operation */
   c = (nip_variable*) calloc(*nc, sizeof(nip_variable));
   if(!c){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     if(nc)
       *nc = -1;
     return NULL;
@@ -566,15 +563,16 @@ int* nip_mapper(nip_variable *set, nip_variable *subset,
   int* mapping = NULL;
   
   /* Check stuff */
-  if(!(set && subset && nset > 0 && nsubset > 0 && nset >= nsubset)){
-    if(nsubset != 0)
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+  if(nsubset < 1)
+    return NULL;
+  if(!(set && subset && nset >= nsubset)){
+    nip_report_error(__FILE__, __LINE__, EINVAL, 1);
     return NULL;
   }
 
   mapping = (int*) calloc(nsubset, sizeof(int));
   if(!mapping){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
   }
 
@@ -613,19 +611,14 @@ nip_interface_list nip_new_interface_list(){
 }
 
 
-nip_error_code nip_append_variable(nip_variable_list l, nip_variable v){
+int nip_append_variable(nip_variable_list l, nip_variable v){
+  if(!l || !v)
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
+
   nip_variable_link new = (nip_variable_link) 
     malloc(sizeof(nip_variable_link_struct));
-
-  if(!l || !v){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
-
-  if(!new){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    return NIP_ERROR_OUTOFMEMORY;
-  }
+  if(!new)
+    return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 
   new->data = v;
   new->fwd = NULL;
@@ -637,25 +630,18 @@ nip_error_code nip_append_variable(nip_variable_list l, nip_variable v){
 
   l->last = new;
   l->length++;
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
-nip_error_code nip_append_interface(nip_interface_list l, 
-				    nip_variable var, 
-				    char* next){
+int nip_append_interface(nip_interface_list l, nip_variable var, char* next){
+  if(!l || !var)
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
+
   nip_interface_link new = (nip_interface_link) 
     malloc(sizeof(nip_iflink_struct));
-
-  if(!l || !var){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
-
-  if(!new){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    return NIP_ERROR_OUTOFMEMORY;
-  }
+  if(!new)
+    return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 
   new->var = var;
   new->next = next;
@@ -669,23 +655,18 @@ nip_error_code nip_append_interface(nip_interface_list l,
 
   l->last = new;
   l->length++;
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
-nip_error_code nip_prepend_variable(nip_variable_list l, nip_variable v){
+int nip_prepend_variable(nip_variable_list l, nip_variable v){
+  if(!l || !v)
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
+
   nip_variable_link new = (nip_variable_link) 
     malloc(sizeof(nip_variable_link_struct));
-
-  if(!l || !v){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
-
-  if(!new){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    return NIP_ERROR_OUTOFMEMORY;
-  }
+  if(!new)
+    return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 
   new->data = v;
   new->bwd = NULL;
@@ -697,24 +678,19 @@ nip_error_code nip_prepend_variable(nip_variable_list l, nip_variable v){
 
   l->first = new;
   l->length++;
-  return NIP_NO_ERROR;
+  return 0;
 }
 
-nip_error_code nip_prepend_interface(nip_interface_list l, 
-				     nip_variable var, 
-				     char* next){
+int nip_prepend_interface(nip_interface_list l, 
+			  nip_variable var, 
+			  char* next){
+  if(!l || !var)
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
+
   nip_interface_link new = (nip_interface_link) 
     malloc(sizeof(nip_iflink_struct));
-
-  if(!l || !var){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
-
-  if(!new){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    return NIP_ERROR_OUTOFMEMORY;
-  }
+  if(!new)
+    return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 
   new->var = var;
   new->next = next;
@@ -727,7 +703,7 @@ nip_error_code nip_prepend_interface(nip_interface_list l,
 
   l->first = new;
   l->length++;
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
@@ -737,7 +713,7 @@ nip_variable* nip_variable_list_to_array(nip_variable_list l){
   nip_variable* new;
   
   if(!l){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     return NULL;
   }
 
@@ -746,7 +722,7 @@ nip_variable* nip_variable_list_to_array(nip_variable_list l){
 
   new = (nip_variable*) calloc(l->length, sizeof(nip_variable));
   if(!new){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
   }
 

@@ -1,41 +1,60 @@
-/*  NIP - Dynamic Bayesian Network library
-    Copyright (C) 2012  Janne Toivola
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, see <http://www.gnu.org/licenses/>.
-*/
-
-/* nippotential.c 
- * Authors: Janne Toivola, Mikko Korpela
- * Version: $Id: nippotential.c,v 1.5 2011-01-23 23:01:47 jatoivol Exp $
+/**
+ * @file
+ * @brief Functions for handling potentials: 
+ * probability tables for distributions of categorical or discrete 
+ * random variables
+ *
+ * @author Janne Toivola
+ * @author Mikko Korpela
+ * @copyright &copy; 2007,2012 Janne Toivola <br>
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. <br>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details. <br>
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "nippotential.h"
 
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "niplists.h"
+#include "niperrorhandler.h"
+
 
 /*#define DEBUG_POTENTIAL*/
 
+/**
+ * Finds a single value in a multidimensional table
+ * @param p The multidimensional table
+ * @param indices The index along each dimension
+ * @return pointer to the data */
 static double* nip_get_potential_pointer(nip_potential p, int indices[]);
 
-/* TODO: this could be a macro */
+/**
+ * Drops the indices that are marginalised or multiplied. 
+ * Some constraints:
+ * - \p dest_indices must have the same size as mapping[] and
+ * - smaller than \p source_indices, and 
+ * - mapping has indices to \p source_indices (index of index).
+ * @param source_indices Indices to a high-dimensional potential
+ * @param dest_indices Indices to a lesser-dimensional potential
+ * @param mapping Indices of each lesser dimension in the higher-dim space
+ * @param size_of_mapping Dimensionality of dest_indices and mapping
+ */
 static void nip_choose_potential_indices(int source_indices[], 
 					 int dest_indices[], 
 					 int mapping[], int size_of_mapping);
 
-/*
- * Returns a pointer to the potential array element corresponding to 
- * the given variable values (indices).
- */
+
 static double* nip_get_potential_pointer(nip_potential p, int indices[]){
   int i;
   int index = 0;
@@ -49,11 +68,7 @@ static double* nip_get_potential_pointer(nip_potential p, int indices[]){
 }
 
 
-/* TODO: this could be a macro...
- * Drops the indices that are marginalised or multiplied. 
- * dest_indices[] must have the same size as mapping[] and smaller than 
- * source_indices[].
- */
+/* TODO: this could be a macro... */
 static void nip_choose_potential_indices(int source_indices[], 
 					 int dest_indices[], 
 					 int mapping[], 
@@ -77,13 +92,13 @@ nip_potential nip_new_potential(int cardinality[], int dimensionality,
   nip_potential p;
 
   if(dimensionality < 0){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
+    nip_report_error(__FILE__, __LINE__, EINVAL, 1);
     return NULL;
   }
 
   p = (nip_potential) malloc(sizeof(nip_potential_struct));
   if(!p){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
   }  
 
@@ -96,8 +111,8 @@ nip_potential nip_new_potential(int cardinality[], int dimensionality,
     p->temp_index = (int *) calloc(1, sizeof(int));
   }
   if(!p->cardinality || !p->temp_index){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    free(p->cardinality);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+    free(p->cardinality); // TODO: consider goto for exceptions?
     free(p);
     return NULL;
   }
@@ -115,7 +130,7 @@ nip_potential nip_new_potential(int cardinality[], int dimensionality,
   p->size_of_data = dsize;
   p->data = (double *) calloc(dsize, sizeof(double));  
   if(!(p->data)){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     nip_free_potential(p);
     return NULL;
   }
@@ -135,13 +150,10 @@ nip_potential nip_new_potential(int cardinality[], int dimensionality,
 }
 
 
-nip_error_code nip_set_potential_property(nip_potential p, 
-					  char* key, char* value){
-  nip_error_code err;
-  if (!p || !key || !value){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
-    return NIP_ERROR_NULLPOINTER;
-  }
+int nip_set_potential_property(nip_potential p, char* key, char* value){
+  int err;
+  if (!p || !key || !value)
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
   err = nip_append_string_pair(p->application_specific_properties, 
 			       key, value);
   return err;
@@ -150,7 +162,7 @@ nip_error_code nip_set_potential_property(nip_potential p,
 char* nip_get_potential_property(nip_potential p, char* key){
   char* value;
   if (!p || !key){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     return NULL;
   }
   value = nip_string_pair_list_search(p->application_specific_properties,
@@ -167,26 +179,22 @@ nip_potential nip_copy_potential(nip_potential p){
   return copy;
 }
 
-nip_error_code nip_retract_potential(nip_potential p, nip_potential ref){
+int nip_retract_potential(nip_potential p, nip_potential ref){
   int i;
-  if(!p || !ref){ /* catch null pointers */
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
-    return NIP_ERROR_NULLPOINTER;
-  }
-  if(NIP_DIMENSIONALITY(p) != NIP_DIMENSIONALITY(ref)){ /* check dimensions */
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
+  if(!p || !ref) /* catch null pointers */
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
+
+  if(NIP_DIMENSIONALITY(p) != NIP_DIMENSIONALITY(ref)) /* check dimensions */
+    return nip_report_error(__FILE__, __LINE__, EINVAL, 1);
+
   for(i=0; i < NIP_DIMENSIONALITY(p); i++)
-    if(p->cardinality[i] != ref->cardinality[i]){
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-      return NIP_ERROR_INVALID_ARGUMENT;
-    }
+    if(p->cardinality[i] != ref->cardinality[i])
+      return nip_report_error(__FILE__, __LINE__, EINVAL, 1);
 
-  for(i = 0; i < p->size_of_data; i++) /* actual work */
-    p->data[i] = ref->data[i];
+  for(i = 0; i < p->size_of_data; i++) 
+    p->data[i] = ref->data[i]; /* actual work */
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 void nip_free_potential(nip_potential p){
@@ -224,12 +232,11 @@ void nip_random_potential(nip_potential p){
 
 double nip_get_potential_value(nip_potential p, int indices[]){
   double *ppointer = nip_get_potential_pointer(p, indices);
-  if(ppointer != NULL)
-    return *ppointer;
-  else{
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
+  if(ppointer == NULL){
+    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     return -1;
   }
+  return *ppointer;
 }
 
 
@@ -257,16 +264,13 @@ void nip_inverse_mapping(nip_potential p, int flat_index, int indices[]){
 }
 
 
-nip_error_code nip_general_marginalise(nip_potential source, 
-				       nip_potential destination, 
-				       int mapping[]){
+int nip_general_marginalise(nip_potential source, nip_potential destination, 
+			    int mapping[]){
   int i;
   double *potvalue;
 
-  if(destination->dimensionality > source->dimensionality){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
+  if(destination->dimensionality > source->dimensionality)
+    return nip_report_error(__FILE__, __LINE__, EINVAL, 1);
 
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) */
   if(destination->dimensionality == 0){
@@ -274,7 +278,7 @@ nip_error_code nip_general_marginalise(nip_potential source,
     destination->data[0] = 0;
     for(i = 0; i < source->size_of_data; i++)
       destination->data[0] += source->data[i];
-    return NIP_NO_ERROR;
+    return 0;
   }
 
   /* Remove old garbage */
@@ -303,26 +307,23 @@ nip_error_code nip_general_marginalise(nip_potential source,
    * update_potential()... 
    * This was implemented 23.1.2011 */
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
-nip_error_code nip_total_marginalise(nip_potential source, 
-				     double destination[], 
-				     int variable){
+int nip_total_marginalise(nip_potential source, double destination[], 
+			  int variable){
   int i, j, x, index = 0, flat_index;
 
-  if(variable >= source->dimensionality){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
+  if(variable < 0 || variable >= source->dimensionality)
+    return nip_report_error(__FILE__, __LINE__, EINVAL, 1);
 
   /* index arrays  (eg. [5][4][3] <-> { 5, 4, 3 }) 
                          |  |  |
      variable index:     0  1  2... (or 'significance') */
   if(source->dimensionality == 0){
     destination[0] = source->data[0];
-    return NIP_NO_ERROR;
+    return 0;
   }
  
   /* initialization */
@@ -338,11 +339,10 @@ nip_error_code nip_total_marginalise(nip_potential source,
       index = flat_index / x;    /* integer division */
       flat_index -= index * x;
     }
-    /* THE sum */
-    destination[index] += source->data[i]; 
+    destination[index] += source->data[i]; /* THE sum */
   }
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
@@ -360,49 +360,41 @@ void nip_normalise_array(double result[], int array_size){
 
 
 /* wrapper */
-nip_error_code nip_normalise_potential(nip_potential p){
-  if(!p){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
+int nip_normalise_potential(nip_potential p){
+  if(!p)
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
   nip_normalise_array(p->data, p->size_of_data);
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
 /* Makes the potential a valid conditional probability distribution
  * assuming that the first variable is the (only) child */
-nip_error_code nip_normalise_cpd(nip_potential p){
+int nip_normalise_cpd(nip_potential p){
   int i, n;
-  if(!p){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
+  if(!p)
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 
   n = p->cardinality[0]; /* first dimension */
   for(i = 0; i < p->size_of_data; i += n)
     nip_normalise_array(&(p->data[i]), n);
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
 /* NOT TESTED... */
-nip_error_code nip_normalise_dimension(nip_potential p, int dimension){
+int nip_normalise_dimension(nip_potential p, int dimension){
   int i, n;
   int* map = NULL; /* cardinality / mapping array */
   nip_potential denom = NULL;
 
-  if(!p || dimension < 0 || dimension >= p->dimensionality){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
-  }
+  if(!p || dimension < 0 || dimension >= p->dimensionality)
+    return nip_report_error(__FILE__, __LINE__, EINVAL, 1);
 
   map = (int*) calloc(p->dimensionality - 1, sizeof(int));
-  if(!map){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
-    return NIP_ERROR_OUTOFMEMORY;
-  }
+  if(!map)
+    return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 
   n = 0;
   for(i = 0; i < p->dimensionality; i++)
@@ -422,30 +414,27 @@ nip_error_code nip_normalise_dimension(nip_potential p, int dimension){
   
   nip_free_potential(denom);
   free(map);
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
-nip_error_code nip_sum_potential(nip_potential sum, nip_potential increment){
+int nip_sum_potential(nip_potential sum, nip_potential increment){
   int i;
   
   if(!sum || !increment || sum->size_of_data != increment->size_of_data){
-    /* check for different geometry? */
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
+    /* TODO: check for different dimensions? */
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
   }
   
   for(i = 0; i < sum->size_of_data; i++)
     sum->data[i] += increment->data[i];
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
-nip_error_code nip_update_potential(nip_potential numerator, 
-				    nip_potential denominator, 
-				    nip_potential target, 
-				    int mapping[]){
+int nip_update_potential(nip_potential numerator, nip_potential denominator, 
+			 nip_potential target, int mapping[]){
   int i;
   int nvars = 0;
   double* potvalue;
@@ -455,8 +444,7 @@ nip_error_code nip_update_potential(nip_potential numerator,
       (numerator->dimensionality != denominator->dimensionality)) || 
      (numerator == NULL && denominator == NULL)){
     /* I hope the logic behind &&-evaluation is "fail fast" */
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
-    return NIP_ERROR_INVALID_ARGUMENT;
+    return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
   }
 
   if(numerator){
@@ -480,7 +468,7 @@ nip_error_code nip_update_potential(nip_potential numerator,
 	  target->data[i] = 0; /* see Procedural Guide p. 20 */
       }
     }
-    return NIP_NO_ERROR;
+    return 0;
   }
 
   /* The general idea is the same as in marginalise */
@@ -504,14 +492,12 @@ nip_error_code nip_update_potential(nip_potential numerator,
     }
   }
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
-nip_error_code nip_update_evidence(double numerator[], 
-				   double denominator[], 
-				   nip_potential target, 
-				   int var){
+int nip_update_evidence(double numerator[], double denominator[], 
+			nip_potential target, int var){
   int i, source_index;
 
   /* target->dimensionality > 0  always */
@@ -532,13 +518,12 @@ nip_error_code nip_update_evidence(double numerator[],
     /* ----------------------------------------------------------- */
   }
 
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
-nip_error_code nip_init_potential(nip_potential probs, 
-				  nip_potential target, 
-				  int mapping[]){
+int nip_init_potential(nip_potential probs, nip_potential target, 
+		       int mapping[]){
 
   /* probs is assumed to be normalised */
 
@@ -548,18 +533,16 @@ nip_error_code nip_init_potential(nip_potential probs,
   if(!mapping){
     if(probs->size_of_data != target->size_of_data){
       /* certainly different geometry but no mapping !?!? */
-      nip_report_error(__FILE__, __LINE__, NIP_ERROR_NULLPOINTER, 1);
-      return NIP_ERROR_NULLPOINTER;
+      return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     }
-    else{ /* the potentials (may) have the same geometry */
-      for(i = 0; i < target->size_of_data; i++)
-	target->data[i] *= probs->data[i];
-      return NIP_NO_ERROR;
-    }
+    /* the potentials (may) have the same geometry */
+    for(i = 0; i < target->size_of_data; i++)
+      target->data[i] *= probs->data[i];
+    return 0;
   }
 
   if(probs->dimensionality == 0)
-    return NIP_NO_ERROR; /* probs is a scalar & normalised => probs == 1 */
+    return 0; /* probs is a scalar & normalised => probs == 1 */
 
   /* The general idea is the same as in marginalise */
   /** JJ NOTE: the fact that two potentials have the same 
@@ -577,7 +560,7 @@ nip_error_code nip_init_potential(nip_potential probs,
     target->data[i] *= *potvalue;  /* THE multiplication */
   }
   
-  return NIP_NO_ERROR;
+  return 0;
 }
 
 
