@@ -66,7 +66,7 @@ int write_unary_timeseries(time_series *ts_set, int n_series, char* filename){
   nip_variable *observed;
   nip_variable *observed_more;
   time_series ts;
-  nip the_model;
+  nip_model the_model;
   FILE *f = NULL;
 
   /* Check stuff */
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
 
   int i, k, n=0;
   int iformat, oformat;
-  nip model = NULL;
+  nip_model model = NULL;
   time_series* ts_set = NULL;
 
   if(argc < 6){

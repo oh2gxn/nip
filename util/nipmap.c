@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
   double m, m_max;
   FILE *f = NULL;
 
-  nip model = NULL;
+  nip_model model = NULL;
   nip_variable temp = NULL;
 
   time_series ts = NULL;

@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
   double** quotient = NULL;
   double*** result = NULL; /* probs of the hidden variables */
 
-  nip model = NULL;
+  nip_model model = NULL;
   nip_clique clique_of_interest = NULL;
 
   nip_variable temp = NULL;

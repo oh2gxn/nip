@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
 
   double probe, loglikelihood;
 
-  nip model = NULL;
+  nip_model model = NULL;
   nip_variable v = NULL;
 
   time_series ts = NULL;

@@ -530,7 +530,7 @@ int nip_next_line_tokens(nip_data_file f, char separator, char ***tokens){
 }
 
 
-char* nip_next_hugin_token(int* token_length, FILE* f){
+char* nip_next_hugin_token(FILE* f, int* token_length){
 
   /* The last line read from the file */
   static char last_line[MAX_LINELENGTH];

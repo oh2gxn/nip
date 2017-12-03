@@ -73,6 +73,12 @@ Cucumber?
 ** Click inside the bitmap modifies conditional/prior probs
 
 
+* TODO Data file abstraction should be "lighter" and separate from model
+** TODO Hide time_series and uncertain_series implementations better
+*** more useful operations for them?
+** TODO write_X() functions could take file id's instead of file names...
+*** opening a file or other output would be users responsibility
+
 * TODO Online forward_inference (+ refactor offline forward_inference?)
 ** Utilize stdin, stdout, and named pipes
 - stderr for "interactive" messages, not just errors
@@ -104,12 +110,6 @@ Cucumber?
 * TODO Figure out and test how nip_gather_joint_probability() works
 ** probably has several errors in it
   
-* TODO Data file abstraction should be "lighter" and separate from model
-** TODO Hide time_series and uncertain_series implementations better
-*** more useful operations for them?
-** TODO write_X() functions could take file id's instead of file names...
-*** opening a file or other output would be users responsibility
-
 
 
 * TODO clique.c could hide potential.c completely?
@@ -253,7 +253,7 @@ Cucumber?
 ** typedef enum nip_error_code_enum { NO_ERROR = 0, ...} nip_error_code;
 ** use nip_error_code instead of int
 
-* TODO Consistent conventions in naming functions, variables, and data structures?
+* DONE Consistent conventions in naming functions, variables, and data structures?
 ** DONE make the naming conventions uniform, e.g. state_names instead of statenames or stateNames
 ** DONE prefix everything with "nip" to simulate namespace
 This is also known as "Smurf naming convention"
@@ -266,7 +266,7 @@ This is also known as "Smurf naming convention"
 ** DONE Heap.h -> nipheap.h
 ** DONE Graph.h -> nipgraph.h
 ** DONE parser.h -> nipparsers.h ?
-** TODO nip.h ok, but needs nip->nip_model etc.
+** DONE nip.h ok, but needs nip->nip_model etc.
 ** DONE convert -> nipconvert
 ** DONE em_test -> niptrain
 ** DONE gen_test -> nipsample

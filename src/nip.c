@@ -44,21 +44,21 @@ void get_parsed_node_size(int* x, int* y);
 
 
 /* Internal helper functions */
-static nip_error_code start_timeslice_message_pass(nip model, 
-						   nip_direction dir, 
-						   nip_potential sepset);
-static nip_error_code finish_timeslice_message_pass(nip model, 
-						    nip_direction dir,
-						    nip_potential num, 
-						    nip_potential den);
+static int start_timeslice_message_pass(nip_model model, 
+					nip_direction dir, 
+					nip_potential sepset);
+static int finish_timeslice_message_pass(nip_model model, 
+					 nip_direction dir,
+					 nip_potential num, 
+					 nip_potential den);
 
-static nip_error_code e_step(time_series ts, nip_potential* parameters, 
-			     double* loglikelihood);
-static nip_error_code m_step(nip_potential* results, nip model);
+static int e_step(time_series ts, nip_potential* parameters, 
+		  double* loglikelihood);
+static int m_step(nip_potential* results, nip_model model);
 
 
 
-void reset_model(nip model){
+void reset_model(nip_model model){
   int i, retval;
   nip_variable v;
   for(i = 0; i < model->num_of_vars; i++){
@@ -73,7 +73,7 @@ void reset_model(nip model){
 }
 
 
-void total_reset(nip model){
+void total_reset(nip_model model){
   int i;
   nip_clique c;
   for(i = 0; i < model->num_of_cliques; i++){
@@ -85,7 +85,7 @@ void total_reset(nip model){
 }
 
 
-void use_priors(nip model, int has_history){
+void use_priors(nip_model model, int has_history){
   int i, retval;
   nip_variable v;
 
@@ -119,11 +119,11 @@ void use_priors(nip model, int has_history){
 }
 
 
-nip parse_model(char* file){
+nip_model parse_model(char* file){
   int i, j, k, m, retval;
   nip_variable temp;
   nip_variable_list vl;
-  nip new = (nip) malloc(sizeof(nip_struct));
+  nip_model new = (nip_model) malloc(sizeof(nip_model_struct));
 
   if(!new){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
@@ -295,7 +295,7 @@ nip parse_model(char* file){
 
 
 /* NOTE: part of this stuff should be moved to potential.c etc. */
-int write_model(nip model, char* filename){
+int write_model(nip_model model, char* filename){
   int i, j, n;
   int x, y;
   int nparents, nvalues;
@@ -482,7 +482,7 @@ int write_model(nip model, char* filename){
 }
 
 
-void free_model(nip model){
+void free_model(nip_model model){
   int i;
 
   if (!model)
@@ -509,7 +509,7 @@ void free_model(nip model){
 }
 
 
-int read_timeseries(nip model, char* filename, 
+int read_timeseries(nip_model model, char* filename, 
 		    time_series** results){
   int i, j, k, m, n, N; 
   int obs;
@@ -677,7 +677,7 @@ int write_timeseries(time_series *ts_set, int n_series, char *filename){
   nip_variable *observed;
   nip_variable *observed_more;
   time_series ts;
-  nip the_model;
+  nip_model the_model;
   FILE *f = NULL;
 
   /* Check stuff */
@@ -806,7 +806,7 @@ void free_timeseries(time_series ts){
 
 /* Replace this with the macro TIME_SERIES_LENGTH() */
 int timeseries_length(time_series ts){
-  if !ts
+  if(!ts)
     return 0;
   return ts->length;
 }
@@ -909,7 +909,7 @@ void free_uncertainseries(uncertain_series ucs){
 
 
 int uncertainseries_length(uncertain_series ucs){
-  if !ucs
+  if(!ucs)
     return 0;
   return ucs->length;
 }
@@ -948,7 +948,7 @@ int set_observation(time_series ts, nip_variable v, int time,
 }
 
 
-int insert_hard_evidence(nip model, char* varname, char* observation){
+int insert_hard_evidence(nip_model model, char* varname, char* observation){
   int ret;
   nip_variable v = model_variable(model, varname);
   if(v == NULL)
@@ -964,7 +964,7 @@ int insert_hard_evidence(nip model, char* varname, char* observation){
 }
 
 
-int insert_soft_evidence(nip model, char* varname, double* distribution){
+int insert_soft_evidence(nip_model model, char* varname, double* distribution){
   int ret;
   nip_variable v = model_variable(model, varname);
   if(v == NULL)
@@ -979,7 +979,7 @@ int insert_soft_evidence(nip model, char* varname, double* distribution){
 
 /* Note that <model> may be different from ts->model, but the variables
  * have to be shared. */
-int insert_ts_step(time_series ts, int t, nip model, char mark_mask){
+int insert_ts_step(time_series ts, int t, nip_model model, char mark_mask){
   int i;
   nip_variable v;
 
@@ -1002,7 +1002,7 @@ int insert_ts_step(time_series ts, int t, nip model, char mark_mask){
 
 
 /* note that <model> may be different from ucs->model */
-int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask){
+int insert_ucs_step(uncertain_series ucs, int t, nip_model model, char mark_mask){
   int i, e;
   nip_variable v;
 
@@ -1028,7 +1028,7 @@ int insert_ucs_step(uncertain_series ucs, int t, nip model, char mark_mask){
 
 
 /* Starts a message pass between timeslices */
-static nip_error_code start_timeslice_message_pass(nip model, 
+static int start_timeslice_message_pass(nip_model model, 
 						   nip_direction dir,
 					 nip_potential alpha_or_gamma){
   int* mapping;
@@ -1066,7 +1066,7 @@ static nip_error_code start_timeslice_message_pass(nip model,
 
 
 /* Finishes the message pass between timeslices */
-static nip_error_code finish_timeslice_message_pass(nip model, 
+static int finish_timeslice_message_pass(nip_model model, 
 						    nip_direction dir,
 						    nip_potential num, 
 						    nip_potential den){
@@ -1109,7 +1109,7 @@ uncertain_series forward_inference(time_series ts, nip_variable vars[],
   nip_potential alpha = NULL;
   nip_clique clique_of_interest;
   uncertain_series results = NULL;
-  nip model = ts->model;
+  nip_model model = ts->model;
 
   
   /* Allocate an array */
@@ -1327,7 +1327,7 @@ uncertain_series forward_backward_inference(time_series ts,
   nip_potential *alpha_gamma = NULL;
   nip_clique clique_of_interest;
   uncertain_series results = NULL;
-  nip model = ts->model;
+  nip_model model = ts->model;
 
   /* Allocate an array for describing the dimensions of timeslice sepsets */
   if(model->outgoing_interface_size > 0){
@@ -1581,7 +1581,7 @@ uncertain_series forward_backward_inference(time_series ts,
 }
 
 
-nip_variable model_variable(nip model, char* symbol){
+nip_variable model_variable(nip_model model, char* symbol){
   int i;
 
   if(!model){
@@ -1597,7 +1597,7 @@ nip_variable model_variable(nip model, char* symbol){
 }
 
 
-void make_consistent(nip model){
+void make_consistent(nip_model model){
   int i;
   for (i = 0; i < model->num_of_cliques; i++)
     nip_unmark_clique(model->cliques[i]);
@@ -1705,7 +1705,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts){
  *   because they can't deliver the results without global variables
  * - some parts of the code could be (and have been) transformed into 
  *   separate procedures */
-static nip_error_code e_step(time_series ts, nip_potential* parameters, 
+static int e_step(time_series ts, nip_potential* parameters, 
 			     double* loglikelihood){
   int i, t;
 #ifdef DEBUG_NIP
@@ -1721,9 +1721,9 @@ static nip_error_code e_step(time_series ts, nip_potential* parameters,
   nip_potential* results = NULL;
   nip_potential p;
   nip_clique c = NULL;
-  nip model = ts->model;
+  nip_model model = ts->model;
   double m1, m2;
-  nip_error_code error;
+  int error;
 
   /* Reserve some memory for computation */
   nobserved = ts->num_of_observed;
@@ -2007,7 +2007,7 @@ static nip_error_code e_step(time_series ts, nip_potential* parameters,
 }
 
 
-static nip_error_code m_step(nip_potential* parameters, nip model){
+static int m_step(nip_potential* parameters, nip_model model){
   int i, j, k;
   int* fam_map;
   nip_clique fam_clique = NULL;
@@ -2073,7 +2073,7 @@ static nip_error_code m_step(nip_potential* parameters, nip model){
 
 /* Trains the given model (ts[0]->model) according to the given set of 
  * time series (ts[*]) with EM-algorithm. Returns an error code. */
-nip_error_code em_learn(time_series* ts, int n_ts, double threshold,
+int em_learn(time_series* ts, int n_ts, double threshold,
 			nip_double_list learning_curve){
   int i, n, v;
   int *card;
@@ -2082,8 +2082,8 @@ nip_error_code em_learn(time_series* ts, int n_ts, double threshold,
   double loglikelihood = -DBL_MAX;
   double probe = 0;
   nip_potential* parameters = NULL;
-  nip model = NULL;
-  nip_error_code e;
+  nip_model model = NULL;
+  int e;
 
   if(!ts[0] || !ts[0]->model){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
@@ -2251,14 +2251,14 @@ nip_error_code em_learn(time_series* ts, int n_ts, double threshold,
 
 
 /* a little wrapper */
-double model_prob_mass(nip model){
+double model_prob_mass(nip_model model){
   double m;
   m = nip_probability_mass(model->cliques, model->num_of_cliques);
   return m;
 }
 
 
-double* get_probability(nip model, nip_variable v){
+double* get_probability(nip_model model, nip_variable v){
   nip_clique clique_of_interest;
   double *result;
   int cardinality;
@@ -2298,7 +2298,7 @@ double* get_probability(nip model, nip_variable v){
 }
 
 
-nip_potential get_joint_probability(nip model, nip_variable *vars, 
+nip_potential get_joint_probability(nip_model model, nip_variable *vars, 
 				    int nvars){
   nip_potential p;
   int i;
@@ -2322,7 +2322,7 @@ nip_potential get_joint_probability(nip model, nip_variable *vars,
 
 
 /* JJ: this has some common elements with the forward_inference function */
-time_series generate_data(nip model, int length){
+time_series generate_data(nip_model model, int length){
   int i, j, k, t;
   int *cardinalities = NULL;
   nip_potential alpha = NULL;
@@ -2520,7 +2520,7 @@ int lottery(double* distribution, int size){
 }
 
 
-void print_cliques(nip model){
+void print_cliques(nip_model model){
   int i;
   int num_of_cliques;
   nip_sepset s;

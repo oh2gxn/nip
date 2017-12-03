@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
 
   double loglikelihood = 0;
 
-  nip model = NULL;
+  nip_model model = NULL;
   nip_variable temp = NULL;
   nip_variable* vars = NULL;
   int nvars = 0;

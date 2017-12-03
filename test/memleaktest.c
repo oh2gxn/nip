@@ -60,7 +60,7 @@ int main(int argc, char *argv[]){
   nip_clique *cl2 = NULL;
   nip_sepset s;
   nip_graph g;
-  nip model = NULL;
+  nip_model model = NULL;
   time_series *ts_set = NULL;
 
   if(argc > 3)

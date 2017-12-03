@@ -22,18 +22,18 @@
 #define __NIPLISTS_H__
 
 /* FIXME: these are dangerous, if the field names don't match for all lists! */
-#define NIP_LIST_LENGTH(l)   ( (l)->length )
-#define NIP_LIST_ITERATOR(l) ( (l)->first  )
-#define NIP_LIST_HAS_NEXT(l) ( (l)->fwd != NULL )
-#define NIP_LIST_NEXT(l)     ( (l)->fwd  )
-#define NIP_LIST_ELEMENT(l)  ( (l)->data  )
+#define NIP_LIST_LENGTH(l)   ( (l)->length ) ///< gets you list length
+#define NIP_LIST_ITERATOR(l) ( (l)->first  ) ///< gets you a link for iterating
+#define NIP_LIST_HAS_NEXT(l) ( (l)->fwd != NULL ) ///< tells if iterator has more
+#define NIP_LIST_NEXT(l)     ( (l)->fwd  )   ///< gets you next link
+#define NIP_LIST_ELEMENT(l)  ( (l)->data  )  ///< gets you data from current link
 
 
 /**
  * Element for linked list of integer arrays */
 typedef struct nip_int_array_link_type {
   int* data; ///< the stored integer array
-  int size; ///< size of the array
+  int size;  ///< size of the array
   struct nip_int_array_link_type* fwd; ///< the next element
   struct nip_int_array_link_type* bwd; ///< the previous element
 } nip_int_array_link_struct;
@@ -46,7 +46,7 @@ typedef struct nip_int_array_list_type {
   nip_int_array_link first; ///< the first element
   nip_int_array_link last;  ///< the last element
 } nip_int_array_list_struct;
-typedef nip_int_array_list_struct* nip_int_array_list;
+typedef nip_int_array_list_struct* nip_int_array_list; ///< reference to an int[] list
 
 
 /**
@@ -65,10 +65,11 @@ typedef struct nip_int_list_type {
   nip_int_link first; ///< the first element
   nip_int_link last;  ///< the last element
 } nip_int_list_struct;
-typedef nip_int_list_struct* nip_int_list;
+typedef nip_int_list_struct* nip_int_list; ///< reference to a list of integers
 
 
-/* Element for linked list of doubles */
+/**
+ * Element for linked list of doubles */
 typedef struct nip_double_link_type {
   double data;                      /* the data */
   struct nip_double_link_type* fwd; /* next element */
@@ -76,7 +77,8 @@ typedef struct nip_double_link_type {
 } nip_double_link_struct;
 typedef nip_double_link_struct* nip_double_link;
 
-/* Linked list of doubles */
+/**
+ * Linked list of doubles */
 typedef struct nip_double_list_type {
   int length;            /* length of the list */
   nip_double_link first; /* first element */
@@ -104,7 +106,8 @@ typedef struct nip_string_list_type {
 typedef nip_string_list_struct* nip_string_list;
 
 
-/* Element for linked list of <key> = "<value>" string pairs. 
+/**
+ * Element for linked list of <key> = "<value>" string pairs. 
  * (NIP_next = "<variable name>" gets handled differently) */
 typedef struct nip_string_pair_link_type {
   char* key;

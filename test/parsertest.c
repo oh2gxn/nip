@@ -21,6 +21,7 @@
  */
 
 #include <stdio.h>
+#include "nipvariable.h"
 #include "nipparsers.h"
 #include "huginnet.tab.h"
 
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]){
     return -1;
 
   while(ok){
-    token = nip_next_hugin_token(&token_length, f);
+    token = nip_next_hugin_token(f, &token_length);
 
     if(token_length == 0)
       ok = 0; /* no more tokens */

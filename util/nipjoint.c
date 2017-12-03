@@ -50,7 +50,7 @@ int main(int argc, char *argv[]){
   int num_of_vars = 0;
   nip_potential result = NULL;
 
-  nip model = NULL;
+  nip_model model = NULL;
   time_series ts = NULL;
   time_series *ts_set = NULL;
   nip_variable v = NULL;
