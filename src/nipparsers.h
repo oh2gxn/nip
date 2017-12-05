@@ -53,7 +53,7 @@ typedef struct {
   int* datarows; /**< Number of rows in the file for each time series, 
 		    excluding the line containing node symbols */
 
-  int num_of_nodes; ///< Number of variables present (columns)
+  int num_of_nodes;    ///< Number of variables present (columns)
   char** node_symbols; ///< Names of the variables (aka attributes or nodes)
 
   int* num_of_states;  ///< Number of states for each variable
@@ -92,7 +92,7 @@ void nip_close_data_file(nip_data_file file);
  * (header row).
  * @param f Reference to an opened data file
  * @param separator The ASCII character to be considered field separator
- * @param token Pointer where an array of strings will be written
+ * @param tokens Pointer where an array of strings will be written
  * @return The number of tokens found, size of \p *tokens array, or
  * negative number in case of error or end of file. */
 int nip_next_line_tokens(nip_data_file f, char separator, char ***tokens);

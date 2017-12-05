@@ -80,9 +80,9 @@ typedef struct nip_var {
 typedef nip_variable_struct* nip_variable; ///< variable reference
 
 /**
- * Linked list for storing nip_variables */
+ * Linked list element for storing nip_variables */
 typedef struct nip_varlink {
-  nip_variable data; ///< the variable
+  nip_variable data;       ///< the variable
   struct nip_varlink* fwd; ///< the next element
   struct nip_varlink* bwd; ///< the previous element
 } nip_variable_link_struct;
@@ -90,8 +90,10 @@ typedef struct nip_varlink {
 typedef nip_variable_link_struct* nip_variable_link; ///< list element ref
 typedef nip_variable_link nip_variable_iterator; ///< iterator reference
 
+/**
+ * Linked list for storing nip_variables */
 typedef struct nip_varlist {
-  int length; ///< number of elements
+  int length;              ///< number of elements
   nip_variable_link first; ///< the beginning of the list
   nip_variable_link last;  ///< the end of the list
 } nip_variable_list_struct;
@@ -99,8 +101,8 @@ typedef struct nip_varlist {
 typedef nip_variable_list_struct* nip_variable_list; ///< list reference
 
 /**
- * List for storing "NIP_next" relations or other strings, 
- * while other variables are yet to be parsed... */
+ * List element for storing "NIP_next" relations or other strings, 
+ * while other variables are yet to be parsed. */
 typedef struct nip_iflink {
   nip_variable var; ///< the variable
   char* next; ///< reference to another variable symbol (yet to be created)
@@ -110,10 +112,13 @@ typedef struct nip_iflink {
 
 typedef nip_iflink_struct* nip_interface_link; ///< list element reference
 
+/**
+ * List for storing "NIP_next" relations or other strings, 
+ * while other variables are yet to be parsed. */
 typedef struct nip_iflist {
-  int length; ///< number of elements
+  int length;               ///< number of elements
   nip_interface_link first; ///< the beginning
-  nip_interface_link last; ///< the end
+  nip_interface_link last;  ///< the end
 } nip_iflist_struct;
 
 typedef nip_iflist_struct* nip_interface_list; ///< list reference
@@ -182,7 +187,7 @@ int nip_variable_marked(nip_variable v);
  * Returns the symbol of the variable. It is a string reference, 
  * not a new char[], so don't free() it.
  * @param v Reference to the variable
- * @param a string reference (do not free) */
+ * @return a string reference (do not free) */
 char* nip_variable_symbol(nip_variable v);
 
 /**
@@ -348,7 +353,7 @@ nip_interface_list nip_new_interface_list();
  * Adds a variable to the end of a list
  * @param l A list of variables to extend
  * @param v A variable to add
- * @param error code, or 0 on success */
+ * @return error code, or 0 on success */
 int nip_append_variable(nip_variable_list l, nip_variable v);
 
 /**
@@ -356,14 +361,14 @@ int nip_append_variable(nip_variable_list l, nip_variable v);
  * @param l A list of (variable,string) pairs to extend
  * @param var A variable to add
  * @param next Symbol of the related variable in the next time slice
- * @param error code, or 0 on success */
+ * @return error code, or 0 on success */
 int nip_append_interface(nip_interface_list l, nip_variable var, char* next);
 
 /**
  * Adds a variable to the beginning of a list
  * @param l A list of variables to extend
  * @param v A variable to add
- * @param error code, or 0 on success */
+ * @return error code, or 0 on success */
 int nip_prepend_variable(nip_variable_list l, nip_variable v);
 
 /**
@@ -371,7 +376,7 @@ int nip_prepend_variable(nip_variable_list l, nip_variable v);
  * @param l A list of (variable,string) pairs to extend
  * @param var A variable to add
  * @param next Symbol of the related variable in the next time slice
- * @param error code, or 0 on success */
+ * @return error code, or 0 on success */
 int nip_prepend_interface(nip_interface_list l, nip_variable var, char* next);
 
 /**

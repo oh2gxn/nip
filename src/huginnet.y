@@ -1,7 +1,7 @@
 %{
 /**
  * @file
- * @brief Parser for a subset of the Hugin Net language.
+ * @brief Parser for a subset of the Hugin Net language. Generated with Bison.
  * 
  * @author Janne Toivola
  * @copyright &copy; 2007,2012 Janne Toivola <br>

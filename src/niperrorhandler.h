@@ -21,32 +21,22 @@
 #define __NIPERRORHANDLER_H__
 
 #ifndef __STDC_VERSION__
-#define __STDC_VERSION__ 199901L
+#define __STDC_VERSION__ 199901L ///< C99
 #endif
 #ifndef _POSIX_VERSION
-#define _POSIX_VERSION 200112L
+#define _POSIX_VERSION 200112L ///< POSIX 2001 source
 #endif
 
 #include <errno.h>
 
-// TODO: get rid of these
-#define NIP_NO_ERROR 0
-#define NIP_ERROR_NULLPOINTER EFAULT
-#define NIP_ERROR_DIVBYZERO EDOM // never used
-#define NIP_ERROR_INVALID_ARGUMENT EINVAL
-#define NIP_ERROR_OUTOFMEMORY ENOMEM
-#define NIP_ERROR_IO EIO
-#define NIP_ERROR_GENERAL 6 // TODO: return the root cause!
-#define NIP_ERROR_FILENOTFOUND ENOENT
-#define NIP_ERROR_BAD_LUCK 8 // FIXME: srsly?
-
+#define NIP_NO_ERROR 0 ///< error code for successful operation
 
 /**
  * Method for reporting an error. 
  * @param srcFile is the source file (__FILE__)
  * @param line is the number of the line in the source code (__LINE__)
  * @param error is for example ENOMEM
- * @param if verbose is other than 0, a message will be printed
+ * @param verbose if other than 0, a message will be printed to stderr
  * @return the same error code to be passed on
  */
 int nip_report_error(char *srcFile, int line, int error, int verbose);
@@ -56,11 +46,13 @@ int nip_report_error(char *srcFile, int line, int error, int verbose);
 void nip_reset_error_handler();
 
 /**
- * Method for checking what was the last error */
+ * Method for checking what was the last error
+ * @return the last error code */
 int nip_check_error_type();
 
 /**
- * Method for checking how many errors have occured */
+ * Method for checking how many errors have occured
+ * @return number of errors reported */
 int nip_check_error_counter();
 
 #endif

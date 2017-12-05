@@ -2,8 +2,8 @@
  * @file 
  * @brief Heap for storing candidate groups of variables for various algorithms.
  *
- * @author Janne Toivola
  * @author Antti Rasinen
+ * @author Janne Toivola
  * @author Mikko Korpela
  * @copyright &copy; 2007,2012 Janne Toivola <br>
  * This program is free software; you can redistribute it and/or modify
@@ -23,42 +23,44 @@
 
 #include "niplists.h"
 
-#define NIP_HEAP_PARENT(i) ((i-1)/2)
-#define NIP_HEAP_LEFT(i) (2*i+1)
-#define NIP_HEAP_RIGHT(i) (2*(i+1))
+#define NIP_HEAP_PARENT(i) ((i-1)/2) ///< index for parent of i
+#define NIP_HEAP_LEFT(i)  (2*i+1)    ///< index for left child of i
+#define NIP_HEAP_RIGHT(i) (2*(i+1))  ///< index for right child of i
 
 /**
  * Structure for storing an item in a heap
  */
 typedef struct {
-  int content_size; ///< in case content is an array (always at least 1)
-  void* content; ///< the pointer to the content (possibly array)
-  int primary_key; ///< key determining the order in the heap
+  int content_size;  ///< in case content is an array (always at least 1)
+  void* content;     ///< the pointer to the content (possibly array)
+  int primary_key;   ///< key determining the order in the heap
   int secondary_key; ///< secondary key determining the order in case of ties
 } nip_heap_item_struct;
-typedef nip_heap_item_struct* nip_heap_item;
+typedef nip_heap_item_struct* nip_heap_item; ///< reference to a heap item
 
 /**
  * Structure storing the heap items and related state
  */
 typedef struct {
-  int allocated_size; ///< Size of the currently allocated table
+  int allocated_size;        ///< Size of the currently allocated table
   nip_heap_item* heap_items; ///< The array of elements
-  int heap_size; ///< Number of elements inserted to the heap
-  int (*primary_key)(void* item, int size); ///< computes primary key
+  int heap_size;             ///< Number of elements inserted to the heap
+  int (*primary_key)(void* item, int size);   ///< computes primary key
   int (*secondary_key)(void* item, int size); ///< computes secondary key
-  int heapified; ///< Flag if someone has seen the trouble of heapifying
+  int heapified;    ///< Flag if someone has seen the trouble of heapifying
   nip_int_list updated_items; /**< List of indices of updated elements 
 				 which potentially violate heap property */
 } nip_heap_struct;
-typedef nip_heap_struct* nip_heap;
+typedef nip_heap_struct* nip_heap; ///< reference to a heap
 
 
 /**
  * Creates a new heap
  * @param initial_size Some guess for required size
  * @param primary function for evaluating primary key
- * @param secondary function for evaluating secondary key */
+ * @param secondary function for evaluating secondary key
+ * @return reference to a new heap
+ * @see nip_free_heap() */
 nip_heap nip_new_heap(int initial_size,
 		      int (*primary)(void* item, int size),
 		      int (*secondary)(void* item, int size));
@@ -106,12 +108,14 @@ void* nip_get_heap_item(nip_heap h, int index, int* size);
  * @param h The heap
  * @param index Flat index to the heap
  * @param content Stuff to be stored
- * @param size \p content size */
+ * @param size Size of \p content
+ * @return error code, or 0 if successful */
 int nip_set_heap_item(nip_heap h, int index, void* content, int size);
 
 
 /**
- * Makes the heap obey the heap property after modifications to the root */
+ * Makes the heap obey the heap property after modifications to the root
+ * @param h The heap */
 void nip_build_min_heap(nip_heap h);
 
 
@@ -128,12 +132,15 @@ void* nip_heap_extract_min(nip_heap h, int* size);
 /**
  * Frees the memory allocated to the heap.
  * Does not free the contents, so don't free a heap unless it's empty
- * or you have pointers to the (dynamically allocated) content somewhere. */
+ * or you have pointers to the (dynamically allocated) content somewhere.
+ * @param h The heap to free */
 void nip_free_heap(nip_heap h);
 
 
 /**
- * Tells how many elements the heap contains */
+ * Tells how many elements the heap contains
+ * @param h The heap
+ * @return Number of elements inserted to the heap */
 int nip_heap_size(nip_heap h);
 
 #endif /* __HEAP_H__ */

@@ -51,8 +51,8 @@
 #define TIME_SERIES_LENGTH(ts) ( (ts)->length ) ///< gets time series length
 #define UNCERTAIN_SERIES_LENGTH(ucs) ( (ucs)->length ) ///< gets ucs length
 
-#define NIP_FIELD_SEPARATOR ' '
-#define NIP_HAD_A_PREVIOUS_TIMESLICE 1
+#define NIP_FIELD_SEPARATOR ','         ///< data file field separator
+#define NIP_HAD_A_PREVIOUS_TIMESLICE 1  ///< true
 
 /* "How probable is the impossible" (0 < epsilon << 1) */
 /*#define PARAMETER_EPSILON 0.00001*/
@@ -61,7 +61,7 @@
  * Direction of inference: either forward or backward in time or sequence
  */
 enum nip_direction_type {BACKWARD, FORWARD};
-typedef enum nip_direction_type nip_direction; /// hide enum notation
+typedef enum nip_direction_type nip_direction; ///< hide enum notation
 
 /**
  * Data structure containing all necessary stuff for running 
@@ -75,14 +75,14 @@ typedef struct {
   int num_of_vars;         ///< number of random variables in the model
   nip_variable *variables; ///< the actual variables (names of values etc.)
   
-  int num_of_nexts;       ///< Number of variables in 'next' and 'previous'
-  nip_variable *next;     /**< The variables that will substitute 
-			     another one in the next timeslice. */
-  nip_variable *previous; /**< The variables that are substituted 
-			     by some variables from the previous timeslice. */
+  int num_of_nexts;        ///< Number of variables in 'next' and 'previous'
+  nip_variable *next;      /**< The variables that will substitute 
+			      another one in the next timeslice. */
+  nip_variable *previous;  /**< The variables that are substituted 
+			      by some variables from the previous timeslice. */
 
-  int outgoing_interface_size;      ///< number of variables in I_{t}->
-  nip_variable* outgoing_interface; ///< I_{t}->
+  int outgoing_interface_size; ///< number of variables in I_{t}->
+  nip_variable* outgoing_interface;          ///< I_{t}->
   nip_variable* previous_outgoing_interface; ///< I_{t-1}->
 
   int incoming_interface_size;      ///< number of variables in I_{t}<-
@@ -90,7 +90,6 @@ typedef struct {
 
   nip_clique in_clique;  /**< The clique which receives the message
 			    from the past timeslices */
-
   nip_clique out_clique; /**< The clique which handles the connection to the 
 			    future timeslices */
 
@@ -111,21 +110,18 @@ typedef nip_model_struct* nip_model; ///< Reference to a DBN model
  * Structure for storing a batch of "crisp" observations
  */
 typedef struct {
-  nip_model model; ///< The model (variables and state names)
-
+  nip_model model;      ///< The model (variables and state names)
   int num_of_hidden;    ///< Number of latent variables
   nip_variable *hidden; ///< The variables never observed (but not missing)
-
-  int num_of_observed;    ///< == model->num_of_vars - num_of_hidden
+  int num_of_observed;  ///< == (model->num_of_vars - num_of_hidden)
   nip_variable *observed; /**< Variables included in data
-                           (even if missing in each time step) */
-
-  int length; ///< Number of time steps
-  int** data; ///< The time series data
+			     (even if missing in each time step) */
+  int length;           ///< Number of time steps
+  int** data;           ///< The time series data
   /* TODO: Should there be a cache for extremely large time series? */
 } time_series_struct;
 
-typedef time_series_struct* time_series;
+typedef time_series_struct* time_series; ///< Reference to a time series
 
 /* TODO: Should there be something else for streams / online inference? */
 
@@ -133,14 +129,13 @@ typedef time_series_struct* time_series;
  * Structure for storing "soft" uncertain observations or inference results
  */
 typedef struct {
-  int num_of_vars; ///< number of variables
+  int num_of_vars;         ///< number of variables
   nip_variable* variables; ///< variables of interest
-
-  int length;     ///< length of the time series or sequence
+  int length;              ///< length of the time series or sequence
   double*** data; ///< probability distribution of every variable at every t
 } uncertain_series_struct;
 
-typedef uncertain_series_struct* uncertain_series;
+typedef uncertain_series_struct* uncertain_series; ///< Reference to soft data
 
 
 /**
@@ -269,8 +264,8 @@ void free_uncertainseries(uncertain_series ucs);
 
 /**
  * Tells the length of an uncertain time series.
- * @param The inference result
- * @return Length T, or 0 for null pointer
+ * @param ucs The inference result
+ * @return length T, or 0 for null pointer
  */
 int uncertainseries_length(uncertain_series ucs);
 

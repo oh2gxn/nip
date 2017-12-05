@@ -23,10 +23,10 @@
 #define __NIPPOTENTIAL_H__
 
 #ifndef __STDC_VERSION__
-#define __STDC_VERSION__ 199901L
+#define __STDC_VERSION__ 199901L ///< using C99
 #endif
 #ifndef _POSIX_VERSION
-#define _POSIX_VERSION 200112L
+#define _POSIX_VERSION 200112L ///< POSIX 2001
 #endif
 
 #include <math.h> // HUGE_VAL
@@ -64,7 +64,7 @@ typedef nip_potential_struct* nip_potential; ///< potential reference
  * potential with just one data element ("scalar weight").
  * @param cardinality Size of each dimension (how many states a var has)
  * @param dimensionality Number of dimensions, length of cardinality array
- * @param NULL for "ones", or initial data to be copied
+ * @param data Initial data to be copied, or NULL for uniform "ones"
  * @return a reference to a new potential
  * @see nip_free_potential() */
 nip_potential nip_new_potential(int cardinality[], int dimensionality, 

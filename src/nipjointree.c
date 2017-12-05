@@ -480,7 +480,15 @@ nip_potential nip_create_potential(nip_variable variables[],
 }
 
 
-/* NOTE: don't use this. This is just a bad idea we had... */
+/**
+ * NOTE: Don't use this. This is just a bad idea we had!
+ * The original idea could now be implemented with:
+ * - creating a suitable mapping array
+ * - newp = nip_new_potential();
+ * - nip_update_potential(p, NULL, newp, mapping);
+ * @param vars Array of variables corresponding to \p p
+ * @param p A potential
+ * @return a new potential in some better order */
 nip_potential nip_reorder_potential(nip_variable vars[], nip_potential p){
 
   /* Simple (stupid) checks */
@@ -494,10 +502,7 @@ nip_potential nip_reorder_potential(nip_variable vars[], nip_potential p){
   }
 
   /* Old crappy code removed, this does nothing. */
-  /* The original idea could now be implemented with:
-   * - creating a suitable mapping array
-   * - nip_new_potential
-   * - nip_update_potential(p, NULL, newp, mapping) */
+  /*  */
 
   return nip_copy_potential(p);
 }

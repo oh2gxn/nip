@@ -157,8 +157,8 @@ int nip_sepset_size(nip_sepset s);
 /**
  * Tells if the cliques are connected (in the same join tree).
  * Remember to UNMARK cliques before calling this.
- * @parameter one Reference to a clique
- * @parameter two Reference to another clique
+ * @param one Reference to a clique
+ * @param two Reference to another clique
  * @return 1 if connected, 0 if not
  * @see nip_unmark_clique() */
 int nip_cliques_connected(nip_clique one, nip_clique two);
@@ -365,7 +365,7 @@ void nip_fprintf_clique(FILE* stream, nip_clique c);
 /**
  * Prints the variables of the given sepset.
  * @param stream An open output stream for writing
- * @param c The sepset of interest */
+ * @param s The sepset of interest */
 void nip_fprintf_sepset(FILE* stream, nip_sepset s);
 
 /**

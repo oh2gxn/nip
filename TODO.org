@@ -1,7 +1,6 @@
 #+TITLE: TODO
 
-Top priority:
-
+Top priority or simple stuff:
 * TODO Make it a library
 ** TODO decide on a minimal set of standards
 - C99 and POSIX.1-2001
@@ -38,15 +37,6 @@ CMake and especially Automake would be overengineering and risk portability.
 - option b :: transform input to/accept only UTF-8, output only UTF-8
 - option c :: remove limits, allocate all strings dynamically?
 
-* TODO Document the code structure
-** Convert comments to Doxygen format
-** UML "class" diagram
-Doxygen generates fancy graphs for explaining dependencies.
-** Call graph
-- Static and context-insensitive (the simple case).
-- Doxygen?
-
-
 * TODO Automated test scripts
 ** Acceptance tests
 Cucumber?
@@ -64,6 +54,10 @@ Cucumber?
 *** TODO models and data for testing nip.c
 *** TODO script with simple diff operations? (not for memleaktest)
 
+* TODO Parse and preserve other fields specified in Hugin Net files 
+** currently this program ignores them
+** How to store potential-specific fields?
+** What are net{input/output}-fields?
 
 * TODO Better demo case?
 ** CW decoding or some other time series smoothing case?
@@ -71,7 +65,6 @@ Cucumber?
 ** A set of windows with one potential / belief universe each
 ** Click on the marginal inserts evidence for the variable
 ** Click inside the bitmap modifies conditional/prior probs
-
 
 * TODO Data file abstraction should be "lighter" and separate from model
 ** TODO Hide time_series and uncertain_series implementations better
@@ -86,6 +79,8 @@ Cucumber?
 * TODO Online fixed_lag_smoothing
 ** Have more than 1.5 temporal slices?
 ** Implement re-use of allocated slices: "tank track" method?
+
+Medium priority:
 * TODO Use online forward mode or fixed-lag smoothing with SDR?
 * TODO ZeroMQ support for distributing join trees over network?
 * TODO Support for OpenCL in potential.c
@@ -111,7 +106,7 @@ Cucumber?
 ** probably has several errors in it
   
 
-
+Lesser priority or science:
 * TODO clique.c could hide potential.c completely?
 ** timeslice sepsets could be handled in clique.c
 
@@ -129,11 +124,6 @@ Cucumber?
 * TODO Tiny addition to huginnet.y: 
 ** potentialDeclaration without data (uniform potential) AND parents. 
 ** Copy-paste the similar thing currently made for priors?
-
-* TODO Parse and preserve other fields specified in Hugin Net files 
-** currently this program ignores them
-** How to store potential-specific fields?
-** What are net{input/output}-fields?
 
 * TODO BUG: net parser segfaults if <symbols> is an empty list:
 ** "potential( A | ) { }" - it should report an error and quit
@@ -193,6 +183,15 @@ Cucumber?
 
 * TODO Spectral clustering vs EM?
 
+
+Done:
+* DONE Document the code structure
+** Convert comments to Doxygen format
+** UML "class" diagram
+Doxygen generates fancy graphs for explaining dependencies.
+** Call graph
+- Static and context-insensitive (the simple case).
+- Doxygen?
 * DONE Publish the code
 ** http://www.nature.com/news/2010/101013/full/467753a.html doi:10.1038/467753a
 ** DL: 15.6.2012
