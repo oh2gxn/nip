@@ -108,11 +108,17 @@ int main(int argc, char *argv[]){
 
   /** DEBUG **/
   printf("  Observed variables:\n  ");
-  for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++)
-    printf("%s ", ts->observed[i]->symbol);
+  for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++){
+    if (i > 0)
+      printf("%c", NIP_FIELD_SEPARATOR);
+    printf("%s", ts->observed[i]->symbol);
+  }
   printf("\n  Hidden variables:\n  ");
-  for(i = 0; i < ts->num_of_hidden; i++)
-    printf("%s ", ts->hidden[i]->symbol);
+  for(i = 0; i < ts->num_of_hidden; i++){
+    if (i > 0)
+      printf("%c", NIP_FIELD_SEPARATOR);
+    printf("%s", ts->hidden[i]->symbol);
+  }
   printf("\n");
 
   /* Use all the data (mark all variables) */
@@ -125,7 +131,8 @@ int main(int argc, char *argv[]){
   fprintf(f, "%s", nip_variable_symbol(ts->hidden[0]));
   for(i = 1; i < ts->num_of_hidden; i++){
     temp = ts->hidden[i];
-    fprintf(f, " %s", nip_variable_symbol(temp));
+    fprintf(f, "%c", NIP_FIELD_SEPARATOR);
+    fprintf(f, "%s", nip_variable_symbol(temp));
   }
   fputs("\n", f);
 
@@ -159,7 +166,8 @@ int main(int argc, char *argv[]){
 	    k = j;
 	  }
 	}
-	fprintf(f, "%s ", (temp->state_names)[k]);
+	fprintf(f, "%s", (temp->state_names)[k]);
+	fprintf(f, "%c", NIP_FIELD_SEPARATOR);
       }
 
       i = ucs->num_of_vars - 1;
@@ -173,7 +181,7 @@ int main(int argc, char *argv[]){
 	  k = j;
 	}
       }
-      fprintf(f, "%s \n", (temp->state_names)[k]);
+      fprintf(f, "%s\n", (temp->state_names)[k]);
     }
     fputs("\n", f); /* space between time series */
     free_uncertainseries(ucs); /* remember to free ucs */

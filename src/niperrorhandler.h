@@ -31,6 +31,16 @@
 
 #define NIP_NO_ERROR 0 ///< error code for successful operation
 
+// TODO: get rid of these
+#define NIP_ERROR_NULLPOINTER EFAULT
+#define NIP_ERROR_DIVBYZERO EDOM // never used
+#define NIP_ERROR_INVALID_ARGUMENT EINVAL
+#define NIP_ERROR_OUTOFMEMORY ENOMEM
+#define NIP_ERROR_IO EIO
+#define NIP_ERROR_GENERAL 6 // TODO: return the root cause!
+#define NIP_ERROR_FILENOTFOUND ENOENT
+#define NIP_ERROR_BAD_LUCK 8 // FIXME: srsly?
+
 /**
  * Method for reporting an error. 
  * @param srcFile is the source file (__FILE__)

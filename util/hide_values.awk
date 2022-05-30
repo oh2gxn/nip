@@ -40,7 +40,7 @@
 
 BEGIN{
 # Field Separator is space: " " - it used to be ", "
-  FS = " "
+  FS = ","
 
 # Reset line counter (only non-empty lines)
   line = 0;

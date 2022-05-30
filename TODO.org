@@ -1,41 +1,13 @@
 #+TITLE: TODO
 
 Top priority or simple stuff:
-* TODO Make it a library
-** TODO decide on a minimal set of standards
-- C99 and POSIX.1-2001
-  : __STDC_VERSION__ = 199901L
-  : _POSIX_VERSION = 200112L
-- Requires GNU Bison for parser generation
-- Minimal Makefile without funny extensions?
-  - CC: the C compiler program
-  - CFLAGS: flags to pass to the C compiler
-  - LDFLAGS: flags to pass to the linker (via the C compiler)
-  - LDLIBS: libraries to pass to the linker
-  - User is left with overriding them as appropriate
-** TODO a single header file instead of nip*.h
-This raises suspicions of 
-- baklava code :: a stack of too thin layers, or 
-- lasagne code :: a nice set of layers but monolithic / impossible to change
-More recommendations for headers: 
-- Included in some order:
-  - matching local header, like x.c includes x.h
-  - standard headers, like <stdio.h>
-  - other local nip headers, like "niperrorhandler.h"
-- No includes in include files, and 
-- Get rid of the ifdef wrappers? Compiler will warn when something is wrong.
-** TODO consider ABI vs. future development
-Some parts of the library are likely to change soon
-** DONE makefile rules for static library
-** DONE makefile rules for a shared library
-** TODO CMake ?
-CMake and especially Automake would be overengineering and risk portability.
 * TODO Check if the library is UTF-8 compatible
 ** BUG: Hard byte length limit of some strings cuts UTF-8 chars?
 ** The only source of UTF-8/wide chars is the input?
 - option a :: transparency: output them as is, but don't mess them
 - option b :: transform input to/accept only UTF-8, output only UTF-8
 - option c :: remove limits, allocate all strings dynamically?
+- option d :: YMMV, let the user shoot herself in the foot
 
 * TODO Automated test scripts
 ** Acceptance tests
@@ -54,6 +26,18 @@ Cucumber?
 *** TODO models and data for testing nip.c
 *** TODO script with simple diff operations? (not for memleaktest)
 
+
+* TODO Data file abstraction should be "lighter" and separate from model
+** TODO Hide time_series and uncertain_series implementations better
+*** more useful operations for them?
+** TODO write_X() functions could take file id's instead of file names...
+*** opening a file or other output would be users responsibility
+
+* TODO Online forward_inference (+ refactor offline forward_inference?)
+** Utilize stdin, stdout, and named pipes
+- stderr for "interactive" messages, not just errors
+- I/O only from the main program
+
 * TODO Parse and preserve other fields specified in Hugin Net files 
 ** currently this program ignores them
 ** How to store potential-specific fields?
@@ -66,16 +50,6 @@ Cucumber?
 ** Click on the marginal inserts evidence for the variable
 ** Click inside the bitmap modifies conditional/prior probs
 
-* TODO Data file abstraction should be "lighter" and separate from model
-** TODO Hide time_series and uncertain_series implementations better
-*** more useful operations for them?
-** TODO write_X() functions could take file id's instead of file names...
-*** opening a file or other output would be users responsibility
-
-* TODO Online forward_inference (+ refactor offline forward_inference?)
-** Utilize stdin, stdout, and named pipes
-- stderr for "interactive" messages, not just errors
-- I/O only from the main program
 * TODO Online fixed_lag_smoothing
 ** Have more than 1.5 temporal slices?
 ** Implement re-use of allocated slices: "tank track" method?
@@ -185,6 +159,41 @@ Lesser priority or science:
 
 
 Done:
+* DONE Make it a library
+** DONE decide on a minimal set of standards
+- C99 and POSIX.1-2001
+  : __STDC_VERSION__ = 199901L
+  : _POSIX_VERSION = 200112L
+- Requires GNU Bison for parser generation
+- Minimal Makefile without funny extensions?
+  - CC: the C compiler program
+  - CFLAGS: flags to pass to the C compiler
+  - LDFLAGS: flags to pass to the linker (via the C compiler)
+  - LDLIBS: libraries to pass to the linker
+  - User is left with overriding them as appropriate
+
+** DONE consider ABI vs. future development
+Some parts of the library are likely to change soon
+
+** DONE makefile rules for static library
+
+** DONE makefile rules for a shared library
+
+** DONE CMake ?
+CMake and especially Automake would be overengineering and risk portability.
+
+** DONE single header file instead of nip*.h [not]
+This raises suspicions of 
+- baklava code :: a stack of too thin layers, or
+- lasagne code :: a nice set of layers but monolithic / impossible to change
+More recommendations for headers:
+- Included in some order:
+  - matching local header, like x.c includes x.h
+  - standard headers, like <stdio.h>
+  - other local nip headers, like "niperrorhandler.h"
+- No includes in include files, and
+- Get rid of the ifdef wrappers? Compiler will warn when something is wrong.
+This is fine. Each of the layers do have a purpose.
 * DONE Document the code structure
 ** Convert comments to Doxygen format
 ** UML "class" diagram

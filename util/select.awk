@@ -23,7 +23,7 @@
 
 BEGIN{
   # Field Separator, was ", "
-  FS = " "
+  FS = ","
 
   # Reset line counter (only non-empty lines)
   line = 0;
