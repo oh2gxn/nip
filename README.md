@@ -5,7 +5,8 @@ NIP - Dynamic Bayesian Network library
 
 This repo contains the code used in my MSc thesis:
 http://users.ics.aalto.fi/jatoivol/di-oneside.pdf
-(there has been some revision since then, though)
+
+There has been some revision to this software since the year 2007, though.
 
 tl;dr: 
 - (Dynamic) Bayesian Network (DBN) library in C
