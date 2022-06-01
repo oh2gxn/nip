@@ -40,7 +40,7 @@ INC = -Isrc/
 #	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 # The default target
-all: test util doc
+all: lib test util doc
 
 
 # Rules for the library object files
