@@ -8,6 +8,7 @@ Top priority or simple stuff:
 *** nip_create_potential()
 *** nip_init_clique()
 *** nip_find_family_mapping()?
+
 * TODO Check if the library is UTF-8 compatible
 ** BUG: Hard byte length limit of some strings cuts UTF-8 chars?
 ** The only source of UTF-8/wide chars is the input?
@@ -15,6 +16,7 @@ Top priority or simple stuff:
 - option b :: transform input to/accept only UTF-8, output only UTF-8
 - option c :: remove limits, allocate all strings dynamically?
 - option d :: YMMV, let the user shoot herself in the foot
+
 
 * TODO Automated test scripts
 ** Acceptance tests
@@ -39,6 +41,7 @@ Cucumber?
 *** more useful operations for them?
 ** TODO write_X() functions could take file id's instead of file names...
 *** opening a file or other output would be users responsibility
+
 
 * TODO Online forward_inference (+ refactor offline forward_inference?)
 ** Utilize stdin, stdout, and named pipes

@@ -40,7 +40,7 @@ INC = -Isrc/
 #	$(CC) $(CFLAGS) $(CCFLAGS) $< -o $@
 
 # The default target
-all: lib test util doc
+all: lib test util
 
 
 # Rules for the library object files
@@ -230,7 +230,7 @@ $(LIKE_TARGET): $(LIKE_SRC) $(SLIB)
 
 LOO_SRC = util/nipbenchmark.c
 LOO_TARGET = util/nipbenchmark
-$(LOO_TARGET): $(LOO_SRC) $(HUG_OBJS)
+$(LOO_TARGET): $(LOO_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 

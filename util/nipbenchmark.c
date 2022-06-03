@@ -18,8 +18,7 @@
 /* nipbenchmark.c
  * 
  * SYNOPSIS: 
- * NIPBENCHMARK <MODEL.NET> <INPUT_DATA.TXT> \ 
- *                     <THRESHOLD> <MINL> <VAR> <OUTPUT_DATA.TXT>
+ * NIPBENCHMARK <MODEL.NET> <INPUT_DATA.TXT> <THRESHOLD> <MINL> <VAR> <OUTPUT_DATA.TXT>
  *
  * Executes leave-one-out testing on the prediction accuracy. 
  * For each time series, a model is estimated from the rest 
@@ -58,7 +57,7 @@ int main(int argc, char *argv[]){
 
   char* tailptr = NULL;
 
-  nip model = NULL;
+  nip_model model = NULL;
   nip_variable v = NULL;
 
   time_series ts = NULL;
