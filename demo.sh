@@ -55,9 +55,10 @@ echo 'See if examples/predictions.txt match at all.'
 # probable states
 
 
-### 5. Cross validating accuracy
+echo ''
+echo '5. Cross validating accuracy:'
 # Run leave-one-out cross validation test on inferring the state of one
 # variable on one sample given the other variables in the rest of the data.  
-#./util/nipbenchmark examples/empty.net examples/data1.txt 0.00001 -1 P1 examples/crossvalidation.txt
-#echo 'See if examples/crossvalidation.txt makes any sense.'
+./util/nipbenchmark examples/empty.net examples/data1.txt 0.00001 -1 P1 examples/crossvalidation.txt
+echo 'See if examples/crossvalidation.txt makes any sense.'
 # TODO: include original data from data-P1.txt also?

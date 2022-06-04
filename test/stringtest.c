@@ -15,9 +15,9 @@
     with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-/* iotest.c 
+/* stringtest.c 
  *
- * A test for io functions. Reads from stdin.
+ * Unit tests for tokenizer in nipstring.c. Reads from stdin.
  * Currently prints the number of characters, words and lines.
  * Also prints the word boundaries of each line, and prints a few
  * of the first words, showing the wonderful ability to split strings
@@ -112,8 +112,8 @@ int main(int argc, char **argv){
       wordtemp = PRINTWORDS;
     printf("%d first words:\n", wordtemp);
     for(i = 0; i < wordtemp; i++)
-      printf("%s ", splitwords[i]);
-    printf("\n");
+      printf("%s\n", splitwords[i]);
+    //printf("\n");
   }
 
   return 0;

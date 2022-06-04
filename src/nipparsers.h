@@ -35,6 +35,11 @@
 #define NIP_COMMENT_CHAR '%'
 
 #include <stdio.h> // FILE
+#include <stdlib.h>
+#include <string.h>
+#include "niplists.h"
+#include "nipstring.h"
+#include "niperrorhandler.h"
 
 /**
  * Structure for bookkeeping while reading data from a file, 

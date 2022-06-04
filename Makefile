@@ -121,47 +121,40 @@ $(DLIBRN): $(LIB_OBJS)
 # Rules for making each program
 
 # The programs for debugging NIP library (test)
-IO_SRC = test/iotest.c
-IO_TARGET = test/iotest
-$(IO_TARGET): $(IO_SRC) $(SLIB)
+STR_SRC = test/stringtest.c
+STR_TARGET = test/stringtest
+$(STR_TARGET): $(STR_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
-# previously: $(LD) $(LDFLAGS) -o $@ $(IO_OBJS) $(LIBS)
 
 POT_SRC = test/potentialtest.c
 POT_TARGET = test/potentialtest
 $(POT_TARGET): $(POT_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
-
 CLI_SRC = test/cliquetest.c
 CLI_TARGET = test/cliquetest
 $(CLI_TARGET): $(CLI_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
-
 
 GRPH_SRC = test/graphtest.c
 GRPH_TARGET = test/graphtest
 $(GRPH_TARGET): $(GRPH_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
-
 PAR_SRC = test/parsertest.c
 PAR_TARGET = test/parsertest
 $(PAR_TARGET): $(PAR_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
-
 
 BIS_SRC = test/bisontest.c
 BIS_TARGET = test/bisontest
 $(BIS_TARGET): $(BIS_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
-
 DF_SRC = test/datafiletest.c
 DF_TARGET = test/datafiletest
 $(DF_TARGET): $(DF_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
-
 
 HMM_SRC = test/hmmtest.c
 HMM_TARGET = test/hmmtest
@@ -173,14 +166,13 @@ HTM_TARGET = test/htmtest
 $(HTM_TARGET): $(HTM_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
-
 MLT_SRC = test/memleaktest.c
 MLT_TARGET = test/memleaktest
 $(MLT_TARGET): $(MLT_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 test: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
-$(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
+$(BIS_TARGET) $(STR_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
 $(MLT_TARGET)
 
 
@@ -240,7 +232,7 @@ $(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
 
 # All targets
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
-$(BIS_TARGET) $(IO_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
+$(BIS_TARGET) $(STR_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
 $(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) \
 $(INF_TARGET) $(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
 

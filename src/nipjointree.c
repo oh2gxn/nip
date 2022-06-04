@@ -142,10 +142,9 @@ nip_clique nip_new_clique(nip_variable vars[], int nvars){
     return NULL;
   }
 
-  /* JJ_NOTE: reordering probably not required anymore... */
   for(i = 0; i < nvars; i++){
-    cardinality[i] = NIP_CARDINALITY(vars[reorder[i]]);
     c->variables[i] = vars[reorder[i]];
+    cardinality[i] = NIP_CARDINALITY(c->variables[i]);
   }
   
   c->p = nip_new_potential(cardinality, nvars, NULL);
@@ -336,8 +335,7 @@ void nip_free_sepset(nip_sepset s){
 }
 
 
-/* FIXME: seems to be copy-paste from new_sepset... 
- * use mapper and functions provided by nippotential.h ! */
+/* FIXME: use mapper and functions provided by nippotential.h ! */
 nip_potential nip_create_potential(nip_variable variables[], 
 				   int nvars, 
 				   double data[]){
@@ -1265,8 +1263,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
   /*** 2. Multiply (<start> clique) ***/
   
   /* 2.1 Form the mapping between potentials */
-  /* NOTE: a slightly bigger array allocated for future purposes also. 
-   * TODO: use nip_mapper() ??? */
+  /* NOTE: a slightly bigger array allocated for future purposes also. */
   mapping = nip_mapper(prod_vars, start->variables, 
 		       nprod, NIP_DIMENSIONALITY(start->p));
   if(!mapping){

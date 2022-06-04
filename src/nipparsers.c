@@ -23,18 +23,6 @@
 
 #include "nipparsers.h"
 
-/* There are some reasons to include stuff here (lack of huginnet.h)
- * TODO: check if these are required in nipparsers.h anyway... */
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "niplists.h"
-#include "nipstring.h"
-#include "nipvariable.h"
-#include "niperrorhandler.h"
-
-
 /* #define DEBUG_PARSER */
 
 /* #define PRINT_TOKENS */

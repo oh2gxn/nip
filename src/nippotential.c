@@ -302,11 +302,6 @@ int nip_general_marginalise(nip_potential source, nip_potential destination,
     *potvalue += source->data[i];
   }
 
-  /* JJ NOTE: What if each potential had a small array called temp_index ??? 
-   * The space is needed anyway in general_marginalise() and 
-   * update_potential()... 
-   * This was implemented 23.1.2011 */
-
   return 0;
 }
 

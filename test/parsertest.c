@@ -21,14 +21,13 @@
  */
 
 #include <stdio.h>
-#include "nipvariable.h"
 #include "nipparsers.h"
-#include "huginnet.tab.h"
 
+/* see nip.c */
 FILE *open_net_file(const char *filename);
 void close_net_file();
 
-/* Tries out the Huginnet parser stuff. */
+/* Tries out the Huginnet parser stuff and low level data parsing. */
 int main(int argc, char *argv[]){
 
   int token_length;
@@ -54,7 +53,6 @@ int main(int argc, char *argv[]){
       printf("%s\n", token);
     
   }
-
 
   close_net_file();
 
