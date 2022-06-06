@@ -34,11 +34,11 @@ assert () #  If condition false, exit from script with appropriate error message
 #######################################################################
 
 echo 'NIP tests' 1>&2
-echo '1. Compile the source code' 1>&2
+echo '0. Compile the source code' 1>&2
 make
 
 echo '' 1>&2
-echo '2. Test string tokenization for parsing models:' 1>&2
+echo '1. Test string tokenization for parsing models:' 1>&2
 
 of=test/output1.txt
 ef=test/expect1.txt
@@ -54,8 +54,62 @@ printf "potential (A | B) {\n\n0 9 10 12 13 14 15 17 18 19 \n  data = (( 1.0 0.0
 assert $of $ef $LINENO
 rm $of $ef
 
+echo '' 1>&2
+echo '2. Test string tokenization for parsing models and data:' 1>&2
+
+nf=test/model.net
+df=test/data.csv
+of=test/output3.txt
+ef=test/expect3.txt
+printf "potential (x1 | x2) { data={\n  0.9 0.1\n  0.1 0.9\n} }\n" > $nf
+echo "$nf:" > $ef
+echo "potential" >> $ef
+echo "(" >> $ef
+echo "x1" >> $ef
+echo "|" >> $ef
+echo "x2" >> $ef
+echo ")" >> $ef
+echo "{" >> $ef
+echo "data" >> $ef
+echo "=" >> $ef
+echo "{" >> $ef
+echo "0.9" >> $ef
+echo "0.1" >> $ef
+echo "0.1" >> $ef
+echo "0.9" >> $ef
+echo "}" >> $ef
+echo "}" >> $ef
+
+printf "\n" > $df
+printf "x1,x2\n\n" >> $df
+printf "1,foo\n" >> $df
+printf "1,foo\n" >> $df
+printf "1,bar\n" >> $df
+printf "\n" >> $df
+printf "2,foo\n" >> $df
+printf "null,bar\n" >> $df
+printf "\n\n" >> $df
+printf "2,bar\n" >> $df
+
+echo "$df:" >> $ef
+echo "sequences:3" >> $ef
+echo "sequence lengths:3,2,1" >> $ef
+echo "columns:2" >> $ef
+echo "column names:x1,x2" >> $ef
+echo "column x1 values:2,1" >> $ef
+echo "column x2 values:bar,foo" >> $ef
+echo "series 0, row 0 :1,foo" >> $ef
+echo "series 0, row 1 :1,foo" >> $ef
+echo "series 0, row 2 :1,bar" >> $ef
+echo "series 1, row 0 :2,foo" >> $ef
+echo "series 1, row 1 :null,bar" >> $ef
+echo "series 2, row 0 :2,bar" >> $ef
+
+./test/parsertest $nf $df > $of
+assert $of $ef $LINENO
+rm $nf $df $of $ef
+
+
 # TODO: some 10 layers or units more...
-#echo '' 1>&2
-#echo '3. Test string tokenization for parsing models:' 1>&2
 
 echo 'OK' 1>&2

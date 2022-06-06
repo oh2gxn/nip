@@ -5,7 +5,7 @@ datafiletest
 graphtest
 hmmtest
 htmtest
-iotest
+stringtest
 memleaktest
 parsertest
 potentialtest

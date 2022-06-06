@@ -31,7 +31,7 @@
 
 #define NIP_NO_ERROR 0 ///< error code for successful operation
 
-// TODO: get rid of these
+// TODO: get rid of these: huginnet.y and nip.c
 #define NIP_ERROR_NULLPOINTER EFAULT
 #define NIP_ERROR_DIVBYZERO EDOM // never used
 #define NIP_ERROR_INVALID_ARGUMENT EINVAL
