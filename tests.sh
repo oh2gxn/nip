@@ -38,7 +38,7 @@ echo '0. Compile the source code' 1>&2
 make
 
 echo '' 1>&2
-echo '1. Test string tokenization for parsing models:' 1>&2
+echo '1. Test low-level string tokenization:' 1>&2
 
 of=test/output1.txt
 ef=test/expect1.txt
@@ -55,14 +55,13 @@ assert $of $ef $LINENO
 rm $of $ef
 
 echo '' 1>&2
-echo '2. Test string tokenization for parsing models and data:' 1>&2
+echo '2. Test string tokenization for parsing models:' 1>&2
 
-nf=test/model.net
-df=test/data.csv
+if=test/model.net
 of=test/output3.txt
 ef=test/expect3.txt
-printf "potential (x1 | x2) { data={\n  0.9 0.1\n  0.1 0.9\n} }\n" > $nf
-echo "$nf:" > $ef
+printf "potential (x1 | x2) { data={\n  0.9 0.1\n  0.1 0.9\n} }\n" > $if
+echo "$if:" > $ef
 echo "potential" >> $ef
 echo "(" >> $ef
 echo "x1" >> $ef
@@ -80,34 +79,52 @@ echo "0.9" >> $ef
 echo "}" >> $ef
 echo "}" >> $ef
 
-printf "\n" > $df
-printf "x1,x2\n\n" >> $df
-printf "1,foo\n" >> $df
-printf "1,foo\n" >> $df
-printf "1,bar\n" >> $df
-printf "\n" >> $df
-printf "2,foo\n" >> $df
-printf "null,bar\n" >> $df
-printf "\n\n" >> $df
-printf "2,bar\n" >> $df
-
-echo "$df:" >> $ef
-echo "sequences:3" >> $ef
-echo "sequence lengths:3,2,1" >> $ef
-echo "columns:2" >> $ef
-echo "column names:x1,x2" >> $ef
-echo "column x1 values:2,1" >> $ef
-echo "column x2 values:bar,foo" >> $ef
-echo "series 0, row 0 :1,foo" >> $ef
-echo "series 0, row 1 :1,foo" >> $ef
-echo "series 0, row 2 :1,bar" >> $ef
-echo "series 1, row 0 :2,foo" >> $ef
-echo "series 1, row 1 :null,bar" >> $ef
-echo "series 2, row 0 :2,bar" >> $ef
-
-./test/parsertest $nf $df > $of
+./test/parsertest $if > $of
 assert $of $ef $LINENO
-rm $nf $df $of $ef
+rm $if $of $ef
+
+
+echo '' 1>&2
+echo '3. Test string tokenization for parsing data:' 1>&2
+
+if=test/data.csv
+of=test/output4.txt
+ef=test/expect4.txt
+printf "\n" > $if
+printf "x1,x2\n\n" >> $if
+printf "1,foo\n" >> $if
+printf "1,foo\n" >> $if
+printf "1,bar\n" >> $if
+printf "\n" >> $if
+printf "2,foo\n" >> $if
+printf "null,bar\n" >> $if
+printf "\n\n" >> $if
+printf "2,bar\n" >> $if
+
+echo "Information about the data file:" > $ef
+echo "Name: $if" >> $ef
+echo "Separator: ," >> $ef
+echo "is_open: 1" >> $ef
+echo "label_line: 2" >> $ef
+echo "Number of sequences: 3" >> $ef
+echo "Sequence lengths: 3,2,1" >> $ef
+echo "Number of columns: 2" >> $ef
+echo "Columns:" >> $ef
+echo "- Node x1, states: 2,1" >> $ef
+echo "- Node x2, states: bar,foo" >> $ef
+echo "" >> $ef
+echo "Reading tokens one line at a time:" >> $ef
+echo "1,foo" >> $ef
+echo "1,foo" >> $ef
+echo "1,bar" >> $ef
+echo "2,foo" >> $ef
+echo "null,bar" >> $ef
+echo "2,bar" >> $ef
+
+# FIXME: output format, memleak
+./test/datafiletest $if > $of
+assert $of $ef $LINENO
+rm $if $of $ef
 
 
 # TODO: some 10 layers or units more...

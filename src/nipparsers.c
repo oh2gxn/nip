@@ -37,23 +37,14 @@ static int nip_null_observation(char* token);
 
 static void nip_free_data_file(nip_data_file f);
 
-static int nip_count_data_rows(nip_data_file f, int nodenames);
-
+static int nip_count_data_rows(nip_data_file f);
+static int nip_set_node_symbols(nip_data_file file, char* line, int* token_bounds, int ntokens);
+static int nip_accumulate_state_names(nip_string_list* statenames, char* line, int* token_bounds, int ntokens);
 
 nip_data_file nip_open_data_file(char* filename, char separator,
 				 int write, int nodenames){
 
-  char last_line[MAX_LINELENGTH];
-  char* token;
   int length_of_name = 0;
-  int num_of_tokens = 0;
-  int* token_bounds;
-  int linecounter = 0;
-  int tscounter = 0;
-  int dividend;
-  int i, j, state = NIP_PARSER_FOUND_DATA;
-  int empty_lines_read = 0;
-  nip_string_list* statenames = NULL;
   nip_data_file f = NULL;
 
   f = (nip_data_file) malloc(sizeof(nip_data_file_struct));
@@ -65,8 +56,9 @@ nip_data_file nip_open_data_file(char* filename, char separator,
   f->name = NULL;
   f->separator = separator;
   f->file = NULL;
+  f->write = write ? 1 : 0; /* not bothering with fstat */
   f->is_open = 0;
-  f->first_line_labels = 0;
+  f->first_line_labels = (nodenames ? 1 : 0);
   f->current_line = 0;
   f->label_line = -1; /* headerless by default */
   f->ndatarows = 0;
@@ -90,7 +82,6 @@ nip_data_file nip_open_data_file(char* filename, char separator,
     f->is_open = 1;
 
   length_of_name = strlen(filename);
-
   f->name = (char *) calloc(length_of_name + 1, sizeof(char));
   if(!f->name){
     nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
@@ -98,241 +89,163 @@ nip_data_file nip_open_data_file(char* filename, char separator,
     free(f);
     return NULL;
   }
-
   strcpy(f->name, filename);
-
-  /* If the file is opened in read mode, check the contents.
-   * This includes names of nodes and their states.
-   */
-  if(!write){
-    /* the first pass: find header, count consecutive rows of data */
-    f->ndatarows = nip_count_data_rows(f, nodenames);
-
-    /* allocate f->datarows array */
-    f->datarows = (int*) calloc(f->ndatarows, sizeof(int));
-    /* NOTE: calloc resets the contents to zero! */
-    if(!f->datarows){
-      nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-      nip_close_data_file(f);
-      return NULL;
-    }
-
-    /* the second pass: determine node labels (header) and unique states */
-    // TODO: have each of the passes as a separate routine
-    linecounter = 0;
-    state = NIP_PARSER_EXPECT_DATA;
-    if(nodenames)
-      state = NIP_PARSER_EXPECT_HEADER;
-
-    while(fgets(last_line, MAX_LINELENGTH, f->file)){
-      num_of_tokens = nip_count_tokens(last_line, NULL, 0,
-				       &separator, 1, 0, 1);
-      if(num_of_tokens > 0){
-	token_bounds =
-	  nip_tokenise(last_line, num_of_tokens, 0, &separator, 1, 0, 1);
-	if(!token_bounds){
-	  nip_report_error(__FILE__, __LINE__, nip_check_error_type(), 1);
-	  nip_close_data_file(f);
-	  return NULL;
-	}
-      }
-      (f->current_line)++;
-      
-      /* JJT  1.9.2004: A sort of bug fix. Ignore empty lines */
-      /* JJT 22.6.2005: Another fix. Ignore only the empty lines
-       * immediately after the node labels... and duplicate empty lines.
-       * Otherwise start a new timeseries */
-      if(num_of_tokens == 0){
-	empty_lines_read++;
-	continue; /* empty lines to be ignored */
-      }
-      else{
-	if(empty_lines_read){
-	  linecounter = 1;
-	  if(state < NIP_PARSER_EXPECT_DATA)
-	    tscounter++;
-	}
-	else
-	  linecounter++;
-	empty_lines_read = 0;
-	if(state > NIP_PARSER_FOUND_DATA)
-	  state--; /* stop ignoring single empty lines */
-      }
-      
-      /* Read node names or make them up. */
-      if(state > NIP_PARSER_FOUND_DATA){
-	/* reading the first non-empty line and expecting node names */
-	f->num_of_nodes = num_of_tokens;
-	f->node_symbols = (char **) calloc(num_of_tokens, sizeof(char *));
-
-	if(!f->node_symbols){
-	  nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-	  nip_close_data_file(f);
-	  free(token_bounds);
-	  return NULL;
-	}
-
-	statenames = 
-	  (nip_string_list *) calloc(num_of_tokens, sizeof(nip_string_list));
-
-	if(!statenames){
-	  nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-	  nip_close_data_file(f);
-	  free(token_bounds);
-	  return NULL;
-	}
-
-	for(i = 0; i < f->num_of_nodes; i++)
-	  statenames[i] = nip_new_string_list();
-
-	f->num_of_states = (int *) calloc(num_of_tokens, sizeof(int));
-
-	if(!f->num_of_states){
-	  nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-	  nip_close_data_file(f);
-	  /* free statenames[i]? */
-	  free(statenames);
-	  free(token_bounds);
-	  return NULL;
-	}
-
-	f->node_states = (char ***) calloc(num_of_tokens, sizeof(char **));
-
-	if(!f->node_states){
-	  nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-	  nip_close_data_file(f);
-	  /* free statenames[i]? */
-	  free(statenames);
-	  free(token_bounds);
-	  return NULL;
-	}
-
-	if(nodenames){
-	  f->first_line_labels = 1;
-
-	  for(i = 0; i < num_of_tokens; i++){
-
-	    f->node_symbols[i] =
-	      (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
-			      sizeof(char));
-	    if(!f->node_symbols[i]){
-	      nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-	      nip_close_data_file(f);
-	      /* free statenames[i]? */
-	      free(statenames);
-	      free(token_bounds);
-	      return NULL;
-	    }
-
-	    strncpy(f->node_symbols[i], &(last_line[token_bounds[2*i]]),
-		    token_bounds[2*i+1] - token_bounds[2*i]);
-	    f->node_symbols[i][token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
-	  }
-
-	}
-	else{
-	  f->first_line_labels = 0;
-
-	  for(i = 0; i < num_of_tokens; i++){
-
-	    /* determine length of the name */
-	    dividend = i + 1;
-	    length_of_name = 5;
-	    while((dividend /= 10) > 1)
-	      length_of_name++;
-
-	    f->node_symbols[i] = (char *) calloc(length_of_name, sizeof(char));
-	    if(!f->node_symbols[i]){
-	      nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-	      nip_close_data_file(f);
-	      /* free statenames[i]? */
-	      free(statenames);
-	      free(token_bounds);
-	      return NULL; /* error horror */
-	    }
-
-	    sprintf(f->node_symbols[i], "node%d", i + 1);
-	  }
-	}
-      }
-      else{
-	/* Read observations (just in order to see all the different
-	   kinds of observations for each node). */
-
-	f->datarows[tscounter]++;
-	
-	/* j == min(f->num_of_nodes, num_of_tokens) */
-	if(f->num_of_nodes < num_of_tokens)
-	  j = f->num_of_nodes;
-	else
-	  j = num_of_tokens;
-
-	for(i = 0; i < j; i++){
-	  token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
-				  sizeof(char));
-	  if(!token){
-	    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-	    nip_close_data_file(f);
-	    /* free statenames[i]? */
-	    free(statenames);
-	    free(token_bounds);
-	    return NULL;
-	  }
-
-	  strncpy(token, &(last_line[token_bounds[2*i]]),
-		  token_bounds[2*i+1] - token_bounds[2*i]);
-
-	  token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
-
-	  /* If the string has not yet been observed, add it to a list 
-	   * (ownership is passed on, string is not freed here) */
-	  if(!nip_null_observation(token) && 
-	     !nip_string_list_contains(statenames[i], token)){
-	    if(nip_prepend_string(statenames[i], token) != NIP_NO_ERROR){
-	      nip_report_error(__FILE__, __LINE__, nip_check_error_type(), 1);
-	      nip_close_data_file(f);
-	      for(i = 0; i < f->num_of_nodes; i++)
-		nip_free_string_list(statenames[i]);
-	      free(statenames);
-	      free(token_bounds);
-	      free(token);
-	      return NULL;
-	    }
-	  }
-	}
-      }
-      free(token_bounds);
-    }
-
-    /* Count number of states in each variable. */
-    for(i = 0; i < f->num_of_nodes; i++){
-      f->num_of_states[i] = NIP_LIST_LENGTH(statenames[i]);
-    }
-
-    for(i = 0; i < f->num_of_nodes; i++){
-      f->node_states[i] = nip_string_list_to_array(statenames[i]);
-    }
-  }
-
-  /* JJT: Added 13.8.2004 because of possible memory leaks. 
-   * JJT: Updated 5.1.2007 with the new stringlist implementation */
-  for(i = 0; i < f->num_of_nodes; i++){
-    nip_empty_string_list(statenames[i]);
-  }
-  free(statenames);
-
-  rewind(f->file);
-  f->current_line = 0;
 
   return f;
 }
 
+int nip_analyse_data_file(nip_data_file file){
+
+  int i, state = NIP_PARSER_FOUND_DATA;
+  int linecounter = 0;
+  int tscounter = 0;
+  char last_line[MAX_LINELENGTH];
+  int num_of_tokens = 0;
+  int* token_bounds;
+  int empty_lines_read = 0;
+  nip_string_list* statenames = NULL;
+
+  if (file->write){
+    return 0;
+  }
+  /* If the file is opened in read mode, check the contents.
+   * This includes names of nodes and their states.
+   */
+
+  /* the first pass: find header, count consecutive rows of data */
+  file->ndatarows = nip_count_data_rows(file);
+
+  /* allocate file->datarows array */
+  file->datarows = (int*) calloc(file->ndatarows, sizeof(int));
+  /* NOTE: calloc resets the contents to zero! */
+  if(!file->datarows){
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+    return -1;
+  }
+
+  /* the second pass: determine node labels (header) and unique states */
+  linecounter = 0;
+  state = NIP_PARSER_EXPECT_DATA;
+  if(file->first_line_labels)
+    state = NIP_PARSER_EXPECT_HEADER;
+
+  while(fgets(last_line, MAX_LINELENGTH, file->file)){
+
+    num_of_tokens = nip_count_tokens(last_line, NULL, 0,
+				     &(file->separator), 1, 0, 1);
+    if(num_of_tokens > 0){
+      token_bounds =
+	nip_tokenise(last_line, num_of_tokens, 0, &(file->separator), 1, 0, 1);
+      if(!token_bounds){
+	nip_report_error(__FILE__, __LINE__, nip_check_error_type(), 1);
+	return -1;
+      }
+    }
+    (file->current_line)++;
+  
+    /* JJT  1.9.2004: A sort of bug fix. Ignore empty lines */
+    /* JJT 22.6.2005: Another fix. Ignore only the empty lines
+     * immediately after the node labels... and duplicate empty lines.
+     * Otherwise start a new timeseries */
+    if(num_of_tokens == 0){
+      empty_lines_read++;
+      continue; /* empty lines to be ignored */
+    }
+    else{
+      if(empty_lines_read){
+	linecounter = 1;
+	if(state < NIP_PARSER_EXPECT_DATA)
+	  tscounter++;
+      }
+      else
+	linecounter++;
+      empty_lines_read = 0;
+      if(state > NIP_PARSER_FOUND_DATA)
+	state--; /* stop ignoring single empty lines */
+    }
+ 
+    /* Read node names or make them up. */
+    if(state > NIP_PARSER_FOUND_DATA){
+      /* reading the first non-empty line and expecting node names */
+      if (nip_set_node_symbols(file, last_line, token_bounds, num_of_tokens) < 0) {
+	nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+	free(token_bounds);
+	return -1;
+      }
+
+      /* allocate memory for counting states */
+      statenames = (nip_string_list *) calloc(file->num_of_nodes, sizeof(nip_string_list));
+      if(!statenames){
+	nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+	free(token_bounds);
+	return -1;
+      }
+
+      for(i = 0; i < file->num_of_nodes; i++)
+	statenames[i] = nip_new_string_list();
+
+      file->num_of_states = (int *) calloc(file->num_of_nodes, sizeof(int));
+      if(!file->num_of_states){
+	nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+	free(statenames);
+	free(token_bounds);
+	return -1;
+      }
+
+      file->node_states = (char ***) calloc(file->num_of_nodes, sizeof(char **));
+      if(!file->node_states){
+	nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+	free(statenames);
+	free(token_bounds);
+	return -1;
+      }
+    }
+    else{
+      /* Read observations (just in order to see all the different
+	 kinds of observations for each node). */
+      file->datarows[tscounter]++;
+      /* j == min(file->num_of_nodes, num_of_tokens) */
+      i = (file->num_of_nodes < num_of_tokens) ? file->num_of_nodes : num_of_tokens;
+      if (nip_accumulate_state_names(statenames, last_line, token_bounds, i) < 0){
+	nip_report_error(__FILE__, __LINE__, nip_check_error_type(), 1);
+	for(i = 0; i < file->num_of_nodes; i++)
+	  nip_free_string_list(statenames[i]);
+	free(statenames);
+	free(token_bounds);
+	return -1;
+      }      
+    }
+    free(token_bounds);
+  }
+
+  /* Count number of states in each variable. */
+  for(i = 0; i < file->num_of_nodes; i++){
+    file->num_of_states[i] = NIP_LIST_LENGTH(statenames[i]);
+  }
+
+  for(i = 0; i < file->num_of_nodes; i++){
+    file->node_states[i] = nip_string_list_to_array(statenames[i]);
+  }
+    
+  /* JJT: Added 13.8.2004 because of possible memory leaks. 
+   * JJT: Updated 5.1.2007 with the new stringlist implementation */
+  for(i = 0; i < file->num_of_nodes; i++){
+    nip_empty_string_list(statenames[i]);
+  }
+  free(statenames);
+
+  rewind(file->file);
+  file->current_line = 0;
+
+  return tscounter;
+}
+
 /*
  * The first pass over a new data file to determine number of time series.
- * Ignores a header row unless nodenames==0.
+ * Ignores a header row unless f->first_line_labels==0.
  * Not useful for streaming / online processing.
  */
-static int nip_count_data_rows(nip_data_file f, int nodenames) {
+static int nip_count_data_rows(nip_data_file f) {
 
   char last_line[MAX_LINELENGTH]; /* buffer */
   int linecounter = 0; /* number of consecutive non-empty lines this far */
@@ -341,7 +254,7 @@ static int nip_count_data_rows(nip_data_file f, int nodenames) {
   int state = NIP_PARSER_EXPECT_DATA; /* ignores empty lines before data */
   int num_of_tokens = 0;
 
-  if(nodenames)
+  if(f->first_line_labels)
     state = NIP_PARSER_EXPECT_HEADER; /* ignores empty lines before node labels */
 
   while(fgets(last_line, MAX_LINELENGTH, f->file)){
@@ -378,6 +291,92 @@ static int nip_count_data_rows(nip_data_file f, int nodenames) {
   rewind(f->file);
   f->current_line = 0;
   return ndatarows;
+}
+
+/* Use the header row as node symbols (column names). Return ntokens, or negative if failed. */
+static int nip_set_node_symbols(nip_data_file file, char* line, int* token_bounds, int ntokens){
+  int i, dividend, length_of_name;
+
+  file->num_of_nodes = ntokens;
+  file->node_symbols = (char **) calloc(ntokens, sizeof(char *));
+
+  if(!file->node_symbols){
+    nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+    return -1;
+  }
+
+  if(file->first_line_labels){
+    for(i = 0; i < ntokens; i++){
+
+      file->node_symbols[i] =
+	(char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
+			sizeof(char));
+      if(!file->node_symbols[i]){
+	nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+	return -1;
+      }
+
+      strncpy(file->node_symbols[i], &(line[token_bounds[2*i]]),
+	      token_bounds[2*i+1] - token_bounds[2*i]);
+      file->node_symbols[i][token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
+    }
+
+  }
+  else{
+    for(i = 0; i < ntokens; i++){
+
+      /* determine length of the made up name */
+      dividend = i + 1;
+      length_of_name = 5;
+      while((dividend /= 10) > 1)
+	length_of_name++;
+
+      file->node_symbols[i] = (char *) calloc(length_of_name, sizeof(char));
+      if(!file->node_symbols[i]){
+	nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+	return -1; /* error horror */
+      }
+
+      sprintf(file->node_symbols[i], "node%d", i + 1);
+    }
+  }
+  return ntokens;
+}
+
+/* Use a data row as state names. Return number of tokens, or negative if failed. */
+static int nip_accumulate_state_names(nip_string_list* statenames, char* line, int* token_bounds, int ntokens){
+  int i;
+  char *token = NULL;
+
+  for(i = 0; i < ntokens; i++){
+    token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
+			    sizeof(char));
+    if(!token){
+      nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+      return -1;
+    }
+
+    strncpy(token, &(line[token_bounds[2*i]]),
+	    token_bounds[2*i+1] - token_bounds[2*i]);
+
+    token[token_bounds[2*i+1] - token_bounds[2*i]] = '\0';
+
+    /* If the string has not yet been observed, add it to a list 
+     * (ownership is passed on, string is not freed here) */
+    if(!nip_null_observation(token) && 
+       !nip_string_list_contains(statenames[i], token)){
+      if(nip_prepend_string(statenames[i], token) != NIP_NO_ERROR){
+	nip_report_error(__FILE__, __LINE__, nip_check_error_type(), 1);
+	free(token);
+	return -1;
+      }
+    }
+    else{
+      free(token); /* was seen earlier, skip */
+    }
+  }
+
+  return ntokens;
 }
 
 /*
@@ -474,7 +473,7 @@ int nip_next_line_tokens(nip_data_file f, char separator, char ***tokens){
     else
       f->current_line++;
     
-    /* treat the white space as separators */
+    /* observed token count */
     num_of_tokens = nip_count_tokens(line, NULL, 0, &separator, 1, 0, 1);
     
     /* Skip the first line if it contains node labels. */
@@ -492,24 +491,20 @@ int nip_next_line_tokens(nip_data_file f, char separator, char ***tokens){
     return -1;
   }
 
-  *tokens = (char **)
-    calloc(f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens,
-	   sizeof(char *));
-
+  /* effective number of tokens from now on: min(f->num_of_nodes, observed) */
+  num_of_tokens = f->num_of_nodes<num_of_tokens ? f->num_of_nodes : num_of_tokens;
+  
+  *tokens = (char **) calloc(num_of_tokens, sizeof(char *)); // TODO: freed where?
   if(!tokens){
     nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     free(token_bounds);
     return -1;
   }
 
-
-  for(i = 0;
-      i < (f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens);
-      i++){
+  for(i = 0; i < num_of_tokens; i++){
 
     token = (char *) calloc(token_bounds[2*i+1] - token_bounds[2*i] + 1,
 			    sizeof(char));
-
     if(!token){
       nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
       nip_free_data_file(f);
@@ -531,7 +526,7 @@ int nip_next_line_tokens(nip_data_file f, char separator, char ***tokens){
   free(token_bounds);
 
   /* Return the number of acquired tokens. */
-  return f->num_of_nodes<num_of_tokens?f->num_of_nodes:num_of_tokens;
+  return num_of_tokens;
 }
 
 

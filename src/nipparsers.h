@@ -48,6 +48,7 @@ typedef struct {
   char* name;     ///< file name
   char separator; ///< ASCII separator between records on the same line
   FILE* file;     ///< file handle
+  int write;      ///< flag if file opened for writing
   int is_open;    ///< flag if the file is open
   int first_line_labels; ///< flag if the first line contains node symbols
   int current_line; /**< current position in the file 
@@ -69,8 +70,8 @@ typedef struct {
 typedef nip_data_file_struct* nip_data_file; ///< reference to a data file
 
 /**
- * Opens a file and creates a struct, which can be used 
- * for reading / parsing or writing the file after opening.
+ * Opens a file and creates a struct with default values (0). The struct 
+ * can be used for reading / parsing or writing the file after opening.
  * The function sets the file position indicator to the beginning of the file.
  * @param filename Name of the file to be opened (null terminated string)
  * @param separator The separator character between fields (ASCII)
@@ -82,6 +83,15 @@ typedef nip_data_file_struct* nip_data_file; ///< reference to a data file
  * @see nip_close_data_file() */
 nip_data_file nip_open_data_file(char* filename, char separator,
 				 int write, int nodenames);
+
+/**
+ * Counts and saves statistics about a data file opened for reading:
+ * numbers of time series, state names and their counts for each column.
+ * The function sets the file position indicator to the beginning of the file.
+ * @param file An open file handle
+ * @return count of time series successfully read
+ * @see nip_open_data_file() */
+int nip_analyse_data_file(nip_data_file file);
 
 /**
  * Closes a file described by the data file struct.
@@ -98,8 +108,9 @@ void nip_close_data_file(nip_data_file file);
  * @param f Reference to an opened data file
  * @param separator The ASCII character to be considered field separator
  * @param tokens Pointer where an array of strings will be written
- * @return The number of tokens found, size of \p *tokens array, or
- * negative number in case of error or end of file. */
+ * @return The number of tokens found (or f->num_of_nodes if smaller),
+ * which is the size of \p *tokens array, or a negative number
+ * in case of error or end of file. */
 int nip_next_line_tokens(nip_data_file f, char separator, char ***tokens);
 
 

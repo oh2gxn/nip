@@ -30,24 +30,18 @@ void close_net_file();
 /* Tries out the Huginnet parser stuff and low level data parsing. */
 int main(int argc, char *argv[]){
 
-  int i, j, t, token_length, n_tokens;
+  int token_length;
   int ok = 1;
   char *token;
   char **tokens = NULL;
-  FILE *nf = NULL;
-  nip_data_file df = NULL;
-  char SEP = ',';
+  FILE *nf = NULL;  
 
-  if (argc < 3) {
-    fprintf(stderr, "Two filenames must be given: net and data file\n");
+  if (argc < 2) {
+    fprintf(stderr, "Filename must be given\n");
     return -1;
   }
   else if ((nf = open_net_file(argv[1])) == NULL) {
     fprintf(stderr, "Failed to open net file %s", argv[1]);
-    return -1;
-  }
-  else if ((df = nip_open_data_file(argv[2], SEP, 0, 1)) == NULL) {
-    fprintf(stderr, "Failed to open data file %s", argv[2]);
     return -1;
   }
 
@@ -65,42 +59,6 @@ int main(int argc, char *argv[]){
     
   }
   close_net_file();
-
-  // Print stats found by open_data_file
-  printf("%s:\n", df->name);
-  printf("sequences:%d\n", df->ndatarows);
-  printf("sequence lengths:");
-  for(i = 0; i < df->ndatarows - 1; i++)
-    printf("%d%c", df->datarows[i], df->separator);
-  printf("%d\n", df->datarows[df->ndatarows - 1]);
-  printf("columns:%d\n", df->num_of_nodes);
-  printf("column names:");
-  for(i = 0; i < df->num_of_nodes - 1; i++)
-    printf("%s%c", df->node_symbols[i], df->separator);
-  printf("%s\n", df->node_symbols[df->num_of_nodes - 1]);
-
-  for(i = 0; i < df->num_of_nodes; i++){
-    printf("column %s values:", df->node_symbols[i]);
-    for(j = 0; j < df->num_of_states[i] - 1; j++)
-      printf("%s%c", df->node_states[i][j], df->separator);
-    printf("%s\n", df->node_states[i][df->num_of_states[i] - 1]);
-  }
-
-  // Print data accessed by next_line_tokens
-  i=0; j=0;
-  while (0 < (n_tokens = nip_next_line_tokens(df, SEP, &tokens))) {
-    printf("series %d, row %d :", i, j);
-    for (t=0; t < n_tokens-1; t++)
-      printf("%s%c", tokens[t], df->separator);
-    printf("%s\n", tokens[n_tokens-1]);
-    j++;
-    if (i >= df->ndatarows)
-      break;
-    if (j >= df->datarows[i]){
-      i++;
-      j=0;
-    }
-  }
 
   return 0;
 }

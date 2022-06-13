@@ -519,12 +519,15 @@ int read_timeseries(nip_model model, char* filename,
   nip_variable v = NULL;
   
   df = nip_open_data_file(filename, NIP_FIELD_SEPARATOR, 0, 1);
-
   if(df == NULL){
-    nip_report_error(__FILE__, __LINE__, NIP_ERROR_FILENOTFOUND, 1);
+    nip_report_error(__FILE__, __LINE__, ENOENT, 1);
     fprintf(stderr, "%s\n", filename);
     return 0;
-  }  
+  }
+  if(nip_analyse_data_file(df) < 0){
+    nip_report_error(__FILE__, __LINE__, EIO, 1);
+    return 0;
+  }
 
   /* N time series */
   N = df->ndatarows;

@@ -24,60 +24,55 @@
 #include <stdlib.h>
 #include "nipparsers.h"
 
-/*
-#define PRINT_ALL
-*/
-
-
 int main(int argc, char *argv[]){
 
   int i, j;
-  nip_data_file file;
-#ifdef PRINT_ALL
+  nip_data_file file = NULL;
   int num_of_tokens;
   char **tokens;
-#endif
+  char SEP = ',';
 
   if(argc < 2){
-    printf("Filename must be given!\n");
+    fprintf(stderr, "Filename must be given\n");
     return -1;
   }
-  else if((file = nip_open_data_file(argv[1], ',', 0, 1)) == NULL){
-    printf("Problems opening file %s\n", argv[1]);
+  else if((file = nip_open_data_file(argv[1], SEP, 0, 1)) == NULL){
+    fprintf(stderr, "Problems opening file %s\n", argv[1]);
+    return -1;
+  }
+  else if (nip_analyse_data_file(file) < 1) {
+    fprintf(stderr, "Failed to read data file %s", argv[1]);
     return -1;
   }
 
   printf("Information about the data file:\n");
-  printf("\tName: %s\n", file->name);
-  printf("\tSeparator: %c\n", file->separator);
-  printf("\tis_open: %d\n", file->is_open);
-  printf("\tlabel_line: %d\n", file->label_line);
-  printf("\tNumber of time series: %d\n", file->ndatarows);
-  printf("\tNumber of data rows for each time series: \n");
-  for(i = 0; i < file->ndatarows; i++)
-    printf("\t  %d,\n", file->datarows[i]);
-  printf("\tNumber of nodes: %d\n", file->num_of_nodes);
-  printf("Nodes:\n");
+  printf("Name: %s\n", file->name);
+  printf("Separator: %c\n", file->separator);
+  printf("is_open: %d\n", file->is_open);
+  printf("label_line: %d\n", file->label_line);
+  printf("Number of sequences: %d\n", file->ndatarows);
+  printf("Sequence lengths: ");
+  for(i = 0; i < file->ndatarows - 1; i++)
+    printf("%d%c", file->datarows[i], file->separator);
+  printf("%d\n", file->datarows[file->ndatarows-1]);
+  printf("Number of columns: %d\n", file->num_of_nodes);
+  printf("Columns:\n");
   for(i = 0; i < file->num_of_nodes; i++){
-    printf("\tNode <%s>, states:\n\t", file->node_symbols[i]);
-    for(j = 0; j < file->num_of_states[i]; j++)
-      printf("<%s>, ", file->node_states[i][j]);
-    printf("\n");
+    printf("- Node %s, states: ", file->node_symbols[i]);
+    for(j = 0; j < file->num_of_states[i] - 1; j++)
+      printf("%s%c", file->node_states[i][j], file->separator);
+    printf("%s\n", file->node_states[i][file->num_of_states[i]-1]);
   }
 
-#ifdef PRINT_ALL
-  printf("\nReading tokens one line at a time.\n");
+  printf("\nReading tokens one line at a time:\n");
 
-  while((num_of_tokens = nip_next_line_tokens(file, ',', &tokens)) >= 0){
-
-    for(i = 0; i < num_of_tokens; i++){
-      printf("%s ", tokens[i]);
-      free(tokens[i]);
+  while((num_of_tokens = nip_next_line_tokens(file, SEP, &tokens)) > 0){
+    for(i = 0; i < num_of_tokens-1; i++){
+      printf("%s%c", tokens[i], file->separator);
     }
-    printf("\n");
+    printf("%s\n", tokens[num_of_tokens-1]);
     free(tokens);
   }
-#endif
 
   nip_close_data_file(file);
 

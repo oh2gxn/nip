@@ -3,12 +3,12 @@
 # Quick example of NIP utilities
 # Author: Janne Toivola
 echo 'NIP demo'
-echo '1. Compile the source code'
+echo '0. Compile the source code'
 make
 
 
 echo ''
-echo '2. Acquire some data:' 
+echo '1. Acquire some data:' 
 # Let's sample data from a known DBN model, 365 time series, 24 samples each.
 # (this would be acquired elsewhere in an actual application) 
 ./util/nipsample examples/model.net 365 24 examples/data1.txt
@@ -27,7 +27,7 @@ awk -f util/select.awk var=M1 examples/data2.txt > examples/data2-M1.txt
 
 
 echo ''
-echo '3. Use EM algorithm to learn a statistical model:'
+echo '2. Use EM algorithm to learn a statistical model:'
 # Learn (assumably unknown) parameters of empty.net from our incomplete data 
 # in data-M1.txt. 
 # Magic termination parameters for EM: 
@@ -38,7 +38,7 @@ echo 'See if examples/trained.net makes any sense compared to model.net.'
 
 
 echo ''
-echo '4. Probabilistic inference with the learned model:'
+echo '3. Probabilistic inference with the learned model:'
 # See if the learned model can infer state of P1 from M1 in data2.txt
 ./util/nipinference examples/trained.net examples/data2-M1.txt P1 examples/data2-P1-inferred.txt
 
@@ -55,10 +55,10 @@ echo 'See if examples/predictions.txt match at all.'
 # probable states
 
 
-echo ''
-echo '5. Cross validating accuracy:'
+#echo ''
+#echo '4. Cross validating accuracy:'
 # Run leave-one-out cross validation test on inferring the state of one
 # variable on one sample given the other variables in the rest of the data.  
-./util/nipbenchmark examples/empty.net examples/data1.txt 0.00001 -1 P1 examples/crossvalidation.txt
-echo 'See if examples/crossvalidation.txt makes any sense.'
+#./util/nipbenchmark examples/empty.net examples/data1.txt 0.00001 -1 P1 examples/crossvalidation.txt
+#echo 'See if examples/crossvalidation.txt makes any sense.'
 # TODO: include original data from data-P1.txt also?
