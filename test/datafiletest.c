@@ -71,6 +71,8 @@ int main(int argc, char *argv[]){
       printf("%s%c", tokens[i], file->separator);
     }
     printf("%s\n", tokens[num_of_tokens-1]);
+    for(i = 0; i < num_of_tokens; i++)
+      free(tokens[i]);
     free(tokens);
   }
 

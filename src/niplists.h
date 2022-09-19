@@ -236,7 +236,8 @@ int* nip_int_list_to_array(nip_int_list l);
 double* nip_double_list_to_array(nip_double_list l);
 /**
  * Creates an array out of the given list. 
- * NOTE: Only the string pointers are copied, not the actual content. 
+ * NOTE: Only the string pointers are copied, not the actual content.
+ * @see nip_empty_string_list() for getting rid of list structure.
  * Remember to free the array and the list eventually.
  * @param l The input list
  * @return a new array containing the contents of the list (and equal length) */
