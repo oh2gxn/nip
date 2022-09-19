@@ -126,6 +126,45 @@ assert $of $ef $LINENO
 rm $if $of $ef
 
 
-# TODO: some 10 layers or units more...
+echo '' 1>&2
+echo '4. Test belief potentials:' 1>&2
+
+of=test/output5.txt
+ef=test/expect5.txt
+echo "Mapping:" > $ef
+parallel echo "\({1}\, {2}\, {3}\) \-\-\>" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/index.txt
+parallel echo "12*{1}+4*{2}+{3} | bc" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Inverse mapping:" >> $ef
+parallel echo "\-\-\> \({3}\, {2}\, {1}\)" ::: 0 1 2 3 ::: 0 1 2 ::: 0 1 > test/index.txt
+paste -d' ' test/values.txt test/index.txt >> $ef
+echo "Marginalized:" >> $ef
+parallel echo "\({1}\, {2}\) \-\-\>" ::: 0 1 2 3 ::: 0 1 > test/index.txt
+parallel echo {} ::: 12 48 15 51 18 54 21 57 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Copy:" >> $ef
+parallel echo "\({1}\, {2}\, {3}\) \-\-\>" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/index.txt
+parallel echo "12*{1}+4*{2}+{3} | bc" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Sum:" >> $ef
+parallel echo "\({1}\, {2}\, {3}\) \-\-\>" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/index.txt
+parallel echo "2*\(12*{1}+4*{2}+{3}\) | bc" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Margin:" >> $ef
+echo "(+, 0, +) -> 120" >> $ef
+echo "(+, 1, +) -> 184" >> $ef
+echo "(+, 2, +) -> 248" >> $ef
+echo "CPD:" >> $ef
+parallel echo "P\({3}\, {2}\, {1}\) =" ::: 0 1 2 3 ::: 0 1 2 ::: 0 1 > test/index.txt
+parallel echo {} ::: 0.000000 1.000000 0.200000 0.800000 0.285714 0.714286 0.071429 0.928571 0.227273 0.772727 0.300000 0.700000 0.125000 0.875000 0.250000 0.750000 0.312500 0.687500 0.166667 0.833333 0.269231 0.730769 0.323529 0.676471 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+# TODO: more
+
+./test/potentialtest > $of
+assert $of $ef $LINENO
+rm $of $ef test/index.txt test/values.txt
+
+
+# TODO: some 9 layers or units more...
 
 echo 'OK' 1>&2
