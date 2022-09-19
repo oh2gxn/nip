@@ -16,18 +16,19 @@
 */
 
 /* nipsample.c
- * 
+ *
  * Samples data according to a given model.
  *
- * SYNOPSIS: 
- * NIPSAMPLE <MODEL.NET> <SERIES> <SAMPLES> <RESULT.TXT>
+ * SYNOPSIS:
+ * NIPSAMPLE <MODEL.NET> <SEED> <SERIES> <SAMPLES> <RESULT.TXT>
  *
  * - Structure of the model is read from the file <MODEL.NET>
+ * - integer <SEED> specifies the initial state of pseudo RNG
  * - integer <SERIES> specifies the number of time series
  * - integer <SAMPLES> specifies how many samples for each time series
  * - resulting data will be written to the file <RESULT.TXT>
  *
- * EXAMPLE: ./nipsample weather.net 52 7 year.txt  
+ * EXAMPLE: ./nipsample weather.net 1234 52 7 year.txt
  *
  * Author: Janne Toivola
  * Version: $Id: nipsample.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
@@ -58,51 +59,58 @@ int main(int argc, char *argv[]) {
   ;
   /** </Some experimental code>**/
 
-  printf("nipsample:\n");
+  fprintf(stderr, "nipsample:\n");
 
-  if(argc < 5){
-    printf("You must specify: \n"); 
-    printf(" - the NET file for the model, \n");
-    printf(" - number of time series, \n");
-    printf(" - time series length, \n"); 
-    printf(" - the resulting data file, please!\n");
+  if(argc < 6){
+    fprintf(stderr, "You must specify: \n");
+    fprintf(stderr, " - the NET file for the model, \n");
+    fprintf(stderr, " - random seed, \n");
+    fprintf(stderr, " - number of time series, \n");
+    fprintf(stderr, " - time series length, \n");
+    fprintf(stderr, " - the resulting data file, please!\n");
     return 0;
   }
-  
+
   /* read the model */
   model = parse_model(argv[1]);
   if(!model){
-    printf("  Unable to parse the NET file: %s?\n", argv[1]);
+    fprintf(stderr, "  Unable to parse the NET file: %s?\n", argv[1]);
     return -1;
   }
 
+  /* read random seed value */
+  seed = strtol(argv[2], &tailptr, 10);
+  if(tailptr == argv[2]){
+    fprintf(stderr, "Specify a valid random seed: %s?\n", argv[2]);
+    free_model(model);
+    return -1;
+  }
+  seed = random_seed(&seed);
+  fprintf(stderr, "  Random seed = %ld\n", seed);
+
   /* read how many time series to generate */
-  d = strtod(argv[2], &tailptr);
+  d = strtod(argv[3], &tailptr);
   n = (int)d;
-  if(d <= 0 || d > 1000000  || tailptr == argv[2]){
-    printf("  Invalid number of time series: %s?\n", argv[2]);
+  if(d <= 0 || d > 1000000  || tailptr == argv[3]){
+    fprintf(stderr, "  Invalid number of time series: %s?\n", argv[3]);
     free_model(model);
     return -1;
   }
 
   /* read the time series length */
-  d = strtod(argv[3], &tailptr);
+  d = strtod(argv[4], &tailptr);
   t = (int)d;
-  if(d <= 0 || d > 1000000  || tailptr == argv[3]){
-    printf("  Invalid time series length: %s?\n", argv[3]);
+  if(d <= 0 || d > 1000000  || tailptr == argv[4]){
+    fprintf(stderr, "  Invalid time series length: %s?\n", argv[4]);
     free_model(model);
     return -1;
   }
 
   /* THE algorithm (may take a while) */
-  printf("  Generating data... \n");
-
-  seed = random_seed(NULL);
-  printf("  Random seed = %ld\n", seed);
-
+  fprintf(stderr, "  Generating data... \n");
   ts_set = (time_series*) calloc(n, sizeof(time_series));
   if(!ts_set){
-    fprintf(stderr, "Ran out of memory!\n");    
+    fprintf(stderr, "Ran out of memory!\n");
     free_model(model);
     return -1;
   }
@@ -111,19 +119,19 @@ int main(int argc, char *argv[]) {
     if(!ts){
       fprintf(stderr, "There were errors during data sampling!\n");
       while(i > 0)
-	free_timeseries(ts_set[--i]);
+        free_timeseries(ts_set[--i]);
       free(ts_set);
       free_model(model);
       return -1;
     }
     ts_set[i] = ts;
   }
-  printf("  ...done.\n");
+  fprintf(stderr, "  ...done.\n");
 
   /* Write the results to the file */
-  i =  write_timeseries(ts_set, n, argv[4]);
+  i =  write_timeseries(ts_set, n, argv[5]);
   if(i != NIP_NO_ERROR){
-    fprintf(stderr, "Failed to write the data into %s\n", argv[4]);
+    fprintf(stderr, "Failed to write the data into %s\n", argv[5]);
     nip_report_error(__FILE__, __LINE__, i, 1);
     while(n > 0)
       free_timeseries(ts_set[--n]);
