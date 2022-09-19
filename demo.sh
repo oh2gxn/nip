@@ -33,8 +33,9 @@ echo '2. Use EM algorithm to learn a statistical model:'
 # Magic termination parameters for EM: 
 # change threshold = 0.00001, 
 # min. log. likelihood per time step = -1.1
-./util/niptrain examples/empty.net examples/data1-M1.txt 0.00001 -1.1 examples/trained.net
+./util/niptrain examples/empty.net examples/data1-M1.txt 42 0.00001 -1.1 examples/trained.net > examples/learning-curve.txt
 echo 'See if examples/trained.net makes any sense compared to model.net.'
+echo 'See examples/learning-curve.txt for any promising convergence.'
 
 
 echo ''

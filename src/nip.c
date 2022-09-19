@@ -2077,7 +2077,7 @@ static int m_step(nip_potential* parameters, nip_model model){
 /* Trains the given model (ts[0]->model) according to the given set of 
  * time series (ts[*]) with EM-algorithm. Returns an error code. */
 int em_learn(time_series* ts, int n_ts, double threshold,
-			nip_double_list learning_curve){
+             nip_double_list learning_curve){
   int i, n, v;
   int *card;
   int ts_steps;
@@ -2102,7 +2102,7 @@ int em_learn(time_series* ts, int n_ts, double threshold,
 
   /* Reserve some memory for calculation */
   parameters = (nip_potential*) calloc(model->num_of_vars, 
-				       sizeof(nip_potential));
+                                       sizeof(nip_potential));
   if(!parameters){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
     return NIP_ERROR_OUTOFMEMORY;
@@ -2114,7 +2114,7 @@ int em_learn(time_series* ts, int n_ts, double threshold,
     if(!card){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       while(v > 0)
-	nip_free_potential(parameters[--v]);
+        nip_free_potential(parameters[--v]);
       free(parameters);
       return NIP_ERROR_OUTOFMEMORY;
     }
@@ -2158,11 +2158,11 @@ int em_learn(time_series* ts, int n_ts, double threshold,
     if(e != NIP_NO_ERROR){
       nip_report_error(__FILE__, __LINE__, e, 1);
       for(v = 0; v < model->num_of_vars; v++){
-	nip_free_potential(parameters[v]);
+        nip_free_potential(parameters[v]);
       }
       free(parameters);
       if(learning_curve != NULL)
-	nip_empty_double_list(learning_curve);
+        nip_empty_double_list(learning_curve);
       return e;
     }
 
@@ -2185,25 +2185,24 @@ int em_learn(time_series* ts, int n_ts, double threshold,
     for(n = 0; n < n_ts; n++){
       e = e_step(ts[n], parameters, &probe);
       if(e != NIP_NO_ERROR){
-	if(e != NIP_ERROR_BAD_LUCK)
-	  nip_report_error(__FILE__, __LINE__, e, 1);
-	/* don't report invalid random parameters */
-	for(v = 0; v < model->num_of_vars; v++){
-	  nip_free_potential(parameters[v]);
-	}
-	free(parameters);
-	if(e != NIP_ERROR_BAD_LUCK){
-	  if(learning_curve != NULL)
-	    nip_empty_double_list(learning_curve);
-	}
-	/* else let the list be */
+        if(e != NIP_ERROR_BAD_LUCK)
+          nip_report_error(__FILE__, __LINE__, e, 1);
+        /* don't report invalid random parameters */
+        for(v = 0; v < model->num_of_vars; v++){
+          nip_free_potential(parameters[v]);
+        }
+        free(parameters);
+        if(e != NIP_ERROR_BAD_LUCK){
+          if(learning_curve != NULL)
+            nip_empty_double_list(learning_curve);
+        }
+        /* else let the list be */
 
-	return e;
+        return e;
       }
 
       /** DEBUG **/
-      assert(-HUGE_DOUBLE < probe  &&  probe <= 0.0  && 
-	     probe == probe);
+      assert(-HUGE_DOUBLE < probe  &&  probe <= 0.0  && probe == probe);
       /* probe != probe  =>  probe == NaN  */
 
       loglikelihood += probe;
@@ -2213,13 +2212,13 @@ int em_learn(time_series* ts, int n_ts, double threshold,
     if(learning_curve != NULL){
       e = nip_append_double(learning_curve, loglikelihood / ts_steps);
       if(e != NIP_NO_ERROR){
-	nip_report_error(__FILE__, __LINE__, e, 1);
-	for(v = 0; v < model->num_of_vars; v++){
-	  nip_free_potential(parameters[v]);
-	}
-	free(parameters);
-	nip_empty_double_list(learning_curve);
-	return e;
+        nip_report_error(__FILE__, __LINE__, e, 1);
+        for(v = 0; v < model->num_of_vars; v++){
+          nip_free_potential(parameters[v]);
+        }
+        free(parameters);
+        nip_empty_double_list(learning_curve);
+        return e;
       }
     }
 
@@ -2229,7 +2228,7 @@ int em_learn(time_series* ts, int n_ts, double threshold,
        loglikelihood == -HUGE_DOUBLE){ /* some "impossible" data */
 
       for(v = 0; v < model->num_of_vars; v++){
-	nip_free_potential(parameters[v]);
+        nip_free_potential(parameters[v]);
       }
       free(parameters);
       /* Return the list as it is */
@@ -2241,7 +2240,7 @@ int em_learn(time_series* ts, int n_ts, double threshold,
     i++;
 
   } while((loglikelihood - old_loglikelihood) > (ts_steps * threshold) || 
-	  i < MIN_EM_ITERATIONS);
+          i < MIN_EM_ITERATIONS);
   /*** When should we stop? ***/
 
   for(v = 0; v < model->num_of_vars; v++){
@@ -2312,7 +2311,7 @@ nip_potential get_joint_probability(nip_model model, nip_variable *vars,
 
   /* Make a DFS in the tree... */
   p = nip_gather_joint_probability(model->cliques[0], 
-				   vars, nvars, NULL, 0);
+                                   vars, nvars, NULL, 0);
   if(p == NULL){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
     return NULL;
@@ -2362,18 +2361,18 @@ time_series generate_data(nip_model model, int length){
     for(i = 0; i < model->num_of_vars; i++){
       v = model->variables[i];
       if(nip_variable_marked(v))
-	continue;
+        continue;
       t = 1;
       for(k = 0; k < nip_number_of_parents(v); k++){
-	if(!nip_variable_marked(v->parents[k])){
-	  t = 0;
-	  break;
-	}
+        if(!nip_variable_marked(v->parents[k])){
+          t = 0;
+          break;
+        }
       }
       if(t){
-	vars[j++] = v;
-	nip_mark_variable(v);
-      }	
+        vars[j++] = v;
+        nip_mark_variable(v);
+      }
     }
   }
 
@@ -2404,7 +2403,7 @@ time_series generate_data(nip_model model, int length){
     if(!(ts->data[t])){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       while(t >= 0)
-	free(ts->data[t--]);
+        free(ts->data[t--]);
       free(ts->data);
       free(ts);
       free(vars);
@@ -2415,7 +2414,7 @@ time_series generate_data(nip_model model, int length){
   /* create the sepset potential between the time slices */
   if(model->outgoing_interface_size > 0){
     cardinalities = (int*) calloc(model->outgoing_interface_size, 
-				  sizeof(int));
+                                  sizeof(int));
     if(!cardinalities){
       nip_report_error(__FILE__, __LINE__, NIP_ERROR_OUTOFMEMORY, 1);
       free_timeseries(ts);
@@ -2426,7 +2425,7 @@ time_series generate_data(nip_model model, int length){
   for(i = 0; i < model->outgoing_interface_size; i++)
     cardinalities[i] = NIP_CARDINALITY(model->outgoing_interface[i]);
   alpha = nip_new_potential(cardinalities, model->outgoing_interface_size, 
-			    NULL);
+                            NULL);
   free(cardinalities);
   
   /* new seed number for rand and clear the previous evidence */
@@ -2440,11 +2439,11 @@ time_series generate_data(nip_model model, int length){
     /* influence from the previous time step */
     if(t > 0){
       if(finish_timeslice_message_pass(model, FORWARD, 
-				       alpha, NULL) != NIP_NO_ERROR){
-	nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
-	free_timeseries(ts);
-	nip_free_potential(alpha);
-	return NULL;
+                                       alpha, NULL) != NIP_NO_ERROR){
+        nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
+        free_timeseries(ts);
+        nip_free_potential(alpha);
+        return NULL;
       }
     }
     
@@ -2460,7 +2459,7 @@ time_series generate_data(nip_model model, int length){
       /*** insert into the time series and the model as evidence */
       ts->data[t][i] = k;
       nip_enter_index_observation(model->variables, model->num_of_vars, 
-				  model->cliques, model->num_of_cliques, v, k);
+                                  model->cliques, model->num_of_cliques, v, k);
     }
     make_consistent(model);
 
@@ -2518,7 +2517,7 @@ int lottery(double* distribution, int size){
       return size-1;
     }
     sum += distribution[i++];
-  }while(sum < r);
+  } while(sum < r);
   return i-1;
 }
 
@@ -2548,7 +2547,7 @@ void print_cliques(nip_model model){
     while(sepsetlist){
       s = (nip_sepset)sepsetlist->data;
       nip_fprintf_sepset(stdout, s);
-      nip_fprintf_potential(stdout, s->new);      
+      nip_fprintf_potential(stdout, s->new);
       sepsetlist = sepsetlist->fwd;
     }
     printf("\n");

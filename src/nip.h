@@ -461,7 +461,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * @return An error code in case of any errors
  */
 int em_learn(time_series* ts, int n_ts, double threshold, 
-	     nip_double_list learning_curve);
+             nip_double_list learning_curve);
 
 
 /**
