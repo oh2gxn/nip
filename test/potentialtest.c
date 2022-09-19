@@ -15,27 +15,29 @@
     with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-/* This is a small test program for potentials... 
- * 
+/* This is a small test program for potentials...
+ *
  * Author: Janne Toivola, Mikko Korpela
  * Version: $Id: potentialtest.c,v 1.8 2010-12-09 16:52:50 jatoivol Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "nippotential.h" 
+#include "nippotential.h"
 
 /* Main function for testing */
 int main(){
 
   /* Use big numbers here and see that 640K isn't enough for everyone... */
-  int cardinality[] = {2, 3, 4, 5, 6};
-  int card2[] = {3, 5, 4, 2};
-  int num_of_vars = 5;
-  int margin_mapping[] = {1, 3, 2, 0}; /* maps variables p -> q */
-  int indices[5], i, j, k, l, m, x = 0;
+  int cardinality[] = {2, 3, 4};
+  int card2[] = {2, 4};
+  int num_of_vars = 3;
+  int margin_mapping[] = {0, 2}; /* maps variables p -> q */
+  int indices[3], i, j, k, x = 0;
   double value;
-  nip_potential p, q;
+  double sum[4], update[4];
+  nip_potential o, p, q, r;
   p = nip_new_potential(cardinality, num_of_vars, NULL);
+  o = nip_new_potential(card2, num_of_vars - 1, NULL);
   q = nip_new_potential(card2, num_of_vars - 1, NULL);
 
   /* Set values of p */
@@ -44,15 +46,9 @@ int main(){
     for(j = 0; j < cardinality[1]; j++){
       indices[1] = j;
       for(k = 0; k < cardinality[2]; k++){
-	indices[2] = k;
-	for(l = 0; l < cardinality[3]; l++){
-	  indices[3] = l;
-	  for(m = 0; m < cardinality[4]; m++){
-	    indices[4] = m;
-	    nip_set_potential_value(p, indices, x);
-	    x++;
-	  }
-	}
+        indices[2] = k;
+        nip_set_potential_value(p, indices, x);
+        x++;
       }
     }
   }
@@ -64,16 +60,10 @@ int main(){
     for(j = 0; j < cardinality[1]; j++){
       indices[1] = j;
       for(k = 0; k < cardinality[2]; k++){
-	indices[2] = k;
-	for(l = 0; l < cardinality[3]; l++){
-	  indices[3] = l;
-	  for(m = 0; m < cardinality[4]; m++){
-	    indices[4] = m;
-	    value = nip_get_potential_value(p, indices);
-	    printf("(%d, %d, %d, %d, %d) --> %g\n", indices[0],
-		   indices[1], indices[2], indices[3], indices[4], value);
-	  }
-	}
+        indices[2] = k;
+        value = nip_get_potential_value(p, indices);
+        printf("P(%d, %d, %d) = %g\n",
+               indices[0], indices[1], indices[2], value);
       }
     }
   }
@@ -82,33 +72,92 @@ int main(){
   printf("Inverse mapping:\n");
   for(i = 0; i < p->size_of_data; i++){
     nip_inverse_mapping(p, i, indices);
-    printf("%d --> (%d, %d, %d, %d, %d)\n", i, indices[0],
-	   indices[1], indices[2], indices[3], indices[4]);
+    printf("%d --> [%d, %d, %d]\n",
+	   i, indices[0], indices[1], indices[2]);
   }
 
-  /* marginalise over variable 4 (fifth variable of p) */
+  /* marginalise over variable 4 (second variable of p) */
   printf("Marginalized:\n");
   nip_general_marginalise(p, q, margin_mapping);
 
   /* Print values of q */
   for(i = 0; i < card2[0]; i++){
     indices[0] = i;
-    for(j = 0; j < card2[1]; j++){
+    for(k = 0; k < card2[1]; k++){
+      indices[1] = k;
+      value = nip_get_potential_value(q, indices);
+      printf("P(%d, %d) = %g\n",
+	     indices[0], indices[1], value);
+    }
+  }
+
+  // copy
+  printf("Copy:\n");
+  r = nip_copy_potential(p);
+  for(i = 0; i < cardinality[0]; i++){
+    indices[0] = i;
+    for(j = 0; j < cardinality[1]; j++){
       indices[1] = j;
-      for(k = 0; k < card2[2]; k++){
-	indices[2] = k;
-	for(l = 0; l < card2[3]; l++){
-	  indices[3] = l;
-	  value = nip_get_potential_value(q, indices);
-	  printf("(%d, %d, %d, %d) --> %g\n", indices[0],
-		 indices[1], indices[2], indices[3], value);
-	}
+      for(k = 0; k < cardinality[2]; k++){
+        indices[2] = k;
+        value = nip_get_potential_value(r, indices);
+        printf("P(%d, %d, %d) = %g\n",
+               indices[0], indices[1], indices[2], value);
       }
     }
   }
 
+  // sum p = p+r
+  printf("Sum:\n");
+  nip_sum_potential(p, r);
+  for(i = 0; i < cardinality[0]; i++){
+    indices[0] = i;
+    for(j = 0; j < cardinality[1]; j++){
+      indices[1] = j;
+      for(k = 0; k < cardinality[2]; k++){
+        indices[2] = k;
+        value = nip_get_potential_value(p, indices);
+        printf("P(%d, %d, %d) = %g\n",
+               indices[0], indices[1], indices[2], value);
+      }
+    }
+  }
+
+  // sum across all but one dimension
+  printf("Margin:\n");
+  nip_total_marginalise(p, sum, 1);
+  for(j = 0; j < cardinality[1]; j++)
+    printf("P(+, %d, +) = %g\n", j, sum[j]);
+
+  // normalization across the first dimension
+  printf("CPD:\n");
+  nip_normalise_cpd(p);
+  nip_fprintf_potential(stdout, p);
+
+  // updating r = o*r/q
+  printf("Belief update from another potential:\n");
+  nip_uniform_potential(o, 1.0);
+  nip_update_potential(o, q, r, margin_mapping);
+  nip_fprintf_potential(stdout, r);
+
+  // updating evidence r = update*r/sum
+  printf("Belief update from single margin:\n");
+  for(j = 0; j < cardinality[1]; j++)
+    update[cardinality[1] - j - 1] = sum[j]; // reverse
+  nip_update_evidence(update, sum, r, 1);
+  nip_fprintf_potential(stdout, r);
+
+  // TODO: normalize across some dimension
+  printf("Normalize:\n");
+  nip_normalise_dimension(p, 1);
+  nip_total_marginalise(p, sum, 1);
+  for(j = 0; j < cardinality[1]; j++)
+    printf("P(+, %d, +) = %g\n", j, sum[j]);
+
+  nip_free_potential(o);
   nip_free_potential(p);
   nip_free_potential(q);
+  nip_free_potential(r);
 
   return 0;
 }

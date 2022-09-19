@@ -6,7 +6,7 @@ Top priority or simple stuff:
 *** DONE iotest - stringtest
 *** DONE parsertest
 *** DONE datafiletest
-*** TODO potentialtest
+*** DONE potentialtest
 *** TODO cliquetest
 *** TODO graphtest
 *** TODO bisontest

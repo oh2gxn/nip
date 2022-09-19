@@ -22,13 +22,13 @@ assert () #  If condition false, exit from script with appropriate error message
   difflen=$(printf "$diffstr" | wc -l)
   if [ $difflen -gt 0 ]
   then
-    echo "Assertion failed:" 1>&2
-    echo "$diffstr" 1>&2
-    echo "File \"$0\", line $lineno" 1>&2 # Give name of file and line number.
-    exit $E_ASSERT_FAILED
-  # else
-  #   return
-  #   and continue executing the script.
+      echo "$(tput setaf 1)Failed$(tput sgr0)" 1>&2
+      echo "$diffstr" 1>&2
+      echo "File \"$0\", line $lineno" 1>&2 # Give name of file and line number.
+      exit $E_ASSERT_FAILED
+  else
+      echo "$(tput setaf 2)Passed$(tput sgr0)"
+      # return and continue executing the script.
   fi
 }
 #######################################################################
@@ -126,6 +126,54 @@ assert $of $ef $LINENO
 rm $if $of $ef
 
 
-# TODO: some 10 layers or units more...
+echo '' 1>&2
+echo '4. Test belief potentials:' 1>&2
+
+of=test/output5.txt
+ef=test/expect5.txt
+echo "Mapping:" > $ef
+parallel echo "P\({1}\, {2}\, {3}\) =" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/index.txt
+parallel echo "12*{1}+4*{2}+{3} | bc" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Inverse mapping:" >> $ef
+parallel echo "\-\-\> \[{3}\, {2}\, {1}\]" ::: 0 1 2 3 ::: 0 1 2 ::: 0 1 > test/index.txt
+paste -d' ' test/values.txt test/index.txt >> $ef
+echo "Marginalized:" >> $ef
+parallel echo "P\({1}\, {2}\) =" ::: 0 1 ::: 0 1 2 3 > test/index.txt
+parallel echo {} ::: 12 15 18 21 48 51 54 57 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Copy:" >> $ef
+parallel echo "P\({1}\, {2}\, {3}\) =" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/index.txt
+parallel echo "12*{1}+4*{2}+{3} | bc" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Sum:" >> $ef
+parallel echo "P\({1}\, {2}\, {3}\) =" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/index.txt
+parallel echo "2*\(12*{1}+4*{2}+{3}\) | bc" ::: 0 1 ::: 0 1 2 ::: 0 1 2 3 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Margin:" >> $ef
+echo "P(+, 0, +) = 120" >> $ef
+echo "P(+, 1, +) = 184" >> $ef
+echo "P(+, 2, +) = 248" >> $ef
+echo "CPD:" >> $ef
+parallel echo "P\({3}\, {2}\, {1}\) =" ::: 0 1 2 3 ::: 0 1 2 ::: 0 1 > test/index.txt
+parallel echo {} ::: 0.000000 1.000000 0.200000 0.800000 0.285714 0.714286 0.071429 0.928571 0.227273 0.772727 0.300000 0.700000 0.125000 0.875000 0.250000 0.750000 0.312500 0.687500 0.166667 0.833333 0.269231 0.730769 0.323529 0.676471 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Belief update from another potential:" >> $ef
+parallel echo {} ::: 0.000000 0.250000 0.333333 0.333333 0.666667 0.416667 0.066667 0.254902 0.333333 0.333333 0.600000 0.411765 0.111111 0.259259 0.333333 0.333333 0.555556 0.407407 0.142857 0.263158 0.333333 0.333333 0.523810 0.403509 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Belief update from single margin:" >> $ef
+parallel echo {} ::: 0.000000 0.516667 0.333333 0.333333 0.322581 0.201613 0.137778 0.526797 0.333333 0.333333 0.290323 0.199241 0.229630 0.535802 0.333333 0.333333 0.268817 0.197133 0.295238 0.543860 0.333333 0.333333 0.253456 0.195246 > test/values.txt
+paste -d' ' test/index.txt test/values.txt >> $ef
+echo "Normalize:" >> $ef
+echo "P(+, 0, +) = 1" >> $ef
+echo "P(+, 1, +) = 1" >> $ef
+echo "P(+, 2, +) = 1" >> $ef
+
+./test/potentialtest > $of
+assert $of $ef $LINENO
+rm $of $ef test/index.txt test/values.txt
+
+
+# TODO: some 9 layers or units more...
 
 echo 'OK' 1>&2
