@@ -54,9 +54,10 @@ int main(int argc, char *argv[]){
       ok = 0; /* no more tokens */
 
     /* Print each "token" on a new line */
-    if(ok)
+    if(ok){
       printf("%s\n", token);
-    
+      free(token);
+    }
   }
   close_net_file();
 
