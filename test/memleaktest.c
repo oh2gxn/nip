@@ -15,7 +15,7 @@
     with this program; if not, see <http://www.gnu.org/licenses/>.
 */
 
-/* Tests if the library functions leak memory. 
+/* Tests if the library functions leak memory.
  * Author: Janne Toivola
  * Version: $Id: memleaktest.c,v 1.32 2011-01-22 13:10:34 jatoivol Exp $
  */
@@ -37,7 +37,6 @@
 
 
 int main(int argc, char *argv[]){
-  
   int i, j, m, n;
 
 #ifdef ALREADY_TESTED
@@ -101,9 +100,9 @@ int main(int argc, char *argv[]){
   names[0] = (char *) calloc(10, sizeof(char));
   names[1] = (char *) calloc(10, sizeof(char));
   names[2] = (char *) calloc(10, sizeof(char));
-  strncpy(names[0], "Nimi1", 10);  
-  strncpy(names[1], "Nimi2", 10);  
-  strncpy(names[2], "Nimi3", 10);  
+  strncpy(names[0], "Nimi1", 10);
+  strncpy(names[1], "Nimi2", 10);
+  strncpy(names[2], "Nimi3", 10);
 
   states = (char ***) calloc(3, sizeof(char **));
   states[0] = (char **) calloc(3, sizeof(char *));
@@ -130,12 +129,12 @@ int main(int argc, char *argv[]){
   varlist = nip_new_variable_list();
   for(i = 0; i < n; i++){
     /* Create variables */
-    nip_append_variable(varlist, 
-	  nip_new_variable(symbols[0], names[0], states[0], cardinality[0]));
-    nip_append_variable(varlist, 
-	  nip_new_variable(symbols[1], names[1], states[1], cardinality[1]));
-    nip_append_variable(varlist, 
-	  nip_new_variable(symbols[2], names[2], states[2], cardinality[2]));
+    nip_append_variable(varlist,
+                        nip_new_variable(symbols[0], names[0], states[0], cardinality[0]));
+    nip_append_variable(varlist,
+                        nip_new_variable(symbols[1], names[1], states[1], cardinality[1]));
+    nip_append_variable(varlist,
+                        nip_new_variable(symbols[2], names[2], states[2], cardinality[2]));
     printf("\rIteration %d of %d                               ", i + 1, n);
     /* Free variables */
     vararray = nip_variable_list_to_array(varlist);
@@ -184,7 +183,7 @@ int main(int argc, char *argv[]){
   /* Free some memory */
   for(i = 0; i < 3; i++)
     nip_free_variable(vars[i]);
-  
+
   for(i = 0; i < 3; i++){
     free(states[i][0]);
     free(states[i][1]);
@@ -204,8 +203,8 @@ int main(int argc, char *argv[]){
     printf("\nParsing and freeing models:\n");
     for(i = 0; i < n/200; i++){
       model = parse_model(argv[1]);
-      printf("\rIteration %d of %d                               ", i + 1, 
-	     n/200);
+      printf("\rIteration %d of %d                               ", i + 1,
+             n/200);
       free_model(model);
     }
     printf("\rDone.                                             \n");
@@ -218,10 +217,10 @@ int main(int argc, char *argv[]){
     for(i = 0; i < n/500; i++){
       /* ...guess this is OK... */
       m = read_timeseries(model, argv[2], &ts_set);
-      printf("\rIteration %d of %d                               ", i + 1, 
-	     n/500); 
+      printf("\rIteration %d of %d                               ", i + 1,
+             n/500);
       for(j = 0; j < m; j++)
-	free_timeseries(ts_set[0]);
+        free_timeseries(ts_set[0]);
       free(ts_set);
     }
     printf("\rDone.                                             \n");
@@ -231,7 +230,7 @@ int main(int argc, char *argv[]){
     printf("\nRunning EM-algorithm %d times:\n",n);
     for(i = 0; i < n; i++){
       total_reset(model);
-      em_learn(ts_set, m, THRESHOLD, NULL);
+      em_learn(ts_set, m, THRESHOLD, NULL, NULL);
       printf("\rIteration %d of %d                               ", i + 1, n);
     }
     printf("\rDone.                                             \n");

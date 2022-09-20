@@ -56,9 +56,9 @@ static int nip_clique_marked(nip_clique c);
  * @param ptr A pointer where the return values can be updated, or NULL
  * @return an error code, or 0 if successful */
 static int nip_join_tree_dfs(nip_clique start, 
-			     int (*cFuncPointer)(nip_clique, double*),
-			     int (*sFuncPointer)(nip_sepset, double*),
-			     double* ptr);
+                             int (*cFuncPointer)(nip_clique, double*),
+                             int (*sFuncPointer)(nip_sepset, double*),
+                             double* ptr);
 
 /**
  * Some callback functions for nip_join_tree_dfs()

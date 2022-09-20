@@ -16,21 +16,21 @@
 */
 
 /* nipbenchmark.c
- * 
- * SYNOPSIS: 
+ *
+ * SYNOPSIS:
  * NIPBENCHMARK <MODEL.NET> <INPUT_DATA.TXT> <THRESHOLD> <MINL> <VAR> <OUTPUT_DATA.TXT>
  *
- * Executes leave-one-out testing on the prediction accuracy. 
- * For each time series, a model is estimated from the rest 
- * of the data sequences and predictive inference is done for 
- * a given variable... The EM learning algorithm requires the 
- * stopping threshold and minimum likelihood parameters. 
- * Inference results are written to a file. 
- * Note: a completely separate test data set is recommended 
- * for further assessment, at least when the results of this 
+ * Executes leave-one-out testing on the prediction accuracy.
+ * For each time series, a model is estimated from the rest
+ * of the data sequences and predictive inference is done for
+ * a given variable... The EM learning algorithm requires the
+ * stopping threshold and minimum likelihood parameters.
+ * Inference results are written to a file.
+ * Note: a completely separate test data set is recommended
+ * for further assessment, at least when the results of this
  * program are used for model selection.
  *
- * EXAMPLE: 
+ * EXAMPLE:
  * ./nipbenchmark model.net data.txt 0.00001 -1.2 A inferred_data.txt
  *
  * Author: Janne Toivola
@@ -152,11 +152,11 @@ int main(int argc, char *argv[]){
     free_model(model);
     return -1;
   }
-  
+
   /*****************/
   /* The inference */
   /*****************/
-  printf("  Computing...\n");  
+  printf("  Computing...\n");
   loglikelihood = 0; /* init */
   seed = random_seed(NULL);
   printf("  Random seed = %ld\n", seed);
@@ -167,9 +167,9 @@ int main(int argc, char *argv[]){
     /* leave-one-out operation */
     for(j = 0; j < n_max; j++){
       if(j < i)
-	loo_set[j] = ts_set[j];
+        loo_set[j] = ts_set[j];
       if(j > i)
-	loo_set[j-1] = ts_set[j];
+        loo_set[j-1] = ts_set[j];
     }
 
     /* Use all the data (mark all variables) in EM */
@@ -182,39 +182,34 @@ int main(int argc, char *argv[]){
 
       /* free the list if necessary */
       if(NIP_LIST_LENGTH(learning_curve) > 0)
-	nip_empty_double_list(learning_curve);
-      
+        nip_empty_double_list(learning_curve);
+
       /* the EM algorithm */
-      e = em_learn(loo_set, n_max-1, threshold, learning_curve);
+      e = em_learn(loo_set, n_max-1, threshold, learning_curve, &nip_append_double);
       if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
-	fprintf(stderr, "There were errors during learning:\n");
-	nip_report_error(__FILE__, __LINE__, e, 1);
-	for(i = 0; i < n_max; i++)
-	  free_timeseries(ts_set[i]);
-	free(ts_set);
-	free(ucs_set);
-	free(loo_set);
-	free_model(model);
-	nip_empty_double_list(learning_curve);
-	free(learning_curve);
-	return -1;
+        fprintf(stderr, "There were errors during learning:\n");
+        nip_report_error(__FILE__, __LINE__, e, 1);
+        for(i = 0; i < n_max; i++)
+          free_timeseries(ts_set[i]);
+        free(ts_set);
+        free(ucs_set);
+        free(loo_set);
+        free_model(model);
+        nip_empty_double_list(learning_curve);
+        free(learning_curve);
+        return -1;
       }
-      
+
       /* find out the last value in learning curve */
       if(NIP_LIST_LENGTH(learning_curve) > 0){
-
-	/* Hack hack. This breaks the list abstraction... */
-	link = NIP_LIST_ITERATOR(learning_curve);
-	while(NIP_LIST_HAS_NEXT(link))
-	  link = NIP_LIST_NEXT(link);
-	last = NIP_LIST_ELEMENT(link);
+        last = learning_curve->last->data;
       }
 
     } while(e == NIP_ERROR_BAD_LUCK || last < min_log_likelihood);
 
     /* the computation of posterior probabilities */
     ts = ts_set[i];
-    
+
     /* ignore possible evidence about the variable to be predicted */
     nip_unmark_variable(v);
 
@@ -247,6 +242,6 @@ int main(int argc, char *argv[]){
   free(ucs_set);
   free(loo_set);
   free_model(model);
-  
+
   return 0;
 }

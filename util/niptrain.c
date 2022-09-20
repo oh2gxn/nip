@@ -49,6 +49,13 @@
 #include "niplists.h"
 #include "nipvariable.h"
 
+// Callback for witnessing EM progress
+static int em_progress(nip_double_list learning_curve, double mean_log_likelihood);
+static int em_progress(nip_double_list learning_curve, double mean_log_likelihood){
+  fprintf(stderr, "  %d: %g\r", learning_curve->length, mean_log_likelihood);
+  return nip_append_double(learning_curve, mean_log_likelihood);
+}
+
 int main(int argc, char *argv[]) {
 
   int i, n, t, e;
@@ -162,7 +169,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* EM algorithm */
-    e = em_learn(ts_set, n, threshold, learning_curve);
+    e = em_learn(ts_set, n, threshold, learning_curve, &em_progress);
     if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
       fprintf(stderr, "There were errors during learning:\n");
       nip_report_error(__FILE__, __LINE__, e, 1);
