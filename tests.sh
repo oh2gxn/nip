@@ -102,6 +102,17 @@ assert $of $ef $LINENO
 rm $of
 
 
-# TODO: some 9 layers or units more...
+echo '' 1>&2
+echo '7. Test net file parser:' 1>&2
+
+if=test/input7.net
+of=test/output7.txt
+ef=test/expect7.txt
+./test/bisontest $if M1 2 0.9 > $of
+assert $of $ef $LINENO
+rm $of
+
+
+# TODO: some 3 layers or units more...
 
 echo "$(tput setaf 2)OK$(tput sgr0)" 1>&2

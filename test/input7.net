@@ -1,0 +1,52 @@
+%%% global properties of the network
+net
+{
+    node_size = (80 40);
+}
+
+%%% random variables
+node P0
+{
+    label = "Process(t-1)";
+    position = (100 200);
+    states = ("F" "f" "u" "!");
+    NIP_next = "P1";
+}
+
+node P1
+{
+    label = "Process(t)";
+    position = (200 200);
+    states = ("F" "f" "u" "!");
+}
+
+node M1
+{
+    label = "Measurement(t)";
+    position = (200 100);
+    states = ("0" "1" "2" "3" "4");
+}
+
+% Emission probabilities
+potential (M1 | P1)
+{
+  data = (( 0.1 0.8 0.1 0.0 0.0 )   % P1=F
+          ( 0.0 0.1 0.8 0.1 0.0 )   % P1=f
+          ( 0.0 0.0 0.1 0.8 0.1 )   % P1=u
+          ( 0.1 0.0 0.0 0.1 0.8 )); % P1=!
+}
+
+% Transition probabilities
+potential (P1 | P0)
+{
+  data = (( 0.9 0.1 0.0 0.0 )  %  P0=F
+          ( 0.0 0.9 0.1 0.0 )  %  P0=f
+          ( 0.0 0.0 0.9 0.1 )  %  P0=u
+          ( 0.1 0.0 0.0 0.9 ));%  P0=!
+}
+
+% Prior for the first time step
+potential (P0)
+{
+    data = ( 0.4 0.3 0.2 0.1 );
+}

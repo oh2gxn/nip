@@ -9,7 +9,7 @@ Top priority or simple stuff:
 *** DONE potentialtest
 *** DONE cliquetest
 *** DONE graphtest
-*** TODO bisontest
+*** DONE bisontest
 *** TODO hmmtest
 *** TODO htmtest
 *** TODO memleaktest
