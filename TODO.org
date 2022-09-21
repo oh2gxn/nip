@@ -8,7 +8,7 @@ Top priority or simple stuff:
 *** DONE datafiletest
 *** DONE potentialtest
 *** DONE cliquetest
-*** TODO graphtest
+*** DONE graphtest
 *** TODO bisontest
 *** TODO hmmtest
 *** TODO htmtest

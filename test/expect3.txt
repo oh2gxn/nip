@@ -1,0 +1,19 @@
+Information about the data file:
+Name: test/input3.txt
+Separator: ,
+is_open: 1
+label_line: 2
+Number of sequences: 3
+Sequence lengths: 3,2,1
+Number of columns: 2
+Columns:
+- Node x1, states: 2,1
+- Node x2, states: bar,foo
+
+Reading tokens one line at a time:
+1,foo
+1,foo
+1,bar
+2,foo
+null,bar
+2,bar

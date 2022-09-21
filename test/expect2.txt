@@ -1,0 +1,17 @@
+test/input2.net:
+potential
+(
+x1
+|
+x2
+)
+{
+data
+=
+{
+0.9
+0.1
+0.1
+0.9
+}
+}

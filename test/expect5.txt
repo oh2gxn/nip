@@ -1,0 +1,29 @@
+Correct=0.4, Reordered=0.4
+Correct=0.5, Reordered=0.5
+Correct=0.5, Reordered=0.5
+Correct=0.6, Reordered=0.6
+Correct=0.6, Reordered=0.6
+Correct=0.5, Reordered=0.5
+Correct=0.5, Reordered=0.5
+Correct=0.4, Reordered=0.4
+Correct=0.2, Reordered=0.2
+Correct=0.4, Reordered=0.4
+Correct=0.6, Reordered=0.6
+Correct=0.7, Reordered=0.7
+Correct=0.8, Reordered=0.8
+Correct=0.6, Reordered=0.6
+Correct=0.4, Reordered=0.4
+Correct=0.3, Reordered=0.3
+Correct=0.1, Reordered=0.1
+Correct=0.3, Reordered=0.3
+Correct=0.6, Reordered=0.6
+Correct=0.9, Reordered=0.9
+Correct=0.9, Reordered=0.9
+Correct=0.7, Reordered=0.7
+Correct=0.4, Reordered=0.4
+Correct=0.1, Reordered=0.1
+Marginalisation returned 0. (0 is OK)
+Normalised probability of A:
+result[0] = 0.49225
+result[1] = 0.2973
+result[2] = 0.21045

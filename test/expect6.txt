@@ -1,0 +1,51 @@
+Testing graphs:
+	Test 1... new_graph and add_node
+		New graph created.
+		graph_nodes OK.
+		graph_size OK.
+	Test 1 done.
+	Test 2... add_child(), linked()
+	Test 2 done.
+	Test 3... copy_graph
+	Test 3 done.
+	Test 4... make_graph_undirected
+	Test 4 done.
+	Test 5... moralise
+	Test 5 done.
+	Test 6... triangulation
+		Original graph:
+		0 1 1 0 0 0 0 0 
+		0 0 0 1 0 0 0 0 
+		0 0 0 0 1 0 1 0 
+		0 0 0 0 0 1 0 0 
+		0 0 0 0 0 1 0 1 
+		0 0 0 0 0 0 0 0 
+		0 0 0 0 0 0 0 1 
+		0 0 0 0 0 0 0 0 
+		Moral and undirected graph:
+		0 1 1 0 0 0 0 0 
+		1 0 0 1 0 0 0 0 
+		1 0 0 0 1 0 1 0 
+		0 1 0 0 1 1 0 0 
+		0 0 1 1 0 1 1 1 
+		0 0 0 1 1 0 0 0 
+		0 0 1 0 1 0 0 1 
+		0 0 0 0 1 0 1 0 
+		Triangulated graph:
+		0 1 1 0 0 0 0 0 
+		1 0 1 1 0 0 0 0 
+		1 1 0 1 1 0 1 0 
+		0 1 1 0 1 1 0 0 
+		0 0 1 1 0 1 1 1 
+		0 0 0 1 1 0 0 0 
+		0 0 1 0 1 0 0 1 
+		0 0 0 0 1 0 1 0 
+	Test 6 done.
+	Test 7... graph_to_cliques
+		clique 0: A B C 
+		clique 1: B C D 
+		clique 2: E G H 
+		clique 3: D E F 
+		clique 4: C E G 
+		clique 5: C D E 
+	Test 7 done.

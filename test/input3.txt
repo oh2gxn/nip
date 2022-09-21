@@ -1,0 +1,12 @@
+
+x1,x2
+
+1,foo
+1,foo
+1,bar
+
+2,foo
+null,bar
+
+
+2,bar

@@ -1,0 +1,37 @@
+foo (bar) { };
+
+0 3 4 9 10 11 12 14 
+1 lines, 4 words, 16 chars
+4 first words:
+foo
+(bar)
+{
+};
+potential (A | B) {
+
+0 9 10 12 13 14 15 17 18 19 
+  data = (( 1.0 0.0 )
+
+2 6 7 8 9 11 12 15 16 19 20 21 
+  (0.1 0.9));
+
+2 6 7 13 
+}
+
+0 1 
+4 lines, 14 words, 62 chars
+14 first words:
+potential
+(A
+|
+B)
+{
+data
+=
+((
+1.0
+0.0
+)
+(0.1
+0.9));
+}
