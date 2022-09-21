@@ -638,6 +638,8 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
 
   free(doubles); /* the data was copied at create_potential */
   nip_empty_variable_list(nip_parent_vars);
+  free(nip_parent_vars);
+  nip_parent_vars = NULL;
   free(family);
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, retval, 1);
@@ -729,6 +731,8 @@ potentialDeclaration: token_potential '(' child '|' symbols ')' '{' dataList '}'
   retval = nip_append_potential(nip_parsed_potentials, p, family[0], parents);
 
   nip_empty_variable_list(nip_parent_vars);
+  free(nip_parent_vars);
+  nip_parent_vars = NULL;
   free(family);
   if(retval != NIP_NO_ERROR){
     nip_report_error(__FILE__, __LINE__, retval, 1);
@@ -756,7 +760,7 @@ symbol:       UNQUOTED_STRING {
 	       if(nip_parent_vars == NULL)
 		 nip_parent_vars = nip_new_variable_list();
 	       retval = nip_prepend_variable(nip_parent_vars, 
-			  nip_search_variable_list(nip_parsed_vars, $1));
+                                             nip_search_variable_list(nip_parsed_vars, $1));
 	       if(retval != NIP_NO_ERROR){
 		 /* NOTE: you could check unrecognized parent variables here */
 		 nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);

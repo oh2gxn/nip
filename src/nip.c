@@ -144,7 +144,8 @@ nip_model parse_model(char* file){
   vl = get_parsed_variables();
   new->num_of_vars = NIP_LIST_LENGTH(vl);
   new->variables = nip_variable_list_to_array(vl);
-  nip_empty_variable_list(vl); /* free the list? */
+  nip_empty_variable_list(vl);
+  free(vl);
 
   /* count the number of various kinds of "special" variables */
   new->num_of_nexts = 0;
@@ -265,7 +266,7 @@ nip_model parse_model(char* file){
     assert(new->independent[i]->num_of_parents == 0);
 
   /* 4. Reset parser globals? */
-  /*nip_empty_variable_list(vl);*/
+  /*nip_empty_variable_list(vl); free(vl);*/
 
 #ifdef DEBUG_NIP
   if(new->out_clique){

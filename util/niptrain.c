@@ -202,6 +202,9 @@ int main(int argc, char *argv[]) {
           last < min_log_likelihood);
 
   fprintf(stderr, "  ...done.\n");
+  for(i = 0; i < n; i++)
+    free_timeseries(ts_set[i]);
+  free(ts_set);
 
   /* Print the learning curve: iteration number, average log. likelihood */
   link = learning_curve->first; t = 1;
@@ -210,26 +213,17 @@ int main(int argc, char *argv[]) {
     printf("%d,%g\n", t++, rint(link->data / threshold) * threshold);
     link = link->fwd;
   }
+  nip_empty_double_list(learning_curve);
+  free(learning_curve);
 
   /* Write the results to a NET file */
   i =  write_model(model, argv[6]);
   if(i != NIP_NO_ERROR){
     fprintf(stderr, "Failed to write the model into %s\n", argv[6]);
     nip_report_error(__FILE__, __LINE__, i, 1);
-    nip_empty_double_list(learning_curve);
-    free(learning_curve);
-    for(i = 0; i < n; i++)
-      free_timeseries(ts_set[i]);
-    free(ts_set);
     free_model(model);
     return -1;
   }
-
-  nip_empty_double_list(learning_curve);
-  free(learning_curve);
-  for(i = 0; i < n; i++)
-    free_timeseries(ts_set[i]);
-  free(ts_set);
   free_model(model);
 
   return 0;
