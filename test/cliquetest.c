@@ -142,7 +142,7 @@ int main(){
 
   /* A test about reordering a potential */
   for(i = 0; i < 24; i++)
-    printf("Correct=%f, Reordered=%f\n", model[1]->data[i], model[3]->data[i]);
+    printf("Correct=%g, Reordered=%g\n", model[1]->data[i], model[3]->data[i]);
 
   /* Set parents of the variables */
   parentsA[0] = variables[1]; parentsA[1] = variables[2];
