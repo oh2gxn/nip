@@ -16,13 +16,13 @@
 */
 
 /* nipinference.c
- * 
- * SYNOPSIS: 
+ *
+ * SYNOPSIS:
  * NIPINFERENCE <MODEL.NET> <INPUT_DATA.TXT> <VARIABLE> <OUTPUT_DATA.TXT>
  *
- * Executes inference procedure with given model and time series. 
- * Inferred probabilities for the selected variable are written to 
- * the specified data file. 
+ * Executes inference procedure with given model and time series.
+ * Inferred probabilities for the selected variable are written to
+ * the specified data file.
  *
  * EXAMPLE: ./nipinference filter.net data.txt A inferred_data.txt
  *
@@ -53,14 +53,14 @@ int main(int argc, char *argv[]){
   time_series *ts_set = NULL;
   uncertain_series *ucs_set = NULL;
 
-  printf("nipinference:\n");
+  fprintf(stderr, "nipinference:\n");
 
   /*****************************************/
   /* Parse the model from a Hugin NET file */
   /*****************************************/
   if(argc < 4){
-    printf("Specify the names of the net file, input data file, ");
-    printf("variable, and output data file.\n");
+    fprintf(stderr, "Specify the names of the net file, input data file, ");
+    fprintf(stderr, "variable, and output data file.\n");
     return 0;
   }
   else{
@@ -115,11 +115,10 @@ int main(int argc, char *argv[]){
   for(i = 0; i < model->num_of_vars; i++)
     nip_mark_variable(model->variables[i]);
 
-  
   /*****************/
   /* The inference */
   /*****************/
-  printf("  Computing...\n");  
+  fprintf(stderr, "  Computing...\n");
   loglikelihood = 0; /* init */
 
   for(i = 0; i < n_max; i++){
@@ -135,8 +134,8 @@ int main(int argc, char *argv[]){
   /* write the output */
   write_uncertainseries(ucs_set, n_max, v, argv[4]);
 
-  printf("  Average log. likelihood = %g\n", loglikelihood);
-  printf("  ...done.\n"); /* new line for the prompt */
+  fprintf(stderr, "  Average log. likelihood = %g\n", loglikelihood);
+  fprintf(stderr, "  ...done.\n"); /* new line for the prompt */
 
   /* free some memory */
   for(i = 0; i < n_max; i++){
@@ -146,6 +145,6 @@ int main(int argc, char *argv[]){
   free(ts_set);
   free(ucs_set);
   free_model(model);
-  
+
   return 0;
 }

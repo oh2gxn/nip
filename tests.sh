@@ -39,7 +39,7 @@ make
 
 
 echo '' 1>&2
-echo '1. Test low-level string tokenization:' 1>&2
+echo '1. Test low-level string tokenization: src/nipstring.c' 1>&2
 
 if=test/input1.txt
 of=test/output1.txt
@@ -51,7 +51,7 @@ rm $of
 
 
 echo '' 1>&2
-echo '2. Test string tokenization for parsing models:' 1>&2
+echo '2. Test string tokenization for parsing models: src/nipparsers.c' 1>&2
 
 if=test/input2.net
 of=test/output2.txt
@@ -62,7 +62,7 @@ rm $of
 
 
 echo '' 1>&2
-echo '3. Test string tokenization for parsing data:' 1>&2
+echo '3. Test string tokenization for parsing data: src/nipparsers.c' 1>&2
 
 if=test/input3.txt
 of=test/output3.txt
@@ -73,7 +73,7 @@ rm $of
 
 
 echo '' 1>&2
-echo '4. Test belief potentials:' 1>&2
+echo '4. Test belief potentials: src/nippotential.c' 1>&2
 
 of=test/output4.txt
 ef=test/expect4.txt
@@ -83,7 +83,7 @@ rm $of
 
 
 echo '' 1>&2
-echo '5. Test join tree inference:' 1>&2
+echo '5. Test join tree inference: src/nipjointree.c' 1>&2
 
 of=test/output5.txt
 ef=test/expect5.txt
@@ -93,7 +93,7 @@ rm $of
 
 
 echo '' 1>&2
-echo '6. Test graph operations:' 1>&2
+echo '6. Test graph operations: src/nipgraph.c' 1>&2
 
 of=test/output6.txt
 ef=test/expect6.txt
@@ -103,12 +103,34 @@ rm $of
 
 
 echo '' 1>&2
-echo '7. Test net file parser:' 1>&2
+echo '7. Test net file parser: src/huginnet.y' 1>&2
 
 if=test/input7.net
 of=test/output7.txt
 ef=test/expect7.txt
 ./test/bisontest $if M1 2 0.9 > $of
+assert $of $ef $LINENO
+rm $of
+
+
+echo '' 1>&2
+echo '8. Test time series MAP inference: util/nipmap' 1>&2
+
+if=test/input8.csv
+of=test/output8.csv
+ef=test/expect8.csv
+./util/nipmap test/input7.net $if $of # 2> /dev/null
+assert $of $ef $LINENO
+rm $of
+
+
+echo '' 1>&2
+echo '9. Test time series inference: util/nipinference' 1>&2
+
+if=test/input8.csv
+of=test/output9.csv
+ef=test/expect9.csv
+./util/nipinference test/input7.net $if P1 $of # 2> /dev/null
 assert $of $ef $LINENO
 rm $of
 

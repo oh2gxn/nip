@@ -156,24 +156,13 @@ DF_TARGET = test/datafiletest
 $(DF_TARGET): $(DF_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
-HMM_SRC = test/hmmtest.c
-HMM_TARGET = test/hmmtest
-$(HMM_TARGET): $(HMM_SRC) $(SLIB)
-	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
-
-HTM_SRC = test/htmtest.c
-HTM_TARGET = test/htmtest
-$(HTM_TARGET): $(HTM_SRC) $(SLIB)
-	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
-
 MLT_SRC = test/memleaktest.c
 MLT_TARGET = test/memleaktest
 $(MLT_TARGET): $(MLT_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 test: $(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
-$(BIS_TARGET) $(STR_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
-$(MLT_TARGET)
+$(BIS_TARGET) $(STR_TARGET) $(DF_TARGET) $(MLT_TARGET)
 
 
 # The utility programs for using certain features of NIP
@@ -232,9 +221,9 @@ $(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
 
 # All targets
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
-$(BIS_TARGET) $(STR_TARGET) $(DF_TARGET) $(HMM_TARGET) $(HTM_TARGET) \
-$(MLT_TARGET) $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) \
-$(INF_TARGET) $(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
+$(BIS_TARGET) $(STR_TARGET) $(DF_TARGET) $(MLT_TARGET) $(JNT_TARGET) \
+$(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET) $(CONV_TARGET) \
+$(LIKE_TARGET) $(LOO_TARGET)
 
 doc: doc/Doxyfile src/*.c src/*.h
 	doxygen doc/Doxyfile

@@ -16,14 +16,14 @@
 */
 
 /* nipmap.c
- * 
- * SYNOPSIS: 
+ *
+ * SYNOPSIS:
  * NIPMAP <MODEL.NET> <INPUT_DATA.TXT> <OUTPUT_DATA.TXT>
  *
- * Computes the Maximum A Posteriori (MAP) estimate for the values 
- * of hidden variables in a time series. You have to specify net file 
- * describing the model and data file containing the data for the 
- * observed variables. 
+ * Computes the Maximum A Posteriori (MAP) estimate for the values
+ * of hidden variables in a time series. You have to specify net file
+ * describing the model and data file containing the data for the
+ * observed variables.
  *
  * EXAMPLE: ./nipmap filter.net data.txt filtered_data.txt
  *
@@ -53,13 +53,13 @@ int main(int argc, char *argv[]){
   time_series *ts_set = NULL;
   uncertain_series ucs = NULL;
 
-  printf("nipmap:\n");
+  fprintf(stderr, "nipmap:\n");
 
   /*****************************************/
   /* Parse the model from a Hugin NET file */
   /*****************************************/
   if(argc < 4){
-    printf("Specify the names of the net file and input/output data files.\n");
+    fprintf(stderr, "Specify the names of the net file and input/output data files.\n");
     return 0;
   }
   else{
@@ -73,7 +73,6 @@ int main(int argc, char *argv[]){
   /* read the data from a file */
   /*****************************/
   n_max = read_timeseries(model, argv[2], &ts_set);
-
   if(n_max < 1){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s\n", argv[2]);
@@ -107,19 +106,19 @@ int main(int argc, char *argv[]){
   }
 
   /** DEBUG **/
-  printf("  Observed variables:\n  ");
+  fprintf(stderr, "  Observed variables:\n  ");
   for(i = 0; i < model->num_of_vars - ts->num_of_hidden; i++){
     if (i > 0)
-      printf("%c", NIP_FIELD_SEPARATOR);
-    printf("%s", ts->observed[i]->symbol);
+      fprintf(stderr, "%c", NIP_FIELD_SEPARATOR);
+    fprintf(stderr, "%s", ts->observed[i]->symbol);
   }
-  printf("\n  Hidden variables:\n  ");
+  fprintf(stderr, "\n  Hidden variables:\n  ");
   for(i = 0; i < ts->num_of_hidden; i++){
     if (i > 0)
-      printf("%c", NIP_FIELD_SEPARATOR);
-    printf("%s", ts->hidden[i]->symbol);
+      fprintf(stderr, "%c", NIP_FIELD_SEPARATOR);
+    fprintf(stderr, "%s", ts->hidden[i]->symbol);
   }
-  printf("\n");
+  fprintf(stderr, "\n");
 
   /* Use all the data (mark all variables) */
   for(i = 0; i < model->num_of_vars; i++)
@@ -139,47 +138,46 @@ int main(int argc, char *argv[]){
   /**************************************/
   /* The inference for each time series */
   /**************************************/
-  printf("  Computing...\n");  
+  fprintf(stderr, "  Computing...\n");
 
   for(n = 0; n < n_max; n++){
 
-    /*printf("Time series %d of %d\r               ", n+1, n_max);*/
+    /*fprintf(stderr, "Time series %d of %d\r               ", n+1, n_max);*/
 
     /* select time series */
     ts = ts_set[n];
 
     /* the computation of posterior probabilities */
     ucs = forward_backward_inference(ts, ts->hidden, ts->num_of_hidden, NULL);
-    
+
     for(t = 0; t < UNCERTAIN_SERIES_LENGTH(ucs); t++){ /* FOR EACH TIMESLICE */
-      
       /* Print the final results */
       for(i = 0; i < ucs->num_of_vars - 1; i++){
-	temp = ucs->variables[i];
-	
-	/* Find the MAP value */
-	k = 0; m_max = 0;
-	for(j = 0; j < NIP_CARDINALITY(temp); j++){
-	  m = ucs->data[t][i][j];
-	  if(m > m_max){
-	    m_max = m;
-	    k = j;
-	  }
-	}
-	fprintf(f, "%s", (temp->state_names)[k]);
-	fprintf(f, "%c", NIP_FIELD_SEPARATOR);
+        temp = ucs->variables[i];
+
+        /* Find the MAP value */
+        k = 0; m_max = 0;
+        for(j = 0; j < NIP_CARDINALITY(temp); j++){
+          m = ucs->data[t][i][j];
+          if(m > m_max){
+            m_max = m;
+            k = j;
+          }
+        }
+        fprintf(f, "%s", (temp->state_names)[k]);
+        fprintf(f, "%c", NIP_FIELD_SEPARATOR);
       }
 
       i = ucs->num_of_vars - 1;
       /* some copy-paste code for the last variable */
-      temp = ucs->variables[i];	
+      temp = ucs->variables[i];
       k = 0; m_max = 0;
       for(j = 0; j < NIP_CARDINALITY(temp); j++){
-	m = ucs->data[t][i][j];
-	if(m > m_max){
-	  m_max = m;
-	  k = j;
-	}
+        m = ucs->data[t][i][j];
+        if(m > m_max){
+          m_max = m;
+          k = j;
+        }
       }
       fprintf(f, "%s\n", (temp->state_names)[k]);
     }
@@ -187,7 +185,7 @@ int main(int argc, char *argv[]){
     free_uncertainseries(ucs); /* remember to free ucs */
   }
 
-  printf("  ...done\n"); /* new line for the prompt */
+  fprintf(stderr, "  ...done\n"); /* new line for the prompt */
 
   /* close the file */
   if(fclose(f)){
@@ -200,6 +198,6 @@ int main(int argc, char *argv[]){
     free_timeseries(ts_set[i]);
   free(ts_set);
   free_model(model);
-  
+
   return 0;
 }

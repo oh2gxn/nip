@@ -10,11 +10,14 @@ Top priority or simple stuff:
 *** DONE cliquetest
 *** DONE graphtest
 *** DONE bisontest
-*** TODO hmmtest
-*** TODO htmtest
+*** DONE models and data for testing nip.c
+*** DONE nipmap
+*** DONE nipinference
+*** DONE script with simple diff operations? (not for memleaktest)
+*** TODO nipsample
+*** TODO nipjoint
+*** TODO niptrain
 *** TODO memleaktest
-*** TODO models and data for testing nip.c
-*** TODO script with simple diff operations? (not for memleaktest)
 
 ** Acceptance tests
 Cucumber?
