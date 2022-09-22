@@ -59,7 +59,8 @@ static int ts_progress(int sequence, int length){
 // Callback for witnessing EM progress
 static int em_progress(nip_double_list learning_curve, double mean_log_likelihood);
 static int em_progress(nip_double_list learning_curve, double mean_log_likelihood){
-  fprintf(stderr, "  iteration %d: %g\r", learning_curve->length, mean_log_likelihood);
+  fprintf(stderr, "                        iteration %d: %g\r",
+          learning_curve->length, mean_log_likelihood);
   return nip_append_double(learning_curve, mean_log_likelihood);
 }
 
