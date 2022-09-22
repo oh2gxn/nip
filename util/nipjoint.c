@@ -77,7 +77,7 @@ int main(int argc, char *argv[]){
   use_priors(model, !NIP_HAD_A_PREVIOUS_TIMESLICE);
 
   /* read the data */
-  n = read_timeseries(model, argv[2], &ts_set);
+  n = read_timeseries(model, argv[2], &ts_set, NULL);
   if(n == 0)
     return -1;
   ts = ts_set[0];

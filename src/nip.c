@@ -504,7 +504,8 @@ void free_model(nip_model model){
 }
 
 
-int read_timeseries(nip_model model, char* filename, time_series** results){
+int read_timeseries(nip_model model, char* filename, time_series** results,
+                    int (*ts_progress)(int, int)){
   int i, j, k, m, n, N;
   int obs;
   char** tokens = NULL;
@@ -656,6 +657,8 @@ int read_timeseries(nip_model model, char* filename, time_series** results){
     }
 
     (*results)[n] = ts;
+    if(ts_progress != NULL)
+      ts_progress(n, ts->length);
   }
 
   nip_close_data_file(df);
@@ -2054,7 +2057,8 @@ static int m_step(nip_potential* parameters, nip_model model){
  * time series (ts[*]) with EM-algorithm. Returns an error code. */
 int em_learn(time_series* ts, int n_ts, double threshold,
              nip_double_list learning_curve,
-             int (*progress_callback)(nip_double_list, double)){
+             int (*em_progress)(nip_double_list, double),
+             int (*ts_progress)(int, int)){
   int i, n, v;
   int *card;
   int ts_steps;
@@ -2182,11 +2186,13 @@ int em_learn(time_series* ts, int n_ts, double threshold,
       /* probe != probe  =>  probe == NaN  */
 
       loglikelihood += probe;
+      if(ts_progress != NULL)
+        ts_progress(n, ts[n]->length);
     }
 
     /* Add an element to the linked list */
     if(learning_curve != NULL){
-      e = progress_callback(learning_curve, loglikelihood / ts_steps);
+      e = em_progress(learning_curve, loglikelihood / ts_steps);
       if(e != NIP_NO_ERROR){
         nip_report_error(__FILE__, __LINE__, e, 1);
         for(v = 0; v < model->num_of_vars; v++){

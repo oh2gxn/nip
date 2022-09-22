@@ -39,6 +39,12 @@
 #define PRINT_CLIQUE_TREE
 */
 
+// Callback for witnessing I/O
+static int ts_progress(int sequence, int length);
+static int ts_progress(int sequence, int length){
+  fprintf(stderr, "  %d: %d\r", sequence, length);
+  return 0;
+}
 
 int main(int argc, char *argv[]){
 
@@ -77,14 +83,15 @@ int main(int argc, char *argv[]){
   /*****************************/
   /* read the data from a file */
   /*****************************/
-  n_max = read_timeseries(model, argv[2], &ts_set);
-
+  fprintf(stderr, "  Reading input data from %s... \n", argv[2]);
+  n_max = read_timeseries(model, argv[2], &ts_set, &ts_progress);
   if(n_max < 1){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s\n", argv[2]);
     free_model(model);
     return -1;
   }
+  fprintf(stderr, "  ...%d sequences found.\n", n_max);
 
   ucs_set = (uncertain_series*) calloc(n_max, sizeof(uncertain_series));
   if(!ucs_set){
@@ -128,6 +135,7 @@ int main(int argc, char *argv[]){
 
     /* Compute average log likelihood */
     loglikelihood += probe / TIME_SERIES_LENGTH(ts);
+    ts_progress(i, ts->length);
   }
   loglikelihood /= n_max;
 
@@ -135,7 +143,7 @@ int main(int argc, char *argv[]){
   write_uncertainseries(ucs_set, n_max, v, argv[4]);
 
   fprintf(stderr, "  Average log. likelihood = %g\n", loglikelihood);
-  fprintf(stderr, "  ...done.\n"); /* new line for the prompt */
+  fprintf(stderr, "  ...computing done.\n"); /* new line for the prompt */
 
   /* free some memory */
   for(i = 0; i < n_max; i++){

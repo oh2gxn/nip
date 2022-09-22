@@ -88,7 +88,7 @@ int main(int argc, char *argv[]){
   /*****************************/
   /* read the data from a file */
   /*****************************/
-  n_max = read_timeseries(model, argv[2], &ts_set);
+  n_max = read_timeseries(model, argv[2], &ts_set, NULL);
 
   /* can't do leave-one-out with a single series */
   if(n_max < 2){
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]){
         nip_empty_double_list(learning_curve);
 
       /* the EM algorithm */
-      e = em_learn(loo_set, n_max-1, threshold, learning_curve, &nip_append_double);
+      e = em_learn(loo_set, n_max-1, threshold, learning_curve, &nip_append_double, NULL);
       if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
         fprintf(stderr, "There were errors during learning:\n");
         nip_report_error(__FILE__, __LINE__, e, 1);

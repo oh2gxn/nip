@@ -38,6 +38,13 @@
 #include "niperrorhandler.h"
 #include "nip.h"
 
+// Callback for witnessing I/O
+static int ts_progress(int sequence, int length);
+static int ts_progress(int sequence, int length){
+  fprintf(stderr, "  %d: %d\r", sequence, length);
+  return 0;
+}
+
 /* contains some copy-paste from write_timeseries in nip.c */
 
 int main(int argc, char *argv[]){
@@ -72,13 +79,15 @@ int main(int argc, char *argv[]){
   /*****************************/
   /* read the data from a file */
   /*****************************/
-  n_max = read_timeseries(model, argv[2], &ts_set);
+  fprintf(stderr, "  Reading input data from %s... \n", argv[2]);
+  n_max = read_timeseries(model, argv[2], &ts_set, &ts_progress);
   if(n_max < 1){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     fprintf(stderr, "%s\n", argv[2]);
     free_model(model);
     return -1;
   }
+  fprintf(stderr, "  ...%d sequences found.\n", n_max);
 
   ts = ts_set[0];
 
@@ -183,9 +192,11 @@ int main(int argc, char *argv[]){
     }
     fputs("\n", f); /* space between time series */
     free_uncertainseries(ucs); /* remember to free ucs */
+
+    ts_progress(n, ts->length); /* progress indication */
   }
 
-  fprintf(stderr, "  ...done\n"); /* new line for the prompt */
+  fprintf(stderr, "  ...computing done\n"); /* new line for the prompt */
 
   /* close the file */
   if(fclose(f)){

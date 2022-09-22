@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* read the data */
-  n = read_timeseries(model, argv[2], &ts_set);
+  n = read_timeseries(model, argv[2], &ts_set, NULL);
   if(n == 0){
     fprintf(stderr, "Unable to parse the data file: %s?\n", argv[2]);
     free_model(model);

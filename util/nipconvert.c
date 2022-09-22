@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
   switch (iformat) {
   case UNIVARIATE:
   case MULTIVARIATE:
-    n = read_timeseries(model, argv[3], &ts_set);
+    n = read_timeseries(model, argv[3], &ts_set, NULL);
     break;
   default:
     n = 0; /* should be impossible */

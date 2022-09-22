@@ -205,10 +205,11 @@ void free_model(nip_model model);
  * @param model The random variables and all
  * @param datafile Name of the input file as a string
  * @param results Pointer where the time_series is set, if N>0
+ * @param progress_callback Function for reporting progress during IO
  * @return Length T of the time series, or 0 in case of any issues.
  */
-int read_timeseries(nip_model model, char* datafile,
-                    time_series **results);
+int read_timeseries(nip_model model, char* datafile, time_series **results,
+                    int (*ts_progress)(int, int));
 
 
 /**
@@ -457,13 +458,15 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * @param n_ts Number of time series' in \p ts
  * @param threshold Minimum required improvement in log. likelihood / slice
  * @param learning_curve Possible list of log. likelihood numbers, or null
- * @param progress_callback Possible pointer to a function which
+ * @param em_progress Possible pointer to a function which
  * accumulates learning_curve, or null if not required
+ * @param ts_progress Optional time series progress callback, or null
  * @return An error code in case of any errors
  */
 int em_learn(time_series* ts, int n_ts, double threshold,
              nip_double_list learning_curve,
-             int (*progress_callback)(nip_double_list, double));
+             int (*em_progress)(nip_double_list, double),
+             int (*ts_progress)(int, int));
 
 
 /**

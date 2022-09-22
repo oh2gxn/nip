@@ -49,10 +49,17 @@
 #include "niplists.h"
 #include "nipvariable.h"
 
+// Callback for witnessing I/O
+static int ts_progress(int sequence, int length);
+static int ts_progress(int sequence, int length){
+  fprintf(stderr, "  series %d: %d\r", sequence, length);
+  return 0;
+}
+
 // Callback for witnessing EM progress
 static int em_progress(nip_double_list learning_curve, double mean_log_likelihood);
 static int em_progress(nip_double_list learning_curve, double mean_log_likelihood){
-  fprintf(stderr, "  %d: %g\r", learning_curve->length, mean_log_likelihood);
+  fprintf(stderr, "  iteration %d: %g\r", learning_curve->length, mean_log_likelihood);
   return nip_append_double(learning_curve, mean_log_likelihood);
 }
 
@@ -84,19 +91,23 @@ int main(int argc, char *argv[]) {
   }
 
   /* read the model */
+  fprintf(stderr, "  Reading model from %s... \n", argv[1]);
   model = parse_model(argv[1]);
   if(!model){
     fprintf(stderr, "Unable to parse the NET file: %s?\n", argv[1]);
     return -1;
   }
+  fprintf(stderr, "  ...model found.\n");
 
   /* read the data */
-  n = read_timeseries(model, argv[2], &ts_set);
+  fprintf(stderr, "  Reading input data from %s... \n", argv[2]);
+  n = read_timeseries(model, argv[2], &ts_set, &ts_progress);
   if(n == 0){
     fprintf(stderr, "Unable to parse the data file: %s?\n", argv[2]);
     free_model(model);
     return -1;
   }
+  fprintf(stderr, "  ...%d sequences found.\n", n);
 
   /* print a summary about the variables */
   ts = ts_set[0];
@@ -169,7 +180,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* EM algorithm */
-    e = em_learn(ts_set, n, threshold, learning_curve, &em_progress);
+    e = em_learn(ts_set, n, threshold, learning_curve, &em_progress, &ts_progress);
     if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
       fprintf(stderr, "There were errors during learning:\n");
       nip_report_error(__FILE__, __LINE__, e, 1);
@@ -201,7 +212,7 @@ int main(int argc, char *argv[]) {
   } while(e == NIP_ERROR_BAD_LUCK ||
           last < min_log_likelihood);
 
-  fprintf(stderr, "  ...done.\n");
+  fprintf(stderr, "  ...computing done.\n");
   for(i = 0; i < n; i++)
     free_timeseries(ts_set[i]);
   free(ts_set);

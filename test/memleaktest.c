@@ -216,7 +216,7 @@ int main(int argc, char *argv[]){
     printf("\nReading and freeing data:\n");
     for(i = 0; i < n/500; i++){
       /* ...guess this is OK... */
-      m = read_timeseries(model, argv[2], &ts_set);
+      m = read_timeseries(model, argv[2], &ts_set, NULL);
       printf("\rIteration %d of %d                               ", i + 1,
              n/500);
       for(j = 0; j < m; j++)
@@ -224,13 +224,13 @@ int main(int argc, char *argv[]){
       free(ts_set);
     }
     printf("\rDone.                                             \n");
-    m = read_timeseries(model, argv[2], &ts_set);
+    m = read_timeseries(model, argv[2], &ts_set, NULL);
 
 
     printf("\nRunning EM-algorithm %d times:\n",n);
     for(i = 0; i < n; i++){
       total_reset(model);
-      em_learn(ts_set, m, THRESHOLD, NULL, NULL);
+      em_learn(ts_set, m, THRESHOLD, NULL, NULL, NULL);
       printf("\rIteration %d of %d                               ", i + 1, n);
     }
     printf("\rDone.                                             \n");
