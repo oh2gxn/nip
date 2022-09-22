@@ -60,7 +60,7 @@ static int ts_progress(int sequence, int length){
 static int em_progress(nip_double_list learning_curve, double mean_log_likelihood);
 static int em_progress(nip_double_list learning_curve, double mean_log_likelihood){
   fprintf(stderr, "                            iteration %4d: %16g\r",
-          learning_curve->length, mean_log_likelihood);
+          learning_curve->length+1, mean_log_likelihood);
   return nip_append_double(learning_curve, mean_log_likelihood);
 }
 
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     free_model(model);
     return -1;
   }
-  fprintf(stderr, "  ...%d sequences found.\n", n);
+  fprintf(stderr, "  ...%8d sequences found.\n", n);
 
   /* print a summary about the variables */
   ts = ts_set[0];
@@ -197,15 +197,15 @@ int main(int argc, char *argv[]) {
     /* find out the last value in learning curve */
     i = NIP_LIST_LENGTH(learning_curve);
     if(i == 0){
-      fprintf(stderr, "  Run %d failed 0.0  with %d iterations, delta = 0.0 \n", t, i);
+      fprintf(stderr, "  Run %4d failed 0.0 with %4d iterations, delta = 0.0 \n", t, i);
     }
     else{
       last = learning_curve->last->data;
       if(i > 1)
-        fprintf(stderr, "  Run %d reached %g  with %d iterations, delta = %g \n",
+        fprintf(stderr, "  Run %4d reached %16g with %4d iterations, delta = %16g \n",
                 t, last, i, last - learning_curve->last->bwd->data);
       else
-        fprintf(stderr,"  Run %d reached %g  with %d iterations, delta = 0.0 \n",
+        fprintf(stderr,"  Run %4d reached %16g with %4d iterations, delta = 0.0 \n",
                 t, last, i);
     }
 
