@@ -52,14 +52,14 @@
 // Callback for witnessing I/O
 static int ts_progress(int sequence, int length);
 static int ts_progress(int sequence, int length){
-  fprintf(stderr, "  series %d: %d\r", sequence, length);
+  fprintf(stderr, "  series %8d: %8d\r", sequence, length);
   return 0;
 }
 
 // Callback for witnessing EM progress
 static int em_progress(nip_double_list learning_curve, double mean_log_likelihood);
 static int em_progress(nip_double_list learning_curve, double mean_log_likelihood){
-  fprintf(stderr, "                        iteration %d: %g\r",
+  fprintf(stderr, "                            iteration %4d: %16g\r",
           learning_curve->length, mean_log_likelihood);
   return nip_append_double(learning_curve, mean_log_likelihood);
 }
