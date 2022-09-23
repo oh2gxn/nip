@@ -128,13 +128,8 @@ void nip_free_sepset(nip_sepset s);
  * @param data A flat data array in the order according to variables
  * @return reference to a new potential
  * @see nip_free_potential() */
-nip_potential nip_create_potential(nip_variable variables[], 
-				   int nvars, 
-				   double data[]);
-
-/* Something very dangerous...
-nip_potential reorder_potential(nip_variable vars[], nip_potential p); 
-*/
+nip_potential nip_create_potential(nip_variable variables[], int nvars,
+                                   double data[]);
 
 /**
  * Method for unmarking a clique: 

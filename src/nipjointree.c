@@ -336,9 +336,8 @@ void nip_free_sepset(nip_sepset s){
 
 
 /* FIXME: use mapper and functions provided by nippotential.h ! */
-nip_potential nip_create_potential(nip_variable variables[], 
-				   int nvars, 
-				   double data[]){
+nip_potential nip_create_potential(nip_variable variables[], int nvars, 
+                                   double data[]){
   /*
    * Suppose we get an array of variables with IDs {5, 2, 3, 4, 0, 1}.
    * In this case, temp_array will be              {5, 2, 3, 4, 0, 1},
@@ -358,7 +357,7 @@ nip_potential nip_create_potential(nip_variable variables[],
    * the variable with the smallest ID.
    */
 
-  int i, j, card_temp, index, size_of_data = 1;
+  int i, j, card_temp, index, size_of_data;
 
   int *cardinality;
   int *indices;
@@ -407,7 +406,7 @@ nip_potential nip_create_potential(nip_variable variables[],
     temp = nip_variable_id(variables[i]);
     for(j = 0; j < nvars; j++){
       if(nip_variable_id(variables[j]) > temp)
-	temp_array[j]++; /* counts how many greater variables there are */
+        temp_array[j]++; /* counts how many greater variables there are */
     }
   }
 
@@ -415,9 +414,10 @@ nip_potential nip_create_potential(nip_variable variables[],
     reorder[temp_array[i]] = i; /* fill the reordering */
 
   /* Figure out some stuff */
+  size_of_data = 1;
   for(i = 0; i < nvars; i++){
-    size_of_data *= NIP_CARDINALITY(variables[i]); /* optimal? */
     cardinality[i] = NIP_CARDINALITY(variables[reorder[i]]);
+    size_of_data *= cardinality[i];
   }
 
   /* Create a potential */
@@ -447,8 +447,7 @@ nip_potential nip_create_potential(nip_variable variables[],
     ********************************************************/
     for(i = 0; i < size_of_data; i++){
 
-      /*
-       * Now this is the trickiest part.
+      /* Now this is the trickiest part.
        * Find out indices (in the internal order of the program,
        * determined by the variable IDs).
        */
@@ -460,8 +459,8 @@ nip_potential nip_create_potential(nip_variable variables[],
 
       /* THE mapping */
       for(j = 0; j < nvars; j++){
-	index += indices[temp_array[j]] * card_temp;
-	card_temp *= cardinality[temp_array[j]];
+        index += indices[temp_array[j]] * card_temp;
+        card_temp *= cardinality[temp_array[j]];
       }
 
       /* set the value (in a little ugly way) */
@@ -475,34 +474,6 @@ nip_potential nip_create_potential(nip_variable variables[],
   free(reorder);
 
   return p;
-}
-
-
-/**
- * NOTE: Don't use this. This is just a bad idea we had!
- * The original idea could now be implemented with:
- * - creating a suitable mapping array
- * - newp = nip_new_potential();
- * - nip_update_potential(p, NULL, newp, mapping);
- * @param vars Array of variables corresponding to \p p
- * @param p A potential
- * @return a new potential in some better order */
-nip_potential nip_reorder_potential(nip_variable vars[], nip_potential p){
-
-  /* Simple (stupid) checks */
-  if(!p){
-    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
-    return NULL;
-  }
-  if(!vars){
-    nip_report_error(__FILE__, __LINE__, EFAULT, 1);
-    return NULL;
-  }
-
-  /* Old crappy code removed, this does nothing. */
-  /*  */
-
-  return nip_copy_potential(p);
 }
 
 

@@ -11,17 +11,39 @@ Top priority or simple stuff:
 *** DONE graphtest
 *** DONE bisontest
 *** DONE models and data for testing nip.c
-*** DONE nipmap
-*** DONE nipinference
 *** DONE script with simple diff operations? (not for memleaktest)
-*** TODO nipsample
-*** TODO nipjoint
-*** TODO niptrain
 *** TODO memleaktest
 
 ** Acceptance tests
-Cucumber?
+*** DONE nipmap
+*** DONE nipinference
+*** TODO nipsample
+*** TODO nipjoint
+*** TODO niptrain
 
+* TODO New utility: nipnext
+Something between nipsample and nipinference:
+- given variable of interest X
+- reads a sequence of N data to build hidden context (likelihood)
+- infers the probabilities of each state of X=x in the *next* time step
+- also outputs likelihood of the complete sequence (N+1)
+- output has 3 columns: X,P(X[n+1]=x|data),P(Xn+1=x,data)
+Ideas for future improvement:
+- given multiple M observed variables {X,Y,...}
+- output M+2 columns: X,Y,...,P(x,y,...|data),P(x,y,...,data)
+  where rows x,y,... span all combinations of X × Y × ...
+
+* TODO Use of mini batches during EM
+** TODO Separate/optional random initialization: support continued training
+** TODO Read a smaller batch of time series from a file
+** TODO Compute E and M on the smaller batch
+
+* TODO OpenMP threads in EM
+** TODO Use smaller batches of data in parallel?
+: gcc -fopenmp nip.c
+: #include <omp.h>
+: #pragma omp parallel for
+** TODO Fixed or dynamic parameter for number of threads/CPUs?
 
 * TODO Refactor: replacing a lot of copy-paste code with these
 ** nip_variable_union(), 
@@ -57,6 +79,13 @@ Cucumber?
 - I/O only from the main program
 
 
+* TODO Online fixed_lag_smoothing
+** Have more than 1.5 temporal slices?
+** Implement re-use of allocated slices: "tank track" method?
+
+Medium priority:
+
+
 * TODO Parse and preserve other fields specified in Hugin Net files 
 ** currently this program ignores them
 ** How to store potential-specific fields?
@@ -69,11 +98,6 @@ Cucumber?
 ** Click on the marginal inserts evidence for the variable
 ** Click inside the bitmap modifies conditional/prior probs
 
-* TODO Online fixed_lag_smoothing
-** Have more than 1.5 temporal slices?
-** Implement re-use of allocated slices: "tank track" method?
-
-Medium priority:
 * TODO Use online forward mode or fixed-lag smoothing with SDR?
 * TODO ZeroMQ support for distributing join trees over network?
 * TODO Support for OpenCL in potential.c
@@ -171,6 +195,7 @@ Lesser priority or science:
 
 
 Done:
+
 * DONE Make it a library
 ** DONE decide on a minimal set of standards
 - C99 and POSIX.1-2001
@@ -307,69 +332,4 @@ This is also known as "Smurf naming convention"
   same clique.
 ** It seems that Mr. Murphy has a solution: 
 *** additional moralization of "interface" variables to include them in a single clique.
-
-
-* Original huomioita.txt
-Sekalaisia huomioita:
-
-** voisi olla järkevää yhdistää myös moralisaatio find_cliquesiin
-** pitäisikö tässä heappikin tehdä. lienee järkevintä.
-** Variable.c:n new_variable näyttää työläältä
-*** id tuntuu konseptina hankalalta, equal-vertailu kosahtaa NULLiin ja pointteri tekee saman (ellei sitten haluta muuttujille järjestystä... sen saisi Graphista. Tähän oli joku syy...)
-
-** Myös Graph nähtävästi ei-pointteri. Mieti korjaus kun ei väsytä.
-** potential copy_potential näyttää NULL-robustilta
-  
-** Potentiaalin choose_indices-funktiota kutsutaan jokaiselle potentiaalin alkiolle eli monta kertaa. Saattaisi olla tehokkaampaa tehdä ensiksi jonkinlainen "maski" ja käyttää sitä _ehkä_ tehokkaampana keinona valita indeksit. 
-*** -> ehkä kakkosversioon
-
-** 16.1.2004 (Janne, Mikko)
-*** Taulukoita ei voi esitellä ilmoittamatta kokoa, eli tyyliin "int i[]" (pitää olla "int *i"). Taulukkoa ei myöskään voi esitellä tyyliin "int[] i" (tämä on javaa).
-*** Variable on nyt osoitintyyppi. Tarvittavat muutokset on periaatteessa tehty.
-
-** 22.1.2004 (Mikko)
-*** Ovatko Graphin moralise-funktion parametrit järkevät? Pitääkö sille tosiaan antaa kopio alkuperäisestä verkosta. Eikö se voisi itse tehdä verkosta kopion ja palauttaa sen? Ehkä oli joku syy, miksi ei tehdä näin. Oliko?
-
-** 23.2.2004 (Janne, Mikko)
-*** Alettiin ihmettelemään Bison-systeemeitä. Teemme seuraavaksi parserin, jolla saadaan malleja ja niiden parametreja luettua tiedostosta. Tällöin pääsemme ehkä jopa testaamaan tuotoksia...
-
-** 16.3.2004 (Janne)
-*** Parserin määritteleminen ei ole aivan triviaalia. 
-**** On hieman muokattava mm. Variable-juttuja s.e. muuttujille voi asettaa tilojen nimet ja muut parametrit helposti. 
-**** Parseriin tulee tietorakenteet, joihin tiedoston mukaisia muuttujia/nodeja tulee... Verkon, riippuvuuksien ja taulukoiden parsettaminen vaikuttaa erityisen ikävältä. Tutkitaan...
-
-** 24.5.2004 (Janne)
-*** Clique.c:ssä on nyt funktio create_Potential(...), jonka avulla voi luoda ohjelmalle kelpaavan potentiaalin minkä tahansa muuttujajärjestyksen mukaan järjestetystä taulukosta. Tämä on tarpeen, koska Huginin tiedostoformaatissa esim. potentiaalin P(C | BD) "vähiten merkitsevä" muuttuja on C, mutta ohjelmassamme oletetaan, että järjestys on esim. BCD.
-
-** 26.5.2004
-*** Tarttis keksiä mihin muuttujia (Variable), klikkejä (Clique) ja sepsettejä (Sepset) tallennetaan! Eli miten koodiamme hyväksi käyttävä ohjelma pääsee käsiksi mihinkään ja miten parseri antaa tuotoksensa ulkomaailman nähtäväksi?
-
-** 27.5.2004 (Mikko)
-*** Mikä ajatus on Variable.c:n funktiossa int variable_statenames(Variable v, char **states) ? Tuo ei näytä kovin paljon tekevän...
-
-** 2.6.2004 (Janne)
-*** variable_statenames() mahdollistaa takin kääntämisen, jos joskus vaikka vaihdettaisiin muistinvarausstrategiaa. Nyt taulukoita ei kopioida, mutta vaarana on käytössä olevan muistin vapauttaminen tai uudelleen käyttäminen merkkijonojen osalta.
-*** Mitäs mitäs... Meillä ei muuten taida olla semmoista kuin "GLOBAL RETRACTION", vaikka jonkunlaiset valmiudet onkin. Tämä vain tarkoittaa sitä, että mikään ei saisi olla mahdotonta l. todennäköisyydeltään nollaa kun dataa syötetään sisään.
-
-** 8.6.2004 (Janne)
-*** No voi hevon kettu. Ei sitten voinut Huginin net-tiedoston esittelyssä kertoa kaikkia likaisia yksityiskohtia... Menee parseri pikkuisen remonttiin, mutta onneksi tehtiin Bisonilla.
-
-** 11.6.2004 (Janne ja Mikko)
-*** Klikeillä ei taida olla sepsettejä. Ei nimittäin etene distribute_evidence mihinkään. Nyt viikonloppua viettämään.
-
-** 17.6.2004 (Janne ja Mikko)
-*** Melko monimutkainen Huginilla tehty verkko onnistutaan laskemaan oikein, JOS riippumattomien muuttujien jakaumaa ei yritetä asettaa .net -tiedoston potentiaaleilla. Tasajakauma (1 1 ... 1) siis toimii mutta muunlainen näköjään ei. Miten tällaiset tilanteet pitäisi hoitaa? enter_evidence ?
-
-** 21.6.2004 (Janne ja Mikko)
-*** enter_evidencen käyttö riippumattomien muuttujien todennäköisyyksien initialisoinnissa toimii. Täytynee vielä tarkistaa, mitä sellaista oleellista eroa initialisen ja enter_evidencen välillä on, joka aiheuttaa virheellisiä tuloksia ensin mainitun kanssa. Toki Variablen likelihood pitää alustaa, mutta sen alustamattomuus ei liene syyllinen esimerkkitapauksen vääriin tuloksiin.
-
-** 9.7.2004 (Janne ja Mikko)
-*** Jouduttiin menemään muutoksissa takaisinpäin kolmisen tuntia. Yritettiin pikaisesti integroida "Clique unmark" collect_evidenceen, distribute_evidenceen yms. Kone meni rikki, minkä takia paluu vanhaan. Täytyy tehdä loman jälkeen paremmin.
-
-** 3.8.2004 (Mikko)
-*** Ajateltiin eilen, että ei kannata vielä yhdistää "Clique unmark" -hommaa, koska koko ohjelman rakenne on vähän hakusessa. Jonkinlainen "nip"-rakenne olisi kai hyvä olla. Mutta mitä seuraavaksi?
-
-** 5.8.2004 (Janne ja Mikko)
-*** Mietitään, minkälaisia rakenneuudistuksia tehdään. Parasta olisi, jos homma saataisiin yksisuuntaiseksi, eli uusi "nip"-systeemi tulee vanhan päälle.
-*** nip.c:hen joku "parse_model" tms. joka käynnistää parserin ja kopioi muuttujalistan ja klikkitaulukon (ainakin) malliin. Palauttaa mallin.
 
