@@ -54,7 +54,7 @@ static int nip_set_variable_text(char** record, const char *name){
 
 
 nip_variable nip_new_variable(const char* symbol, const char* name, 
-			      char** states, int cardinality){
+                              char** states, int cardinality){
   /* NOTE: This id-stuff may overflow if variables are created and 
    * freed over and over again. */
   static long id = NIP_VAR_MIN_ID;
@@ -101,11 +101,11 @@ nip_variable nip_new_variable(const char* symbol, const char* name,
     }
     for(i = 0; i < cardinality; i++){
       if(nip_set_variable_text(&(v->state_names[i]), states[i])){
-	nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-	for(j = 0; j < i; j++)
-	  free(v->state_names[j]);
-	free(v->state_names);
-	free(v);
+        nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
+        for(j = 0; j < i; j++)
+          free(v->state_names[j]);
+        free(v->state_names);
+        free(v);
       }
     }
   }
@@ -151,7 +151,7 @@ nip_variable nip_copy_variable(nip_variable v){
   copy->num_of_parents = v->num_of_parents;
   if(v->parents){
     copy->parents = (nip_variable*) calloc(v->num_of_parents, 
-					   sizeof(nip_variable));
+                                           sizeof(nip_variable));
     if(!(copy->parents)){
       nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
       free(copy);
@@ -335,26 +335,26 @@ void nip_get_variable_position(nip_variable v, int* x, int* y){
 }
 
 
-int nip_set_parents(nip_variable v, 
-			       nip_variable* parents, 
-			       int nparents){
+int nip_set_parents(nip_variable v,
+                    nip_variable* parents,
+                    int nparents){
   int i;
   if(v == NULL || (nparents > 0 && parents == NULL))
     return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 
   free(v->parents); /* in case it previously had another array */
-  
+
   if(nparents > 0){
     v->parents = (nip_variable *) calloc(nparents, sizeof(nip_variable));
     if(!(v->parents))
       return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-    
+
     for(i = 0; i < nparents; i++)
       v->parents[i] = parents[i]; /* makes a copy of the array */
   }
   else
     v->parents = NULL;
-  
+
   v->num_of_parents = nparents;  
   return 0;
 }
@@ -434,9 +434,9 @@ nip_variable* nip_sort_variables(nip_variable* vars, int nvars){
   for(i = 0; i < nvars - 1; i++)
     for(j = 1; j < nvars; j++)
       if(sorted[j]->id < sorted[i]->id){
-	temp = sorted[j];
-	sorted[j] = sorted[i];
-	sorted[i] = temp;
+        temp = sorted[j];
+        sorted[j] = sorted[i];
+        sorted[i] = temp;
       }
 
   return sorted;
@@ -444,7 +444,7 @@ nip_variable* nip_sort_variables(nip_variable* vars, int nvars){
 
 
 nip_variable* nip_variable_union(nip_variable* a, nip_variable* b, 
-				 int na, int nb, int* nc){
+                                 int na, int nb, int* nc){
   int i, j, n, found;
   nip_variable* c = NULL;
 
@@ -466,8 +466,8 @@ nip_variable* nip_variable_union(nip_variable* a, nip_variable* b,
   for(i = 0; i < na; i++){
     for(j = 0; j < nb; j++){
       if(nip_equal_variables(a[i], b[j])){
-	n--;
-	break;
+        n--;
+        break;
       }
     }
   }
@@ -491,8 +491,8 @@ nip_variable* nip_variable_union(nip_variable* a, nip_variable* b,
     found = 0;
     for(j = 0; j < n; j++){
       if(nip_equal_variables(b[i], c[j])){
-	found = 1;
-	break;
+        found = 1;
+        break;
       }
     }
     if(!found)
@@ -526,8 +526,8 @@ nip_variable* nip_variable_isect(nip_variable *a, nip_variable *b,
   for(i = 0; i < na; i++){
     for(j = 0; j < nb; j++){
       if(nip_equal_variables(a[i], b[j])){
-	n++;
-	break;
+        n++;
+        break;
       }
     }
   }
@@ -547,8 +547,8 @@ nip_variable* nip_variable_isect(nip_variable *a, nip_variable *b,
   for(i = 0; i < na; i++){
     for(j = 0; j < nb; j++){
       if(nip_equal_variables(a[i], b[j])){
-	c[n++] = a[i];
-	break;
+        c[n++] = a[i];
+        break;
       }
     }
   }
@@ -558,7 +558,7 @@ nip_variable* nip_variable_isect(nip_variable *a, nip_variable *b,
 
 
 int* nip_mapper(nip_variable *set, nip_variable *subset, 
-		int nset, int nsubset){
+                int nset, int nsubset){
   int i, j;
   int* mapping = NULL;
   
@@ -579,8 +579,8 @@ int* nip_mapper(nip_variable *set, nip_variable *subset,
   for(i = 0; i < nsubset; i++){
     for(j = 0; j < nset; j++){ /* linear search */
       if(nip_equal_variables(subset[i], set[j])){
-	mapping[i] = j;
-	break;
+        mapping[i] = j;
+        break;
       }
     }
   }

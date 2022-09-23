@@ -21,6 +21,18 @@ Top priority or simple stuff:
 *** TODO nipjoint
 *** TODO niptrain
 
+* TODO Refactor: replacing a lot of copy-paste code with these
+** nip_variable_union(),
+** nip_variable_isect(): search for clique_intersection, and
+** nip_mapper(): to be used in following functions of nipjointree.c
+*** nip_create_potential()
+- needs a unit test about reading a model potential in one order (inconvenient node ID order), and
+  printing it in another: cliquetest.c has potentialC2 and outputs "Correct vs Reordered"
+- seems like nip_create_potential shuffles variables, but nip_normalise_cpd assumes original order!
+*** nip_init_clique()
+*** nip_find_family_mapping()?
+
+
 * TODO New utility: nipnext
 Something between nipsample and nipinference:
 - given variable of interest X
@@ -44,17 +56,6 @@ Ideas for future improvement:
 : #include <omp.h>
 : #pragma omp parallel for
 ** TODO Fixed or dynamic parameter for number of threads/CPUs?
-
-* TODO Refactor: replacing a lot of copy-paste code with these
-** nip_variable_union(), 
-** nip_variable_isect(): search for clique_intersection, and
-** nip_mapper(): to be used in following functions of nipjointree.c
-*** nip_create_potential()
-- needs a unit test about reading a model potential in one order (inconvenient node ID order), and
-  printing it in another
-- seems like nip_create_potential shuffles variables, but nip_normalise_cpd assumes original order!
-*** nip_init_clique()
-*** nip_find_family_mapping()?
 
 
 * TODO Check if the library is UTF-8 compatible

@@ -306,8 +306,7 @@ int nip_general_marginalise(nip_potential source, nip_potential destination,
 }
 
 
-int nip_total_marginalise(nip_potential source, double destination[],
-                          int variable){
+int nip_total_marginalise(nip_potential source, double destination[], int variable){
   int i, j, x, index = 0, flat_index;
 
   if(variable < 0 || variable >= source->dimensionality)

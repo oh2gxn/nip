@@ -2012,10 +2012,8 @@ static int m_step(nip_potential* parameters, nip_model model){
 
   /* 1. Normalise parameters by dividing with the sums over child variables */
   for(i = 0; i < model->num_of_vars; i++){
-    /* k = NIP_CARDINALITY(model->variables[i]); */
-    /* child is the first variable in the potential? */
+    /* NOTE: parameter potentials have children as the 1st dimension */
     nip_normalise_cpd(parameters[i]);
-    /** JJT: Not so sure if this is correct! **/
   }
 
   /* 2. Reset the clique potentials and everything */
@@ -2026,6 +2024,8 @@ static int m_step(nip_potential* parameters, nip_model model){
     child = model->variables[i];
 
     if(nip_number_of_parents(child) > 0){
+      /* NOTE: parameters have children as the 1st dimension,
+       * but cliques have dimensions ordered by variable ID */
       fam_clique = nip_find_family(model->cliques,
                                    model->num_of_cliques,
                                    child);
@@ -2038,14 +2038,10 @@ static int m_step(nip_potential* parameters, nip_model model){
         nip_report_error(__FILE__, __LINE__, NIP_ERROR_GENERAL, 1);
         return NIP_ERROR_GENERAL;
       }
-      /* couldn't use initialise() here because of the messy order of
-       * parameter potentials */
     }
     else{
       /* Update the priors of independent variables */
-      nip_total_marginalise(parameters[i], child->prior, 0); /* correct? */
-      /*for(j = 0; j < NIP_CARDINALITY(child); j++)
-        child->prior[j] = parameters[i]->data[j];*/
+      nip_total_marginalise(parameters[i], child->prior, 0);
     }
   }
 
@@ -2098,14 +2094,10 @@ int em_learn(time_series* ts, int n_ts, double threshold,
       free(parameters);
       return NIP_ERROR_OUTOFMEMORY;
     }
-    /* The child MUST be the first variable in order to normalize
-     * potentials reasonably */
+    /* The child MUST be the first variable in order to normalize potentials */
     card[0] = NIP_CARDINALITY(model->variables[v]);
     for(i = 1; i < n; i++)
       card[i] = NIP_CARDINALITY(model->variables[v]->parents[i-1]);
-    /* variable->parents should be null only if n==1
-     * => no for-loop => no null dereference */
-
     parameters[v] = nip_new_potential(card, n, NULL);
     free(card);
   }
@@ -2153,11 +2145,6 @@ int em_learn(time_series* ts, int n_ts, double threshold,
      * accumulating the "average parameters" in the E-step */
     for(v = 0; v < model->num_of_vars; v++){
       nip_uniform_potential(parameters[v], 1.0); /* Q: Use pseudo counts? */
-
-      /*memset(parameters[v]->data, 0, n * sizeof(double)); BS */
-
-      /* the M-step will take care of the normalisation
-       * (and elimination of zeros ?) */
     }
 
     /* E-Step: Now this is the heavy stuff..!

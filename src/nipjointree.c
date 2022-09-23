@@ -933,8 +933,7 @@ static int nip_clique_var_index(nip_clique c, nip_variable v){
 }
 
 
-nip_clique nip_find_family(nip_clique *cliques, int ncliques, 
-			   nip_variable var){
+nip_clique nip_find_family(nip_clique *cliques, int ncliques, nip_variable var){
   int i, n;
   nip_variable* family = NULL;
   nip_clique found;
@@ -950,9 +949,8 @@ nip_clique nip_find_family(nip_clique *cliques, int ncliques,
     return NULL;
   }
 
-  if(n > 0) /* A useful check or not? */
-    for(i = 0; i < n; i++)
-      family[i] = var->parents[i];
+  for(i = 0; i < n; i++)
+    family[i] = var->parents[i];
   family[n] = var;
 
   found = nip_find_clique(cliques, ncliques, family, n+1);
@@ -985,22 +983,22 @@ int* nip_find_family_mapping(nip_clique family, nip_variable child){
     /* NOTE: Child must always be the first in the target potential! */
     for(i=0; i < NIP_DIMENSIONALITY(family->p); i++)
       if(nip_equal_variables((family->variables)[i], child)){
-	result[0] = i;
-	break;
+        result[0] = i;
+        break;
       }
 
     if(n > 1){ /* if child actually has any parents */
       p = 0;
       n--; /* from #parents+1 down to #parents */
       for(i=0; i < NIP_DIMENSIONALITY(family->p); i++){
-	if(p == n)
-	  break; /* all pointers found */
-	for(j=0; j < n; j++)
-	  if(nip_equal_variables((family->variables)[i], parents[j])){
-	    result[j+1] = i;
-	    p++;
-	    break;
-	  }
+        if(p == n)
+          break; /* all pointers found */
+        for(j=0; j < n; j++)
+          if(nip_equal_variables((family->variables)[i], parents[j])){
+            result[j+1] = i;
+            p++;
+            break;
+          }
       }
     }
     child->family_mapping = result; /* MEMOIZE */
@@ -1010,7 +1008,7 @@ int* nip_find_family_mapping(nip_clique family, nip_variable child){
 
 
 nip_clique nip_find_clique(nip_clique *cliques, int ncliques, 
-			   nip_variable *variables, int nvars){
+                           nip_variable *variables, int nvars){
   int i, j, k;
   int ok;
 
@@ -1018,10 +1016,10 @@ nip_clique nip_find_clique(nip_clique *cliques, int ncliques,
     ok = 0;
     for(j = 0; j < nvars; j++){
       for(k = 0; k < NIP_DIMENSIONALITY(cliques[i]->p); k++){
-	if(nip_equal_variables(variables[j], cliques[i]->variables[k])){
-	  ok++;
-	  break; /* found the variable in the clique */
-	}
+        if(nip_equal_variables(variables[j], cliques[i]->variables[k])){
+          ok++;
+          break; /* found the variable in the clique */
+        }
       }
     }
     /* All variables found in the clique */
