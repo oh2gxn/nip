@@ -135,6 +135,17 @@ assert $of $ef $LINENO
 rm $of
 
 
+echo '' 1>&2
+echo '10. Test time series sampling: util/nipsample' 1>&2
+
+if=test/input7.net
+of=test/output10.csv
+ef=test/expect10.csv
+./util/nipsample $if 42 52 7 $of # 2> /dev/null
+assert $of $ef $LINENO
+rm $of
+
+
 # TODO: some 3 layers or units more...
 
 echo "$(tput setaf 2)OK$(tput sgr0)" 1>&2

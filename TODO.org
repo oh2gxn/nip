@@ -17,7 +17,7 @@ Top priority or simple stuff:
 ** Acceptance tests
 *** DONE nipmap
 *** DONE nipinference
-*** TODO nipsample
+*** DONE nipsample
 *** TODO nipjoint
 *** TODO niptrain
 
