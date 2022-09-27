@@ -50,6 +50,7 @@ int main(int argc, char *argv[]){
 
   int e, i, j, n_max;
 
+  int have_random_init;
   long seed;
 
   double probe, loglikelihood;
@@ -185,7 +186,9 @@ int main(int argc, char *argv[]){
         nip_empty_double_list(learning_curve);
 
       /* the EM algorithm */
-      e = em_learn(loo_set, n_max-1, threshold, learning_curve, &nip_append_double, NULL);
+      have_random_init = 1;
+      e = em_learn(model, loo_set, n_max-1, have_random_init,
+                   threshold, learning_curve, &nip_append_double, NULL);
       if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
         fprintf(stderr, "There were errors during learning:\n");
         nip_report_error(__FILE__, __LINE__, e, 1);

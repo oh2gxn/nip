@@ -454,8 +454,10 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * NOTE: Only evidence for the marked variables is used. Unmarked are
  * ignored and you can thus easily omit evidence for an entire variable.
  *
+ * @param model Model structure and possible initial parameters
  * @param ts The input data for training: an array of time series'
  * @param n_ts Number of time series' in \p ts
+ * @param have_random_init 0 if starting with model parameters, 1 if random
  * @param threshold Minimum required improvement in log. likelihood / slice
  * @param learning_curve Possible list of log. likelihood numbers, or null
  * @param em_progress Possible pointer to a function which
@@ -463,10 +465,9 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * @param ts_progress Optional time series progress callback, or null
  * @return An error code in case of any errors
  */
-int em_learn(time_series* ts, int n_ts, double threshold,
-             nip_double_list learning_curve,
-             int (*em_progress)(nip_double_list, double),
-             int (*ts_progress)(int, int));
+int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
+             double threshold, nip_double_list learning_curve,
+             int (*em_progress)(nip_double_list, double), int (*ts_progress)(int, int));
 
 
 /**

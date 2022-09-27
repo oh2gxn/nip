@@ -63,7 +63,7 @@ typedef struct {
 typedef nip_sepset_struct* nip_sepset; ///< sepset reference
 
 /**
- * List item for storing parsed potentials while constructing the graph etc. 
+ * List item for storing parsed potentials while constructing the graph etc.
  * (when the cliques don't exist yet) */
 typedef struct nip_potentiallink {
   nip_potential data; ///< conditional distribution of child given parents
@@ -107,8 +107,7 @@ int nip_confirm_sepset(nip_sepset s);
 
 /**
  * Method for creating sepsets.
- * NOTE: the cliques don't reference the sepset until nip_confirm_sepset 
- * is called. 
+ * NOTE: the cliques don't reference the sepset until nip_confirm_sepset is called.
  * @param neighbour_a The first neighbour clique
  * @param neighbour_b The second neighbour clique (order not relevant, but there are 2)
  * @return reference to a new sepset, free it somewhere later
@@ -132,8 +131,8 @@ nip_potential nip_create_potential(nip_variable variables[], int nvars,
                                    double data[]);
 
 /**
- * Method for unmarking a clique: 
- * call this to every clique before collecting or distributing evidence. 
+ * Method for unmarking a clique:
+ * call this to every clique before collecting or distributing evidence.
  * @param c Reference to a clique to be unmarked (available for search) */
 void nip_unmark_clique(nip_clique c);
 
@@ -167,7 +166,7 @@ int nip_cliques_connected(nip_clique one, nip_clique two);
 int nip_distribute_evidence(nip_clique c);
 
 /**
- * Call Collect-Evidence from clique c1 (or nullpointer) for clique c2. 
+ * Call Collect-Evidence from clique c1 (or nullpointer) for clique c2.
  * Sepset s12 is the sepset between c1 and c2.
  * Remember to UNMARK cliques before calling this.
  * @param c1 Reference to earlier clique, or NULL when starting recursion
@@ -179,11 +178,11 @@ int nip_collect_evidence(nip_clique c1, nip_sepset s12, nip_clique c2);
 
 /**
  * Method for finding out the joint probability distribution of arbitrary
- * variables by making a DFS in the join tree. 
+ * variables by making a DFS in the join tree.
  * NOTE: \p isect MAY NOT contain any of the variables in \p vars
  * NOTE: Remember to unmark all cliques before calling this.
  * @param start The starting point for the recursion
- * @param vars Specifies the variables of interest and the order of variables in 
+ * @param vars Specifies the variables of interest and the order of variables in
  * the resulting potential.
  * @param n_vars Size of the \p vars array
  * @param isect An intersection used during recursion, initially NULL (empty)
@@ -191,19 +190,19 @@ int nip_collect_evidence(nip_clique c1, nip_sepset s12, nip_clique c2);
  * @return reference to the resulting belief potential (free afterwards)
  * @see nip_unmark_clique()
  * @see nip_free_potential() */
-nip_potential nip_gather_joint_probability(nip_clique start, 
-					   nip_variable *vars, int n_vars,
-					   nip_variable *isect, int n_isect);
+nip_potential nip_gather_joint_probability(nip_clique start,
+                                           nip_variable *vars, int n_vars,
+                                           nip_variable *isect, int n_isect);
 
 /**
- * Initialises a clique with a belief potential, which describes the 
- * conditional probability of the child variable given its parents. 
- * This is basically a potential multiplication so that the clique keeps 
- * the parameters even when retraction is used. If transient==1, the 
+ * Initialises a clique with a belief potential, which describes the
+ * conditional probability of the child variable given its parents.
+ * This is basically a potential multiplication so that the clique keeps
+ * the parameters even when retraction is used. If transient==1, the
  * potential can be "wiped" with retraction.
  *
  * NOTE: p->dimensionality equals "number of parents + 1"!
- * Sum of the elements in the potential is assumed to be 1. 
+ * Sum of the elements in the potential is assumed to be 1.
  * The "ownership" of the potential changes, so do not free it.
  * @param c The clique to initialize with model parameters
  * @param child The variable whose dependency is being modeled
@@ -211,16 +210,16 @@ nip_potential nip_gather_joint_probability(nip_clique start,
  * @param transient 0 for permanent model parameters, 1 for temporary stuff
  * @return error code, or 0 if successful
  */
-int nip_init_clique(nip_clique c, nip_variable child, 
-		    nip_potential p, int transient);
+int nip_init_clique(nip_clique c, nip_variable child,
+                    nip_potential p, int transient);
 
 /**
  * This one calculates the probability distribution for a variable
- * according to the given clique. NOTE: the join tree should be 
+ * according to the given clique. NOTE: the join tree should be
  * made consistent before this (enter, distribute, and collect evidence).
  * @param c Reference to a clique containing \p v
  * @param v Reference to the variable of interest
- * @param r Pointer to an array of size v->cardinality, 
+ * @param r Pointer to an array of size v->cardinality,
  * where the result gets written
  * @return error code, or 0 if successful
  * @see nip_enter_evidence()
@@ -240,13 +239,13 @@ int nip_marginalise_clique(nip_clique c, nip_variable v, double r[]);
  * @param cliques Array of all the cliques in the join tree
  * @param ncliques Size of the array \p cliques
  * @return error code, or 0 if successful */
-int nip_global_retraction(nip_variable* vars, int nvars, 
-			  nip_clique* cliques, int ncliques);
+int nip_global_retraction(nip_variable* vars, int nvars,
+                          nip_clique* cliques, int ncliques);
 
 /**
  * Computes the so called probability mass of a clique tree.
- * Suitable for evaluating conditional probability of new evidence, 
- * given the old weight. Hence, call this before and after entering 
+ * Suitable for evaluating conditional probability of new evidence,
+ * given the old weight. Hence, call this before and after entering
  * evidence of interest (and making the tree consistent).
  * @param cliques Array of all the cliques in the join tree
  * @param ncliques Size of the array \p cliques
@@ -267,9 +266,9 @@ double nip_probability_mass(nip_clique* cliques, int ncliques);
  * @param state Observed state of \p v as a string
  * @return error code, or 0 if successful
  * @see nip_enter_evidence() */
-int nip_enter_observation(nip_variable* vars, int nvars, 
-			  nip_clique* cliques, int ncliques, 
-			  nip_variable v, char *state);
+int nip_enter_observation(nip_variable* vars, int nvars,
+                          nip_clique* cliques, int ncliques,
+                          nip_variable v, char *state);
 
 /**
  * Function for entering an observation to a clique tree.
@@ -282,13 +281,13 @@ int nip_enter_observation(nip_variable* vars, int nvars,
  * @param index The index of observed state of \p v: 0 being the first
  * @return error code, or 0 if successful
  * @see nip_variable_state_index() */
-int nip_enter_index_observation(nip_variable* vars, int nvars, 
-				nip_clique* cliques, int ncliques, 
-				nip_variable v, int index);
+int nip_enter_index_observation(nip_variable* vars, int nvars,
+                                nip_clique* cliques, int ncliques,
+                                nip_variable v, int index);
 
 /**
- * Function for entering (hard or soft) evidence to a clique tree. 
- * Retracting the evidence or entering some new evidence about the 
+ * Function for entering (hard or soft) evidence to a clique tree.
+ * Retracting the evidence or entering some new evidence about the
  * variable cancels the effects of this operation.
  * Size of the evidence array must equal \p v->cardinality.
  * This function might do a global retraction, if required.
@@ -299,13 +298,13 @@ int nip_enter_index_observation(nip_variable* vars, int nvars,
  * @param v The variable of interest
  * @param evidence The observed probability of each state of \p v
  * @return error code, or 0 if successful */
-int nip_enter_evidence(nip_variable* vars, int nvars, 
-		       nip_clique* cliques, int ncliques, 
-		       nip_variable v, double evidence[]);
+int nip_enter_evidence(nip_variable* vars, int nvars,
+                       nip_clique* cliques, int ncliques,
+                       nip_variable v, double evidence[]);
 
 /**
- * Function for entering a prior distribution to a clique tree. 
- * Retracting evidence from the cliques cancels the effect of this operation, 
+ * Function for entering a prior distribution to a clique tree.
+ * Retracting evidence from the cliques cancels the effect of this operation,
  * but entering evidence about the variable does not.
  * Size of the prior array must equal \p v->cardinality.
  * @param vars Array of all variables in the model
@@ -316,9 +315,9 @@ int nip_enter_evidence(nip_variable* vars, int nvars,
  * @param prior Array of prior probabilities P(v)
  * @return error code, or 0 if successful
  */
-int nip_enter_prior(nip_variable* vars, int nvars, 
-		    nip_clique* cliques, int ncliques, 
-		    nip_variable v, double prior[]);
+int nip_enter_prior(nip_variable* vars, int nvars,
+                    nip_clique* cliques, int ncliques,
+                    nip_variable v, double prior[]);
 
 /**
  * Finds a clique containing the family of the given variable.
@@ -330,26 +329,26 @@ int nip_enter_prior(nip_variable* vars, int nvars,
 nip_clique nip_find_family(nip_clique* cliques, int ncliques, nip_variable var);
 
 /**
- * Computes or finds a mapping from the family members to the clique 
- * variables, so that you can use general_marginalise to compute 
+ * Computes or finds a mapping from the family members to the clique
+ * variables, so that you can use general_marginalise to compute
  * P(child | pa(child)) from the family clique.
- * @param family The node which models the probability distribution of the 
+ * @param family The node which models the probability distribution of the
  * child and its parents
  * @param child The dependent variable of interest
- * @return Array indicating which variables of the family clique are the child 
+ * @return Array indicating which variables of the family clique are the child
  * and each of its parents. NOTE: Do not free the array (owned by \p child). */
 int* nip_find_family_mapping(nip_clique family, nip_variable child);
 
 /**
- * Finds a clique containing the specified set of variables. 
+ * Finds a clique containing the specified set of variables.
  * Note that this is usually more expensive than nip_find_family().
  * @param cliques Array of all nodes in the join tree
  * @param ncliques Size of the array \p cliques
  * @param variables Array of the variables expected to be included in the clique
  * @param nvars Size of the array \p variables
  * @return reference to the clique of interest, or NULL if not found */
-nip_clique nip_find_clique(nip_clique* cliques, int ncliques, 
-			   nip_variable* variables, int nvars);
+nip_clique nip_find_clique(nip_clique* cliques, int ncliques,
+                           nip_variable* variables, int nvars);
 
 /**
  * Prints the variables of the given clique.
@@ -366,14 +365,14 @@ void nip_fprintf_sepset(FILE* stream, nip_sepset s);
 /**
  * Finds the intersection of two cliques. Creates an array of those
  * variables that can be found in both cliques. Remember to free the
- * memory when the array is not needed anymore. 
+ * memory when the array is not needed anymore.
  * @param cl1 Clique of interest
  * @param cl2 Another clique of interest
  * @param vars Pointer where array reference to the result is written
  * @param n Pointer where size of the array \p *vars is written
  * @return error code, or 0 if successful */
-int nip_clique_intersection(nip_clique cl1, nip_clique cl2, 
-			    nip_variable **vars, int *n);
+int nip_clique_intersection(nip_clique cl1, nip_clique cl2,
+                            nip_variable **vars, int *n);
 
 /**
  * Creates an empty list for storing potentials and corresponding variables
@@ -388,8 +387,8 @@ nip_potential_list nip_new_potential_list();
  * @param child The related child variable
  * @param parents Array of parent variables of \p child, to be freed by the list
  * @return an error code, or 0 if successful */
-int nip_append_potential(nip_potential_list l, nip_potential p, 
-			 nip_variable child, nip_variable* parents);
+int nip_append_potential(nip_potential_list l, nip_potential p,
+                         nip_variable child, nip_variable* parents);
 
 /**
  * Adds potentials to the beginning of a list
@@ -398,12 +397,12 @@ int nip_append_potential(nip_potential_list l, nip_potential p,
  * @param child The related child variable
  * @param parents Array of parent variables of \p child, to be freed by the list
  * @return an error code, or 0 if successful */
-int nip_prepend_potential(nip_potential_list l, nip_potential p, 
-			  nip_variable child, nip_variable* parents);
+int nip_prepend_potential(nip_potential_list l, nip_potential p,
+                          nip_variable child, nip_variable* parents);
 
 /**
  * Frees the memory allocated to a potential list.
- * NOTE: This frees also the actual potentials and parent variable arrays! 
+ * NOTE: This frees also the actual potentials and parent variable arrays!
  * Variables themselves are kept intact.
  * @param l The list to be freed */
 void nip_free_potential_list(nip_potential_list l);

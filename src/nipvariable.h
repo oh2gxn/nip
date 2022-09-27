@@ -60,14 +60,14 @@ typedef struct nip_var {
   int prior_entered; ///< Tells whether the prior is already in use
 
   struct nip_var* previous; /**< Pointer to the variable which corresponds to
-			       this one in the previous timeslice */
+                               this one in the previous timeslice */
   struct nip_var* next; /**< Pointer to the variable which corresponds to
-			   this one in the next timeslice */
+                           this one in the next timeslice */
   int num_of_parents; ///< Number of parents
   struct nip_var** parents; ///< Array of pointers to the parents
   void* family_clique; ///< Possible reference to the family clique
   int* family_mapping; /**< Maps the variables in the family to the
-			  variables in the family clique */
+                          variables in the family clique */
 
   int interface_status; ///< Bit flags which interfaces the variable belongs to
   char mark; ///< mark for some algorithms (like DFS and data generation)

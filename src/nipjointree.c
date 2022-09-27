@@ -48,14 +48,14 @@ static int nip_clique_marked(nip_clique c);
 
 /**
  * Depth-first search in the clique tree starting from clique \p start.
- * All cliques must be unmarked before calling this, unless limiting 
+ * All cliques must be unmarked before calling this, unless limiting
  * the search deliberately.
  * @param start Clique where the DFS starts
  * @param cFuncPointer The function to be used for every clique on the way
  * @param sFuncPointer The function to be used for every sepset on the way
  * @param ptr A pointer where the return values can be updated, or NULL
  * @return an error code, or 0 if successful */
-static int nip_join_tree_dfs(nip_clique start, 
+static int nip_join_tree_dfs(nip_clique start,
                              int (*cFuncPointer)(nip_clique, double*),
                              int (*sFuncPointer)(nip_sepset, double*),
                              double* ptr);
@@ -84,14 +84,14 @@ nip_clique nip_new_clique(nip_variable vars[], int nvars){
   if(!c){
     nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
-  }    
+  }
 
   cardinality = (int *) calloc(nvars, sizeof(int));
   if(!cardinality){
     free(c);
     nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
-  }    
+  }
 
   reorder = (int *) calloc(nvars, sizeof(int));
   if(!reorder){
@@ -99,7 +99,7 @@ nip_clique nip_new_clique(nip_variable vars[], int nvars){
     free(cardinality);
     nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
-  }    
+  }
 
   indices = (int *) calloc(nvars, sizeof(int));
   if(!indices){
@@ -108,9 +108,9 @@ nip_clique nip_new_clique(nip_variable vars[], int nvars){
     free(reorder);
     nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
-  }    
+  }
 
-  /* reorder[i] is the place of i:th variable (in the sense of this program) 
+  /* reorder[i] is the place of i:th variable (in the sense of this program)
    * in the array variables[].
    * Because of this, vars[] can be given in any order.
    */
@@ -146,7 +146,7 @@ nip_clique nip_new_clique(nip_variable vars[], int nvars){
     c->variables[i] = vars[reorder[i]];
     cardinality[i] = NIP_CARDINALITY(c->variables[i]);
   }
-  
+
   c->p = nip_new_potential(cardinality, nvars, NULL);
   c->original_p = nip_new_potential(cardinality, nvars, NULL);
 
@@ -180,7 +180,7 @@ void nip_free_clique(nip_clique c){
 
   if(c == NULL)
     return;
-  
+
   /* clean the list of sepsets */
   l1 = c->sepsets;
   while(l1 != NULL){
@@ -216,7 +216,7 @@ int nip_confirm_sepset(nip_sepset s){
   new2 = (nip_sepset_link) malloc(sizeof(nip_sepsetlink_struct));
   if (!new || !new2)
     return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-  
+
   c = s->first_neighbour;
   for (i=0; i<2; i++){
     new->data = s;
@@ -254,7 +254,7 @@ static void nip_remove_sepset(nip_clique c, nip_sepset s){
 
       free(l);
       return;
-    }      
+    }
     l = l->fwd;
   }
   return;
@@ -272,7 +272,7 @@ nip_sepset nip_new_sepset(nip_clique neighbour_a, nip_clique neighbour_b){
   if (neighbour_a == NULL || neighbour_b == NULL){
     nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     return NULL;
-  }    
+  }
 
   s = (nip_sepset) malloc(sizeof(nip_sepset_struct));
   if(!s){
@@ -283,11 +283,11 @@ nip_sepset nip_new_sepset(nip_clique neighbour_a, nip_clique neighbour_b){
   /* Take the intersection of two cliques. */
   s->first_neighbour = neighbour_a;
   s->second_neighbour = neighbour_b;
-  s->variables = nip_variable_isect(neighbour_a->variables, 
-				    neighbour_b->variables, 
-				    NIP_DIMENSIONALITY(neighbour_a->p),
-				    NIP_DIMENSIONALITY(neighbour_b->p),
-				    &isect_size);
+  s->variables = nip_variable_isect(neighbour_a->variables,
+                                    neighbour_b->variables,
+                                    NIP_DIMENSIONALITY(neighbour_a->p),
+                                    NIP_DIMENSIONALITY(neighbour_b->p),
+                                    &isect_size);
 
   if(isect_size < 0){
     free(s);
@@ -336,7 +336,7 @@ void nip_free_sepset(nip_sepset s){
 
 
 /* FIXME: use mapper and functions provided by nippotential.h ! */
-nip_potential nip_create_potential(nip_variable variables[], int nvars, 
+nip_potential nip_create_potential(nip_variable variables[], int nvars,
                                    double data[]){
   /*
    * Suppose we get an array of variables with IDs {5, 2, 3, 4, 0, 1}.
@@ -393,7 +393,7 @@ nip_potential nip_create_potential(nip_variable variables[], int nvars,
     return NULL;
   }
 
-  /* reorder[i] is the place of i:th variable (in the sense of this program) 
+  /* reorder[i] is the place of i:th variable (in the sense of this program)
    * in the array variables[] */
 
   /* init (needed?) */
@@ -432,7 +432,7 @@ nip_potential nip_create_potential(nip_variable variables[], int nvars,
     nip_report_error(__FILE__, __LINE__, EFAULT, 1);
     return NULL;
   }
-  
+
   /*
    * NULL data is accepted.
    * In that case, potential will be uniformly distributed.
@@ -440,10 +440,10 @@ nip_potential nip_create_potential(nip_variable variables[], int nvars,
   if(data != NULL)
 
     /* Copy the contents to their correct places */
-    /******************************************************* 
-	  JJT: In principle it is a bit ugly to do this 
-	  at this level. If potential.c changes, this has to 
-	  be revised too!!! 
+    /*******************************************************
+	  JJT: In principle it is a bit ugly to do this
+	  at this level. If potential.c changes, this has to
+	  be revised too!!!
     ********************************************************/
     for(i = 0; i < size_of_data; i++){
 
@@ -451,7 +451,7 @@ nip_potential nip_create_potential(nip_variable variables[], int nvars,
        * Find out indices (in the internal order of the program,
        * determined by the variable IDs).
        */
-      nip_inverse_mapping(p, i, indices); 
+      nip_inverse_mapping(p, i, indices);
 
       /* calculate the address in the original array */
       index = 0;
@@ -655,9 +655,9 @@ static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2){
   /*
    * Marginalise (projection). Information flows from clique c1 to sepset s.
    */
-  mapping = nip_mapper(c1->variables, s->variables, 
-		       NIP_DIMENSIONALITY(c1->p), 
-		       NIP_DIMENSIONALITY(s->new));
+  mapping = nip_mapper(c1->variables, s->variables,
+                       NIP_DIMENSIONALITY(c1->p),
+                       NIP_DIMENSIONALITY(s->new));
   err = nip_general_marginalise(c1->p, s->new, mapping);
   free(mapping);
   if(err != 0)
@@ -666,8 +666,8 @@ static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2){
   /*
    * Update (absorption). Information flows from sepset s to clique c2.
    */
-  mapping = nip_mapper(c2->variables, s->variables, 
-		       NIP_DIMENSIONALITY(c2->p), 
+  mapping = nip_mapper(c2->variables, s->variables,
+		       NIP_DIMENSIONALITY(c2->p),
 		       NIP_DIMENSIONALITY(s->new));
   err = nip_update_potential(s->new, s->old, c2->p, mapping);
   free(mapping);
@@ -679,8 +679,8 @@ static int nip_message_pass(nip_clique c1, nip_sepset s, nip_clique c2){
 
 
 /* TODO: check that this has a correct mapping between p and c! */
-int nip_init_clique(nip_clique c, nip_variable child, 
-		    nip_potential p, int transient){
+int nip_init_clique(nip_clique c, nip_variable child,
+                    nip_potential p, int transient){
   int i, j, k, err;
   int* mapping = NULL;
   nip_variable var = NULL;
@@ -691,28 +691,28 @@ int nip_init_clique(nip_clique c, nip_variable child,
     mapping = (int *) calloc(NIP_DIMENSIONALITY(p), sizeof(int));
     if(!mapping)
       return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
-    
+
     /***************************************************************/
     /* HEY! parents[] NOT assumed to be in any particular order!   */
     /* But the variables of p are assumed to be in the same order  */
     /* as in the clique c!                                         */
     /***************************************************************/
-    
-    /* initialisation with conditional distributions 
+
+    /* initialisation with conditional distributions
        first: select the variables (in a stupid but working way) */
     /* FIXME: use mapper? */
     k = 0;
     for(i=0; i < NIP_DIMENSIONALITY(c->p); i++){
       if(k == NIP_DIMENSIONALITY(p))
-	break; /* all found */
+        break; /* all found */
       var = (c->variables)[i];
-      
+
       for(j=0; j < NIP_DIMENSIONALITY(p) - 1; j++)
-	if(nip_equal_variables(var, parents[j]))
-	  mapping[k++] = i;
-      
+        if(nip_equal_variables(var, parents[j]))
+          mapping[k++] = i;
+
       if(nip_equal_variables(var, child))
-	mapping[k++] = i;
+        mapping[k++] = i;
     }
   }
 
@@ -732,8 +732,8 @@ int nip_init_clique(nip_clique c, nip_variable child,
       return nip_report_error(__FILE__, __LINE__, err, 1);
     }
   }
-  /* This should be an optional phase: in timeslice models 
-   * some clique potentials need to be initialised but still 
+  /* This should be an optional phase: in timeslice models
+   * some clique potentials need to be initialised but still
    * be retractable... */
 
   free(mapping); /* free(NULL) is O.K. */
@@ -748,7 +748,7 @@ int nip_marginalise_clique(nip_clique c, nip_variable v, double r[]){
   /* variable not in this clique => ERROR */
   if(index < 0)
     return nip_report_error(__FILE__, __LINE__, EINVAL, 1);
-  
+
   err = nip_total_marginalise(c->p, r, index);
   if(err != 0)
     nip_report_error(__FILE__, __LINE__, err, 1);
@@ -757,8 +757,8 @@ int nip_marginalise_clique(nip_clique c, nip_variable v, double r[]){
 }
 
 
-int nip_global_retraction(nip_variable* vars, int nvars, 
-			  nip_clique* cliques, int ncliques){
+int nip_global_retraction(nip_variable* vars, int nvars,
+                          nip_clique* cliques, int ncliques){
   int i, index;
   int err;
   nip_variable v;
@@ -786,21 +786,21 @@ int nip_global_retraction(nip_variable* vars, int nvars,
 }
 
 
-int nip_enter_observation(nip_variable* vars, int nvars, 
-			  nip_clique* cliques, int ncliques, 
-			  nip_variable v, char *state){
+int nip_enter_observation(nip_variable* vars, int nvars,
+                          nip_clique* cliques, int ncliques,
+                          nip_variable v, char *state){
   int index = nip_variable_state_index(v, state);
   if(index < 0)
     return 0;
-  return nip_enter_index_observation(vars, nvars, 
-				     cliques, ncliques, 
-				     v, index);
+  return nip_enter_index_observation(vars, nvars,
+                                     cliques, ncliques,
+                                     v, index);
 }
 
 
-int nip_enter_index_observation(nip_variable* vars, int nvars, 
-				nip_clique* cliques, int ncliques, 
-				nip_variable v, int index){
+int nip_enter_index_observation(nip_variable* vars, int nvars,
+                                nip_clique* cliques, int ncliques,
+                                nip_variable v, int index){
   int i, err;
   double *evidence;
 
@@ -825,9 +825,9 @@ int nip_enter_index_observation(nip_variable* vars, int nvars,
 }
 
 
-int nip_enter_evidence(nip_variable* vars, int nvars, 
-		       nip_clique* cliques, int ncliques, 
-		       nip_variable v, double evidence[]){
+int nip_enter_evidence(nip_variable* vars, int nvars,
+                       nip_clique* cliques, int ncliques,
+                       nip_variable v, double evidence[]){
   int index, i, err;
   int retraction = 0;
   nip_clique c;
@@ -835,7 +835,7 @@ int nip_enter_evidence(nip_variable* vars, int nvars,
   if(v == NULL || evidence == NULL)
     return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 
-  c = nip_find_family(cliques, ncliques, v);    
+  c = nip_find_family(cliques, ncliques, v);
   if(!c)
     return nip_report_error(__FILE__, __LINE__, EINVAL, 0);
 
@@ -844,7 +844,7 @@ int nip_enter_evidence(nip_variable* vars, int nvars,
   for(i = 0; i < NIP_CARDINALITY(v); i++)
     if((v->likelihood)[i] == 0 && evidence[i] != 0)
       retraction = 1; /* Must do global retraction! */
-  
+
   /*
    * Here is the update of clique potential.
    * MUST be done before update_likelihood.
@@ -870,9 +870,9 @@ int nip_enter_evidence(nip_variable* vars, int nvars,
 }
 
 
-int nip_enter_prior(nip_variable* vars, int nvars, 
-		    nip_clique* cliques, int ncliques, 
-		    nip_variable v, double prior[]){
+int nip_enter_prior(nip_variable* vars, int nvars,
+                    nip_clique* cliques, int ncliques,
+                    nip_variable v, double prior[]){
   int index, i, e;
   nip_clique c;
 
@@ -881,7 +881,7 @@ int nip_enter_prior(nip_variable* vars, int nvars,
 
   /* printf("Entering prior for variable %s:\n", v->symbol); DEBUG */
 
-  c = nip_find_family(cliques, ncliques, v);    
+  c = nip_find_family(cliques, ncliques, v);
 
   e = 1;
   for(i = 0; i < NIP_CARDINALITY(v); i++){
@@ -898,7 +898,7 @@ int nip_enter_prior(nip_variable* vars, int nvars,
   index = nip_clique_var_index(c, v);
 
   /*
-   * Here is the update of clique potential: simply a multiplication, 
+   * Here is the update of clique potential: simply a multiplication,
    * effects of which may not disappear if it gets multiplied again
    * when the variable is observed and actual evidence entered.
    */
@@ -1007,7 +1007,7 @@ int* nip_find_family_mapping(nip_clique family, nip_variable child){
 }
 
 
-nip_clique nip_find_clique(nip_clique *cliques, int ncliques, 
+nip_clique nip_find_clique(nip_clique *cliques, int ncliques,
                            nip_variable *variables, int nvars){
   int i, j, k;
   int ok;
@@ -1056,7 +1056,7 @@ void nip_fprintf_sepset(FILE* stream, nip_sepset s){
 static int nip_retract_clique(nip_clique c, double* ptr){
   if(!c)
     return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
-  /* another option: 
+  /* another option:
    * nip_uniform_potential(c->p, 1.0);
    * nip_init_potential(c->original_p, c->p); */
   return nip_retract_potential(c->p, c->original_p);
@@ -1072,16 +1072,16 @@ static int nip_retract_sepset(nip_sepset s, double* ptr){
 }
 
 
-static int nip_join_tree_dfs(nip_clique start, 
-			     int (*cFuncPointer)(nip_clique, double*),
-			     int (*sFuncPointer)(nip_sepset, double*),
-			     double* ptr) {
+static int nip_join_tree_dfs(nip_clique start,
+                             int (*cFuncPointer)(nip_clique, double*),
+                             int (*sFuncPointer)(nip_sepset, double*),
+                             double* ptr) {
 
   /* a lot of copy-paste from collect/distribute_evidence and clique_search */
   nip_sepset_link l;
   nip_sepset s;
   int err;
-  
+
   if(start == NULL)
     return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 
@@ -1155,16 +1155,16 @@ double nip_probability_mass(nip_clique* cliques, int ncliques){
 }
 
 
-/** TODO: Currently this computes potentials in EVERY node of join tree 
- ** even if the answer can be found in a single node. It could try to 
- ** remember the found variables and prune the DFS after all necessary 
+/** TODO: Currently this computes potentials in EVERY node of join tree
+ ** even if the answer can be found in a single node. It could try to
+ ** remember the found variables and prune the DFS after all necessary
  ** variables have been encountered.
  **/
 /* TODO: a lot of copy-paste, what if a dummy clique was used */
 /* FIXME: this is probably a big mess... */
-nip_potential nip_gather_joint_probability(nip_clique start, 
-					   nip_variable *vars, int n_vars,
-					   nip_variable *isect, int n_isect){  
+nip_potential nip_gather_joint_probability(nip_clique start,
+                                           nip_variable *vars, int n_vars,
+                                           nip_variable *isect, int n_isect){
   int i, err;
   int* mapping = NULL;
   int* cardinality = NULL;
@@ -1184,7 +1184,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
   nip_sepset_link l;
   nip_sepset s; /* a neighbour sepset */
   nip_clique c; /* a neighbour clique */
-  
+
   /* error? */
   if(start == NULL || n_vars < 0){
     nip_report_error(__FILE__, __LINE__, EINVAL, 1);
@@ -1224,17 +1224,17 @@ nip_potential nip_gather_joint_probability(nip_clique start,
     cardinality[i] = NIP_CARDINALITY(prod_vars[i]);
 
   /* ### possibly HUGE potential array ! ### */
-  prod = nip_new_potential(cardinality, nprod, NULL); 
+  prod = nip_new_potential(cardinality, nprod, NULL);
 
   /* free(cardinality);
    * reuse the larger cardinality array: nprod >= n_vars */
 
   /*** 2. Multiply (<start> clique) ***/
-  
+
   /* 2.1 Form the mapping between potentials */
   /* NOTE: a slightly bigger array allocated for future purposes also. */
-  mapping = nip_mapper(prod_vars, start->variables, 
-		       nprod, NIP_DIMENSIONALITY(start->p));
+  mapping = nip_mapper(prod_vars, start->variables,
+                       nprod, NIP_DIMENSIONALITY(start->p));
   if(!mapping){
     nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     free(cardinality);
@@ -1258,19 +1258,19 @@ nip_potential nip_gather_joint_probability(nip_clique start,
   while (l != NULL){
     s = (nip_sepset)(l->data);
     /* try both directions in a neighboring sepset */
-    for(i = 0; i < 2; i++){ 
+    for(i = 0; i < 2; i++){
       if (i==0)
-	c = s->first_neighbour;
+        c = s->first_neighbour;
       else
-	c = s->second_neighbour;
+        c = s->second_neighbour;
 
       if(!nip_clique_marked(c)){
-	
+
 	/*** 3. Operations on potentials ***/
 
 	/* 3.1 Mapping between sepset and prod potentials */
-	mapping = nip_mapper(prod_vars, s->variables, 
-			     nprod, NIP_DIMENSIONALITY(s->new));
+	mapping = nip_mapper(prod_vars, s->variables,
+                       nprod, NIP_DIMENSIONALITY(s->new));
 
 	/* 3.2 Division with sepset potential */
 	err = nip_update_potential(NULL, s->new, prod, mapping);
@@ -1283,13 +1283,13 @@ nip_potential nip_gather_joint_probability(nip_clique start,
 	  return NULL;
 	}
 
-	/* 3.3 Decide what kind of potential you need 
+	/* 3.3 Decide what kind of potential you need
 	 *     from the rest of the tree */
 
 	/* original <vars> and intersection of cliques */
-	msg_isect = nip_variable_isect(s->variables, vars, 
-				       NIP_DIMENSIONALITY(s->new), n_vars, 
-				       &nmsgi);
+	msg_isect = nip_variable_isect(s->variables, vars,
+                                 NIP_DIMENSIONALITY(s->new), n_vars,
+                                 &nmsgi);
 	if(!msg_isect){
 	  nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 	  free(cardinality);
@@ -1300,7 +1300,6 @@ nip_potential nip_gather_joint_probability(nip_clique start,
 
 	/* 3.4 Continue DFS */
 	msg = nip_gather_joint_probability(c, vars, n_vars, msg_isect, nmsgi);
-	
 
 	/* 3.5 Mapping between prod potential and recursive result */
 	msg_vars = nip_variable_union(vars, msg_isect, n_vars, nmsgi, &nmsg);
@@ -1333,21 +1332,20 @@ nip_potential nip_gather_joint_probability(nip_clique start,
     sum = prod;
   }
   else{
-    
     /* 4.1 Reserve space for the result */
     for(i = 0; i < n_vars; i++)
       cardinality[i] = NIP_CARDINALITY(vars[i]);
     for(i = 0; i < n_isect; i++)
       cardinality[n_vars + i] = NIP_CARDINALITY(isect[i]);
     /* possibly LARGE potential array ! */
-    sum = nip_new_potential(cardinality, n_vars + n_isect, NULL); 
+    sum = nip_new_potential(cardinality, n_vars + n_isect, NULL);
     free(cardinality);
-    
+
     /* 4.2 Form the mapping between prod and sum potentials */
     mapping = (int*) calloc(n_vars + n_isect, sizeof(int));
     for(i = 0; i < n_vars + n_isect; i++)
       mapping[i] = i; /* Trivial because of the union operation above */
-    
+
     /* 4.3 Marginalise */
     err = nip_general_marginalise(prod, sum, mapping);
     free(mapping);
@@ -1359,7 +1357,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
       return NULL;
     }
   }
-  
+
   /* 4.4 Normalise (?) */
   /* Q: is this a good idea at this point? */
   /*normalise_potential(sum);*/
@@ -1369,8 +1367,7 @@ nip_potential nip_gather_joint_probability(nip_clique start,
 
 
 nip_potential_list nip_new_potential_list(){
-  nip_potential_list pl = (nip_potential_list) 
-    malloc(sizeof(nip_potential_list_struct));
+  nip_potential_list pl = (nip_potential_list) malloc(sizeof(nip_potential_list_struct));
   if(!pl){
     nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
     return NULL;
@@ -1382,13 +1379,12 @@ nip_potential_list nip_new_potential_list(){
 }
 
 
-int nip_append_potential(nip_potential_list l, nip_potential p, 
-			 nip_variable child, nip_variable* parents){
+int nip_append_potential(nip_potential_list l, nip_potential p,
+                         nip_variable child, nip_variable* parents){
   if(!l || !p)
     return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 
-  nip_potential_link new = (nip_potential_link) 
-    malloc(sizeof(nip_potential_link_struct));
+  nip_potential_link new = (nip_potential_link) malloc(sizeof(nip_potential_link_struct));
   if(!new)
     return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 
@@ -1409,13 +1405,12 @@ int nip_append_potential(nip_potential_list l, nip_potential p,
 }
 
 
-int nip_prepend_potential(nip_potential_list l, nip_potential p, 
-			  nip_variable child, nip_variable* parents){
+int nip_prepend_potential(nip_potential_list l, nip_potential p,
+                          nip_variable child, nip_variable* parents){
   if(!l || !p)
     return nip_report_error(__FILE__, __LINE__, EFAULT, 1);
 
-  nip_potential_link new = (nip_potential_link) 
-    malloc(sizeof(nip_potential_link_struct));
+  nip_potential_link new = (nip_potential_link) malloc(sizeof(nip_potential_link_struct));
   if(!new)
     return nip_report_error(__FILE__, __LINE__, ENOMEM, 1);
 
@@ -1440,7 +1435,7 @@ void nip_free_potential_list(nip_potential_list l){
 
   if(!l)
     return;
-  
+
   ln = l->last;
 
   l->last = NULL;

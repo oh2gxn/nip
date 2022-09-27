@@ -18,8 +18,13 @@ Top priority or simple stuff:
 *** DONE nipmap
 *** DONE nipinference
 *** DONE nipsample
-*** TODO nipjoint
 *** TODO niptrain
+- BUG: copies node property NIP_next in a wrong way?
+: input:  parent.NIP_next = child.symbol;
+: output: child.NIP_next = parent.symbol;
+- Separate/optional random initialization: support continued training
+*** TODO nipjoint
+
 
 * TODO Refactor: replacing a lot of copy-paste code with these
 ** nip_variable_union(),
@@ -45,10 +50,11 @@ Ideas for future improvement:
 - output M+2 columns: X,Y,...,P(x,y,...|data),P(x,y,...,data)
   where rows x,y,... span all combinations of X × Y × ...
 
+
 * TODO Use of mini batches during EM
-** TODO Separate/optional random initialization: support continued training
 ** TODO Read a smaller batch of time series from a file
 ** TODO Compute E and M on the smaller batch
+
 
 * TODO OpenMP threads in EM
 ** TODO Use smaller batches of data in parallel?

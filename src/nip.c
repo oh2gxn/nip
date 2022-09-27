@@ -359,9 +359,9 @@ int write_model(nip_model model, char* filename){
     for(j = 0; j < n; j++)
       fprintf(f, " \"%s\" \n%s              ", v->state_names[j], indent);
     fprintf(f, " \"%s\" );\n", v->state_names[n]);
-    if(v->previous) /* semantics of next/previous?*/
+    if(v->next)
       fprintf(f, "%s    NIP_next = \"%s\";\n", indent,
-              nip_variable_symbol(v->previous));
+              nip_variable_symbol(v->next));
     fprintf(f, "%s}\n", indent);
     fflush(f);
   }
@@ -426,6 +426,7 @@ int write_model(nip_model model, char* filename){
     c = nip_find_family(model->cliques, model->num_of_cliques, v);
     map = nip_find_family_mapping(c, v);
     nip_general_marginalise(c->original_p, p, map);
+    /* TODO: keep parameters/pseudocounts as model state, separate from join tree */
 
     /* normalisation (NOTE: should be part of potential.c) */
     nip_normalise_cpd(p);
@@ -2051,25 +2052,23 @@ static int m_step(nip_potential* parameters, nip_model model){
 
 /* Trains the given model (ts[0]->model) according to the given set of
  * time series (ts[*]) with EM-algorithm. Returns an error code. */
-int em_learn(time_series* ts, int n_ts, double threshold,
-             nip_double_list learning_curve,
-             int (*em_progress)(nip_double_list, double),
-             int (*ts_progress)(int, int)){
+int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
+             double threshold, nip_double_list learning_curve,
+             int (*em_progress)(nip_double_list, double), int (*ts_progress)(int, int)){
   int i, n, v;
-  int *card;
+  int *card, *mapping;
   int ts_steps;
   double old_loglikelihood;
   double loglikelihood = -DBL_MAX;
   double probe = 0;
   nip_potential* parameters = NULL;
-  nip_model model = NULL;
+  nip_clique clique;
   int e;
 
-  if(!ts[0] || !ts[0]->model){
+  if(!ts[0] || !model){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
     return NIP_ERROR_INVALID_ARGUMENT;
   }
-  model = ts[0]->model;
 
   if(learning_curve != NULL){
     /* Take care it's empty */
@@ -2106,11 +2105,28 @@ int em_learn(time_series* ts, int n_ts, double threshold,
    * NOTE: parameters near zero are a numerical problem...
    *       on the other hand, zeros are needed in some cases.
    *       How to identify a "bad" zero? */
-  /*random_seed(NULL);*/
-  for(v = 0; v < model->num_of_vars; v++){
-    nip_random_potential(parameters[v]);
-    /* the M-step will take care of the normalisation */
-  }
+  if(have_random_init)
+    for(v = 0; v < model->num_of_vars; v++){
+      nip_random_potential(parameters[v]);
+      /* the M-step will take care of the normalisation */
+    }
+  else
+    for(v = 0; v < model->num_of_vars; v++){
+      clique = nip_find_family(model->cliques, model->num_of_cliques,
+                               model->variables[v]);
+      if(!clique){
+        nip_report_error(__FILE__, __LINE__, EINVAL, 1);
+        while(v > 0)
+          nip_free_potential(parameters[--v]);
+        free(parameters);
+        return NIP_ERROR_OUTOFMEMORY;
+      }
+      mapping = nip_find_family_mapping(clique, model->variables[v]);
+      nip_general_marginalise(clique->original_p, parameters[v], mapping);
+      /* TODO: keep parameters/pseudocounts as model state, separate from join tree */
+      /* the M-step will take care of the normalisation?
+      nip_normalise_cpd(p); */
+    }
 
   /* Compute total number of time steps */
   ts_steps = 0;

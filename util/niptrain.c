@@ -27,7 +27,7 @@
  *
  * - Structure of the model will be read from the file <ORIGINAL.NET>
  * - data for learning will be read from <DATA.TXT>
- * - <SEED> will be used for initializing pseudo RNG
+ * - <SEED> will be used for initializing pseudo RNG, non-number for skipping init
  * - <THRESHOLD> will provide the minimum change in average log. likelihood
  * - <MINL> sets the minimum average log. likelihood
  *   (be careful not to demand too much)
@@ -66,9 +66,10 @@ static int em_progress(nip_double_list learning_curve, double mean_log_likelihoo
 
 int main(int argc, char *argv[]) {
 
-  int i, n, t, e;
+  int i, n, e;
   nip_model model = NULL;
   time_series *ts_set = NULL;
+  int n_ts;
   time_series ts;
   double threshold = 0;
   double min_log_likelihood = 0;
@@ -77,6 +78,7 @@ int main(int argc, char *argv[]) {
   nip_double_link link = NULL;
   char* tailptr = NULL;
   long seed;
+  int have_random_init;
 
   fprintf(stderr, "niptrain:\n");
 
@@ -84,7 +86,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "You must specify: \n");
     fprintf(stderr, " - the original NET file, \n");
     fprintf(stderr, " - data file, \n");
-    fprintf(stderr, " - random seed (integer), \n");
+    fprintf(stderr, " - random seed (integer if random init), \n");
     fprintf(stderr, " - threshold value (0...1), \n");
     fprintf(stderr, " - minimum required log. likelihood/time step (<<0), and \n");
     fprintf(stderr, " - file name for the resulting model, please!\n");
@@ -102,13 +104,13 @@ int main(int argc, char *argv[]) {
 
   /* read the data */
   fprintf(stderr, "  Reading input data from %s... \n", argv[2]);
-  n = read_timeseries(model, argv[2], &ts_set, &ts_progress);
-  if(n == 0){
+  n_ts = read_timeseries(model, argv[2], &ts_set, &ts_progress);
+  if(n_ts == 0){
     fprintf(stderr, "Unable to parse the data file: %s?\n", argv[2]);
     free_model(model);
     return -1;
   }
-  fprintf(stderr, "  ...%8d sequences found.\n", n);
+  fprintf(stderr, "  ...%8d sequences found.\n", n_ts);
 
   /* print a summary about the variables */
   ts = ts_set[0];
@@ -121,7 +123,7 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "\n");
   if(model->num_of_vars == ts->num_of_hidden){
     fprintf(stderr, "No relevant data columns: check the header row.\n");
-    for(i = 0; i < n; i++)
+    for(i = 0; i < n_ts; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
     free_model(model);
@@ -131,21 +133,21 @@ int main(int argc, char *argv[]) {
   /* read random seed value */
   seed = strtol(argv[3], &tailptr, 10);
   if(tailptr == argv[3]){
-    fprintf(stderr, "Specify a valid random seed: %s?\n", argv[3]);
-    for(i = 0; i < n; i++)
-      free_timeseries(ts_set[i]);
-    free(ts_set);
-    free_model(model);
-    return -1;
+    seed = random_seed(NULL);
+    have_random_init = 0;
+    fprintf(stderr, "  Using model without randomization. Not seeding with %s\n", argv[3]);
   }
-  seed = random_seed(&seed);
+  else{
+    seed = random_seed(&seed);
+    have_random_init = 1;
+  }
   fprintf(stderr, "  Random seed = %ld\n", seed);
 
   /* read the threshold value */
   threshold = strtod(argv[4], &tailptr);
   if(threshold <= 0.0 || threshold > 1  || tailptr == argv[4]){
     fprintf(stderr, "Specify a valid threshold value: %s?\n", argv[4]);
-    for(i = 0; i < n; i++)
+    for(i = 0; i < n_ts; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
     free_model(model);
@@ -158,7 +160,7 @@ int main(int argc, char *argv[]) {
   if(min_log_likelihood >= 0.0 || tailptr == argv[5]){
     fprintf(stderr, "Specify a valid value for minimum log. likelihood");
     fprintf(stderr, " / time step: %s?\n", argv[5]);
-    for(i = 0; i < n; i++)
+    for(i = 0; i < n_ts; i++)
       free_timeseries(ts_set[i]);
     free(ts_set);
     free_model(model);
@@ -170,9 +172,9 @@ int main(int argc, char *argv[]) {
   for(i = 0; i < model->num_of_vars; i++)
     nip_mark_variable(model->variables[i]); /* Make sure all the data is used */
   learning_curve = nip_new_double_list();
-  t = 0;
+  n = 0;
   do{
-    t++;
+    n++;
     last = 0; /* init */
 
     /* free the list if necessary */
@@ -181,11 +183,12 @@ int main(int argc, char *argv[]) {
     }
 
     /* EM algorithm */
-    e = em_learn(ts_set, n, threshold, learning_curve, &em_progress, &ts_progress);
+    e = em_learn(model, ts_set, n_ts, have_random_init,
+                 threshold, learning_curve, &em_progress, &ts_progress);
     if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
       fprintf(stderr, "There were errors during learning:\n");
       nip_report_error(__FILE__, __LINE__, e, 1);
-      for(i = 0; i < n; i++)
+      for(i = 0; i < n_ts; i++)
         free_timeseries(ts_set[i]);
       free(ts_set);
       free_model(model);
@@ -197,32 +200,33 @@ int main(int argc, char *argv[]) {
     /* find out the last value in learning curve */
     i = NIP_LIST_LENGTH(learning_curve);
     if(i == 0){
-      fprintf(stderr, "  Run %4d failed 0.0 with %4d iterations, delta = 0.0 \n", t, i);
+      fprintf(stderr, "  Run %4d failed 0.0 with %4d iterations, delta = 0.0 \n", n, i);
     }
     else{
       last = learning_curve->last->data;
       if(i > 1)
         fprintf(stderr, "  Run %4d reached %16g with %4d iterations, delta = %16g \n",
-                t, last, i, last - learning_curve->last->bwd->data);
+                n, last, i, last - learning_curve->last->bwd->data);
       else
         fprintf(stderr,"  Run %4d reached %16g with %4d iterations, delta = 0.0 \n",
-                t, last, i);
+                n, last, i);
     }
 
     /* Try again, if not satisfied with the result */
+    have_random_init = 1;
   } while(e == NIP_ERROR_BAD_LUCK ||
           last < min_log_likelihood);
 
   fprintf(stderr, "  ...computing done.\n");
-  for(i = 0; i < n; i++)
+  for(i = 0; i < n_ts; i++)
     free_timeseries(ts_set[i]);
   free(ts_set);
 
   /* Print the learning curve: iteration number, average log. likelihood */
-  link = learning_curve->first; t = 1;
+  link = learning_curve->first; n = 1;
   while(link != NULL){
     /* Reminder: rint() is NOT ANSI C. */
-    printf("%d,%g\n", t++, rint(link->data / threshold) * threshold);
+    printf("%d,%g\n", n++, rint(link->data / threshold) * threshold);
     link = link->fwd;
   }
   nip_empty_double_list(learning_curve);
