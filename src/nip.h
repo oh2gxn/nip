@@ -285,6 +285,19 @@ char* get_observation(time_series ts, nip_variable v, int time);
 
 
 /**
+ * Method for reading inferred probabilities from an uncertain series.
+ * You'll have to specify the variable of interest \p v.
+ *
+ * NOTE: DO NOT alter the table returned by the function!
+ * The returned value may be NULL if the variable was not observed at
+ * the specified moment in time, or \p ucs is shorter than that.
+ * @param ucs Uncertain series inferred
+ * @param v One of the model variables
+ * @param time Time step in [0, T-1] */
+double* get_posterior(uncertain_series ucs, nip_variable v, int time);
+
+
+/**
  * Method for modifying an observation in the time series.
  * - Variable \p v must be one of the observed variables in the
  * time series.
@@ -353,8 +366,7 @@ int insert_ts_step(time_series ts, int t, nip_model model, char mark_mask);
  * @param mark_mask Flags for including or excluding marked variables
  * @see nip_mark_variable()
  * @see nip_unmark_variable() */
-int insert_ucs_step(uncertain_series ucs, int t, nip_model model,
-		    char mark_mask);
+int insert_ucs_step(uncertain_series ucs, int t, nip_model model, char mark_mask);
 
 
 /**

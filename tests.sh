@@ -136,11 +136,22 @@ rm $of
 
 
 echo '' 1>&2
-echo '10. Test time series sampling: util/nipsample' 1>&2
+echo '10. Test forward inference: util/nipnext' 1>&2
 
-if=test/input7.net
+if=test/input8.csv
 of=test/output10.csv
 ef=test/expect10.csv
+./util/nipnext test/input7.net $if P1 > $of
+assert $of $ef $LINENO
+rm $of
+
+
+echo '' 1>&2
+echo '11. Test time series sampling: util/nipsample' 1>&2
+
+if=test/input7.net
+of=test/output11.csv
+ef=test/expect11.csv
 ./util/nipsample $if 42 52 7 $of # 2> /dev/null
 assert $of $ef $LINENO
 rm $of

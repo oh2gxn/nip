@@ -17,6 +17,7 @@ Top priority or simple stuff:
 ** Acceptance tests
 *** DONE nipmap
 *** DONE nipinference
+*** TODO nipnext
 *** DONE nipsample
 *** TODO niptrain
 - BUG: copies node property NIP_next in a wrong way?
@@ -37,18 +38,6 @@ Top priority or simple stuff:
 *** nip_init_clique()
 *** nip_find_family_mapping()?
 
-
-* TODO New utility: nipnext
-Something between nipsample and nipinference:
-- given variable of interest X
-- reads a sequence of N data to build hidden context (likelihood)
-- infers the probabilities of each state of X=x in the *next* time step
-- also outputs likelihood of the complete sequence (N+1)
-- output has 3 columns: X,P(X[n+1]=x|data),P(Xn+1=x,data)
-Ideas for future improvement:
-- given multiple M observed variables {X,Y,...}
-- output M+2 columns: X,Y,...,P(x,y,...|data),P(x,y,...,data)
-  where rows x,y,... span all combinations of X × Y × ...
 
 
 * TODO Use of mini batches during EM
@@ -202,6 +191,17 @@ Lesser priority or science:
 
 
 Done:
+
+
+* DONE New utility: nipnext
+Something between nipsample and nipinference:
+- given variable of interest X
+- reads a sequence of T >= 0 data to build hidden context (likelihood)
+  - actually multiple N sequences, and multiple N rows of output
+- infers the probabilities of each state of X=x at the *final* time step
+- maybe also outputs likelihood of the complete sequence (T),
+  which might be redundant, given earlier results at T-1
+- output has a header row x, and N rows of P(X[T]=x|data)
 
 * DONE Make it a library
 ** DONE decide on a minimal set of standards

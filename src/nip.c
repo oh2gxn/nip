@@ -931,6 +931,22 @@ char* get_observation(time_series ts, nip_variable v, int time){
 }
 
 
+double* get_posterior(uncertain_series ucs, nip_variable v, int time){
+  int i, j = -1;
+  for(i = 0; i < ucs->num_of_vars; i++)
+    if(nip_equal_variables(v, ucs->variables[i]))
+      j = i;
+
+  if(j < 0)
+    return NULL;
+
+  if (time < 0 || ucs->length <= time)
+    return NULL;
+
+  return ucs->data[time][j];
+}
+
+
 int set_observation(time_series ts, nip_variable v, int time,
                     char* observation){
   int i, j = -1;

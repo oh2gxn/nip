@@ -197,6 +197,12 @@ $(INF_TARGET): $(INF_SRC) $(SLIB)
 	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
 
 
+NEXT_SRC = util/nipnext.c
+NEXT_TARGET = util/nipnext
+$(NEXT_TARGET): $(NEXT_SRC) $(SLIB)
+	$(LD) $(LDFLAGS) $< $(INC) $(NIPLIBS) -o $@
+
+
 CONV_SRC = util/nipconvert.c
 CONV_TARGET = util/nipconvert
 $(CONV_TARGET): $(CONV_SRC) $(SLIB)
@@ -216,14 +222,14 @@ $(LOO_TARGET): $(LOO_SRC) $(SLIB)
 
 
 util: $(JNT_TARGET) $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET) \
-$(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
+$(NEXT_TARGET) $(CONV_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
 
 
 # All targets
 TARGET=$(POT_TARGET) $(CLI_TARGET) $(PAR_TARGET) $(GRPH_TARGET) \
 $(BIS_TARGET) $(STR_TARGET) $(DF_TARGET) $(MLT_TARGET) $(JNT_TARGET) \
 $(EM_TARGET) $(GEN_TARGET) $(MAP_TARGET) $(INF_TARGET) $(CONV_TARGET) \
-$(LIKE_TARGET) $(LOO_TARGET)
+$(NEXT_TARGET) $(LIKE_TARGET) $(LOO_TARGET)
 
 doc: doc/Doxyfile src/*.c src/*.h
 	doxygen doc/Doxyfile
