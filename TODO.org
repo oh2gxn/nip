@@ -17,7 +17,7 @@ Top priority or simple stuff:
 ** Acceptance tests
 *** DONE nipmap
 *** DONE nipinference
-*** TODO nipnext
+*** DONE nipnext
 *** DONE nipsample
 *** TODO niptrain
 - BUG: copies node property NIP_next in a wrong way?

@@ -90,6 +90,9 @@ static int yylex (void);
   * @param s Error message */
 static void yyerror (const char *s);
 
+
+int yyparse(void);
+
 /**
  * Creates a graph from a list of variables referencing each other
  * @param vl List of variables

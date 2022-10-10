@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Quick example of NIP utilities
 # Author: Janne Toivola

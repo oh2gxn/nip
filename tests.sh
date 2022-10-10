@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Runs test programs in test/*.c
 # Quits and returns non-zero in case of any errors.
@@ -138,12 +138,18 @@ rm $of
 echo '' 1>&2
 echo '10. Test forward inference: util/nipnext' 1>&2
 
-if=test/input8.csv
+if=test/input10.csv
 of=test/output10.csv
 ef=test/expect10.csv
+head -n3 input8.csv > $if
+echo "null,null" >> $if
+echo "" >> $if
+echo "f,0" >> $if
+echo "null,0" >> $if
+echo "null,null" >> $if
 ./util/nipnext test/input7.net $if P1 > $of
 assert $of $ef $LINENO
-rm $of
+rm $if $of
 
 
 echo '' 1>&2
