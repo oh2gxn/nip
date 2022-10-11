@@ -141,11 +141,11 @@ echo '10. Test forward inference: util/nipnext' 1>&2
 if=test/input10.csv
 of=test/output10.csv
 ef=test/expect10.csv
-head -n3 input8.csv > $if
+head -n3 test/input8.csv > $if
 echo "null,null" >> $if
 echo "" >> $if
-echo "f,0" >> $if
-echo "null,0" >> $if
+echo "F,2" >> $if
+echo "null,1" >> $if
 echo "null,null" >> $if
 ./util/nipnext test/input7.net $if P1 > $of
 assert $of $ef $LINENO
