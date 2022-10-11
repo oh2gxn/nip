@@ -295,7 +295,7 @@ nip_model parse_model(char* file){
 int write_model(nip_model model, char* filename){
   int i, j, n;
   int x, y;
-  int nparents, nvalues;
+  int nparents, nvalues, multiparent = 0;
   FILE *f = NULL;
   nip_variable v = NULL;
   int *temp = NULL;
@@ -397,8 +397,13 @@ int write_model(nip_model model, char* filename){
 
     nvalues  = NIP_CARDINALITY(v);
     nparents = nip_number_of_parents(v);
-    fputs("\n", f);
+    if (nparents > 1)
+      multiparent = 1;
+    else
+      multiparent = 0;
+
     /* child variables have conditional distributions */
+    fputs("\n", f);
     fprintf(f, "%spotential (%s | ", indent, nip_variable_symbol(v));
     for(j = nparents-1; j > 0; j--){
       /* Hugin fellas put parents in reverse order */
@@ -407,6 +412,8 @@ int write_model(nip_model model, char* filename){
     fprintf(f, "%s)\n", nip_variable_symbol(v->parents[0]));
     fprintf(f, "%s{ \n", indent);
     fprintf(f, "%s    data = (", indent);
+    if (multiparent)
+      fputs("(", f);
 
     temp = (int*) calloc(nparents+1, sizeof(int));
     if(!temp){
@@ -440,6 +447,8 @@ int write_model(nip_model model, char* filename){
          (n || (nvalues > POTENTIAL_ELEMENTS_PER_LINE &&
                 y % POTENTIAL_ELEMENTS_PER_LINE == 0))){
         if(n){
+          if (multiparent)
+            fputs(")(", f);
           /* print comments about parent values for previous line
            * NOTE: the last comment is left out */
           fputs(" % ", f);
@@ -458,6 +467,8 @@ int write_model(nip_model model, char* filename){
       fprintf(f, " %f ", p->data[j]);
       y++;
     }
+    if (multiparent)
+      fputs(")", f);
     fputs(");\n", f);
     fprintf(f, "%s}\n", indent);
     free(temp);
