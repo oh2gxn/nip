@@ -19,7 +19,7 @@ assert () #  If condition false, exit from script with appropriate error message
   lineno=$3
 
   diffstr=$(diff $1 $2)
-  difflen=$(printf "$diffstr" | wc -l)
+  difflen=$(printf "%s" "$diffstr" | wc -l)
   if [ $difflen -gt 0 ]
   then
       echo "$(tput setaf 1)Failed$(tput sgr0)" 1>&2
