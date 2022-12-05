@@ -454,7 +454,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
 /**
  * Trains the given model according to the given time series with EM
  * algorithm. Stops when the average improvement of log. likelihood of
- * the data is small enough.
+ * the data is small enough or maximum number of iterations reached.
  * The \p learning_curve can be NULL: if it isn't, it will be
  * emptied and filled with average log. likelihood values for each
  * iteration.
@@ -470,6 +470,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * @param ts The input data for training: an array of time series'
  * @param n_ts Number of time series' in \p ts
  * @param have_random_init 0 if starting with model parameters, 1 if random
+ * @param max_iterations Maximum number of iterations
  * @param threshold Minimum required improvement in log. likelihood / slice
  * @param learning_curve Possible list of log. likelihood numbers, or null
  * @param em_progress Possible pointer to a function which
@@ -478,7 +479,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * @return An error code in case of any errors
  */
 int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
-             double threshold, nip_double_list learning_curve,
+             long max_iterations, double threshold, nip_double_list learning_curve,
              int (*em_progress)(nip_double_list, double), int (*ts_progress)(int, int));
 
 

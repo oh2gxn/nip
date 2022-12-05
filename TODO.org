@@ -12,7 +12,8 @@ Top priority or simple stuff:
 *** DONE bisontest
 *** DONE models and data for testing nip.c
 *** DONE script with simple diff operations? (not for memleaktest)
-*** TODO memleaktest
+*** DONE memleaktest
+Escapes the realm of automated tests run as child processes: continue using interactively
 
 ** Acceptance tests
 *** DONE nipmap
@@ -24,6 +25,13 @@ Top priority or simple stuff:
 : input:  parent.NIP_next = child.symbol;
 : output: child.NIP_next = parent.symbol;
 - Separate/optional random initialization: support continued training
+- Continuous output: avoid losing model state during long computations
+  - write model each N=10 or so iterations
+  - flush learning curve likelihoods too?
+- Use getopt for proper command line options?
+  - introduce version numbering scheme
+  - not using argp within the library: only utils, but consider GNU conventions
+
 *** TODO nipjoint
 
 
@@ -42,7 +50,11 @@ Top priority or simple stuff:
 
 * TODO Use of mini batches during EM
 ** TODO Read a smaller batch of time series from a file
+Users can utilize unix head & tail for chunking data?
+
 ** TODO Compute E and M on the smaller batch
+Requirements:
+- command line argument for max iterations / batch to avoid overfitting?
 
 
 * TODO OpenMP threads in EM
@@ -50,8 +62,14 @@ Top priority or simple stuff:
 : gcc -fopenmp nip.c
 : #include <omp.h>
 : #pragma omp parallel for
-** TODO Fixed or dynamic parameter for number of threads/CPUs?
 
+Opportunities:
+- each TS sequence can run parallel inference, given separate model state
+- each set of pseudocounts can be counted in parallel, given separate chunk of RAM
+
+** TODO Fixed or dynamic parameter for number of threads/CPUs?
+Command line argument for integer -j / --jobs
+- require j chunks of private RAM and enable batches
 
 * TODO Check if the library is UTF-8 compatible
 ** BUG: Hard byte length limit of some strings cuts UTF-8 chars?

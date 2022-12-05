@@ -25,7 +25,7 @@
 /** This many probabilities / row of text */
 #define POTENTIAL_ELEMENTS_PER_LINE 7
 
-/** Run EM steps at least this many times */
+/** Run EM steps at least this many times unless limited by maximum count */
 #define MIN_EM_ITERATIONS 3
 
 /*#define DEBUG_NIP*/
@@ -2080,7 +2080,7 @@ static int m_step(nip_potential* parameters, nip_model model){
 /* Trains the given model (ts[0]->model) according to the given set of
  * time series (ts[*]) with EM-algorithm. Returns an error code. */
 int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
-             double threshold, nip_double_list learning_curve,
+             long max_iterations, double threshold, nip_double_list learning_curve,
              int (*em_progress)(nip_double_list, double), int (*ts_progress)(int, int)){
   int i, n, v;
   int *card, *mapping;
@@ -2250,8 +2250,9 @@ int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
      * (It helps if you insist having a minimum amount of iterations :) */
     i++;
 
-  } while((loglikelihood - old_loglikelihood) > (ts_steps * threshold) ||
-          i < MIN_EM_ITERATIONS);
+  } while (i < max_iterations &&
+           ((loglikelihood - old_loglikelihood) > (ts_steps * threshold) ||
+            i < MIN_EM_ITERATIONS));
   /*** When should we stop? ***/
 
   for(v = 0; v < model->num_of_vars; v++){

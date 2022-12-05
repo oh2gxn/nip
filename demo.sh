@@ -30,10 +30,11 @@ echo ''
 echo '2. Use EM algorithm to learn a statistical model:'
 # Learn (assumably unknown) parameters of empty.net
 # from our incomplete data in data-M1.csv.
-# Magic termination parameters for EM: 
-# change threshold = 0.00001, 
-# min. log. likelihood per time step = -1.1
-./util/niptrain examples/empty.net examples/data-train-M1.csv 42 0.00001 -1.1 examples/trained.net > examples/learning-curve.csv
+# Magic termination parameters for EM:
+# - change threshold = 0.00001,
+# - min. log. likelihood per time step = -1.1
+# - absolute max number of iterations = 128
+./util/niptrain examples/empty.net examples/data-train-M1.csv 42 0.00001 -1.1 128 examples/trained.net > examples/learning-curve.csv
 echo 'See if examples/trained.net makes any sense compared to model.net.'
 echo 'See examples/learning-curve.csv for any promising convergence.'
 

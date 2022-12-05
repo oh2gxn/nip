@@ -42,6 +42,8 @@
 #include <string.h>
 #include "nip.h"
 
+#define MAX_ITER 1024L
+
 /* a lot of similarities with the inference tool (inftest)... */
 
 /* TODO: a way to evaluate statistical significance... empirical p-value? */
@@ -187,7 +189,7 @@ int main(int argc, char *argv[]){
 
       /* the EM algorithm */
       have_random_init = 1;
-      e = em_learn(model, loo_set, n_max-1, have_random_init,
+      e = em_learn(model, loo_set, n_max-1, have_random_init, MAX_ITER,
                    threshold, learning_curve, &nip_append_double, NULL);
       if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
         fprintf(stderr, "There were errors during learning:\n");

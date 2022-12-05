@@ -23,7 +23,7 @@
  * to the specified output file.
  *
  * SYNOPSIS:
- * NIPTRAIN <ORIGINAL.NET> <DATA.TXT> <SEED> <THRESHOLD> <MINL> <RESULT.NET>
+ * NIPTRAIN <ORIGINAL.NET> <DATA.TXT> <SEED> <THRESHOLD> <MINL> <MAXI> <RESULT.NET>
  *
  * - Structure of the model will be read from the file <ORIGINAL.NET>
  * - data for learning will be read from <DATA.TXT>
@@ -31,9 +31,10 @@
  * - <THRESHOLD> will provide the minimum change in average log. likelihood
  * - <MINL> sets the minimum average log. likelihood
  *   (be careful not to demand too much)
+ * - <MAXI> sets the maximum number of iterations, non-number for unlimited
  * - resulting model will be written to the file <RESULT.NET>
  *
- * EXAMPLE: ./niptrain model1.net data.txt 73 0.00001 -1.2 model2.net
+ * EXAMPLE: ./niptrain model1.net data.txt 73 0.00001 -1.2 128 model2.net
  *
  * Author: Janne Toivola
  * Version: $Id: niptrain.c,v 1.1 2010-12-03 17:21:29 jatoivol Exp $
@@ -43,6 +44,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include <float.h>
 #include <math.h>
 #include "nip.h"
@@ -77,18 +79,21 @@ int main(int argc, char *argv[]) {
   nip_double_list learning_curve = NULL;
   nip_double_link link = NULL;
   char* tailptr = NULL;
-  long seed;
+  long seed, max_iterations;
   int have_random_init;
 
+  // TODO: version numbering scheme for checking compatibility
   fprintf(stderr, "niptrain:\n");
 
-  if(argc < 7){
+  // TODO: utilize getopt for proper optional command line arguments
+  if(argc < 8){
     fprintf(stderr, "You must specify: \n");
     fprintf(stderr, " - the original NET file, \n");
     fprintf(stderr, " - data file, \n");
     fprintf(stderr, " - random seed (integer if random init), \n");
-    fprintf(stderr, " - threshold value (0...1), \n");
-    fprintf(stderr, " - minimum required log. likelihood/time step (<<0), and \n");
+    fprintf(stderr, " - threshold value (0.0 ... 1.0), \n");
+    fprintf(stderr, " - minimum required log. likelihood/time step (<<0.0), \n");
+    fprintf(stderr, " - maximum number of iterations (int>3 if limited), and \n");
     fprintf(stderr, " - file name for the resulting model, please!\n");
     return 0;
   }
@@ -167,6 +172,14 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  /* read max number of iterations value */
+  max_iterations = strtol(argv[6], &tailptr, 10);
+  if(tailptr == argv[6]){
+    max_iterations = LONG_MAX;
+    fprintf(stderr, "  Not limiting iterations. Not using %s\n", argv[6]);
+  }
+  fprintf(stderr, "  Max. number of iterations = %ld\n", max_iterations);
+
   /* THE algorithm (may take a while) */
   fprintf(stderr, "  Computing... \n");
   for(i = 0; i < model->num_of_vars; i++)
@@ -183,7 +196,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* EM algorithm */
-    e = em_learn(model, ts_set, n_ts, have_random_init,
+    e = em_learn(model, ts_set, n_ts, have_random_init, max_iterations,
                  threshold, learning_curve, &em_progress, &ts_progress);
     if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
       fprintf(stderr, "There were errors during learning:\n");
@@ -233,9 +246,12 @@ int main(int argc, char *argv[]) {
   free(learning_curve);
 
   /* Write the results to a NET file */
-  i =  write_model(model, argv[6]);
-  if(i != NIP_NO_ERROR){
-    fprintf(stderr, "Failed to write the model into %s\n", argv[6]);
+  i =  write_model(model, argv[7]);
+  if(i == NIP_NO_ERROR){
+    fprintf(stderr, "  Wrote the model into %s\n", argv[7]);
+  }
+  else {
+    fprintf(stderr, "  Failed to write the model into %s\n", argv[7]);
     nip_report_error(__FILE__, __LINE__, i, 1);
     free_model(model);
     return -1;
