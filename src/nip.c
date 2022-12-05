@@ -2097,12 +2097,6 @@ int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
     return NIP_ERROR_INVALID_ARGUMENT;
   }
 
-  if(learning_curve != NULL){
-    /* Take care it's empty */
-    if(NIP_LIST_LENGTH(learning_curve) > 0)
-      nip_empty_double_list(learning_curve);
-  }
-
   /* Reserve some memory for calculation */
   parameters = (nip_potential*) calloc(model->num_of_vars, sizeof(nip_potential));
   if(!parameters){

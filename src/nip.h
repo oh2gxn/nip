@@ -456,8 +456,7 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * algorithm. Stops when the average improvement of log. likelihood of
  * the data is small enough or maximum number of iterations reached.
  * The \p learning_curve can be NULL: if it isn't, it will be
- * emptied and filled with average log. likelihood values for each
- * iteration.
+ * appended with average log. likelihood values for each iteration.
  *
  * NOTE: Call random_seed() before this!
  *

@@ -26,7 +26,7 @@ Escapes the realm of automated tests run as child processes: continue using inte
 : output: child.NIP_next = parent.symbol;
 - Separate/optional random initialization: support continued training
 - Continuous output: avoid losing model state during long computations
-  - write model each N=10 or so iterations
+  - write model each N=32 or so iterations
   - flush learning curve likelihoods too?
 - Use getopt for proper command line options?
   - introduce version numbering scheme

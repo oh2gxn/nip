@@ -51,6 +51,10 @@
 #include "niplists.h"
 #include "nipvariable.h"
 
+/* Number of EM iterations before saving an intermediate model into file
+ * avoiding loss of data during long runs */
+#define BATCH_ITERATIONS 32L
+
 // Callback for witnessing I/O
 static int ts_progress(int sequence, int length);
 static int ts_progress(int sequence, int length){
@@ -68,7 +72,7 @@ static int em_progress(nip_double_list learning_curve, double mean_log_likelihoo
 
 int main(int argc, char *argv[]) {
 
-  int i, n, e;
+  int i, n, k, e;
   nip_model model = NULL;
   time_series *ts_set = NULL;
   int n_ts;
@@ -79,7 +83,8 @@ int main(int argc, char *argv[]) {
   nip_double_list learning_curve = NULL;
   nip_double_link link = NULL;
   char* tailptr = NULL;
-  long seed, max_iterations;
+  long seed;
+  long max_iterations, current_iterations, left_iterations;
   int have_random_init;
 
   // TODO: version numbering scheme for checking compatibility
@@ -195,23 +200,48 @@ int main(int argc, char *argv[]) {
       nip_empty_double_list(learning_curve);
     }
 
-    /* EM algorithm */
-    e = em_learn(model, ts_set, n_ts, have_random_init, max_iterations,
-                 threshold, learning_curve, &em_progress, &ts_progress);
-    if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
-      fprintf(stderr, "There were errors during learning:\n");
-      nip_report_error(__FILE__, __LINE__, e, 1);
-      for(i = 0; i < n_ts; i++)
-        free_timeseries(ts_set[i]);
-      free(ts_set);
-      free_model(model);
-      nip_empty_double_list(learning_curve);
-      free(learning_curve);
-      return -1;
-    }
+    /* EM algorithm, with intermediate save after each batch */
+    k = 0;
+    left_iterations = max_iterations;
+    do{
+      k++;
+      current_iterations = (left_iterations > BATCH_ITERATIONS) ? BATCH_ITERATIONS : left_iterations;
+
+      e = em_learn(model, ts_set, n_ts, have_random_init, current_iterations,
+                   threshold, learning_curve, &em_progress, &ts_progress);
+      if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
+        fprintf(stderr, "There were errors during learning:\n");
+        nip_report_error(__FILE__, __LINE__, e, 1);
+        for(i = 0; i < n_ts; i++)
+          free_timeseries(ts_set[i]);
+        free(ts_set);
+        free_model(model);
+        nip_empty_double_list(learning_curve);
+        free(learning_curve);
+        return -1;
+      }
+      left_iterations -= current_iterations; // maintain max cumulative count
+
+      /* Write the results to a NET file */
+      i =  write_model(model, argv[7]);
+      if(i == NIP_NO_ERROR){
+        fprintf(stderr, "\n  Wrote intermediate model into %s\n", argv[7]);
+      }
+
+      /* See if em_learn quit early due to threshold */
+      i = NIP_LIST_LENGTH(learning_curve);
+      if (i >= k * BATCH_ITERATIONS || i >= max_iterations) {
+        // max cumulative count reached, maybe due to iteration limit
+        have_random_init = 0; // learn more with the same model, TODO: minor drop in learning curve?
+      }
+      else {
+        // max count not reached, surely due to threshold, drop iterations
+        left_iterations = 0;
+      }
+    } while (left_iterations > 0);
 
     /* find out the last value in learning curve */
-    i = NIP_LIST_LENGTH(learning_curve);
+    // i = NIP_LIST_LENGTH(learning_curve);
     if(i == 0){
       fprintf(stderr, "  Run %4d failed 0.0 with %4d iterations, delta = 0.0 \n", n, i);
     }
@@ -226,7 +256,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Try again, if not satisfied with the result */
-    have_random_init = 1;
+    have_random_init = 1; // cannot continue from the same model
   } while(e == NIP_ERROR_BAD_LUCK ||
           last < min_log_likelihood);
 
@@ -248,7 +278,7 @@ int main(int argc, char *argv[]) {
   /* Write the results to a NET file */
   i =  write_model(model, argv[7]);
   if(i == NIP_NO_ERROR){
-    fprintf(stderr, "  Wrote the model into %s\n", argv[7]);
+    fprintf(stderr, "  Wrote the final model into %s\n", argv[7]);
   }
   else {
     fprintf(stderr, "  Failed to write the model into %s\n", argv[7]);
