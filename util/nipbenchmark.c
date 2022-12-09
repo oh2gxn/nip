@@ -70,6 +70,7 @@ int main(int argc, char *argv[]){
 
   nip_double_list learning_curve = NULL;
   nip_double_link link = NULL;
+  nip_convergence stopping_reason;
 
   printf("nipbenchmark:\n");
 
@@ -190,7 +191,7 @@ int main(int argc, char *argv[]){
       /* the EM algorithm */
       have_random_init = 1;
       e = em_learn(model, loo_set, n_max-1, have_random_init, MAX_ITER,
-                   threshold, learning_curve, &nip_append_double, NULL);
+                   threshold, learning_curve, &stopping_reason, &nip_append_double, NULL);
       if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
         fprintf(stderr, "There were errors during learning:\n");
         nip_report_error(__FILE__, __LINE__, e, 1);

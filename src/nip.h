@@ -64,6 +64,15 @@ enum nip_direction_type {BACKWARD, FORWARD};
 typedef enum nip_direction_type nip_direction; ///< hide enum notation
 
 /**
+ * Reasons to stop EM algorithm:
+ * - DELTA: change in likelihood was small
+ * - LIKELIHOOD: data seems probable enough given current model
+ * - ITERATIONS: given number of iterations reached
+ */
+enum nip_convergence_type {DELTA, LIKELIHOOD, ITERATIONS};
+typedef enum nip_convergence_type nip_convergence;
+
+/**
  * Data structure containing all necessary stuff for running
  * probabilistic inference with a model for a single time step,
  * except the input data itself
@@ -472,13 +481,15 @@ time_series mlss(nip_variable vars[], int nvars, time_series ts);
  * @param max_iterations Maximum number of iterations
  * @param threshold Minimum required improvement in log. likelihood / slice
  * @param learning_curve Possible list of log. likelihood numbers, or null
+ * @param stopping_criterion Reason why iterations ended, or null
  * @param em_progress Possible pointer to a function which
  * accumulates learning_curve, or null if not required
  * @param ts_progress Optional time series progress callback, or null
  * @return An error code in case of any errors
  */
 int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
-             long max_iterations, double threshold, nip_double_list learning_curve,
+             long max_iterations, double threshold,
+             nip_double_list learning_curve, nip_convergence* stopping_criterion,
              int (*em_progress)(nip_double_list, double), int (*ts_progress)(int, int));
 
 

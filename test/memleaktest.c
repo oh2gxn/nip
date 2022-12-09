@@ -231,7 +231,7 @@ int main(int argc, char *argv[]){
     printf("\nRunning EM-algorithm %d times:\n",n);
     for(i = 0; i < n; i++){
       total_reset(model);
-      em_learn(model, ts_set, MAX_ITER, m, i%2, THRESHOLD, NULL, NULL, NULL);
+      em_learn(model, ts_set, MAX_ITER, m, i%2, THRESHOLD, NULL, NULL, NULL, NULL);
       printf("\rIteration %d of %d                               ", i + 1, n);
     }
     printf("\rDone.                                             \n");

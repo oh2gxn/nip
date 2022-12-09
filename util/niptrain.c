@@ -82,6 +82,7 @@ int main(int argc, char *argv[]) {
   double last = 0;
   nip_double_list learning_curve = NULL;
   nip_double_link link = NULL;
+  nip_convergence stopping_criterion = LIKELIHOOD;
   char* tailptr = NULL;
   long seed;
   long max_iterations, current_iterations, left_iterations;
@@ -208,7 +209,8 @@ int main(int argc, char *argv[]) {
       current_iterations = (left_iterations > BATCH_ITERATIONS) ? BATCH_ITERATIONS : left_iterations;
 
       e = em_learn(model, ts_set, n_ts, have_random_init, current_iterations,
-                   threshold, learning_curve, &em_progress, &ts_progress);
+                   threshold, learning_curve, &stopping_criterion,
+                   &em_progress, &ts_progress);
       if(!(e == NIP_NO_ERROR || e == NIP_ERROR_BAD_LUCK)){
         fprintf(stderr, "There were errors during learning:\n");
         nip_report_error(__FILE__, __LINE__, e, 1);
@@ -229,14 +231,13 @@ int main(int argc, char *argv[]) {
       }
 
       /* See if em_learn quit early due to threshold */
-      i = NIP_LIST_LENGTH(learning_curve);
-      if (i >= k * BATCH_ITERATIONS || i >= max_iterations) {
-        // max cumulative count reached, maybe due to iteration limit
-        have_random_init = 0; // learn more with the same model, TODO: minor drop in learning curve?
-      }
-      else {
-        // max count not reached, surely due to threshold, drop iterations
-        left_iterations = 0;
+      switch (stopping_criterion) {
+      case ITERATIONS : // max iteration limit reached
+        have_random_init = 0; break; // learn more with the same model
+        // TODO: minor drop in learning curve, but recovered during the 3 minimum iterations ?
+      case DELTA : // true convergence
+        left_iterations = 0; break; // drop remaining iterations
+      // default : continue with the next batch
       }
     } while (left_iterations > 0);
 
@@ -258,7 +259,7 @@ int main(int argc, char *argv[]) {
     /* Try again, if not satisfied with the result */
     have_random_init = 1; // cannot continue from the same model
   } while(e == NIP_ERROR_BAD_LUCK ||
-          last < min_log_likelihood);
+          last < min_log_likelihood); // stopping_criterion == LIKELIHOOD
 
   fprintf(stderr, "  ...computing done.\n");
   for(i = 0; i < n_ts; i++)

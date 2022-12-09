@@ -2080,7 +2080,8 @@ static int m_step(nip_potential* parameters, nip_model model){
 /* Trains the given model (ts[0]->model) according to the given set of
  * time series (ts[*]) with EM-algorithm. Returns an error code. */
 int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
-             long max_iterations, double threshold, nip_double_list learning_curve,
+             long max_iterations, double threshold,
+             nip_double_list learning_curve, nip_convergence* stopping_criterion,
              int (*em_progress)(nip_double_list, double), int (*ts_progress)(int, int)){
   int i, n, v;
   int *card, *mapping;
@@ -2090,7 +2091,7 @@ int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
   double probe = 0;
   nip_potential* parameters = NULL;
   nip_clique clique;
-  int e;
+  int e, converged;
 
   if(!ts[0] || !model){
     nip_report_error(__FILE__, __LINE__, NIP_ERROR_INVALID_ARGUMENT, 1);
@@ -2144,6 +2145,7 @@ int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
       }
       mapping = nip_find_family_mapping(clique, model->variables[v]);
       nip_general_marginalise(clique->original_p, parameters[v], mapping);
+      // TODO: minor drop in learning curve when continuing, but recovered during the 3 minimum iterations ?
       /* TODO: keep parameters/pseudocounts as model state, separate from join tree */
       /* the M-step will take care of the normalisation?
       nip_normalise_cpd(p); */
@@ -2157,7 +2159,7 @@ int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
   /************/
   /* THE Loop */
   /************/
-  i = 0;
+  i = 0; converged = 0;
   do{
 
     /* M-Step... or at least the last part of it.
@@ -2244,10 +2246,22 @@ int em_learn(nip_model model, time_series* ts, int n_ts, int have_random_init,
      * (It helps if you insist having a minimum amount of iterations :) */
     i++;
 
-  } while (i < max_iterations &&
-           ((loglikelihood - old_loglikelihood) > (ts_steps * threshold) ||
-            i < MIN_EM_ITERATIONS));
-  /*** When should we stop? ***/
+    /* Check for convergence or other stopping criteria */
+    if (i >= MIN_EM_ITERATIONS) {
+      if ((loglikelihood - old_loglikelihood) > (ts_steps * threshold)) {
+        if (i >= max_iterations) {
+          converged = 1;
+          if (stopping_criterion)
+            *stopping_criterion = ITERATIONS;
+        }
+      } else {
+        converged = 1;
+        if (stopping_criterion)
+          *stopping_criterion = DELTA;
+      }
+    } // else: force minimum number of iterations
+
+  } while (!converged);
 
   for(v = 0; v < model->num_of_vars; v++){
     nip_free_potential(parameters[v]);
