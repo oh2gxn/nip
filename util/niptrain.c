@@ -242,7 +242,7 @@ int main(int argc, char *argv[]) {
     } while (left_iterations > 0);
 
     /* find out the last value in learning curve */
-    // i = NIP_LIST_LENGTH(learning_curve);
+    i = NIP_LIST_LENGTH(learning_curve);
     if(i == 0){
       fprintf(stderr, "  Run %4d failed 0.0 with %4d iterations, delta = 0.0 \n", n, i);
     }
